@@ -56,7 +56,6 @@ if [ -f /boot/uboot/flash-eMMC.txt ] ; then
 	if [ -f /boot/uboot/tools/scripts/beaglebone-black-copy-microSD-to-eMMC.sh ] ; then
 		/bin/bash /boot/uboot/tools/scripts/beaglebone-black-copy-microSD-to-eMMC.sh
 		sync
-		rm -rf /boot/uboot/flash-eMMC.txt || true
 		if [ -e /sys/class/leds/beaglebone\:green\:usr0/trigger ] ; then
 			echo default-on > /sys/class/leds/beaglebone\:green\:usr0/trigger
 			echo default-on > /sys/class/leds/beaglebone\:green\:usr1/trigger
