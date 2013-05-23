@@ -70,8 +70,13 @@ if [ -f /boot/uboot/flash-eMMC.txt ] ; then
 fi
 
 if [ -e /sys/class/drm/card0/card0-HDMI-A-1/edid ] ; then
+	if which fbset > /dev/null ; then
+		echo "fbset:" > /boot/uboot/debug/edid.txt
+		fbset >> /boot/uboot/debug/edid.txt
+	fi
 	if which parse-edid > /dev/null ; then
-		parse-edid /sys/class/drm/card0/card0-HDMI-A-1/edid > /boot/uboot/debug/edid.txt
+		echo "edid:" >> /boot/uboot/debug/edid.txt
+		parse-edid /sys/class/drm/card0/card0-HDMI-A-1/edid >> /boot/uboot/debug/edid.txt
 	fi
 fi
 
