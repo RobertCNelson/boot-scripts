@@ -3,6 +3,10 @@
 #Based off:
 #https://github.com/beagleboard/meta-beagleboard/blob/master/meta-beagleboard-extras/recipes-support/usb-gadget/gadget-init/g-ether-load.sh
 
+if [ ! -d /boot/uboot/debug/ ] ; then
+	mkdir -p /boot/uboot/debug/ || true
+fi
+
 SERIAL_NUMBER=$(hexdump -e '8/1 "%c"' /sys/bus/i2c/devices/0-0050/eeprom -s 14 -n 2)-$(hexdump -e '8/1 "%c"' /sys/bus/i2c/devices/0-0050/eeprom -s 16 -n 12)
 ISBLACK=$(hexdump -e '8/1 "%c"' /sys/bus/i2c/devices/0-0050/eeprom -s 8 -n 4-s 8 -n 4)
 
@@ -64,3 +68,10 @@ if [ -f /boot/uboot/flash-eMMC.txt ] ; then
 		fi
 	fi
 fi
+
+if [ -e /sys/class/drm/card0/card0-HDMI-A-1/edid ] ; then
+	if which parse-edid > /dev/null ; then
+		parse-edid /sys/class/drm/card0/card0-HDMI-A-1/edid > /boot/uboot/debug/edid.txt
+	fi
+fi
+
