@@ -72,3 +72,5 @@ if [ -f /boot/uboot/flash-eMMC.txt ] ; then
 		fi
 	fi
 fi
+
+dmesg | grep cape > /boot/uboot/debug/cape.txt
