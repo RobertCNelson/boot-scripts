@@ -62,7 +62,7 @@ fi
 
 if [ -f /boot/uboot/flash-eMMC.txt ] ; then
 	if [ -f /boot/uboot/tools/scripts/beaglebone-black-copy-microSD-to-eMMC.sh ] ; then
-		/bin/bash /boot/uboot/tools/scripts/beaglebone-black-copy-microSD-to-eMMC.sh &> /boot/uboot/debug/flash-eMMC.log
+		/bin/bash /boot/uboot/tools/scripts/beaglebone-black-copy-microSD-to-eMMC.sh >/boot/uboot/debug/flash-eMMC.log 2>&1
 	fi
 fi
 
