@@ -1,6 +1,6 @@
 #!/bin/sh -e
 
-if [ -f /etc/timestamp ] ; the
+if [ -f /etc/timestamp ] ; then
 	systemdate=$(/bin/date -u "+%4Y%2m%2d%2H%2M")
 	timestamp=$(cat /etc/timestamp)
 
