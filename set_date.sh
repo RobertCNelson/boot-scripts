@@ -1,4 +1,6 @@
 #!/bin/sh -e
+#/etc/timestamp is set via:
+#date --utc "+%4Y%2m%2d%2H%2M" > /etc/timestamp
 
 if [ -f /etc/timestamp ] ; then
 	systemdate=$(/bin/date --utc "+%4Y%2m%2d%2H%2M")
