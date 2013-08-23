@@ -1,4 +1,7 @@
 #!/bin/sh -e
+#Notes:
+#This script is to just get the (non-battery backed up) rtc 'in the ballbark'..
+#Usually it will be around a month at most off, vs 40-ish years...
 #/etc/timestamp is set via:
 #date --utc "+%4Y%2m%2d%2H%2M" > /etc/timestamp
 
