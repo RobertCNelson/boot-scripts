@@ -51,7 +51,11 @@ latest_version () {
 		wget http://rcn-ee.net/deb/${dist}-${arch}/LATEST-${SOC}
 		if [ -f /tmp/LATEST-${SOC} ] ; then
 			wget $(cat /tmp/LATEST-${SOC} | grep ${kernel} | awk '{print $3}')
-			/bin/bash /tmp/install-me.sh
+			if [ "xv${current_kernel}" = "x${kernel}" ] ; then
+				echo "v${current_kernel} is latest"
+			else
+				/bin/bash /tmp/install-me.sh
+			fi
 		fi
 	fi
 }
@@ -76,6 +80,7 @@ checkparm () {
 
 dist=$(lsb_release -cs)
 arch=$(dpkg --print-architecture)
+current_kernel=$(uname -r)
 
 kernel="STABLE"
 unset kernel_version
