@@ -33,7 +33,7 @@ get_device () {
 		;;
 	*)
 		echo "Machine: [${machine}]"
-		unset SOC
+		SOC="armv7"
 		;;
 	esac
 }
