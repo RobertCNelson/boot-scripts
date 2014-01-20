@@ -50,11 +50,18 @@ latest_version () {
 
 		wget http://rcn-ee.net/deb/${dist}-${arch}/LATEST-${SOC}
 		if [ -f /tmp/LATEST-${SOC} ] ; then
-			wget $(cat /tmp/LATEST-${SOC} | grep ${kernel} | awk '{print $3}')
 			if [ "xv${current_kernel}" = "x${kernel}" ] ; then
 				echo "v${current_kernel} is latest"
 			else
-				/bin/bash /tmp/install-me.sh
+				wget $(cat /tmp/LATEST-${SOC} | grep ${kernel} | awk '{print $3}')
+				if [ -f /tmp/install-me.sh ] ; then
+					if [ "x${rcn_mirror}" = "xenabled" ] ; then
+						sed -i -e 's:disabled:enabled:g' /tmp/install-me.sh
+					fi
+					/bin/bash /tmp/install-me.sh
+				else
+					echo "error: kernel: ${kernel} not on mirror"
+				fi
 			fi
 		fi
 	fi
@@ -67,7 +74,12 @@ specific_version () {
 	fi
 	wget http://rcn-ee.net/deb/${dist}-${arch}/${kernel_version}/install-me.sh
 	if [ -f /tmp/install-me.sh ] ; then
+		if [ "x${rcn_mirror}" = "xenabled" ] ; then
+			sed -i -e 's:disabled:enabled:g' /tmp/install-me.sh
+		fi
 		/bin/bash /tmp/install-me.sh
+	else
+		echo "error: kernel: ${kernel_version} doesnt exist"
 	fi
 }
 
@@ -83,16 +95,23 @@ arch=$(dpkg --print-architecture)
 current_kernel=$(uname -r)
 
 kernel="STABLE"
+unset rcn_mirror
 unset kernel_version
 # parse commandline options
 while [ ! -z "$1" ] ; do
 	case $1 in
+	--use-rcn-mirror)
+		rcn_mirror="enabled"
+		;;
 	--kernel)
 		checkparm $2
 		kernel_version="$2"
 		;;
 	--beta-kernel)
 		kernel="TESTING"
+		;;
+	--exp-kernel)
+		kernel="EXPERIMENTAL"
 		;;
 	esac
 	shift
