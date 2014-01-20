@@ -48,7 +48,7 @@ latest_version () {
 			rm -f /tmp/install-me.sh || true
 		fi
 
-		wget http://rcn-ee.net/deb/${dist}-${arch}/LATEST-${SOC}
+		wget ${mirror}/${dist}-${arch}/LATEST-${SOC}
 		if [ -f /tmp/LATEST-${SOC} ] ; then
 			latest_kernel=$(cat /tmp/LATEST-${SOC} | grep ${kernel} | awk '{print $3}' | awk -F'/' '{print $6}')
 			if [ "xv${current_kernel}" = "x${latest_kernel}" ] ; then
@@ -73,7 +73,7 @@ specific_version () {
 	if [ -f /tmp/install-me.sh ] ; then
 		rm -f /tmp/install-me.sh || true
 	fi
-	wget http://rcn-ee.net/deb/${dist}-${arch}/${kernel_version}/install-me.sh
+	wget ${mirror}/${dist}-${arch}/${kernel_version}/install-me.sh
 	if [ -f /tmp/install-me.sh ] ; then
 		if [ "x${rcn_mirror}" = "xenabled" ] ; then
 			sed -i -e 's:disabled:enabled:g' /tmp/install-me.sh
@@ -96,12 +96,14 @@ arch=$(dpkg --print-architecture)
 current_kernel=$(uname -r)
 
 kernel="STABLE"
+mirror="http://rcn-ee.net/deb"
 unset rcn_mirror
 unset kernel_version
 # parse commandline options
 while [ ! -z "$1" ] ; do
 	case $1 in
 	--use-rcn-mirror)
+		mirror="http://rcn-ee.homeip.net:81/dl/mirrors/deb"
 		rcn_mirror="enabled"
 		;;
 	--kernel)
