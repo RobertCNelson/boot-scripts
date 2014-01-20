@@ -50,7 +50,8 @@ latest_version () {
 
 		wget http://rcn-ee.net/deb/${dist}-${arch}/LATEST-${SOC}
 		if [ -f /tmp/LATEST-${SOC} ] ; then
-			if [ "xv${current_kernel}" = "x${kernel}" ] ; then
+			latest_kernel=$(cat /tmp/LATEST-${SOC} | grep ${kernel} | awk '{print $3}' | awk -F'/' '{print $6}')
+			if [ "xv${current_kernel}" = "x${latest_kernel}" ] ; then
 				echo "v${current_kernel} is latest"
 			else
 				wget $(cat /tmp/LATEST-${SOC} | grep ${kernel} | awk '{print $3}')
