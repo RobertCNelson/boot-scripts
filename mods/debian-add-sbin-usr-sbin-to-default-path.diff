@@ -1,0 +1,13 @@
+diff --git a/etc/profile b/etc/profile
+index c9207fc..d8e68da 100644
+--- a/etc/profile
++++ b/etc/profile
+@@ -4,7 +4,7 @@
+ if [ "`id -u`" -eq 0 ]; then
+   PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+ else
+-  PATH="/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games"
++  PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/games:/usr/games"
+ fi
+ export PATH
+ 
