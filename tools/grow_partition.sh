@@ -57,6 +57,9 @@ expand_partition () {
 	1,96,0xE,*
 	,,,-
 	__EOF__
+
+	touch /boot/uboot/resizerootfs
+	touch /resizerootfs
 }
 
 restore_partition () {

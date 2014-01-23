@@ -98,4 +98,9 @@ if [ -f /boot/uboot/flash-eMMC.txt ] ; then
 		/bin/bash /opt/scripts/tools/beaglebone-black-eMMC-flasher.sh >/boot/uboot/debug/flash-eMMC.log 2>&1
 	fi
 fi
+
+if [ -f /boot/uboot/resizerootfs ] ; then
+	resize2fs /dev/mmcblk0p2 || true
+	rm -rf /boot/uboot/resizerootfs || true
+fi
 #
