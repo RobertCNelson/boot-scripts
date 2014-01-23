@@ -53,13 +53,13 @@ expand_partition () {
 	#,,,-
 	#__EOF__
 
-	sfdisk --force --in-order --Linux --unit M ${drive} <<-__EOF__
+	touch /boot/uboot/resizerootfs
+	touch /resizerootfs
+
+	sfdisk --force --no-reread --in-order --Linux --unit M ${drive} <<-__EOF__
 	1,96,0xE,*
 	,,,-
 	__EOF__
-
-	touch /boot/uboot/resizerootfs
-	touch /resizerootfs
 }
 
 restore_partition () {
@@ -69,5 +69,6 @@ restore_partition () {
 
 backup_partition
 expand_partition
+echo "reboot"
 #restore_partition
 #
