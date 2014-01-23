@@ -25,6 +25,11 @@ if ! id | grep -q root; then
 	exit
 fi
 
+if [ ! -f /sbin/partprobe ] ; then
+	echo "Install parted: apt-get install parted"
+	exit
+fi
+
 backup_partition () {
 	echo "sfdisk: backing up partition layout."
 	sfdisk -d /dev/mmcblk0 > /tmp/sfdisk.backup
@@ -37,12 +42,15 @@ calculate_new_partition () {
 	,,,-
 	__EOF__
 
+	partprobe
+
 	sfdisk -d /dev/mmcblk0 > /tmp/sfdisk.newsize
 }
 
 restore_partition () {
 	echo "sfdisk: restoring original layout"
 	sfdisk --force /dev/mmcblk0 < /tmp/sfdisk.backup
+	partprobe
 }
 
 backup_partition
