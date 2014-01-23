@@ -53,8 +53,8 @@ expand_partition () {
 	#,,,-
 	#__EOF__
 
-	touch /boot/uboot/resizerootfs
-	touch /resizerootfs
+	echo "${drive}" > /boot/uboot/resizerootfs
+	echo "${drive}" > /resizerootfs
 
 	sfdisk --force --no-reread --in-order --Linux --unit M ${drive} <<-__EOF__
 	1,96,0xE,*
