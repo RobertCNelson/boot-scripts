@@ -26,10 +26,12 @@ if ! id | grep -q root; then
 fi
 
 backup_partition () {
+	echo "sfdisk: backing up partition layout."
 	sfdisk -d /dev/mmcblk0 > /tmp/sfdisk.backup
 }
 
 calculate_new_partition () {
+	echo "sfdisk: initial calculation."
 	sfdisk --force --in-order --Linux --unit M /dev/mmcblk0 <<-__EOF__
 	1,96,0xE,*
 	,,,-
@@ -39,6 +41,7 @@ calculate_new_partition () {
 }
 
 restore_partition () {
+	echo "sfdisk: restoring original layout"
 	sfdisk --force /dev/mmcblk0 < /tmp/sfdisk.backup
 }
 
