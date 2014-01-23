@@ -104,8 +104,9 @@ if [ -f /boot/uboot/resizerootfs ] || [ -f /resizerootfs ] ; then
 		mkdir -p /boot/uboot/debug/ || true
 	fi
 
-	#FIXME: discover "/dev/mmcblk0p2"
-	resize2fs /dev/mmcblk0p2 >/boot/uboot/debug/resize.log 2>&1
+	#FIXME: only good for two partition "/dev/mmcblkXp2" setups...
+	root_partition=$(LC_ALL=C lsblk -l | grep part | grep -v /media | grep -v p1 | awk '{print $1}')
+	resize2fs /dev/${root_partition} >/boot/uboot/debug/resize.log 2>&1
 	rm -rf /boot/uboot/resizerootfs || true
 	rm -rf /resizerootfs || true
 fi
