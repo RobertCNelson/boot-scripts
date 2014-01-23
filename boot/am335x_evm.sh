@@ -99,8 +99,14 @@ if [ -f /boot/uboot/flash-eMMC.txt ] ; then
 	fi
 fi
 
-if [ -f /boot/uboot/resizerootfs ] ; then
-	resize2fs /dev/mmcblk0p2 || true
+if [ -f /boot/uboot/resizerootfs ] || [ -f /resizerootfs ] ; then
+	if [ ! -d /boot/uboot/debug/ ] ; then
+		mkdir -p /boot/uboot/debug/ || true
+	fi
+
+	#FIXME: discover "/dev/mmcblk0p2"
+	resize2fs /dev/mmcblk0p2 >/boot/uboot/debug/resize.log 2>&1
 	rm -rf /boot/uboot/resizerootfs || true
+	rm -rf /resizerootfs || true
 fi
 #
