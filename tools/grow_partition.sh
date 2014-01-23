@@ -25,9 +25,26 @@ if ! id | grep -q root; then
 	exit
 fi
 
+unset boot_drive
+boot_drive=$(LC_ALL=C lsblk -l | grep "/boot/uboot" | awk '{print $1}')
+
+if [ "x${boot_drive}" = "x" ] ; then
+	echo "Error: script halting, system unrecognized..."
+	exit 1
+fi
+
+if [ "x${boot_drive}" = "xmmcblk0p1" ] ; then
+	drive="/dev/mmcblk0"
+elif [ "x${boot_drive}" = "xmmcblk1p1" ] ; then
+	drive="/dev/mmcblk1"
+else
+	echo "Error: script halting, could detect drive..."
+	exit 1
+fi
+
 backup_partition () {
 	echo "sfdisk: backing up partition layout."
-	sfdisk -d /dev/mmcblk0 > /etc/sfdisk.backup
+	sfdisk -d ${drive} > /etc/sfdisk.backup
 }
 
 expand_partition () {
@@ -36,7 +53,7 @@ expand_partition () {
 	#,,,-
 	#__EOF__
 
-	sfdisk --force --in-order --Linux --unit M /dev/mmcblk0 <<-__EOF__
+	sfdisk --force --in-order --Linux --unit M ${drive} <<-__EOF__
 	1,96,0xE,*
 	,,,-
 	__EOF__
@@ -44,7 +61,7 @@ expand_partition () {
 
 restore_partition () {
 	echo "sfdisk: restoring original layout"
-	sfdisk --force /dev/mmcblk0 < /etc/sfdisk.backup
+	sfdisk --force ${drive} < /etc/sfdisk.backup
 }
 
 backup_partition
