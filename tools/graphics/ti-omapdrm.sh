@@ -39,10 +39,6 @@ check_dpkg
 pkg="pkg-config"
 check_dpkg
 
-#libdrm
-pkg="libpthread-stubs0-dev"
-check_dpkg
-
 #ddx
 pkg="xutils-dev"
 check_dpkg
@@ -59,10 +55,14 @@ check_dpkg
 
 case "${deb_distro}" in
 wheezy|jessie|sid)
+	pkg="libpthread-stubs0-dev:${deb_arch}"
+	check_dpkg
 	pkg="libxext-dev:${deb_arch}"
 	check_dpkg
 	;;
 *)
+	pkg="libpthread-stubs0-dev"
+	check_dpkg
 	pkg="libxext-dev"
 	check_dpkg
 	;;
