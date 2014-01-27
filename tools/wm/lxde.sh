@@ -49,4 +49,10 @@ if [ "x${USER}" != "xroot" ] ; then
 		sudo sed -i -e 's:#autologin-session=UNIMPLEMENTED:autologin-session=LXDE:g' /etc/lightdm/lightdm.conf
 	fi
 fi
+#Disable LXDE's screensaver on autostart
+if [ -f /etc/xdg/lxsession/LXDE/autostart ] ; then
+	cat /etc/xdg/lxsession/LXDE/autostart | grep -v xscreensaver > /tmp/autostart
+	sudo mv -v /tmp/autostart /etc/xdg/lxsession/LXDE/autostart
+	rm -rf /tmp/autostart || true
+fi
 #
