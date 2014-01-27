@@ -53,6 +53,14 @@ check_dpkg
 pkg="git-core"
 check_dpkg
 
+#utils:
+pkg="read-edid"
+check_dpkg
+pkg="xserver-xorg-video-modesetting"
+check_dpkg
+pkg="x11-xserver-utilspkg="
+check_dpkg
+
 case "${deb_distro}" in
 wheezy|jessie|sid|raring|saucy|trusty)
 	pkg="libpthread-stubs0-dev:${deb_arch}"
