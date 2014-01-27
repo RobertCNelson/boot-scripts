@@ -58,7 +58,7 @@ pkg="read-edid"
 check_dpkg
 pkg="xserver-xorg-video-modesetting"
 check_dpkg
-pkg="x11-xserver-utilspkg="
+pkg="x11-xserver-utils"
 check_dpkg
 
 case "${deb_distro}" in
