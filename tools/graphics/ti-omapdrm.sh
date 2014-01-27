@@ -21,8 +21,11 @@
 # THE SOFTWARE.
 
 check_dpkg () {
-	LC_ALL=C dpkg --list | awk '{print $2}' | grep "^${pkg}" >/dev/null || deb_pkgs="${deb_pkgs}${pkg} "
+	LC_ALL=C dpkg --list | awk '{print $2}' | grep "^${pkg}$" >/dev/null || deb_pkgs="${deb_pkgs}${pkg} "
 }
+
+deb_distro=$(lsb_release -cs)
+deb_arch=$(LC_ALL=C dpkg --print-architecture)
 
 unset deb_pkgs
 pkg="build-essential"
@@ -47,14 +50,23 @@ pkg="xserver-xorg-dev"
 check_dpkg
 pkg="x11proto-xf86dri-dev"
 check_dpkg
-pkg="libxext-dev"
-check_dpkg
 pkg="libudev-dev"
 check_dpkg
 
 #git (not installed by default in netinstall)
 pkg="git-core"
 check_dpkg
+
+case "${deb_distro}" in
+wheezy|jessie|sid)
+	pkg="libxext-dev:${deb_arch}"
+	check_dpkg
+	;;
+*)
+	pkg="libxext-dev"
+	check_dpkg
+	;;
+esac
 
 if [ "${deb_pkgs}" ] ; then
 	echo ""
