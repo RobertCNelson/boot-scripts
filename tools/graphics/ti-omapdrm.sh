@@ -56,8 +56,6 @@ check_dpkg
 #utils:
 pkg="read-edid"
 check_dpkg
-pkg="xserver-xorg-video-modesetting"
-check_dpkg
 pkg="x11-xserver-utils"
 check_dpkg
 
