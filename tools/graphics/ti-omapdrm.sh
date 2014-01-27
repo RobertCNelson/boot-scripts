@@ -77,7 +77,7 @@ if [ "${deb_pkgs}" ] ; then
 	echo "--------------------"
 fi
 
-git_sha="libdrm-2.4.50"
+git_sha="libdrm-2.4.52"
 project="libdrm"
 server="git://anongit.freedesktop.org/mesa/drm"
 
@@ -189,3 +189,4 @@ cat > /tmp/xorg.conf <<-__EOF__
 __EOF__
 
 sudo cp -v /tmp/xorg.conf /etc/X11/xorg.conf
+#
