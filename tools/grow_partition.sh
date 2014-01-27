@@ -25,6 +25,11 @@ if ! id | grep -q root; then
 	exit
 fi
 
+if [ ! -f /etc/ssh/ssh_host_ecdsa_key.pub ] ; then
+	echo "Please wait a few more seconds as ssh keys are still being generated..."
+	exit 1
+fi
+
 unset boot_drive
 boot_drive=$(LC_ALL=C lsblk -l | grep "/boot/uboot" | awk '{print $1}')
 
