@@ -54,7 +54,7 @@ pkg="git-core"
 check_dpkg
 
 case "${deb_distro}" in
-wheezy|jessie|sid)
+wheezy|jessie|sid|raring|saucy|trusty)
 	pkg="libpthread-stubs0-dev:${deb_arch}"
 	check_dpkg
 	pkg="libxext-dev:${deb_arch}"
