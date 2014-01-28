@@ -23,19 +23,6 @@
 #Based off:
 #https://github.com/beagleboard/meta-beagleboard/blob/master/meta-beagleboard-extras/recipes-support/usb-gadget/gadget-init/g-ether-load.sh
 
-#Load new default pinmux:
-if [ ! -f /etc/default/capemgr ] ; then
-	if [ -f /lib/firmware/cape-bone-proto-00A0.dtbo ] ; then
-		kernel_version=$(uname -r)
-		if [ ! "x${kernel_version}" = "x3.8.13-bone38" ] ; then
-			capemgr=$(ls /sys/devices/bone_capemgr.*/slots 2> /dev/null)
-			if [ ! "x${capemgr}" = "x" ] ; then
-				echo "cape-bone-proto" > ${capemgr}
-			fi
-		fi
-	fi
-fi
-
 eeprom="/sys/bus/i2c/devices/0-0050/eeprom"
 SERIAL_NUMBER=$(hexdump -e '8/1 "%c"' ${eeprom} -s 14 -n 2)-$(hexdump -e '8/1 "%c"' ${eeprom} -s 16 -n 12)
 ISBLACK=$(hexdump -e '8/1 "%c"' ${eeprom} -s 8 -n 4)
