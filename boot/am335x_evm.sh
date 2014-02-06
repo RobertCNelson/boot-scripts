@@ -27,9 +27,18 @@ eeprom="/sys/bus/i2c/devices/0-0050/eeprom"
 
 #Flash BeagleBone Black's eeprom:
 if [ -f /boot/uboot/flash-eMMC.txt ] ; then
+	eeprom_location=$(ls /sys/devices/ocp.*/44e0b000.i2c/i2c-0/0-0050/eeprom 2> /dev/null)
 	eeprom_header=$(hexdump -e '8/1 "%c"' ${eeprom} -s 5 -n 3)
 	if [ "x${eeprom_header}" = "x335" ] ; then
 		echo "Valid EEPROM header found"
+	else
+		echo "Invalid EEPROM header detected"
+		if [ -f /opt/scripts/device/bone/bbb-eeprom.dump ] ; then
+			if [ ! "x${eeprom_location}" = "x" ] ; then
+				echo "Adding header to EEPROM"
+				dd if=/opt/scripts/device/bone/bbb-eeprom.dump of=${eeprom_location}
+			fi
+		fi
 	fi
 fi
 
