@@ -188,6 +188,14 @@ copy_rootfs () {
 	rsync -aAXv /* /tmp/rootfs/ --exclude={/dev/*,/proc/*,/sys/*,/tmp/*,/run/*,/mnt/*,/media/*,/lost+found,/boot/*,/lib/modules/*} || write_failure
 	flush_cache
 
+	if [ -f /tmp/rootfs/opt/scripts/images/beaglebg.jpg ] ; then
+		if [ -f /tmp/rootfs/opt/desktop-background.jpg ] ; then
+			rm -f /tmp/rootfs/opt/desktop-background.jpg || true
+		fi
+		cp -v /tmp/rootfs/opt/scripts/images/beaglebg.jpg /tmp/rootfs/opt/desktop-background.jpg
+	fi
+	flush_cache
+
 	mkdir -p /tmp/rootfs/boot/uboot/ || true
 	mkdir -p /tmp/rootfs/lib/modules/`uname -r` || true
 	rsync -aAXv /lib/modules/`uname -r`/* /tmp/rootfs/lib/modules/`uname -r`/ || write_failure
