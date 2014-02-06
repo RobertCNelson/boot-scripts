@@ -24,6 +24,15 @@
 #https://github.com/beagleboard/meta-beagleboard/blob/master/meta-beagleboard-extras/recipes-support/usb-gadget/gadget-init/g-ether-load.sh
 
 eeprom="/sys/bus/i2c/devices/0-0050/eeprom"
+
+#Flash BeagleBone Black's eeprom:
+if [ -f /boot/uboot/flash-eMMC.txt ] ; then
+	eeprom_header=$(hexdump -e '8/1 "%c"' ${eeprom} -s 5 -n 3)
+	if [ "x${eeprom_header}" = "x335" ] ; then
+		echo "Valid EEPROM header found"
+	fi
+fi
+
 SERIAL_NUMBER=$(hexdump -e '8/1 "%c"' ${eeprom} -s 14 -n 2)-$(hexdump -e '8/1 "%c"' ${eeprom} -s 16 -n 12)
 ISBLACK=$(hexdump -e '8/1 "%c"' ${eeprom} -s 8 -n 4)
 
