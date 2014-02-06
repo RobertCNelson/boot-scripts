@@ -237,6 +237,13 @@ check_soc_sh () {
 	if [ -f ${DRIVE}/SOC.sh ] ; then
 		. ${DRIVE}/SOC.sh
 		if [ "x${board}" != "x" ] ; then
+
+			if [ "x${board}" = "xam335x_boneblack" ] ; then
+				#Special eeprom less u-boot, switch them to normal on upgrades
+				sed -i -e 's:am335x_boneblack:am335x_evm:g' ${DRIVE}/SOC.sh
+				board="am335x_evm"
+			fi
+
 			conf_board="${board}"
 			got_board
 		else
