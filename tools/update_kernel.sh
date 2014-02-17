@@ -84,6 +84,19 @@ specific_version () {
 	fi
 }
 
+#FIXME: third_party modules...
+third_party () {
+	machine=$(cat /proc/device-tree/model | sed "s/ /_/g")
+	case "${machine}" in
+	TI_AM335x_BeagleBone)
+		echo "Third party modules..."
+		;;
+	*)
+		echo "No third party modules..."
+		;;
+	esac
+}
+
 checkparm () {
 	if [ "$(echo $1|grep ^'\-')" ] ; then
 		echo "E: Need an argument"
@@ -126,4 +139,5 @@ if [ "x${kernel_version}" = "x" ] ; then
 else
 	specific_version
 fi
+third_party
 #
