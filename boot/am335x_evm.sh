@@ -135,4 +135,11 @@ if [ -f /boot/uboot/resizerootfs ] || [ -f /resizerootfs ] ; then
 	rm -rf /boot/uboot/resizerootfs || true
 	rm -rf /resizerootfs || true
 fi
+
+#FIXME: need to move this to systemd, this is just temp..
+if [ -f /opt/scripts/tools/restart_cloud9.sh ] ; then
+	if [ -f /opt/cloud9/build/standalone/config ] ; then
+		/bin/bash /opt/scripts/tools/restart_cloud9.sh &> /opt/cloud9/log &
+	fi
+fi
 #
