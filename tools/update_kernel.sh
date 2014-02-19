@@ -31,6 +31,9 @@ get_device () {
 	TI_AM335x_BeagleBone)
 		SOC="omap-psp"
 		;;
+	TI_OMAP5_uEVM_board)
+		SOC="armv7-lpae"
+		;;
 	*)
 		echo "Machine: [${machine}]"
 		SOC="armv7"
