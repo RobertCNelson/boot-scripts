@@ -1,0 +1,21 @@
+diff --git a/node_modules/connect-architect/connect/connect-plugin.js b/node_modules/connect-architect/connect/connect-plugin.js
+index 70314ed..722605f 100644
+--- a/node_modules/connect-architect/connect/connect-plugin.js
++++ b/node_modules/connect-architect/connect/connect-plugin.js
+@@ -118,7 +118,8 @@ module.exports = function startup(options, imports, register) {
+         else
+             server = http.createServer(app);
+ 
+-        server.listen(port, host, function(err) {
++        server.listen(port);
++	server.on('listening', function(err) {
+             if (err)
+                 return register(err);
+ 
+@@ -216,4 +217,4 @@ function merge(objects) {
+         }
+     }
+     return result;
+-}
+\ No newline at end of file
++}
