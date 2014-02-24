@@ -5,3 +5,4 @@ cat /sys/bus/i2c/devices/1-0055/eeprom | hexdump -c
 cat /sys/bus/i2c/devices/1-0056/eeprom | hexdump -c
 cat /sys/bus/i2c/devices/1-0057/eeprom | hexdump -c
 
+echo "cat eeprom.dump > /sys/bus/i2c/devices/1-005X/eeprom"
