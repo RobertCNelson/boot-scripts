@@ -46,4 +46,38 @@ if [ "${deb_pkgs}" ] ; then
 	echo "--------------------"
 fi
 
+if [ ! -d /etc/X11/ ] ; then
+	sudo mkdir -p /etc/X11/ || true
+fi
+
+if [ -f /etc/X11/xorg.conf ] ; then
+	sudo rm -rf /etc/X11/xorg.conf.bak || true
+	sudo mv /etc/X11/xorg.conf /etc/X11/xorg.conf.bak
+fi
+
+cat > /tmp/xorg.conf <<-__EOF__
+	Section "Monitor"
+	        Identifier      "Builtin Default Monitor"
+	EndSection
+
+	Section "Device"
+	        Identifier      "Builtin Default fbdev Device 0"
+	        Driver          "modesetting"
+	        Option          "SWCursor"      "trueSWCursor"
+	EndSection
+
+	Section "Screen"
+	        Identifier      "Builtin Default fbdev Screen 0"
+	        Device          "Builtin Default fbdev Device 0"
+	        Monitor         "Builtin Default Monitor"
+	        DefaultDepth    24
+	EndSection
+
+	Section "ServerLayout"
+	        Identifier      "Builtin Default Layout"
+	        Screen          "Builtin Default fbdev Screen 0"
+	EndSection
+__EOF__
+
+sudo cp -v /tmp/xorg.conf /etc/X11/xorg.conf
 #
