@@ -63,7 +63,7 @@ cat > /tmp/xorg.conf <<-__EOF__
 	Section "Device"
 	        Identifier      "Builtin Default fbdev Device 0"
 	        Driver          "modesetting"
-	        Option          "SWCursor"      "trueSWCursor"
+	        Option          "SWCursor"      "true"
 	EndSection
 
 	Section "Screen"
