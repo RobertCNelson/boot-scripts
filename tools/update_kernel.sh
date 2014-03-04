@@ -142,5 +142,5 @@ if [ "x${kernel_version}" = "x" ] ; then
 else
 	specific_version
 fi
-third_party
+#third_party
 #
