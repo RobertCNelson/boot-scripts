@@ -12,6 +12,9 @@ if [ -f /etc/Wireless/RT2870/RT2870STA.dat ] ; then
 fi
 
 unset deb_pkgs
+pkg="beaglebone"
+check_dpkg
+#fixed: https://github.com/beagleboard/image-builder/commit/1b4caa3de385414674b734157f6bf1d487e0cd9d
 pkg="libopencv-dev"
 check_dpkg
 #fixed: https://github.com/beagleboard/image-builder/commit/6af879606f2638dda363c54264e8e72ddb032b98
