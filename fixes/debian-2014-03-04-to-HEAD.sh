@@ -32,7 +32,7 @@ fi
 echo "Disabling DPMS mode/screen blanking/cursor"
 #Disable dpms mode and screen blanking
 #Better fix for missing cursor
-wfile="/home/${rfs_username}/.xsessionrc"
+wfile="/home/debian/.xsessionrc"
 echo "#!/bin/sh" > ${wfile}
 echo "" >> ${wfile}
 echo "xset -dpms" >> ${wfile}
