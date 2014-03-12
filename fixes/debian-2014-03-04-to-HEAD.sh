@@ -68,3 +68,4 @@ if [ -f /etc/X11/xorg.conf ] ; then
 fi
 sudo mv /tmp/xorg.conf /etc/X11/xorg.conf
 
+echo "Please Reboot"
