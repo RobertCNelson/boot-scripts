@@ -68,4 +68,9 @@ if [ -f /etc/X11/xorg.conf ] ; then
 fi
 sudo mv /tmp/xorg.conf /etc/X11/xorg.conf
 
+#root password is blank, so remove useless application as it requires a password.
+if [ -f /usr/share/applications/gksu.desktop ] ; then
+	sudo rm -f /usr/share/applications/gksu.desktop || true
+fi
+
 echo "Please Reboot"
