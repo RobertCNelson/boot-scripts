@@ -24,6 +24,14 @@ if [ -e $CALFILE ] ; then
   fi
 fi
 
+##BlackList:
+#Logitech USB Keyboard
+unset blacklist
+blacklist=`$BINARY --list | sed 's/ /_/g' | awk -F "\"" '{print $2}' || true`
+if [ "x${blacklist}" = "xLogitech_USB_Keyboard" ] ; then
+	exit 0
+fi
+
 CALDATA=`$BINARY --output-type xinput -v | tee $LOGFILE | grep '    xinput set' | sed 's/^    //g; s/$/;/g'`
 if [ ! -z "$CALDATA" ] ; then
   echo $CALDATA > $CALFILE
