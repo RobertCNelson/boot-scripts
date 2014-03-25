@@ -10,7 +10,8 @@ pkg="wicd-cli"
 check_dpkg
 pkg="wicd-curses"
 check_dpkg
-#fixed: https://github.com/beagleboard/image-builder/commit/6af879606f2638dda363c54264e8e72ddb032b98
+pkg="xrdp"
+check_dpkg
 
 if [ "${deb_pkgs}" ] ; then
 	echo "Installing: [${deb_pkgs}]"
@@ -19,11 +20,11 @@ if [ "${deb_pkgs}" ] ; then
 fi
 
 if [ -f /lib/systemd/system/getty@.service ] ; then
-	ln -s /lib/systemd/system/getty@.service /etc/systemd/system/getty.target.wants/getty@ttyGS0.service
+	sudo ln -s /lib/systemd/system/getty@.service /etc/systemd/system/getty.target.wants/getty@ttyGS0.service
 
-	echo "" >> /etc/securetty
-	echo "#USB Gadget Serial Port" >> /etc/securetty
-	echo "ttyGS0" >> /etc/securetty
+	sudo sh -c "echo '' >> /etc/securetty"
+	sudo sh -c "echo '#USB Gadget Serial Port' >> /etc/securetty"
+	sudo sh -c "echo 'ttyGS0' >> /etc/securetty"
 fi
 
 echo "Please Reboot"
