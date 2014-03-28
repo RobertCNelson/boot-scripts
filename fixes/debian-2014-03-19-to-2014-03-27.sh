@@ -27,6 +27,6 @@ if [ -f /lib/systemd/system/getty@.service ] ; then
 fi
 
 cd /opt/scripts/tools
-sudo ./update_kernel --kernel v3.8.13-bone43
+sudo ./update_kernel.sh --kernel v3.8.13-bone43
 
 echo "Please Reboot"
