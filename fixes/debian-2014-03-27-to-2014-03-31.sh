@@ -28,7 +28,7 @@ fi
 
 #https://github.com/beagleboard/image-builder/commit/93952245774e6986c2a54b4993533e2e37601c8a
 if [ -f /etc/sudoers ] ; then
-	echo "debian  ALL=NOPASSWD: ALL" >>/etc/sudoers	sudo sh -c "echo 'debian  ALL=NOPASSWD: ALL' >> /etc/sudoers"
+	sudo sh -c "echo 'debian  ALL=NOPASSWD: ALL' >> /etc/sudoers"
 fi
 
 if [ -f /boot/uboot/uEnv.txt ] ; then
