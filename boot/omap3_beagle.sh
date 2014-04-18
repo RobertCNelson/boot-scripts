@@ -51,4 +51,24 @@ if [ -e /sys/class/drm/card1/card1-DVI-D-1/edid ] ; then
 		parse-edid /sys/class/drm/card1/card1-DVI-D-1/edid >> /boot/uboot/debug/edid.txt
 	fi
 fi
+
+if [ -f /boot/uboot/resizerootfs ] || [ -f /resizerootfs ] ; then
+	if [ ! -d /boot/uboot/debug/ ] ; then
+		mkdir -p /boot/uboot/debug/ || true
+	fi
+
+	drive=$(cat /boot/uboot/resizerootfs)
+	if [ "x${drive}" = "x" ] ; then
+		drive=$(cat /resizerootfs)
+	fi
+	if [ "x${drive}" = "x" ] ; then
+		drive="/dev/mmcblk0"
+	fi
+
+	#FIXME: only good for two partition "/dev/mmcblkXp2" setups...
+	resize2fs ${drive}p2 >/boot/uboot/debug/resize.log 2>&1
+	rm -rf /boot/uboot/resizerootfs || true
+	rm -rf /resizerootfs || true
+fi
+
 #
