@@ -37,12 +37,9 @@ if [ -f /boot/uboot/flash-eMMC.txt ] ; then
 			if [ ! "x${eeprom_location}" = "x" ] ; then
 				echo "Adding header to EEPROM"
 				dd if=/opt/scripts/device/bone/bbb-eeprom.dump of=${eeprom_location}
-
-				#load eMMC: might have to reboot..
-				capemgr=$(ls /sys/devices/bone_capemgr.*/slots 2> /dev/null || true)
-				if [ ! "x${capemgr}" = "x" ] ; then
-					echo BB-BONE-eMMC1-01 > ${capemgr}
-				fi
+				sync
+				#We have to reboot, to load eMMC cape
+				reboot
 			fi
 		fi
 	fi
