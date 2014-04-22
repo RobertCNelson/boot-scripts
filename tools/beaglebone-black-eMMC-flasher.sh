@@ -46,6 +46,27 @@ if [ "x${boot_drive}" = "xmmcblk1p1" ] ; then
 	destination="/dev/mmcblk0"
 fi
 
+flush_cache () {
+	sync
+	blockdev --flushbufs ${destination}
+}
+
+write_failure () {
+	echo "writing to [${destination}] failed..."
+
+	if [ -e /sys/class/leds/beaglebone\:green\:usr0/trigger ] ; then
+		echo heartbeat > /sys/class/leds/beaglebone\:green\:usr0/trigger
+		echo heartbeat > /sys/class/leds/beaglebone\:green\:usr1/trigger
+		echo heartbeat > /sys/class/leds/beaglebone\:green\:usr2/trigger
+		echo heartbeat > /sys/class/leds/beaglebone\:green\:usr3/trigger
+	fi
+	echo "-----------------------------"
+	flush_cache
+	umount ${destination}p1 || true
+	umount ${destination}p2 || true
+	exit
+}
+
 check_running_system () {
 	if [ ! -f /boot/uboot/uEnv.txt ] ; then
 		echo "Error: script halting, system unrecognized..."
@@ -57,6 +78,11 @@ check_running_system () {
 	echo "debug copying: [${source}] -> [${destination}]"
 	lsblk
 	echo "-----------------------------"
+
+	if [ ! -b "${destination}" ] ; then
+		echo "Error: [${destination}] does not exist"
+		write_failure
+	fi
 }
 
 update_boot_files () {
@@ -75,11 +101,6 @@ update_boot_files () {
 	fi
 
 	mkimage -A arm -O linux -T ramdisk -C none -a 0 -e 0 -n initramfs -d /boot/initrd.img-$(uname -r) /boot/uboot/uInitrd
-}
-
-flush_cache () {
-	sync
-	blockdev --flushbufs ${destination}
 }
 
 fdisk_toggle_boot () {
@@ -134,22 +155,6 @@ partition_drive () {
 
 	format_boot
 	format_root
-}
-
-write_failure () {
-	echo "writing to [${destination}] failed..."
-
-	if [ -e /sys/class/leds/beaglebone\:green\:usr0/trigger ] ; then
-		echo heartbeat > /sys/class/leds/beaglebone\:green\:usr0/trigger
-		echo heartbeat > /sys/class/leds/beaglebone\:green\:usr1/trigger
-		echo heartbeat > /sys/class/leds/beaglebone\:green\:usr2/trigger
-		echo heartbeat > /sys/class/leds/beaglebone\:green\:usr3/trigger
-	fi
-	echo "-----------------------------"
-	flush_cache
-	umount ${destination}p1 || true
-	umount ${destination}p2 || true
-	exit
 }
 
 copy_boot () {
