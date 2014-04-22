@@ -40,6 +40,8 @@ if [ -f /boot/uboot/flash-eMMC.txt ] ; then
 				sync
 				#We have to reboot, to load eMMC cape
 				reboot
+				#We shouldnt hit this...
+				exit
 			fi
 		fi
 	fi
