@@ -227,6 +227,9 @@ copy_rootfs () {
 	flush_cache
 	umount ${destination}p2 || true
 
+	#Disable force load of eMMC cape
+	sed -i -e 's:CAPE=BB-BONE-eMMC1-01:CAPE:g' /etc/default/capemgr
+
 	if [ -e /sys/class/leds/beaglebone\:green\:usr0/trigger ] ; then
 		echo default-on > /sys/class/leds/beaglebone\:green\:usr0/trigger
 		echo default-on > /sys/class/leds/beaglebone\:green\:usr1/trigger
