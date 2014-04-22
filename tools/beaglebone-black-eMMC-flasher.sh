@@ -140,18 +140,9 @@ partition_drive () {
 	umount ${destination}p1 || true
 	umount ${destination}p2 || true
 
-	#eMMC, try to save it by not "always" eraseing everything over and over...
-	mkdir -p /tmp/boot/ || true
-	if mount ${destination}p1 /tmp/boot/ ; then
-		flush_cache
-		umount ${destination}p1 || true
-		repartition_drive
-		flush_cache
-	else
-		flush_cache
-		repartition_drive
-		flush_cache
-	fi
+	flush_cache
+	repartition_drive
+	flush_cache
 
 	format_boot
 	format_root
