@@ -1,6 +1,6 @@
 #!/bin/bash -e
 #
-# Copyright (c) 2013 Robert Nelson <robertcnelson@gmail.com>
+# Copyright (c) 2013-2014 Robert Nelson <robertcnelson@gmail.com>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -226,9 +226,6 @@ copy_rootfs () {
 	echo "debugfs         /sys/kernel/debug  debugfs  defaults          0  0" >> /tmp/rootfs/etc/fstab
 	flush_cache
 	umount ${destination}p2 || true
-
-	#Disable force load of eMMC cape
-	sed -i -e 's:CAPE=BB-BONE-eMMC1-01:CAPE:g' /etc/default/capemgr
 
 	if [ -e /sys/class/leds/beaglebone\:green\:usr0/trigger ] ; then
 		echo default-on > /sys/class/leds/beaglebone\:green\:usr0/trigger
