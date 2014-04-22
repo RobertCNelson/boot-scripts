@@ -23,8 +23,8 @@ else
 fi
 
 #Might be run twice...
-sed -i -e 's:CAPE=BB-BONE-eMMC1-01:CAPE:g' /etc/default/capemgr
-sed -i -e 's:CAPE:CAPE=BB-BONE-eMMC1-01:g' /etc/default/capemgr
+#sed -i -e 's:CAPE=BB-BONE-eMMC1-01:CAPE:g' /etc/default/capemgr
+#sed -i -e 's:CAPE:CAPE=BB-BONE-eMMC1-01:g' /etc/default/capemgr
 
 dd if=/dev/zero of=/dev/mmcblk1 bs=1M count=16
 touch /boot/uboot/flash-eMMC.txt
