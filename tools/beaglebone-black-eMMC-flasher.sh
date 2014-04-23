@@ -94,7 +94,7 @@ umount_p1 () {
 umount_p2 () {
 	if [ -b "${destination}p2" ] ; then
 		echo "umounting: ${destination}p2"
-		umount ${destination}p1 || force_umount_p1
+		umount ${destination}p2 || force_umount_p2
 	fi
 }
 
