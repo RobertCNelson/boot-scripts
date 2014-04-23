@@ -189,7 +189,7 @@ copy_boot () {
 	cp -v /boot/uboot/u-boot.img /tmp/boot/u-boot.img || write_failure
 	flush_cache_mounted
 
-	rsync -aAXv /boot/uboot/ /tmp/boot/ --exclude={MLO,u-boot.img,*bak,flash-eMMC.txt} || write_failure
+	rsync -aAXv /boot/uboot/ /tmp/boot/ --exclude={MLO,u-boot.img,*bak,flash-eMMC.txt,/debug/*} || write_failure
 	flush_cache_mounted
 
 	unset root_uuid
