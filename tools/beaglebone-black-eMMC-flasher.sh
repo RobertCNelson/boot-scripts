@@ -84,6 +84,20 @@ force_umount_p2 () {
 	umount -l ${destination}p2 || write_failure
 }
 
+umount_p1 () {
+	if [ -b "${destination}p1" ] ; then
+		echo "umounting: ${destination}p1"
+		umount ${destination}p1 || force_umount_p1
+	fi
+}
+
+umount_p2 () {
+	if [ -b "${destination}p2" ] ; then
+		echo "umounting: ${destination}p2"
+		umount ${destination}p1 || force_umount_p1
+	fi
+}
+
 check_running_system () {
 	if [ ! -f /boot/uboot/uEnv.txt ] ; then
 		echo "Error: script halting, system unrecognized..."
@@ -154,8 +168,8 @@ repartition_drive () {
 
 partition_drive () {
 	flush_cache
-	umount ${destination}p1 || force_umount_p1
-	umount ${destination}p2 || force_umount_p2
+	umount_p1
+	umount_p2
 
 	flush_cache
 	repartition_drive
@@ -192,7 +206,7 @@ copy_boot () {
 		root_uuid="${source}p2"
 	fi
 	flush_cache_mounted
-	umount ${destination}p1 || force_umount_p1
+	umount_p1
 }
 
 copy_rootfs () {
@@ -242,7 +256,7 @@ copy_rootfs () {
 	echo "${boot_uuid}  /boot/uboot  auto  defaults  0  0" >> /tmp/rootfs/etc/fstab
 	echo "debugfs         /sys/kernel/debug  debugfs  defaults          0  0" >> /tmp/rootfs/etc/fstab
 	flush_cache_mounted
-	umount ${destination}p2 || force_umount_p2
+	umount_p2
 
 	if [ -e /sys/class/leds/beaglebone\:green\:usr0/trigger ] ; then
 		echo default-on > /sys/class/leds/beaglebone\:green\:usr0/trigger
