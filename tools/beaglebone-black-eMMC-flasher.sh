@@ -48,6 +48,10 @@ fi
 
 flush_cache () {
 	sync
+}
+
+flush_cache_mounted () {
+	sync
 	blockdev --flushbufs ${destination}
 }
 
@@ -65,6 +69,19 @@ write_failure () {
 	umount ${destination}p1 || true
 	umount ${destination}p2 || true
 	exit
+}
+
+
+force_umount_p1 () {
+	echo "Trying to force umount -l of ${destination}p1"
+	flush_cache
+	umount -l ${destination}p1 || write_failure
+}
+
+force_umount_p2 () {
+	echo "Trying to force umount -l of ${destination}p2"
+	flush_cache
+	umount -l ${destination}p2 || write_failure
 }
 
 check_running_system () {
@@ -137,8 +154,8 @@ repartition_drive () {
 
 partition_drive () {
 	flush_cache
-	umount ${destination}p1 || true
-	umount ${destination}p2 || true
+	umount ${destination}p1 || force_umount_p1
+	umount ${destination}p2 || force_umount_p2
 
 	flush_cache
 	repartition_drive
@@ -153,13 +170,13 @@ copy_boot () {
 	mount ${destination}p1 /tmp/boot/ -o sync
 	#Make sure the BootLoader gets copied first:
 	cp -v /boot/uboot/MLO /tmp/boot/MLO || write_failure
-	flush_cache
+	flush_cache_mounted
 
 	cp -v /boot/uboot/u-boot.img /tmp/boot/u-boot.img || write_failure
-	flush_cache
+	flush_cache_mounted
 
 	rsync -aAXv /boot/uboot/ /tmp/boot/ --exclude={MLO,u-boot.img,*bak,flash-eMMC.txt} || write_failure
-	flush_cache
+	flush_cache_mounted
 
 	unset root_uuid
 	root_uuid=$(/sbin/blkid -s UUID -o value ${destination}p2)
@@ -174,15 +191,15 @@ copy_boot () {
 	else
 		root_uuid="${source}p2"
 	fi
-	flush_cache
-	umount ${destination}p1 || true
+	flush_cache_mounted
+	umount ${destination}p1 || force_umount_p1
 }
 
 copy_rootfs () {
 	mkdir -p /tmp/rootfs/ || true
 	mount ${destination}p2 /tmp/rootfs/ -o async,noatime
 	rsync -aAXv /* /tmp/rootfs/ --exclude={/dev/*,/proc/*,/sys/*,/tmp/*,/run/*,/mnt/*,/media/*,/lost+found,/boot/*,/lib/modules/*} || write_failure
-	flush_cache
+	flush_cache_mounted
 
 	if [ -f /tmp/rootfs/opt/scripts/images/beaglebg.jpg ] ; then
 		if [ -f /tmp/rootfs/opt/desktop-background.jpg ] ; then
@@ -190,15 +207,15 @@ copy_rootfs () {
 		fi
 		cp -v /tmp/rootfs/opt/scripts/images/beaglebg.jpg /tmp/rootfs/opt/desktop-background.jpg
 	fi
-	flush_cache
+	flush_cache_mounted
 
 	mkdir -p /tmp/rootfs/boot/uboot/ || true
 	mkdir -p /tmp/rootfs/lib/modules/`uname -r` || true
 	rsync -aAXv /lib/modules/`uname -r`/* /tmp/rootfs/lib/modules/`uname -r`/ || write_failure
-	flush_cache
+	flush_cache_mounted
 
 	cp /boot/initrd.img-`uname -r` /tmp/rootfs/boot/ || write_failure
-	flush_cache
+	flush_cache_mounted
 
 	unset boot_uuid
 	boot_uuid=$(/sbin/blkid -s UUID -o value ${destination}p1)
@@ -224,8 +241,8 @@ copy_rootfs () {
 	echo "${root_uuid}  /  ${root_filesystem}  noatime,errors=remount-ro  0  1" >> /tmp/rootfs/etc/fstab
 	echo "${boot_uuid}  /boot/uboot  auto  defaults  0  0" >> /tmp/rootfs/etc/fstab
 	echo "debugfs         /sys/kernel/debug  debugfs  defaults          0  0" >> /tmp/rootfs/etc/fstab
-	flush_cache
-	umount ${destination}p2 || true
+	flush_cache_mounted
+	umount ${destination}p2 || force_umount_p2
 
 	if [ -e /sys/class/leds/beaglebone\:green\:usr0/trigger ] ; then
 		echo default-on > /sys/class/leds/beaglebone\:green\:usr0/trigger
