@@ -22,5 +22,7 @@ else
 	echo "EEPROM: blanked"
 fi
 
-dd if=/dev/zero of=/dev/mmcblk1 bs=1M count=16
+if [ -b /dev/mmcblk1 ] ; then
+	dd if=/dev/zero of=/dev/mmcblk1 bs=1M count=16 || true
+fi
 touch /boot/uboot/flash-eMMC.txt
