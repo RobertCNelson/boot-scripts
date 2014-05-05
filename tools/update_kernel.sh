@@ -112,7 +112,7 @@ arch=$(dpkg --print-architecture)
 current_kernel=$(uname -r)
 
 kernel="STABLE"
-mirror="http://rcn-ee.net/deb"
+mirror="https://rcn-ee.net/deb"
 unset rcn_mirror
 unset kernel_version
 # parse commandline options
