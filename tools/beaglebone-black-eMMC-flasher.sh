@@ -270,6 +270,10 @@ copy_rootfs () {
 	echo "-----------------------------"
 	echo "Note: Actually unpower the board, a reset [sudo reboot] is not enough."
 	echo "-----------------------------"
+
+	echo "Shutting Down..."
+	sync
+	halt
 }
 
 check_running_system
