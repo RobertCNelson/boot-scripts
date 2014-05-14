@@ -224,11 +224,11 @@ copy_rootfs () {
 	flush_cache_mounted
 
 	mkdir -p /tmp/rootfs/boot/uboot/ || true
-	mkdir -p /tmp/rootfs/lib/modules/`uname -r` || true
-	rsync -aAXv /lib/modules/`uname -r`/* /tmp/rootfs/lib/modules/`uname -r`/ || write_failure
+	mkdir -p /tmp/rootfs/lib/modules/$(uname -r)/ || true
+	rsync -aAXv /lib/modules/$(uname -r)/* /tmp/rootfs/lib/modules/$(uname -r)/ || write_failure
 	flush_cache_mounted
 
-	cp /boot/initrd.img-`uname -r` /tmp/rootfs/boot/ || write_failure
+	cp /boot/initrd.img-$(uname -r) /tmp/rootfs/boot/ || write_failure
 	flush_cache_mounted
 
 	unset boot_uuid
