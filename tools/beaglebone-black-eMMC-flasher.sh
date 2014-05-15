@@ -71,31 +71,12 @@ write_failure () {
 	exit
 }
 
-
-force_umount_p1 () {
-	echo "Trying to force umount -l of ${destination}p1"
-	flush_cache
-	umount -l ${destination}p1 || write_failure
-}
-
-force_umount_p2 () {
-	echo "Trying to force umount -l of ${destination}p2"
-	flush_cache
-	umount -l ${destination}p2 || write_failure
-}
-
 umount_p1 () {
-	if [ -b "${destination}p1" ] ; then
-		echo "umounting: ${destination}p1"
-		umount ${destination}p1 || force_umount_p1
-	fi
+	umount ${destination}p1 || umount -l ${destination}p1 || write_failure
 }
 
 umount_p2 () {
-	if [ -b "${destination}p2" ] ; then
-		echo "umounting: ${destination}p2"
-		umount ${destination}p2 || force_umount_p2
-	fi
+	umount ${destination}p2 || umount -l ${destination}p2 || write_failure
 }
 
 check_running_system () {
@@ -168,8 +149,16 @@ repartition_drive () {
 
 partition_drive () {
 	flush_cache
-	umount_p1
-	umount_p2
+#	umount_p1
+#	umount_p2
+
+	NUM_MOUNTS=$(mount | grep -v none | grep "${destination}" | wc -l)
+
+	for ((i=1;i<=${NUM_MOUNTS};i++))
+	do
+		DRIVE=$(mount | grep -v none | grep "${destination}" | tail -1 | awk '{print $1}')
+		umount ${DRIVE} >/dev/null 2>&1 || umount -l ${DRIVE} >/dev/null 2>&1 || write_failure
+	done
 
 	flush_cache
 	repartition_drive
