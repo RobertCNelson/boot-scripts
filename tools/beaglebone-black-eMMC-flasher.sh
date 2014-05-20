@@ -97,6 +97,26 @@ check_running_system () {
 	fi
 }
 
+sweep_leds () {
+	if [ -e /sys/class/leds/beaglebone\:green\:usr0/trigger ] ; then
+		#From: Jason
+		#https://groups.google.com/d/msg/beagleboard/kN0wKrpTJTg/P7v7yNhUvWUJ
+		#https://gist.github.com/jadonk/71a409ffaa151eb1f8e8
+		BASE=/sys/class/leds/beaglebone\:green\:usr
+		echo timer > ${BASE}0/trigger
+		echo 2000 > ${BASE}0/delay_off
+		sleep 0.5
+		echo timer > ${BASE}1/trigger
+		echo 2000 > ${BASE}1/delay_off
+		sleep 0.5
+		echo timer > ${BASE}2/trigger
+		echo 2000 > ${BASE}2/delay_off
+		sleep 0.5
+		echo timer > ${BASE}3/trigger
+		echo 2000 > ${BASE}3/delay_off
+	fi
+}
+
 update_boot_files () {
 	if [ ! -f /boot/initrd.img-$(uname -r) ] ; then
 		update-initramfs -c -k $(uname -r)
@@ -257,6 +277,7 @@ copy_rootfs () {
 }
 
 check_running_system
+sweep_leds
 update_boot_files
 partition_drive
 copy_boot
