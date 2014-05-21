@@ -178,21 +178,18 @@ cylon_leds () {
 }
 
 update_boot_files () {
-	if [ ! -f /boot/initrd.img-$(uname -r) ] ; then
-		update-initramfs -c -k $(uname -r)
-	else
-		update-initramfs -u -k $(uname -r)
-	fi
+	#We need an initrd.img to find the uuid partition
+	if [ ! -f /boot/uboot/initrd.img ] ; then
+		if [ ! -f /boot/initrd.img-$(uname -r) ] ; then
+			update-initramfs -c -k $(uname -r)
+		else
+			update-initramfs -u -k $(uname -r)
+		fi
 
-	if [ -f /boot/vmlinuz-$(uname -r) ] ; then
-		cp -v /boot/vmlinuz-$(uname -r) /boot/uboot/zImage
+		if [ -f /boot/initrd.img-$(uname -r) ] ; then
+			cp -v /boot/initrd.img-$(uname -r) /boot/uboot/initrd.img
+		fi
 	fi
-
-	if [ -f /boot/initrd.img-$(uname -r) ] ; then
-		cp -v /boot/initrd.img-$(uname -r) /boot/uboot/initrd.img
-	fi
-
-	mkimage -A arm -O linux -T ramdisk -C none -a 0 -e 0 -n initramfs -d /boot/initrd.img-$(uname -r) /boot/uboot/uInitrd
 }
 
 fdisk_toggle_boot () {
