@@ -29,7 +29,7 @@ if ! id | grep -q root; then
 fi
 
 # Check to see if we're starting as init
-if grep -q '[ =^]init-eMMC-flasher[ $]' /proc/cmdline ; then
+if grep -q '[ =/]init-eMMC-flasher.sh\>' /proc/cmdline ; then
 	root_drive="$(sed 's:.*root=/dev/\([^ ]*\):\1:;s/[ $].*//' /proc/cmdline)"
 	boot_drive="${root_drive%?}1"
 
@@ -276,7 +276,7 @@ copy_boot () {
 	fi
 
 	# Fixup uEnv.txt init setting, should probably be handled differently
-	sed -i 's:^systemd.*init-eMMC-flasher.*$:systemd=init=/lib/systemd/systemd:' /boot/uboot/uEnv.txt                                  #
+	sed -i 's:^systemd.*init-eMMC-flasher.*$:systemd=init=/lib/systemd/systemd:' /boot/uboot/uEnv.txt
 
 	flush_cache_mounted
 	umount_p1
@@ -285,8 +285,7 @@ copy_boot () {
 copy_rootfs () {
 	mkdir -p /tmp/rootfs/ || true
 	mount ${destination}p2 /tmp/rootfs/ -o async,noatime
-	#rsync -aAXv /* /tmp/rootfs/ --exclude={/dev/*,/proc/*,/sys/*,/tmp/*,/run/*,/mnt/*,/media/*,/lost+found,/boot/*,/lib/modules/*} || write_failure
-	rsync -aAXv /* /tmp/rootfs/ --exclude={/usr/share/*,/dev/*,/proc/*,/sys/*,/tmp/*,/run/*,/mnt/*,/media/*,/lost+found,/boot/*,/lib/modules/*} || write_failure
+	rsync -aAXv /* /tmp/rootfs/ --exclude={/dev/*,/proc/*,/sys/*,/tmp/*,/run/*,/mnt/*,/media/*,/lost+found,/boot/*,/lib/modules/*} || write_failure
 	flush_cache_mounted
 
 	if [ -f /tmp/rootfs/opt/scripts/images/beaglebg.jpg ] ; then
