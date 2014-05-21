@@ -261,6 +261,16 @@ copy_boot () {
 	rsync -aAXv /boot/uboot/ /tmp/boot/ --exclude={MLO,u-boot.img,*bak,flash-eMMC.txt,flash-eMMC.log} || write_failure
 	flush_cache_mounted
 
+	# Fixup uEnv.txt
+	if [ -e /tmp/boot/target-uEnv.txt ] ; then
+		# Use target version of uEnv.txt if it exists
+		mv /tmp/boot/target-uEnv.txt /tmp/boot/uEnv.txt
+	else
+		# ...otherwise, just switch init back to systemd
+		sed -i 's:^systemd.*init-eMMC-flasher.*$:systemd=init=/lib/systemd/systemd:' /tmp/boot/uEnv.txt
+	fi
+	flush_cache_mounted
+
 	unset root_uuid
 	root_uuid=$(/sbin/blkid -s UUID -o value ${destination}p2)
 	if [ "${root_uuid}" ] ; then
@@ -274,9 +284,6 @@ copy_boot () {
 	else
 		root_uuid="${source}p2"
 	fi
-
-	# Fixup uEnv.txt init setting, should probably be handled differently
-	sed -i 's:^systemd.*init-eMMC-flasher.*$:systemd=init=/lib/systemd/systemd:' /boot/uboot/uEnv.txt
 
 	flush_cache_mounted
 	umount_p1
