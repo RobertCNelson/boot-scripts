@@ -64,6 +64,19 @@ flush_cache_mounted () {
 	blockdev --flushbufs ${destination}
 }
 
+inf_loop () {
+	while read MAGIC ; do
+		case $MAGIC in
+		beagleboard.org)
+			echo "Your foo is strong!"
+			bash -i
+			;;
+		*)	echo "Your foo is weak."
+			;;
+		esac
+	done
+}
+
 write_failure () {
 	echo "writing to [${destination}] failed..."
 
@@ -79,7 +92,7 @@ write_failure () {
 	flush_cache
 	umount ${destination}p1 || true
 	umount ${destination}p2 || true
-	exit
+	inf_loop
 }
 
 umount_p1 () {
@@ -98,7 +111,7 @@ check_running_system () {
 	if [ ! -f /boot/uboot/uEnv.txt ] ; then
 		echo "Error: script halting, system unrecognized..."
 		echo "unable to find: [/boot/uboot/uEnv.txt] is ${source}p1 mounted?"
-		exit 1
+		inf_loop
 	fi
 
 	echo "-----------------------------"
@@ -341,6 +354,7 @@ copy_rootfs () {
 	echo "Note: Actually unpower the board, a reset [sudo reboot] is not enough."
 	echo "-----------------------------"
 
+	inf_loop
 #	echo "Shutting Down..."
 #	sync
 #	halt
@@ -354,4 +368,3 @@ CYLON_PID=$!
 partition_drive
 copy_boot
 copy_rootfs
-
