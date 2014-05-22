@@ -30,16 +30,15 @@ if ! id | grep -q root; then
 fi
 
 # Check to see if we're starting as init
+unset RUN_AS_INIT
 if grep -q '[ =/]init-eMMC-flasher.sh\>' /proc/cmdline ; then
+	RUN_AS_INIT=1
+
 	root_drive="$(sed 's:.*root=/dev/\([^ ]*\):\1:;s/[ $].*//' /proc/cmdline)"
 	boot_drive="${root_drive%?}1"
 
 	mount /dev/$boot_drive /boot/uboot -o ro
 	mount -t tmpfs tmpfs /tmp
-
-	# Required for update-initramfs
-	[ -d /var/tmp ] && mount -t tmpfs tmpfs /var/tmp
-	[ -d /var/lib/initramfs-tools/ ] && mount -t tmpfs tmpfs /var/lib/initramfs-tools/
 else
 	unset boot_drive
 	boot_drive=$(LC_ALL=C lsblk -l | grep "/boot/uboot" | awk '{print $1}')
@@ -186,7 +185,18 @@ cylon_leds () {
 update_boot_files () {
 	#We need an initrd.img to find the uuid partition, generate one if not present
 	if [ ! -f /tmp/boot/initrd.img-$(uname -r) ] ; then
+		if [ "${RUN_AS_INIT}" ] ; then
+			# Writable locations required for update-initramfs
+			[ -d /var/tmp ] && mount -t tmpfs tmpfs /var/tmp
+			[ -d /var/lib/initramfs-tools/ ] && mount -t tmpfs tmpfs /var/lib/initramfs-tools/
+		fi
+
 		update-initramfs -c -k $(uname -r) -b /tmp/boot/ || write_failure
+
+		if [ "${RUN_AS_INIT}" ] ; then
+			umount /var/tmp
+			umount /var/lib/initramfs-tools/
+		fi
 	fi
 
 	if [ ! -f /tmp/boot/initrd.img ] ; then
