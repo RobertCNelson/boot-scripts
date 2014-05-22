@@ -77,10 +77,30 @@ inf_loop () {
 	done
 }
 
+# umount does not like device names without a valid /etc/mtab
+# find the mount point from /proc/mounts
+dev2dir () {
+	grep '^$1 ' /proc/mounts | head -n 1 | while read LINE ; do set -- $LINE ; echo $2 ; done
+}
+
+umount_p1 () {
+	DIR=$(dev2dir ${destination}p1)
+	if [ -n "$DIR" ] ; then
+		umount ${DIR} || umount -l ${DIR} || write_failure
+	fi
+}
+
+umount_p2 () {
+	DIR=$(dev2dir ${destination}p2)
+	if [ -n "$DIR" ] ; then
+		umount ${DIR} || umount -l ${DIR} || write_failure
+	fi
+}
+
 write_failure () {
 	echo "writing to [${destination}] failed..."
 
-	[ -e /proc/$CYLON_PID ]  && kill $CYLON_PID
+	[ -e /proc/$CYLON_PID ]  && kill $CYLON_PID > /dev/null 2>&1
 
 	if [ -e /sys/class/leds/beaglebone\:green\:usr0/trigger ] ; then
 		echo heartbeat > /sys/class/leds/beaglebone\:green\:usr0/trigger
@@ -90,21 +110,9 @@ write_failure () {
 	fi
 	echo "-----------------------------"
 	flush_cache
-	umount ${destination}p1 || true
-	umount ${destination}p2 || true
+	umount_p1 || true
+	umount_p2 || true
 	inf_loop
-}
-
-umount_p1 () {
-	if grep -q ${destination}p1 /proc/mounts ; then
-		umount ${destination}p1 || umount -l ${destination}p1 || write_failure
-	fi
-}
-
-umount_p2 () {
-	if grep -q ${destination}p2 /proc/mounts ; then
-		umount ${destination}p2 || umount -l ${destination}p2 || write_failure
-	fi
 }
 
 check_running_system () {
