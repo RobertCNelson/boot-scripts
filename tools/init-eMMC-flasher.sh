@@ -1,6 +1,7 @@
 #!/bin/bash -e
 #
 # Copyright (c) 2013-2014 Robert Nelson <robertcnelson@gmail.com>
+# Portions copyright (c) 2014 Charles Steinkuehler <charles@steinkuehler.net>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -35,6 +36,10 @@ if grep -q '[ =/]init-eMMC-flasher.sh\>' /proc/cmdline ; then
 
 	mount /dev/$boot_drive /boot/uboot -o ro
 	mount -t tmpfs tmpfs /tmp
+
+	# Required for update-initramfs
+	[ -d /var/tmp ] && mount -t tmpfs tmpfs /var/tmp
+	[ -d /var/lib/initramfs-tools/ ] && mount -t tmpfs tmpfs /var/lib/initramfs-tools/
 else
 	unset boot_drive
 	boot_drive=$(LC_ALL=C lsblk -l | grep "/boot/uboot" | awk '{print $1}')
@@ -64,10 +69,29 @@ flush_cache_mounted () {
 	blockdev --flushbufs ${destination}
 }
 
+inf_loop () {
+	while read MAGIC ; do
+		case $MAGIC in
+		beagleboard.org)
+			echo "Your foo is strong!"
+			bash -i
+			;;
+		*)	echo "Your foo is weak."
+			;;
+		esac
+	done
+}
+
+# umount does not like device names without a valid /etc/mtab
+# find the mount point from /proc/mounts
+dev2dir () {
+	grep -m 1 '^$1 ' /proc/mounts | while read LINE ; do set -- $LINE ; echo $2 ; done
+}
+
 write_failure () {
 	echo "writing to [${destination}] failed..."
 
-	[ -e /proc/$CYLON_PID ]  && kill $CYLON_PID
+	[ -e /proc/$CYLON_PID ]  && kill $CYLON_PID > /dev/null 2>&1
 
 	if [ -e /sys/class/leds/beaglebone\:green\:usr0/trigger ] ; then
 		echo heartbeat > /sys/class/leds/beaglebone\:green\:usr0/trigger
@@ -77,20 +101,22 @@ write_failure () {
 	fi
 	echo "-----------------------------"
 	flush_cache
-	umount ${destination}p1 || true
-	umount ${destination}p2 || true
-	exit
+	umount $(dev2dir ${destination}p1) > /dev/null 2>&1 || true
+	umount $(dev2dir ${destination}p2) > /dev/null 2>&1 || true
+	inf_loop
 }
 
 umount_p1 () {
-	if grep -q ${destination}p1 /proc/mounts ; then
-		umount ${destination}p1 || umount -l ${destination}p1 || write_failure
+	DIR=$(dev2dir ${destination}p1)
+	if [ -n "$DIR" ] ; then
+		umount ${DIR} || umount -l ${DIR} || write_failure
 	fi
 }
 
 umount_p2 () {
-	if grep -q ${destination}p2 /proc/mounts ; then
-		umount ${destination}p2 || umount -l ${destination}p2 || write_failure
+	DIR=$(dev2dir ${destination}p2)
+	if [ -n "$DIR" ] ; then
+		umount ${DIR} || umount -l ${DIR} || write_failure
 	fi
 }
 
@@ -98,7 +124,7 @@ check_running_system () {
 	if [ ! -f /boot/uboot/uEnv.txt ] ; then
 		echo "Error: script halting, system unrecognized..."
 		echo "unable to find: [/boot/uboot/uEnv.txt] is ${source}p1 mounted?"
-		exit 1
+		inf_loop
 	fi
 
 	echo "-----------------------------"
@@ -109,26 +135,6 @@ check_running_system () {
 	if [ ! -b "${destination}" ] ; then
 		echo "Error: [${destination}] does not exist"
 		write_failure
-	fi
-}
-
-sweep_leds () {
-	if [ -e /sys/class/leds/beaglebone\:green\:usr0/trigger ] ; then
-		#From: Jason
-		#https://groups.google.com/d/msg/beagleboard/kN0wKrpTJTg/P7v7yNhUvWUJ
-		#https://gist.github.com/jadonk/71a409ffaa151eb1f8e8
-		BASE=/sys/class/leds/beaglebone\:green\:usr
-		echo timer > ${BASE}0/trigger
-		echo 2000 > ${BASE}0/delay_off
-		sleep 0.5
-		echo timer > ${BASE}1/trigger
-		echo 2000 > ${BASE}1/delay_off
-		sleep 0.5
-		echo timer > ${BASE}2/trigger
-		echo 2000 > ${BASE}2/delay_off
-		sleep 0.5
-		echo timer > ${BASE}3/trigger
-		echo 2000 > ${BASE}3/delay_off
 	fi
 }
 
@@ -178,17 +184,19 @@ cylon_leds () {
 }
 
 update_boot_files () {
-	#We need an initrd.img to find the uuid partition
-	if [ ! -f /boot/uboot/initrd.img ] ; then
-		if [ ! -f /boot/initrd.img-$(uname -r) ] ; then
-			update-initramfs -c -k $(uname -r)
-		else
-			update-initramfs -u -k $(uname -r)
-		fi
+	#We need an initrd.img to find the uuid partition, generate one if not present
+	if [ ! -f /tmp/boot/initrd.img-$(uname -r) ] ; then
+		update-initramfs -c -k $(uname -r) -b /tmp/boot/ || write_failure
+	fi
 
-		if [ -f /boot/initrd.img-$(uname -r) ] ; then
-			cp -v /boot/initrd.img-$(uname -r) /boot/uboot/initrd.img
-		fi
+	if [ ! -f /tmp/boot/initrd.img ] ; then
+		cp -v /tmp/boot/initrd.img-$(uname -r) /tmp/boot/initrd.img || write_failure
+	fi
+
+	# We should have a zImage-<version> file.  If one doesn't exist, assume we
+	# booted from the /boot/uboot/zImage kernel file and give it a full name
+	if [ -r /boot/uboot/zImage -a ! -f /tmp/boot/zImage-$(uname -r) ] ; then
+		cp /boot/uboot/zImage /tmp/boot/zImage-$(uname -r) || write_failure
 	fi
 }
 
@@ -226,8 +234,8 @@ repartition_drive () {
 
 partition_drive () {
 	flush_cache
-#	umount_p1
-#	umount_p2
+	umount_p1
+	umount_p2
 
 	NUM_MOUNTS=$(mount | grep -v none | grep "${destination}" | wc -l)
 
@@ -256,6 +264,9 @@ copy_boot () {
 	flush_cache_mounted
 
 	rsync -aAXv /boot/uboot/ /tmp/boot/ --exclude={MLO,u-boot.img,*bak,flash-eMMC.txt,flash-eMMC.log} || write_failure
+	flush_cache_mounted
+
+	update_boot_files
 	flush_cache_mounted
 
 	# Fixup uEnv.txt
@@ -305,8 +316,10 @@ copy_rootfs () {
 	rsync -aAXv /lib/modules/$(uname -r)/* /tmp/rootfs/lib/modules/$(uname -r)/ || write_failure
 	flush_cache_mounted
 
-	cp /boot/initrd.img-$(uname -r) /tmp/rootfs/boot/ || write_failure
-	flush_cache_mounted
+	if [ -r /boot/initrd.img-$(uname -r) ] ; then
+		cp /boot/initrd.img-$(uname -r) /tmp/rootfs/boot/ || write_failure
+		flush_cache_mounted
+	fi
 
 	unset boot_uuid
 	boot_uuid=$(/sbin/blkid -s UUID -o value ${destination}p1)
@@ -341,17 +354,14 @@ copy_rootfs () {
 	echo "Note: Actually unpower the board, a reset [sudo reboot] is not enough."
 	echo "-----------------------------"
 
+	inf_loop
 #	echo "Shutting Down..."
 #	sync
 #	halt
 }
 
 check_running_system
-#sweep_leds
-#update_boot_files
-cylon_leds &
-CYLON_PID=$!
+cylon_leds & CYLON_PID=$!
 partition_drive
 copy_boot
 copy_rootfs
-
