@@ -318,8 +318,10 @@ copy_rootfs () {
 	rsync -aAXv /lib/modules/$(uname -r)/* /tmp/rootfs/lib/modules/$(uname -r)/ || write_failure
 	flush_cache_mounted
 
-	cp /boot/initrd.img-$(uname -r) /tmp/rootfs/boot/ || write_failure
-	flush_cache_mounted
+	if [ -r /boot/initrd.img-$(uname -r) ] ; then
+		cp /boot/initrd.img-$(uname -r) /tmp/rootfs/boot/ || write_failure
+		flush_cache_mounted
+	fi
 
 	unset boot_uuid
 	boot_uuid=$(/sbin/blkid -s UUID -o value ${destination}p1)
