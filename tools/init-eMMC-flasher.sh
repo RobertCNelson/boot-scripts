@@ -290,7 +290,7 @@ copy_boot () {
 	flush_cache_mounted
 
 	unset root_uuid
-	root_uuid=$(/sbin/blkid -s UUID -o value ${destination}p2)
+	root_uuid=$(/sbin/blkid -c /dev/null -s UUID -o value ${destination}p2)
 	if [ "${root_uuid}" ] ; then
 		root_uuid="UUID=${root_uuid}"
 		device_id=$(cat /tmp/boot/uEnv.txt | grep mmcroot | grep mmcblk | awk '{print $1}' | awk -F '=' '{print $2}')
@@ -332,7 +332,7 @@ copy_rootfs () {
 	fi
 
 	unset boot_uuid
-	boot_uuid=$(/sbin/blkid -s UUID -o value ${destination}p1)
+	boot_uuid=$(/sbin/blkid -c /dev/null -s UUID -o value ${destination}p1)
 	if [ "${boot_uuid}" ] ; then
 		boot_uuid="UUID=${boot_uuid}"
 	else
