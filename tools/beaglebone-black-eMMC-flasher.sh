@@ -1,6 +1,7 @@
 #!/bin/bash -e
 #
 # Copyright (c) 2013-2014 Robert Nelson <robertcnelson@gmail.com>
+# Portions copyright (c) 2014 Charles Steinkuehler <charles@steinkuehler.net>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -58,6 +59,8 @@ flush_cache_mounted () {
 write_failure () {
 	echo "writing to [${destination}] failed..."
 
+	[ -e /proc/$CYLON_PID ]  && kill $CYLON_PID > /dev/null 2>&1
+
 	if [ -e /sys/class/leds/beaglebone\:green\:usr0/trigger ] ; then
 		echo heartbeat > /sys/class/leds/beaglebone\:green\:usr0/trigger
 		echo heartbeat > /sys/class/leds/beaglebone\:green\:usr1/trigger
@@ -97,23 +100,48 @@ check_running_system () {
 	fi
 }
 
-sweep_leds () {
+cylon_leds () {
 	if [ -e /sys/class/leds/beaglebone\:green\:usr0/trigger ] ; then
-		#From: Jason
-		#https://groups.google.com/d/msg/beagleboard/kN0wKrpTJTg/P7v7yNhUvWUJ
-		#https://gist.github.com/jadonk/71a409ffaa151eb1f8e8
 		BASE=/sys/class/leds/beaglebone\:green\:usr
-		echo timer > ${BASE}0/trigger
-		echo 2000 > ${BASE}0/delay_off
-		sleep 0.5
-		echo timer > ${BASE}1/trigger
-		echo 2000 > ${BASE}1/delay_off
-		sleep 0.5
-		echo timer > ${BASE}2/trigger
-		echo 2000 > ${BASE}2/delay_off
-		sleep 0.5
-		echo timer > ${BASE}3/trigger
-		echo 2000 > ${BASE}3/delay_off
+		echo none > ${BASE}0/trigger
+		echo none > ${BASE}1/trigger
+		echo none > ${BASE}2/trigger
+		echo none > ${BASE}3/trigger
+
+		STATE=1
+		while : ; do
+			case $STATE in
+			1)	echo 255 > ${BASE}0/brightness
+				echo 0   > ${BASE}1/brightness
+				STATE=2
+				;;
+			2)	echo 255 > ${BASE}1/brightness
+				echo 0   > ${BASE}0/brightness
+				STATE=3
+				;;
+			3)	echo 255 > ${BASE}2/brightness
+				echo 0   > ${BASE}1/brightness
+				STATE=4
+				;;
+			4)	echo 255 > ${BASE}3/brightness
+				echo 0   > ${BASE}2/brightness
+				STATE=5
+				;;
+			5)	echo 255 > ${BASE}2/brightness
+				echo 0   > ${BASE}3/brightness
+				STATE=6
+				;;
+			6)	echo 255 > ${BASE}1/brightness
+				echo 0   > ${BASE}2/brightness
+				STATE=1
+				;;
+			*)	echo 255 > ${BASE}0/brightness
+				echo 0   > ${BASE}1/brightness
+				STATE=2
+				;;
+			esac
+			sleep 0.1
+		done
 	fi
 }
 
@@ -211,6 +239,7 @@ copy_boot () {
 	else
 		root_uuid="${source}p2"
 	fi
+
 	flush_cache_mounted
 	umount_p1
 }
@@ -255,6 +284,8 @@ copy_rootfs () {
 	flush_cache_mounted
 	umount_p2
 
+	[ -e /proc/$CYLON_PID ]  && kill $CYLON_PID
+
 	if [ -e /sys/class/leds/beaglebone\:green\:usr0/trigger ] ; then
 		echo default-on > /sys/class/leds/beaglebone\:green\:usr0/trigger
 		echo default-on > /sys/class/leds/beaglebone\:green\:usr1/trigger
@@ -274,7 +305,7 @@ copy_rootfs () {
 }
 
 check_running_system
-sweep_leds
+cylon_leds & CYLON_PID=$!
 update_boot_files
 partition_drive
 copy_boot
