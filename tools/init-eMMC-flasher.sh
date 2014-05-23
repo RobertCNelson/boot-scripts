@@ -311,7 +311,7 @@ copy_boot () {
 		# ...otherwise, just switch init back to systemd
 		sed -i 's:^systemd.*init-eMMC-flasher.*$:systemd=init=/lib/systemd/systemd:' /tmp/boot/uEnv.txt
 	fi
-	flush_cache_mounted
+	flush_cache
 
 	unset root_uuid
 	root_uuid=$(/sbin/blkid -c /dev/null -s UUID -o value ${destination}p2)
