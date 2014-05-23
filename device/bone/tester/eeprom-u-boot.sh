@@ -234,8 +234,8 @@ check_soc_sh () {
 		DRIVE="/tmp/uboot"
 	fi
 
-#	if [ -f ${DRIVE}/SOC.sh ] ; then
-#		. ${DRIVE}/SOC.sh
+	if [ -f ${DRIVE}/SOC.sh ] ; then
+		. ${DRIVE}/SOC.sh
 #		if [ "x${board}" != "x" ] ; then
 
 #			if [ "x${board}" = "xam335x_boneblack" ] ; then
@@ -250,10 +250,10 @@ check_soc_sh () {
 #			echo "Sorry: board undefined in [${DRIVE}/SOC.sh] can not update bootloader safely"
 #			exit
 #		fi
-#	else
-#		echo "Sorry: unable to find [${DRIVE}/SOC.sh] can not update bootloader safely"
-#		exit
-#	fi
+	else
+		echo "Sorry: unable to find [${DRIVE}/SOC.sh] can not update bootloader safely"
+		exit
+	fi
 
 	if [ $(uname -m) != "armv7l" ] ; then
 		sync
