@@ -218,8 +218,13 @@ copy_boot () {
 copy_rootfs () {
 	mkdir -p /tmp/rootfs/ || true
 	mount ${destination}p2 /tmp/rootfs/ -o async,noatime
+
 	rsync -aAXv /* /tmp/rootfs/ --exclude={/dev/*,/proc/*,/sys/*,/tmp/*,/run/*,/mnt/*,/media/*,/lost+found,/boot/*,/lib/modules/*} || write_failure
 	flush_cache_mounted
+
+	#FIXME: testing to see
+	#rsync -aAXv /* /tmp/rootfs/ --exclude={/dev/*,/proc/*,/sys/*,/tmp/*,/run/*,/mnt/*,/media/*,/lost+found,/boot/*,/lib/modules/*} || write_failure
+	#flush_cache_mounted
 
 	if [ -f /tmp/rootfs/opt/scripts/images/beaglebg.jpg ] ; then
 		if [ -f /tmp/rootfs/opt/desktop-background.jpg ] ; then
