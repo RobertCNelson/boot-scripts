@@ -49,6 +49,7 @@ fi
 
 flush_cache () {
 	sync
+	blockdev --flushbufs ${destination}
 }
 
 flush_cache_mounted () {
