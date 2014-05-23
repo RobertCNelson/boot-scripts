@@ -343,6 +343,9 @@ copy_rootfs () {
 		fi
 		cp -v /tmp/rootfs/opt/scripts/images/beaglebg.jpg /tmp/rootfs/opt/desktop-background.jpg
 	fi
+
+	#ssh keys will now get regenerated on the next bootup
+	touch /tmp/rootfs/etc/ssh/ssh.regenerate
 	flush_cache
 
 	mkdir -p /tmp/rootfs/boot/uboot/ || true
