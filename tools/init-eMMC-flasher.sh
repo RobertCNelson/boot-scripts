@@ -147,8 +147,8 @@ check_eeprom () {
 
 				#We have to reboot, as the kernel only loads the eMMC cape
 				# with a valid header
-				#reboot
-				shutdown -r now
+				reboot -f
+				#shutdown -r now
 
 				#We shouldnt hit this...
 				exit
