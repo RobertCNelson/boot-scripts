@@ -118,11 +118,9 @@ umount_p2 () {
 check_eeprom () {
 
 	# We might have mounted something over /run; see if
-	# /run/initctl is present.  Look for
-	# /usr/share/sysvinit/update-rc.d to verify that sysvinit (and
-	# not upstart) is installed).
+	# /run/initctl is present.
 	INITCTL="/run/initctl"
-	if [ ! -p "$INITCTL" ] && [ -f "/usr/share/sysvinit/update-rc.d" ]; then
+	if [ ! -p "$INITCTL" ] ; then
 		# Create new control channel
 		rm -f "$INITCTL"
 		mknod -m 600 "$INITCTL" p
