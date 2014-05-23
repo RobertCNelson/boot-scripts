@@ -116,6 +116,22 @@ umount_p2 () {
 }
 
 check_eeprom () {
+
+	# We might have mounted something over /run; see if
+	# /run/initctl is present.  Look for
+	# /usr/share/sysvinit/update-rc.d to verify that sysvinit (and
+	# not upstart) is installed).
+	INITCTL="/run/initctl"
+	if [ ! -p "$INITCTL" ] && [ -f "/usr/share/sysvinit/update-rc.d" ]; then
+		# Create new control channel
+		rm -f "$INITCTL"
+		mknod -m 600 "$INITCTL" p
+
+		# Reopen control channel.
+		PID="$(pidof -s /sbin/init || echo 1)"
+		[ -n "$PID" ] && kill -s USR1 "$PID"
+	fi
+
 	eeprom="/sys/bus/i2c/devices/0-0050/eeprom"
 
 	#Flash BeagleBone Black's eeprom:
