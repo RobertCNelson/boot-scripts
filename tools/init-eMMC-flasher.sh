@@ -178,6 +178,34 @@ cylon_leds () {
 	fi
 }
 
+check_eeprom () {
+	eeprom="/sys/bus/i2c/devices/0-0050/eeprom"
+
+	#Flash BeagleBone Black's eeprom:
+	eeprom_location=$(ls /sys/devices/ocp.*/44e0b000.i2c/i2c-0/0-0050/eeprom 2> /dev/null)
+	eeprom_header=$(hexdump -e '8/1 "%c"' ${eeprom} -s 5 -n 3)
+	if [ "x${eeprom_header}" = "x335" ] ; then
+		echo "Valid EEPROM header found"
+	else
+		echo "Invalid EEPROM header detected"
+		if [ -f /opt/scripts/device/bone/bbb-eeprom.dump ] ; then
+			if [ ! "x${eeprom_location}" = "x" ] ; then
+				echo "Adding header to EEPROM"
+				dd if=/opt/scripts/device/bone/bbb-eeprom.dump of=${eeprom_location}
+				sync
+
+				[ -e /proc/$CYLON_PID ] && kill $CYLON_PID
+
+				#We have to reboot, as the kernel only loads the eMMC cape
+				# with a valid header
+				reboot
+				#We shouldnt hit this...
+				exit
+			fi
+		fi
+	fi
+}
+
 update_boot_files () {
 	#We need an initrd.img to find the uuid partition, generate one if not present
 	if [ ! -f /tmp/boot/initrd.img-$(uname -r) ] ; then
@@ -367,6 +395,7 @@ copy_rootfs () {
 
 check_running_system
 cylon_leds & CYLON_PID=$!
+check_eeprom
 partition_drive
 copy_boot
 copy_rootfs
