@@ -284,6 +284,10 @@ copy_rootfs () {
 	flush_cache_mounted
 	umount_p2
 
+	#https://github.com/beagleboard/meta-beagleboard/blob/master/contrib/bone-flash-tool/emmc.sh#L158-L159
+	# force writeback of eMMC buffers
+	dd if=${destination} of=/dev/null count=100000
+
 	[ -e /proc/$CYLON_PID ]  && kill $CYLON_PID
 
 	if [ -e /sys/class/leds/beaglebone\:green\:usr0/trigger ] ; then
