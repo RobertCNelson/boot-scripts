@@ -117,19 +117,6 @@ umount_p2 () {
 
 check_eeprom () {
 
-	# We might have mounted something over /run; see if
-	# /run/initctl is present.
-	INITCTL="/run/initctl"
-	if [ ! -p "$INITCTL" ] ; then
-		# Create new control channel
-		rm -f "$INITCTL"
-		mknod -m 600 "$INITCTL" p
-
-		# Reopen control channel.
-		PID="$(pidof -s /sbin/init || echo 1)"
-		[ -n "$PID" ] && kill -s USR1 "$PID"
-	fi
-
 	eeprom="/sys/bus/i2c/devices/0-0050/eeprom"
 
 	#Flash BeagleBone Black's eeprom:
@@ -148,7 +135,6 @@ check_eeprom () {
 				#We have to reboot, as the kernel only loads the eMMC cape
 				# with a valid header
 				reboot -f
-				#shutdown -r now
 
 				#We shouldnt hit this...
 				exit
