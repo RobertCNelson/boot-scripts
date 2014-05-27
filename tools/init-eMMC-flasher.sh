@@ -307,9 +307,6 @@ copy_boot () {
 	if [ -e /tmp/boot/target-uEnv.txt ] ; then
 		# Use target version of uEnv.txt if it exists
 		mv /tmp/boot/target-uEnv.txt /tmp/boot/uEnv.txt
-	else
-		# ...otherwise, just switch init back to systemd
-		sed -i 's:^systemd.*init-eMMC-flasher.*$:systemd=init=/lib/systemd/systemd:' /tmp/boot/uEnv.txt
 	fi
 	flush_cache
 
