@@ -178,7 +178,10 @@ format_root () {
 }
 
 repartition_drive () {
-	dd if=/dev/zero of=${destination} bs=1M count=16
+	dd if=/dev/zero of=${destination} bs=1M count=108
+	sync
+	dd if=${destination} of=/dev/null bs=1M count=108
+	sync
 	flush_cache
 
 	#96Mb fat formatted boot partition
