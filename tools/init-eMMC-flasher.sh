@@ -270,17 +270,17 @@ repartition_drive () {
 }
 
 partition_drive () {
-	flush_cache
-	umount_p1
-	umount_p2
+#	flush_cache
+#	umount_p1
+#	umount_p2
 
-	NUM_MOUNTS=$(mount | grep -v none | grep "${destination}" | wc -l)
+#	NUM_MOUNTS=$(mount | grep -v none | grep "${destination}" | wc -l)
 
-	for ((i=1;i<=${NUM_MOUNTS};i++))
-	do
-		DRIVE=$(mount | grep -v none | grep "${destination}" | tail -1 | awk '{print $1}')
-		umount ${DRIVE} >/dev/null 2>&1 || umount -l ${DRIVE} >/dev/null 2>&1 || write_failure
-	done
+#	for ((i=1;i<=${NUM_MOUNTS};i++))
+#	do
+#		DRIVE=$(mount | grep -v none | grep "${destination}" | tail -1 | awk '{print $1}')
+#		umount ${DRIVE} >/dev/null 2>&1 || umount -l ${DRIVE} >/dev/null 2>&1 || write_failure
+#	done
 
 	flush_cache
 	repartition_drive
