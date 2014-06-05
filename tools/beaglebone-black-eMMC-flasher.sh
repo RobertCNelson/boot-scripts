@@ -160,7 +160,7 @@ fdisk_toggle_boot () {
 format_boot () {
 	LC_ALL=C fdisk -l ${destination} | grep ${destination}p1 | grep '*' || fdisk_toggle_boot
 
-	mkfs.vfat -F 16 ${destination}p1 -n boot
+	mkfs.vfat -F 16 ${destination}p1 -n BOOT
 	flush_cache
 }
 
