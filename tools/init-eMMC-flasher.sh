@@ -101,20 +101,6 @@ write_failure () {
 	inf_loop
 }
 
-umount_p1 () {
-	DIR=$(dev2dir ${destination}p1)
-	if [ -n "$DIR" ] ; then
-		umount ${DIR} || umount -l ${DIR} || write_failure
-	fi
-}
-
-umount_p2 () {
-	DIR=$(dev2dir ${destination}p2)
-	if [ -n "$DIR" ] ; then
-		umount ${DIR} || umount -l ${DIR} || write_failure
-	fi
-}
-
 check_eeprom () {
 
 	eeprom="/sys/bus/i2c/devices/0-0050/eeprom"
@@ -260,7 +246,8 @@ format_root () {
 	flush_cache
 }
 
-repartition_drive () {
+partition_drive () {
+	flush_cache
 	dd if=/dev/zero of=${destination} bs=1M count=108
 	sync
 	dd if=${destination} of=/dev/null bs=1M count=108
@@ -272,25 +259,8 @@ repartition_drive () {
 		1,96,0xe,*
 		,,,-
 	__EOF__
-}
-
-partition_drive () {
-#	flush_cache
-#	umount_p1
-#	umount_p2
-
-#	NUM_MOUNTS=$(mount | grep -v none | grep "${destination}" | wc -l)
-
-#	for ((i=1;i<=${NUM_MOUNTS};i++))
-#	do
-#		DRIVE=$(mount | grep -v none | grep "${destination}" | tail -1 | awk '{print $1}')
-#		umount ${DRIVE} >/dev/null 2>&1 || umount -l ${DRIVE} >/dev/null 2>&1 || write_failure
-#	done
 
 	flush_cache
-	repartition_drive
-	flush_cache
-
 	format_boot
 	format_root
 }
@@ -335,7 +305,7 @@ copy_boot () {
 	fi
 
 	flush_cache
-	umount_p1
+	umount /tmp/boot/ || umount -l /tmp/boot/ || write_failure
 }
 
 copy_rootfs () {
@@ -376,7 +346,7 @@ copy_rootfs () {
 	echo "${boot_uuid}  /boot/uboot  auto  defaults  0  0" >> /tmp/rootfs/etc/fstab
 	echo "debugfs         /sys/kernel/debug  debugfs  defaults          0  0" >> /tmp/rootfs/etc/fstab
 	flush_cache
-	umount_p2
+	umount /tmp/rootfs/ || umount -l /tmp/rootfs/ || write_failure
 
 	#https://github.com/beagleboard/meta-beagleboard/blob/master/contrib/bone-flash-tool/emmc.sh#L158-L159
 	# force writeback of eMMC buffers
