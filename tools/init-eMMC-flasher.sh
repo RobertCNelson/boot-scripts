@@ -369,13 +369,17 @@ copy_rootfs () {
 	echo ""
 	echo "This script has now completed it's task"
 	echo "-----------------------------"
-	echo "Note: Actually unpower the board, a reset [sudo reboot] is not enough."
-	echo "-----------------------------"
 
-	inf_loop
-#	echo "Shutting Down..."
-#	sync
-#	halt
+	if [ -f /boot/uboot/debug.txt ] ; then
+		echo "debug: enabled"
+		inf_loop
+	else
+		echo "Shutting Down"
+		sync
+		umount /boot/uboot || umount -l /boot/uboot
+		mount
+		halt -f
+	fi
 }
 
 check_eeprom
