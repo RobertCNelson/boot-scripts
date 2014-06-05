@@ -160,9 +160,10 @@ check_running_system () {
 		write_failure
 	fi
 
-	if [ -L /etc/mtab && -r /proc/mounts ] ; then
-		rm /etc/mtab && ln -s /proc/mounts /etc/mtab
-	fi
+	#/ is ro...
+	#if [ -L /etc/mtab && -r /proc/mounts ] ; then
+	#	rm /etc/mtab && ln -s /proc/mounts /etc/mtab
+	#fi
 }
 
 cylon_leds () {
