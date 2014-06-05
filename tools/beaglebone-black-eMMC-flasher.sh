@@ -70,14 +70,6 @@ write_failure () {
 	exit
 }
 
-umount_p1 () {
-	umount ${destination}p1 || umount -l ${destination}p1 || write_failure
-}
-
-umount_p2 () {
-	umount ${destination}p2 || umount -l ${destination}p2 || write_failure
-}
-
 check_running_system () {
 	if [ ! -f /boot/uboot/uEnv.txt ] ; then
 		echo "Error: script halting, system unrecognized..."
@@ -177,7 +169,18 @@ format_root () {
 	flush_cache
 }
 
-repartition_drive () {
+partition_drive () {
+	flush_cache
+
+	NUM_MOUNTS=$(mount | grep -v none | grep "${destination}" | wc -l)
+
+	for ((i=1;i<=${NUM_MOUNTS};i++))
+	do
+		DRIVE=$(mount | grep -v none | grep "${destination}" | tail -1 | awk '{print $1}')
+		umount ${DRIVE} >/dev/null 2>&1 || umount -l ${DRIVE} >/dev/null 2>&1 || write_failure
+	done
+
+	flush_cache
 	dd if=/dev/zero of=${destination} bs=1M count=108
 	sync
 	dd if=${destination} of=/dev/null bs=1M count=108
@@ -189,25 +192,8 @@ repartition_drive () {
 		1,96,0xe,*
 		,,,-
 	__EOF__
-}
-
-partition_drive () {
-	flush_cache
-#	umount_p1
-#	umount_p2
-
-	NUM_MOUNTS=$(mount | grep -v none | grep "${destination}" | wc -l)
-
-	for ((i=1;i<=${NUM_MOUNTS};i++))
-	do
-		DRIVE=$(mount | grep -v none | grep "${destination}" | tail -1 | awk '{print $1}')
-		umount ${DRIVE} >/dev/null 2>&1 || umount -l ${DRIVE} >/dev/null 2>&1 || write_failure
-	done
 
 	flush_cache
-	repartition_drive
-	flush_cache
-
 	format_boot
 	format_root
 }
@@ -222,7 +208,8 @@ copy_boot () {
 	cp -v /boot/uboot/u-boot.img /tmp/boot/u-boot.img || write_failure
 	flush_cache
 
-	rsync -aAXv /boot/uboot/ /tmp/boot/ --exclude={MLO,u-boot.img,*bak,flash-eMMC.txt,flash-eMMC.log} || write_failure
+	echo "rsync: /boot/uboot/ -> /tmp/boot/"
+	rsync -aAX /boot/uboot/ /tmp/boot/ --exclude={MLO,u-boot.img,*bak,flash-eMMC.txt,flash-eMMC.log} || write_failure
 	flush_cache
 
 	unset root_uuid
@@ -240,13 +227,15 @@ copy_boot () {
 	fi
 
 	flush_cache
-	umount_p1
+	umount /tmp/boot/ || umount -l /tmp/boot/ || write_failure
 }
 
 copy_rootfs () {
 	mkdir -p /tmp/rootfs/ || true
 	mount ${destination}p2 /tmp/rootfs/ -o async,noatime
-	rsync -aAXv /* /tmp/rootfs/ --exclude={/dev/*,/proc/*,/sys/*,/tmp/*,/run/*,/mnt/*,/media/*,/lost+found,/boot/*,/lib/modules/*} || write_failure
+
+	echo "rsync: / -> /tmp/rootfs/"
+	rsync -aAX /* /tmp/rootfs/ --exclude={/dev/*,/proc/*,/sys/*,/tmp/*,/run/*,/mnt/*,/media/*,/lost+found,/boot/*,/lib/modules/*} || write_failure
 	flush_cache
 
 	if [ -f /tmp/rootfs/opt/scripts/images/beaglebg.jpg ] ; then
@@ -262,7 +251,9 @@ copy_rootfs () {
 
 	mkdir -p /tmp/rootfs/boot/uboot/ || true
 	mkdir -p /tmp/rootfs/lib/modules/$(uname -r)/ || true
-	rsync -aAXv /lib/modules/$(uname -r)/* /tmp/rootfs/lib/modules/$(uname -r)/ || write_failure
+
+	echo "rsync: /lib/modules/$(uname -r)/ -> /tmp/rootfs/lib/modules/$(uname -r)/"
+	rsync -aAX /lib/modules/$(uname -r)/* /tmp/rootfs/lib/modules/$(uname -r)/ || write_failure
 	flush_cache
 
 	unset boot_uuid
@@ -281,7 +272,7 @@ copy_rootfs () {
 	echo "${boot_uuid}  /boot/uboot  auto  defaults  0  0" >> /tmp/rootfs/etc/fstab
 	echo "debugfs         /sys/kernel/debug  debugfs  defaults          0  0" >> /tmp/rootfs/etc/fstab
 	flush_cache
-	umount_p2
+	umount /tmp/rootfs/ || umount -l /tmp/rootfs/ || write_failure
 
 	#https://github.com/beagleboard/meta-beagleboard/blob/master/contrib/bone-flash-tool/emmc.sh#L158-L159
 	# force writeback of eMMC buffers
