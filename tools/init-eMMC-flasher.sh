@@ -377,6 +377,7 @@ copy_rootfs () {
 		echo "Shutting Down"
 		sync
 		umount /boot/uboot || umount -l /boot/uboot
+		umount /tmp || umount -l /tmp
 		mount
 		halt -f
 	fi
