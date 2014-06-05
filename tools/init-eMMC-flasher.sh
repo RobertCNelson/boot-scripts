@@ -275,7 +275,8 @@ copy_boot () {
 	cp -v /boot/uboot/u-boot.img /tmp/boot/u-boot.img || write_failure
 	flush_cache
 
-	rsync -aAXv /boot/uboot/ /tmp/boot/ --exclude={MLO,u-boot.img,*bak,flash-eMMC.txt,flash-eMMC.log} || write_failure
+	echo "rsync: /boot/uboot/ -> /tmp/boot/"
+	rsync -aAX /boot/uboot/ /tmp/boot/ --exclude={MLO,u-boot.img,*bak,flash-eMMC.txt,flash-eMMC.log} || write_failure
 	flush_cache
 
 	update_boot_files
@@ -311,7 +312,9 @@ copy_boot () {
 copy_rootfs () {
 	mkdir -p /tmp/rootfs/ || true
 	mount ${destination}p2 /tmp/rootfs/ -o async,noatime
-	rsync -aAXv /* /tmp/rootfs/ --exclude={/dev/*,/proc/*,/sys/*,/tmp/*,/run/*,/mnt/*,/media/*,/lost+found,/boot/*,/lib/modules/*} || write_failure
+
+	echo "rsync: / -> /tmp/rootfs/"
+	rsync -aAX /* /tmp/rootfs/ --exclude={/dev/*,/proc/*,/sys/*,/tmp/*,/run/*,/mnt/*,/media/*,/lost+found,/boot/*,/lib/modules/*} || write_failure
 	flush_cache
 
 	if [ -f /tmp/rootfs/opt/scripts/images/beaglebg.jpg ] ; then
@@ -327,7 +330,9 @@ copy_rootfs () {
 
 	mkdir -p /tmp/rootfs/boot/uboot/ || true
 	mkdir -p /tmp/rootfs/lib/modules/$(uname -r)/ || true
-	rsync -aAXv /lib/modules/$(uname -r)/* /tmp/rootfs/lib/modules/$(uname -r)/ || write_failure
+
+	echo "rsync: /lib/modules/$(uname -r)/ -> /tmp/rootfs/lib/modules/$(uname -r)/"
+	rsync -aAX /lib/modules/$(uname -r)/* /tmp/rootfs/lib/modules/$(uname -r)/ || write_failure
 	flush_cache
 
 	unset boot_uuid
