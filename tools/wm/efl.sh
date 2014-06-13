@@ -28,6 +28,20 @@ deb_distro=$(lsb_release -cs)
 deb_arch=$(LC_ALL=C dpkg --print-architecture)
 
 unset deb_pkgs
+pkg="build-essential"
+check_dpkg
+
+#autotools
+pkg="autoconf"
+check_dpkg
+pkg="libtool"
+check_dpkg
+pkg="pkg-config"
+check_dpkg
+
+#--enable-systemd
+pkg="libsystemd-daemon-dev"
+check_dpkg
 
 if [ "${deb_pkgs}" ] ; then
 	echo ""
