@@ -76,7 +76,7 @@ make distclean >/dev/null 2>&1 || true
 git checkout master -f
 git pull || true
 
-if [ ! "${git_sha}" = "x" ] ; then
+if [ ! "x${git_sha}" = "x" ] ; then
 	test_for_branch=$(git branch --list ${git_sha}-build)
 	if [ "x${test_for_branch}" != "x" ] ; then
 		git branch ${git_sha}-build -D
