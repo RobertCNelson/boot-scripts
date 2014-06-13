@@ -39,7 +39,7 @@ check_dpkg
 pkg="pkg-config"
 check_dpkg
 
-pkg="check"
+pkg="check:${deb_arch}"
 check_dpkg
 
 #Graphics libs
