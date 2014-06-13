@@ -43,6 +43,10 @@ check_dpkg
 pkg="libsystemd-daemon-dev"
 check_dpkg
 
+#--enable-pixman
+pkg="libpixman-1-dev"
+check_dpkg
+
 if [ "${deb_pkgs}" ] ; then
 	echo ""
 	echo "Installing: ${deb_pkgs}"
