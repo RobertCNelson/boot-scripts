@@ -54,13 +54,16 @@ check_dpkg
 pkg="libgstreamer1.0-dev"
 check_dpkg
 
-pkg="libmount-dev"
-check_dpkg
+#pkg="libmount-dev"
+#check_dpkg
 
 pkg="libpulse-dev:${deb_arch}"
 check_dpkg
 
 pkg="libsndfile1-dev"
+check_dpkg
+
+pkg="libsystemd-daemon-dev"
 check_dpkg
 
 pkg="libudev-dev"
