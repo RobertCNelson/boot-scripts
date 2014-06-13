@@ -42,7 +42,7 @@ check_dpkg
 #Graphics libs
 pkg="libgif-dev"
 check_dpkg
-pkg="libtiff5-dev"
+pkg="libtiff5-dev:${deb_arch}"
 check_dpkg
 
 pkg="libglib2.0-dev"
