@@ -57,6 +57,9 @@ check_dpkg
 pkg="libsndfile1-dev"
 check_dpkg
 
+pkg="libudev-dev"
+check_dpkg
+
 pkg="libxkbcommon-dev"
 check_dpkg
 
