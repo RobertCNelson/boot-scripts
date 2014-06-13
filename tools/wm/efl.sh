@@ -85,5 +85,5 @@ if [ ! "x${git_sha}" = "x" ] ; then
 	git checkout ${git_sha} -b ${git_sha}-build
 fi
 
-./autogen.sh --prefix=/usr --enable-wayland --enable-systemd --enable-fb
+./autogen.sh --prefix=/usr --enable-systemd --enable-wayland --enable-egl --with-opengl=es
 
