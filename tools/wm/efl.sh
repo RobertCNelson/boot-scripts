@@ -39,6 +39,10 @@ check_dpkg
 pkg="pkg-config"
 check_dpkg
 
+#Graphics libs
+pkg="libgif-dev"
+check_dpkg
+
 #--enable-systemd
 pkg="libsystemd-daemon-dev"
 check_dpkg
