@@ -42,6 +42,14 @@ check_dpkg
 #Graphics libs
 pkg="libgif-dev"
 check_dpkg
+pkg="libtiff5-dev"
+check_dpkg
+
+pkg="libglib2.0-dev"
+check_dpkg
+
+pkg="libgstreamer1.0-dev"
+check_dpkg
 
 #--enable-systemd
 pkg="libsystemd-daemon-dev"
@@ -93,7 +101,7 @@ if [ ! "x${git_sha}" = "x" ] ; then
 	git checkout ${git_sha} -b ${git_sha}-build
 fi
 
-./autogen.sh --prefix=/usr --enable-systemd --enable-wayland --enable-fb --enable-pixman --with-x11=none
+./autogen.sh --prefix=/usr --enable-systemd --enable-wayland --enable-fb --enable-pixman --with-x11=none --disable-tslib
 
 #someday:
 #./autogen.sh --prefix=/usr --enable-systemd --enable-wayland --enable-egl --with-opengl=es
