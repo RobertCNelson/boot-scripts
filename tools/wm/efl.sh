@@ -39,6 +39,9 @@ check_dpkg
 pkg="pkg-config"
 check_dpkg
 
+pkg="check"
+check_dpkg
+
 #Graphics libs
 pkg="libgif-dev"
 check_dpkg
@@ -49,6 +52,9 @@ pkg="libglib2.0-dev"
 check_dpkg
 
 pkg="libgstreamer1.0-dev"
+check_dpkg
+
+pkg="libmount-dev"
 check_dpkg
 
 pkg="libpulse-dev:${deb_arch}"
