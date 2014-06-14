@@ -130,7 +130,7 @@ if [ ! "x${git_sha}" = "x" ] ; then
 	git checkout ${git_sha} -b ${git_sha}-build
 fi
 
-./autogen.sh --prefix=/usr --enable-systemd --enable-wayland --enable-fb --enable-pixman --with-x11=none --disable-tslib --disable-libmount --disable-gstreamer1
+./autogen.sh --prefix=/usr --enable-systemd --enable-wayland --enable-fb --enable-pixman --with-x11=none --disable-tslib --disable-libmount --disable-gstreamer1 --enable-i-really-know-what-i-am-doing-and-that-this-will-probably-break-things-and-i-will-fix-them-myself-and-send-patches-aaa
 make -j5
 
 #someday:
