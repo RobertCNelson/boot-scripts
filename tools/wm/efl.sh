@@ -48,6 +48,9 @@ check_dpkg
 pkg="libtiff5-dev:${deb_arch}"
 check_dpkg
 
+pkg="libbullet-dev:${deb_arch}"
+check_dpkg
+
 pkg="libglib2.0-dev"
 check_dpkg
 
@@ -63,17 +66,22 @@ check_dpkg
 pkg="libsndfile1-dev"
 check_dpkg
 
-pkg="libsystemd-daemon-dev"
-check_dpkg
-
 pkg="libudev-dev"
 check_dpkg
 
 pkg="libxkbcommon-dev"
 check_dpkg
 
+pkg="libluajit-5.1-dev:${deb_arch}"
+check_dpkg
+
+pkg="libfribidi-dev"
+check_dpkg
+
 #--enable-systemd
 pkg="libsystemd-daemon-dev"
+check_dpkg
+pkg="libsystemd-journal-dev"
 check_dpkg
 
 #--enable-pixman
@@ -122,7 +130,8 @@ if [ ! "x${git_sha}" = "x" ] ; then
 	git checkout ${git_sha} -b ${git_sha}-build
 fi
 
-./autogen.sh --prefix=/usr --enable-systemd --enable-wayland --enable-fb --enable-pixman --with-x11=none --disable-tslib
+./autogen.sh --prefix=/usr --enable-systemd --enable-wayland --enable-fb --enable-pixman --with-x11=none --disable-tslib --disable-libmount --disable-gstreamer1
+make -j5
 
 #someday:
 #./autogen.sh --prefix=/usr --enable-systemd --enable-wayland --enable-egl --with-opengl=es
