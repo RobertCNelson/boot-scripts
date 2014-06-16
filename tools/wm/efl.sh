@@ -81,6 +81,9 @@ check_dpkg
 pkg="libfribidi-dev"
 check_dpkg
 
+pkg="libwayland-dev"
+check_dpkg
+
 #--enable-systemd
 pkg="libsystemd-daemon-dev"
 check_dpkg
