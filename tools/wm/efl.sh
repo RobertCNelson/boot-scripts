@@ -84,6 +84,9 @@ check_dpkg
 pkg="libfreetype6-dev"
 check_dpkg
 
+pkg="libfontconfig1-dev:${deb_arch}"
+check_dpkg
+
 #--enable-wayland
 pkg="libwayland-dev"
 check_dpkg
