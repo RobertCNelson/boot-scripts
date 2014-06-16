@@ -81,6 +81,7 @@ check_dpkg
 pkg="libfribidi-dev"
 check_dpkg
 
+#--enable-wayland
 pkg="libwayland-dev"
 check_dpkg
 
