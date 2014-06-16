@@ -66,6 +66,9 @@ check_dpkg
 pkg="libsndfile1-dev"
 check_dpkg
 
+pkg="libssl-dev:${deb_arch}"
+check_dpkg
+
 pkg="libudev-dev"
 check_dpkg
 
