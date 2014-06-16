@@ -110,45 +110,61 @@ if [ "${deb_pkgs}" ] ; then
 	echo "--------------------"
 fi
 
+git_generic () {
+	if [ ! -f ${HOME}/git/${project}/.git/config ] ; then
+		git clone ${server} ${HOME}/git/${project}/ || true
+	fi
+
+	if [ ! -f ${HOME}/git/${project}/.git/config ] ; then
+		rm -rf ${HOME}/git/${project}/ || true
+		echo "error: git failure, try re-runing"
+		exit
+	fi
+
+	echo ""
+	echo "Building ${project}"
+	echo ""
+
+	cd ${HOME}/git/${project}/
+
+	make distclean >/dev/null 2>&1 || true
+	git checkout master -f
+	git pull || true
+
+	if [ ! "x${git_sha}" = "x" ] ; then
+		test_for_branch=$(git branch --list ${git_sha}-build)
+		if [ "x${test_for_branch}" != "x" ] ; then
+			git branch ${git_sha}-build -D
+		fi
+
+		git checkout ${git_sha} -b ${git_sha}-build
+	fi
+}
+
 git_sha=""
 project="efl"
 server="git://git.enlightenment.org/core/efl.git"
 
-if [ ! -f ${HOME}/git/${project}/.git/config ] ; then
-	git clone ${server} ${HOME}/git/${project}/ || true
-fi
-
-if [ ! -f ${HOME}/git/${project}/.git/config ] ; then
-	rm -rf ${HOME}/git/${project}/ || true
-	echo "error: git failure, try re-runing"
-	exit
-fi
-
-echo ""
-echo "Building ${project}"
-echo ""
-
-cd ${HOME}/git/${project}/
-
-make distclean >/dev/null 2>&1 || true
-git checkout master -f
-git pull || true
-
-if [ ! "x${git_sha}" = "x" ] ; then
-	test_for_branch=$(git branch --list ${git_sha}-build)
-	if [ "x${test_for_branch}" != "x" ] ; then
-		git branch ${git_sha}-build -D
-	fi
-
-	git checkout ${git_sha} -b ${git_sha}-build
-fi
+git_generic
 
 #[bug]: efl assumes neon is: -mfloat-abi=softfp -mfpu=neon
 #--disable-neon
 
-./autogen.sh --prefix=/usr --enable-systemd --enable-wayland --enable-fb --enable-pixman --with-x11=none --disable-tslib --disable-libmount --disable-gstreamer1 --disable-neon --enable-i-really-know-what-i-am-doing-and-that-this-will-probably-break-things-and-i-will-fix-them-myself-and-send-patches-aaa
-make -j5
+#./autogen.sh --prefix=/usr --enable-systemd --enable-wayland --enable-fb --enable-pixman --with-x11=none --disable-tslib --disable-libmount --disable-gstreamer1 --disable-neon --enable-i-really-know-what-i-am-doing-and-that-this-will-probably-break-things-and-i-will-fix-them-myself-and-send-patches-aaa
+#make -j5
+#sudo make install
 
 #someday:
 #./autogen.sh --prefix=/usr --enable-systemd --enable-wayland --enable-egl --with-opengl=es
 
+git_sha=""
+project="elementary"
+server="git://git.enlightenment.org/core/elementary.git"
+
+git_generic
+
+./autogen.sh --prefix=/usr
+make
+sudo make install
+
+#
