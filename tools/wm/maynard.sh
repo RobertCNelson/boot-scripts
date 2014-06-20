@@ -55,7 +55,7 @@ check_dpkg
 pkg="libgnome-desktop-3-dev"
 check_dpkg
 
-pkg="libasound2-dev"
+pkg="libasound2-dev:${deb_arch}"
 check_dpkg
 
 pkg="libxml2-utils"
