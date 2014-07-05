@@ -210,7 +210,6 @@ partition_drive () {
 
 	if [ -f /boot/SOC.sh ] ; then
 		. /boot/SOC.sh
-		echo "${conf_boot_startmb},${conf_boot_endmb},${sfdisk_fstype},*"
 	fi
 	conf_boot_startmb=${conf_boot_startmb:-"1"}
 	conf_boot_endmb=${conf_boot_endmb:-"96"}
