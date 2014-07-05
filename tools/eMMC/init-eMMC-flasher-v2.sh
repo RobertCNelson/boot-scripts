@@ -290,20 +290,13 @@ copy_rootfs () {
 	flush_cache
 	umount /tmp/rootfs/ || umount -l /tmp/rootfs/ || write_failure
 
+	[ -e /proc/$CYLON_PID ]  && kill $CYLON_PID
+
 	echo "Syncing: ${destination}"
 	#https://github.com/beagleboard/meta-beagleboard/blob/master/contrib/bone-flash-tool/emmc.sh#L158-L159
 	# force writeback of eMMC buffers
 	sync
 	dd if=${destination} of=/dev/null count=100000
-
-	[ -e /proc/$CYLON_PID ]  && kill $CYLON_PID
-
-	if [ -e ${BASE}0/brightness ] ; then
-		echo 0   > ${BASE}0/brightness
-		echo 0   > ${BASE}1/brightness
-		echo 0   > ${BASE}2/brightness
-		echo 0   > ${BASE}3/brightness
-	fi
 
 	echo ""
 	echo "This script has now completed it's task"
@@ -315,6 +308,12 @@ copy_rootfs () {
 	else
 		echo "Shutting Down"
 		umount /tmp || umount -l /tmp
+		if [ -e ${BASE}0/brightness ] ; then
+			echo 0   > ${BASE}0/brightness
+			echo 0   > ${BASE}1/brightness
+			echo 0   > ${BASE}2/brightness
+			echo 0   > ${BASE}3/brightness
+		fi
 		mount
 		halt -f
 	fi
