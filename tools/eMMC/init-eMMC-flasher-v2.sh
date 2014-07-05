@@ -200,6 +200,7 @@ format_root () {
 }
 
 partition_drive () {
+	echo "Erasing: ${destination}"
 	flush_cache
 	dd if=/dev/zero of=${destination} bs=1M count=108
 	sync
@@ -207,6 +208,7 @@ partition_drive () {
 	sync
 	flush_cache
 
+	echo "Formatting: ${destination}"
 	#96Mb fat formatted boot partition
 	LC_ALL=C sfdisk --force --in-order --Linux --unit M "${destination}" <<-__EOF__
 		1,96,0xe,*
@@ -219,6 +221,7 @@ partition_drive () {
 }
 
 copy_boot () {
+	echo "Copying: ${destination}p1"
 	mkdir -p /tmp/boot/ || true
 	mount ${destination}p1 /tmp/boot/ -o sync
 	#Make sure the BootLoader gets copied first:
@@ -235,6 +238,7 @@ copy_boot () {
 }
 
 copy_rootfs () {
+	echo "Copying: ${destination}p2"
 	mkdir -p /tmp/rootfs/ || true
 	mount ${destination}p2 /tmp/rootfs/ -o async,noatime
 
