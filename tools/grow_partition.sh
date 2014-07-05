@@ -53,17 +53,18 @@ backup_partition () {
 }
 
 expand_partition () {
-	echo "sfdisk: initial calculation."
-	#sfdisk -N2 --force --no-reread /dev/mmcblk0 <<-__EOF__
-	#,,,-
-	#__EOF__
-
-	echo "${drive}" > /boot/uboot/resizerootfs
 	echo "${drive}" > /resizerootfs
 
-	sfdisk --force --no-reread --in-order --Linux --unit M ${drive} <<-__EOF__
-	1,96,0xE,*
-	,,,-
+	if [ -f /boot/SOC.sh ] ; then
+		. /boot/SOC.sh
+	fi
+	conf_boot_startmb=${conf_boot_startmb:-"1"}
+	conf_boot_endmb=${conf_boot_endmb:-"96"}
+	sfdisk_fstype=${sfdisk_fstype:-"0xE"}
+
+	LC_ALL=C sfdisk --force --no-reread --in-order --Linux --unit M ${drive} <<-__EOF__
+		${conf_boot_startmb},${conf_boot_endmb},${sfdisk_fstype},*
+		,,,-
 	__EOF__
 }
 

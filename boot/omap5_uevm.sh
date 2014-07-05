@@ -36,38 +36,18 @@ if [ ! "x${usb0_addr}" = "x" ] ; then
 	echo "The IP Address for usb0 is: ${usb0_addr}" >> /etc/issue
 fi
 
-if [ -e /sys/class/drm/card1/card1-DVI-D-1/edid ] ; then
-
-	if [ ! -d /boot/uboot/debug/ ] ; then
-		mkdir -p /boot/uboot/debug/ || true
+if [ -f /resizerootfs ] ; then
+	if [ ! -d /boot/debug/ ] ; then
+		mkdir -p /boot/debug/ || true
 	fi
 
-	if which fbset > /dev/null ; then
-		echo "fbset:" > /boot/uboot/debug/edid.txt
-		fbset >> /boot/uboot/debug/edid.txt
-	fi
-	if which parse-edid > /dev/null ; then
-		echo "edid:" >> /boot/uboot/debug/edid.txt
-		parse-edid /sys/class/drm/card1/card1-DVI-D-1/edid >> /boot/uboot/debug/edid.txt
-	fi
-fi
-
-if [ -f /boot/uboot/resizerootfs ] || [ -f /resizerootfs ] ; then
-	if [ ! -d /boot/uboot/debug/ ] ; then
-		mkdir -p /boot/uboot/debug/ || true
-	fi
-
-	drive=$(cat /boot/uboot/resizerootfs)
-	if [ "x${drive}" = "x" ] ; then
-		drive=$(cat /resizerootfs)
-	fi
+	drive=$(cat /resizerootfs)
 	if [ "x${drive}" = "x" ] ; then
 		drive="/dev/mmcblk1"
 	fi
 
 	#FIXME: only good for two partition "/dev/mmcblkXp2" setups...
-	resize2fs ${drive}p2 >/boot/uboot/debug/resize.log 2>&1
-	rm -rf /boot/uboot/resizerootfs || true
+	resize2fs ${drive}p2 >/boot/debug/resize.log 2>&1
 	rm -rf /resizerootfs || true
 fi
 
