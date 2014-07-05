@@ -221,7 +221,7 @@ partition_drive () {
 }
 
 copy_boot () {
-	echo "Copying: ${destination}p1"
+	echo "Copying: ${source}p1 -> ${destination}p1"
 	mkdir -p /tmp/boot/ || true
 	mount ${destination}p1 /tmp/boot/ -o sync
 	#Make sure the BootLoader gets copied first:
@@ -238,20 +238,13 @@ copy_boot () {
 }
 
 copy_rootfs () {
-	echo "Copying: ${destination}p2"
+	echo "Copying: ${source}p2 -> ${destination}p2"
 	mkdir -p /tmp/rootfs/ || true
 	mount ${destination}p2 /tmp/rootfs/ -o async,noatime
 
 	echo "rsync: / -> /tmp/rootfs/"
 	rsync -aAX /* /tmp/rootfs/ --exclude={/dev/*,/proc/*,/sys/*,/tmp/*,/run/*,/mnt/*,/media/*,/lost+found,/lib/modules/*} || write_failure
 	flush_cache
-
-	if [ -f /tmp/rootfs/opt/scripts/images/beaglebg.jpg ] ; then
-		if [ -f /tmp/rootfs/opt/desktop-background.jpg ] ; then
-			rm -f /tmp/rootfs/opt/desktop-background.jpg || true
-		fi
-		cp -v /tmp/rootfs/opt/scripts/images/beaglebg.jpg /tmp/rootfs/opt/desktop-background.jpg
-	fi
 
 	#ssh keys will now get regenerated on the next bootup
 	touch /tmp/rootfs/etc/ssh/ssh.regenerate
@@ -293,7 +286,9 @@ copy_rootfs () {
 	echo "Syncing: ${destination}"
 	#https://github.com/beagleboard/meta-beagleboard/blob/master/contrib/bone-flash-tool/emmc.sh#L158-L159
 	# force writeback of eMMC buffers
-	dd if=${destination} of=/dev/null count=100000
+	sync
+	dd if=${destination} of=/dev/null bs=1M count=108
+	#dd if=${destination} of=/dev/null count=100000
 
 	[ -e /proc/$CYLON_PID ]  && kill $CYLON_PID
 
