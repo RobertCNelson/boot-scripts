@@ -210,6 +210,7 @@ partition_drive () {
 
 	if [ -f /boot/SOC.sh ] ; then
 		. /boot/SOC.sh
+		echo "${conf_boot_startmb},${conf_boot_endmb},${sfdisk_fstype},*"
 	fi
 	conf_boot_startmb=${conf_boot_startmb:-"1"}
 	conf_boot_endmb=${conf_boot_endmb:-"96"}
@@ -300,9 +301,9 @@ copy_rootfs () {
 
 	if [ -e ${BASE}0/brightness ] ; then
 		echo 0   > ${BASE}0/brightness
-		echo 1   > ${BASE}0/brightness
-		echo 2   > ${BASE}0/brightness
-		echo 3   > ${BASE}0/brightness
+		echo 0   > ${BASE}1/brightness
+		echo 0   > ${BASE}2/brightness
+		echo 0   > ${BASE}3/brightness
 	fi
 
 	echo ""
