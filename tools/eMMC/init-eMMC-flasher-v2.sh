@@ -208,10 +208,17 @@ partition_drive () {
 	sync
 	flush_cache
 
+	if [ -f /boot/SOC.sh ] ; then
+		. /boot/SOC.sh
+	fi
+	conf_boot_startmb=${conf_boot_startmb:-"1"}
+	conf_boot_endmb=${conf_boot_endmb:-"96"}
+	sfdisk_fstype=${sfdisk_fstype:-"0xE"}
+
 	echo "Formatting: ${destination}"
 	#96Mb fat formatted boot partition
 	LC_ALL=C sfdisk --force --in-order --Linux --unit M "${destination}" <<-__EOF__
-		1,96,0xe,*
+		${conf_boot_startmb},${conf_boot_endmb},${sfdisk_fstype},*
 		,,,-
 	__EOF__
 
@@ -287,16 +294,15 @@ copy_rootfs () {
 	#https://github.com/beagleboard/meta-beagleboard/blob/master/contrib/bone-flash-tool/emmc.sh#L158-L159
 	# force writeback of eMMC buffers
 	sync
-	dd if=${destination} of=/dev/null bs=1M count=108
-	#dd if=${destination} of=/dev/null count=100000
+	dd if=${destination} of=/dev/null count=100000
 
 	[ -e /proc/$CYLON_PID ]  && kill $CYLON_PID
 
-	if [ -e /sys/class/leds/beaglebone\:green\:usr0/trigger ] ; then
-		echo none > /sys/class/leds/beaglebone\:green\:usr0/trigger
-		echo none > /sys/class/leds/beaglebone\:green\:usr1/trigger
-		echo none > /sys/class/leds/beaglebone\:green\:usr2/trigger
-		echo none > /sys/class/leds/beaglebone\:green\:usr3/trigger
+	if [ -e ${BASE}0/brightness ] ; then
+		echo 0   > ${BASE}0/brightness
+		echo 1   > ${BASE}0/brightness
+		echo 2   > ${BASE}0/brightness
+		echo 3   > ${BASE}0/brightness
 	fi
 
 	echo ""
