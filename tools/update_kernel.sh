@@ -48,7 +48,7 @@ check_dpkg () {
 
 check_apt_cache () {
 	unset apt_cache
-	apt_cache=$(LC_ALL=C apt-cache search "^${pkg}$" | awk '{print $1}' || true)
+	apt_cache=$(LC_ALL=C apt-cache search "^${pkg}$" | awk '{print $1}' | sed 's/ //' || true)
 }
 
 latest_version_repo () {
