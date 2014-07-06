@@ -136,8 +136,10 @@ while [ ! -z "$1" ] ; do
 	shift
 done
 
-test_rcnee=$(cat /etc/apt/sources.list | grep rcn-ee || true )
+test_rcnee=$(cat /etc/apt/sources.list | grep rcn-ee || true)
 if [ ! "x${test_rcnee}" = "x" ] ; then
+	sudo apt-get update
+
 	echo "Not implemtned yet"
 	echo "run: [git pull] incase i've fixed it"
 	exit 1
