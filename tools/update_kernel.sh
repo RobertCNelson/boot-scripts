@@ -43,10 +43,12 @@ get_device () {
 
 update_uEnv_txt () {
 	if [ -f /boot/uEnv.txt ] ; then
-		deb_old_kernel=$(grep uname_r /boot/uEnv.txt | awk -F"=" '{print $2}')
-		sed -i -e 's:'${deb_old_kernel}':'${latest_kernel}':g' /boot/uEnv.txt
-		echo "info: `grep uname_r /boot/uEnv.txt`"
-		echo "info: kernel , now safe to reboot..."
+		older_kernel=$(grep uname_r /boot/uEnv.txt | awk -F"=" '{print $2}')
+		sed -i -e 's:'${older_kernel}':'${latest_kernel}':g' /boot/uEnv.txt
+		echo "info: /boot/uEnv.txt: `grep uname_r /boot/uEnv.txt`"
+		if [ ! "x${older_kernel}" = "x${latest_kernel}" ] ; then
+			echo "info: [${latest_kernel}] now installed and will be used on the next reboot..."
+		fi
 	fi
 }
 
