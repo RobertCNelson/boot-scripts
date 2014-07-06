@@ -239,7 +239,7 @@ copy_boot () {
 	flush_cache
 
 	echo "rsync: /boot/uboot/ -> /tmp/boot/"
-	rsync -aAX /boot/uboot/ /tmp/boot/ --exclude={MLO,u-boot.img} || write_failure
+	rsync -aAX /boot/uboot/ /tmp/boot/ --exclude={MLO,u-boot.img,uEnv.txt} || write_failure
 	flush_cache
 
 	flush_cache
