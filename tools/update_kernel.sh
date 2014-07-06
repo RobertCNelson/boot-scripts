@@ -43,12 +43,12 @@ get_device () {
 
 check_dpkg () {
 	unset deb_pkgs
-	LC_ALL=C dpkg --list | awk '{print $2}' | grep "^${pkg}$" >/dev/null || deb_pkgs="${pkg} "
+	LC_ALL=C dpkg --list | awk '{print $2}' | grep "^${pkg}$" >/dev/null || deb_pkgs="${pkg}"
 }
 
 check_apt_cache () {
 	unset apt_cache
-	apt_cache=$(LC_ALL=C apt-cache search "^${pkg}$" | awk '{print $1}' | sed 's/ //' || true)
+	apt_cache=$(LC_ALL=C apt-cache search "^${pkg}$" | awk '{print $1}' || true)
 }
 
 latest_version_repo () {
