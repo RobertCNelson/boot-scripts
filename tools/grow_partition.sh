@@ -30,23 +30,16 @@ if [ ! -f /etc/ssh/ssh_host_ecdsa_key.pub ] ; then
 	exit 1
 fi
 
-unset boot_drive
-boot_drive=$(LC_ALL=C lsblk -l | grep "/" | awk '{print $1}')
-if [ "x${boot_drive}" = "xmmcblk0p2" ] ; then
+root_drive="$(sed 's:.*root=/dev/\([^ ]*\):\1:;s/[ $].*//' /proc/cmdline)"
+boot_drive="${root_drive%?}1"
+
+if [ "x${boot_drive}" = "xmmcblk0p1" ] ; then
 	drive="/dev/mmcblk0"
-elif [ "x${boot_drive}" = "xmmcblk1p2" ] ; then
+elif [ "x${boot_drive}" = "xmmcblk1p1" ] ; then
 	drive="/dev/mmcblk1"
 else
-	#the old images...
-	boot_drive=$(LC_ALL=C lsblk -l | grep "/boot/uboot/" | awk '{print $1}')
-	if [ "x${boot_drive}" = "xmmcblk0p1" ] ; then
-		drive="/dev/mmcblk0"
-	elif [ "x${boot_drive}" = "xmmcblk1p1" ] ; then
-		drive="/dev/mmcblk1"
-	else
-		echo "Error: script halting, could detect drive..."
-		exit 1
-	fi
+	echo "Error: script halting, could detect drive..."
+	exit 1
 fi
 
 backup_partition () {
