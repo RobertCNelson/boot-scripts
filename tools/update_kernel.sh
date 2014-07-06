@@ -70,6 +70,10 @@ latest_version_repo () {
 			check_apt_cache
 			if [ "x${deb_pkgs}" = "x${apt_cache}" ] ; then
 				apt-get install -y ${pkg}
+			else
+				if [ "x${pkg}" = "x${apt_cache}" ] ; then
+					apt-get install -y ${pkg} --reinstall
+				fi
 			fi
 
 			if [ "xv${current_kernel}" = "xv${latest_kernel}" ] ; then
