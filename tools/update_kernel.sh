@@ -41,6 +41,16 @@ get_device () {
 	esac
 }
 
+check_dpkg () {
+	unset deb_pkgs
+	LC_ALL=C dpkg --list | awk '{print $2}' | grep "^${pkg}$" >/dev/null || deb_pkgs="${pkg} "
+}
+
+check_apt_cache () {
+	unset apt_cache
+	apt_cache=$(LC_ALL=C apt-cache search "^${pkg}$" | awk '{print $1}' || true)
+}
+
 latest_version_repo () {
 	if [ ! "x${SOC}" = "x" ] ; then
 		cd /tmp/
@@ -48,9 +58,20 @@ latest_version_repo () {
 			rm -f /tmp/LATEST-${SOC} || true
 		fi
 
+		echo "info: checking archive"
 		wget ${mirror}/${dist}-${arch}/LATEST-${SOC}
 		if [ -f /tmp/LATEST-${SOC} ] ; then
 			latest_kernel=$(cat /tmp/LATEST-${SOC} | grep ${kernel} | awk '{print $3}' | awk -F'/' '{print $6}')
+
+			pkg="linux-image-${latest_kernel}"
+			#is the package installed?
+			check_dpkg
+			#is the package even available to apt?
+			check_apt_cache
+			if [ "x${deb_pkgs}" = "x${pkg}" ] && [ "x${apt_cache}" = "x${pkg}" ] ; then
+				apt-get install -y ${pkg}
+			fi
+
 			if [ "xv${current_kernel}" = "x${latest_kernel}" ] ; then
 				echo "v${current_kernel} is latest"
 			fi
@@ -68,6 +89,7 @@ latest_version () {
 			rm -f /tmp/install-me.sh || true
 		fi
 
+		echo "info: checking archive"
 		wget ${mirror}/${dist}-${arch}/LATEST-${SOC}
 		if [ -f /tmp/LATEST-${SOC} ] ; then
 			latest_kernel=$(cat /tmp/LATEST-${SOC} | grep ${kernel} | awk '{print $3}' | awk -F'/' '{print $6}')
