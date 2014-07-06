@@ -136,6 +136,13 @@ while [ ! -z "$1" ] ; do
 	shift
 done
 
+test_rcnee=$(cat /etc/apt/sources.list | grep rcn-ee || true )
+if [ ! "x${test_rcnee}" = "x" ] ; then
+	echo "Not implemtned yet"
+	echo "run: [git pull] incase i've fixed it"
+	exit 1
+fi
+
 get_device
 if [ "x${kernel_version}" = "x" ] ; then
 	latest_version
