@@ -61,7 +61,7 @@ latest_version_repo () {
 		echo "info: checking archive"
 		wget ${mirror}/${dist}-${arch}/LATEST-${SOC}
 		if [ -f /tmp/LATEST-${SOC} ] ; then
-			latest_kernel=$(cat /tmp/LATEST-${SOC} | grep ${kernel} | awk '{print $3}' | awk -F'/' '{print $6}')
+			latest_kernel=$(cat /tmp/LATEST-${SOC} | grep ${kernel} | awk '{print $3}' | awk -F'/' '{print $6}' | awk -F'v' '{print $1}')
 
 			pkg="linux-image-${latest_kernel}"
 			#is the package installed?
@@ -72,7 +72,7 @@ latest_version_repo () {
 				apt-get install -y ${pkg}
 			fi
 
-			if [ "xv${current_kernel}" = "x${latest_kernel}" ] ; then
+			if [ "xv${current_kernel}" = "xv${latest_kernel}" ] ; then
 				echo "v${current_kernel} is latest"
 			fi
 		fi
