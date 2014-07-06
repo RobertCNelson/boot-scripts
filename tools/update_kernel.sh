@@ -41,6 +41,14 @@ get_device () {
 	esac
 }
 
+update_uEnv_txt () {
+	if [ -f /boot/uEnv.txt ] ; then
+		deb_old_kernel=$(grep uname_r /boot/uEnv.txt | awk -F"=" '{print $2}')
+		sed -i -e 's:'${deb_old_kernel}':'${latest_kernel}':g' /boot/uEnv.txt
+		echo "info: `grep uname_r /boot/uEnv.txt`"
+	fi
+}
+
 check_dpkg () {
 	unset deb_pkgs
 	LC_ALL=C dpkg --list | awk '{print $2}' | grep "^${pkg}$" >/dev/null || deb_pkgs="${pkg}"
@@ -70,14 +78,12 @@ latest_version_repo () {
 			check_apt_cache
 			if [ "x${deb_pkgs}" = "x${apt_cache}" ] ; then
 				apt-get install -y ${pkg}
+				update_uEnv_txt
 			else
 				if [ "x${pkg}" = "x${apt_cache}" ] ; then
 					apt-get install -y ${pkg} --reinstall
+					update_uEnv_txt
 				fi
-			fi
-
-			if [ "xv${current_kernel}" = "xv${latest_kernel}" ] ; then
-				echo "v${current_kernel} is latest"
 			fi
 		fi
 	fi
@@ -183,11 +189,16 @@ test_rcnee=$(cat /etc/apt/sources.list | grep rcn-ee || true)
 if [ ! "x${test_rcnee}" = "x" ] ; then
 	apt-get update
 	get_device
-	latest_version_repo
 
-	echo "Not implemtned yet"
-	echo "run: [git pull] incase i've fixed it"
-	exit 1
+	if [ "x${kernel_version}" = "x" ] ; then
+		latest_version_repo
+	else
+		echo "Not implemtned yet"
+		echo "run: [git pull] incase i've fixed it"
+		exit 1
+		specific_version
+	fi
+
 else
 	get_device
 	if [ "x${kernel_version}" = "x" ] ; then
