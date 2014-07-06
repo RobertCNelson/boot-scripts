@@ -46,6 +46,7 @@ update_uEnv_txt () {
 		deb_old_kernel=$(grep uname_r /boot/uEnv.txt | awk -F"=" '{print $2}')
 		sed -i -e 's:'${deb_old_kernel}':'${latest_kernel}':g' /boot/uEnv.txt
 		echo "info: `grep uname_r /boot/uEnv.txt`"
+		echo "info: kernel , now safe to reboot..."
 	fi
 }
 
@@ -79,11 +80,11 @@ latest_version_repo () {
 			if [ "x${deb_pkgs}" = "x${apt_cache}" ] ; then
 				apt-get install -y ${pkg}
 				update_uEnv_txt
+			elif [ "x${pkg}" = "x${apt_cache}" ] ; then
+				apt-get install -y ${pkg} --reinstall
+				update_uEnv_txt
 			else
-				if [ "x${pkg}" = "x${apt_cache}" ] ; then
-					apt-get install -y ${pkg} --reinstall
-					update_uEnv_txt
-				fi
+				echo "error: [${pkg}] unavailable"
 			fi
 		fi
 	fi
@@ -133,6 +134,25 @@ specific_version () {
 		/bin/bash /tmp/install-me.sh
 	else
 		echo "error: kernel: ${kernel_version} doesnt exist"
+	fi
+}
+
+specific_version_repo () {
+	latest_kernel=$(echo ${kernel_version} | sed 's/^v//')
+
+	pkg="linux-image-${latest_kernel}"
+	#is the package installed?
+	check_dpkg
+	#is the package even available to apt?
+	check_apt_cache
+	if [ "x${deb_pkgs}" = "x${apt_cache}" ] ; then
+		apt-get install -y ${pkg}
+		update_uEnv_txt
+	elif [ "x${pkg}" = "x${apt_cache}" ] ; then
+		apt-get install -y ${pkg} --reinstall
+		update_uEnv_txt
+	else
+		echo "error: [${pkg}] unavailable"
 	fi
 }
 
@@ -193,10 +213,7 @@ if [ ! "x${test_rcnee}" = "x" ] ; then
 	if [ "x${kernel_version}" = "x" ] ; then
 		latest_version_repo
 	else
-		echo "Not implemtned yet"
-		echo "run: [git pull] incase i've fixed it"
-		exit 1
-		specific_version
+		specific_version_repo
 	fi
 
 else
