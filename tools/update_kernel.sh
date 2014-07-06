@@ -41,6 +41,23 @@ get_device () {
 	esac
 }
 
+latest_version_repo () {
+	if [ ! "x${SOC}" = "x" ] ; then
+		cd /tmp/
+		if [ -f /tmp/LATEST-${SOC} ] ; then
+			rm -f /tmp/LATEST-${SOC} || true
+		fi
+
+		wget ${mirror}/${dist}-${arch}/LATEST-${SOC}
+		if [ -f /tmp/LATEST-${SOC} ] ; then
+			latest_kernel=$(cat /tmp/LATEST-${SOC} | grep ${kernel} | awk '{print $3}' | awk -F'/' '{print $6}')
+			if [ "xv${current_kernel}" = "x${latest_kernel}" ] ; then
+				echo "v${current_kernel} is latest"
+			fi
+		fi
+	fi
+}
+
 latest_version () {
 	if [ ! "x${SOC}" = "x" ] ; then
 		cd /tmp/
@@ -138,18 +155,20 @@ done
 
 test_rcnee=$(cat /etc/apt/sources.list | grep rcn-ee || true)
 if [ ! "x${test_rcnee}" = "x" ] ; then
-	sudo apt-get update
+	apt-get update
+	get_device
+	latest_version_repo
 
 	echo "Not implemtned yet"
 	echo "run: [git pull] incase i've fixed it"
 	exit 1
-fi
-
-get_device
-if [ "x${kernel_version}" = "x" ] ; then
-	latest_version
 else
-	specific_version
+	get_device
+	if [ "x${kernel_version}" = "x" ] ; then
+		latest_version
+	else
+		specific_version
+	fi
 fi
 #third_party
 #
