@@ -68,7 +68,7 @@ latest_version_repo () {
 			check_dpkg
 			#is the package even available to apt?
 			check_apt_cache
-			if [ "x${deb_pkgs}" = "x${pkg}" ] && [ "x${apt_cache}" = "x${pkg}" ] ; then
+			if [ "x${deb_pkgs}" = "x${apt_cache}" ] ; then
 				apt-get install -y ${pkg}
 			fi
 
