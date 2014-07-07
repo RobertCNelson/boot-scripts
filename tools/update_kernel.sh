@@ -86,7 +86,7 @@ latest_version_repo () {
 				apt-get install -y ${pkg} --reinstall
 				update_uEnv_txt
 			else
-				echo "error: [${pkg}] unavailable"
+				echo "info: [${pkg}] (latest) is currently unavailable on [repos.rcn-ee.net]"
 			fi
 		fi
 	fi
