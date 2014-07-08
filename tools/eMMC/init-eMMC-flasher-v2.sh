@@ -319,6 +319,14 @@ copy_rootfs () {
 			echo default-on > /sys/class/leds/beaglebone\:green\:usr3/trigger
 		fi
 		mount
+
+		echo ""
+		echo "-----------------------------"
+		echo ""
+		echo "eMMC has been flashed, please remove power and microSD card"
+		echo ""
+		echo "-----------------------------"
+
 		halt -f
 	fi
 }
