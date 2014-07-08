@@ -190,7 +190,7 @@ fdisk_toggle_boot () {
 format_boot () {
 	LC_ALL=C fdisk -l ${destination} | grep ${destination}p1 | grep '*' || fdisk_toggle_boot
 
-	mkfs.vfat -F 16 ${destination}p1 -n BOOT
+	mkfs.vfat -F 16 ${destination}p1 -n BEAGLE_BONE
 	flush_cache
 }
 
