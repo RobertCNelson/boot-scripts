@@ -271,7 +271,13 @@ copy_rootfs () {
 	unset root_uuid
 	root_uuid=$(/sbin/blkid -c /dev/null -s UUID -o value ${destination}p2)
 	if [ "${root_uuid}" ] ; then
+
+		#for compatibilty, uuid was added late, those u-boots will override this value...
 		echo "mmcroot=UUID=${root_uuid}" >> /tmp/rootfs/boot/uEnv.txt
+
+		sed -i -e 's:uuid=:#uuid=:g' /tmp/rootfs/boot/uEnv.txt
+		echo "uuid=${root_uuid}" >> /tmp/rootfs/boot/uEnv.txt
+
 		root_uuid="UUID=${root_uuid}"
 	else
 		#really a failure...
