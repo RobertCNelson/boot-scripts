@@ -158,17 +158,34 @@ specific_version_repo () {
 	fi
 }
 
-#FIXME: third_party modules...
 third_party () {
-	machine=$(cat /proc/device-tree/model | sed "s/ /_/g")
-	case "${machine}" in
-	TI_AM335x_BeagleBone)
-		echo "Third party modules..."
-		;;
-	*)
-		echo "No third party modules..."
-		;;
-	esac
+	if [ -f /etc/rcn-ee.conf ] ; then
+		. /etc/rcn-ee.conf
+		if [ "x${third_party_modules}" = "xenable" ] ; then
+
+			cd /tmp/
+			if [ -f /tmp/index.html ] ; then
+				rm -f /tmp/index.html || true
+			fi
+
+			wget ${mirror}/${dist}-${arch}/v${latest_kernel}/
+			unset thirdparty_file
+			thirdparty_file=$(cat /tmp/index.html | grep thirdparty | head -n 1)
+			thirdparty_file=$(echo ${thirdparty_file} | awk -F "\"" '{print $2}')
+
+			if [ "x${thirdparty_file}" = "xthirdparty" ] ; then
+				if [ -f /tmp/thirdparty ] ; then
+					rm -rf /tmp/thirdparty || true
+				fi
+				wget ${mirror}/${dist}-${arch}/v${latest_kernel}/thirdparty
+				if [ -f /tmp/thirdparty ] ; then
+					sudo /bin/sh /tmp/thirdparty
+					sudo depmod ${latest_kernel} -a
+				fi
+			fi
+
+		fi
+	fi
 }
 
 checkparm () {
@@ -217,7 +234,7 @@ if [ ! "x${test_rcnee}" = "x" ] ; then
 	else
 		specific_version_repo
 	fi
-
+	third_party
 else
 	get_device
 	if [ "x${kernel_version}" = "x" ] ; then
