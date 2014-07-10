@@ -162,6 +162,7 @@ third_party () {
 	if [ -f /etc/rcn-ee.conf ] ; then
 		. /etc/rcn-ee.conf
 		if [ "x${third_party_modules}" = "xenable" ] ; then
+			echo "Debug: third_party_modules enabled in /etc/rcn-ee.conf"
 
 			cd /tmp/
 			if [ -f /tmp/index.html ] ; then
@@ -181,6 +182,8 @@ third_party () {
 				if [ -f /tmp/thirdparty ] ; then
 					/bin/sh /tmp/thirdparty
 					depmod ${latest_kernel} -a
+					update-initramfs -uk ${latest_kernel}
+					echo "Debug: third party kernel modules now installed."
 				fi
 			fi
 
