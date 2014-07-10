@@ -179,8 +179,8 @@ third_party () {
 				fi
 				wget ${mirror}/${dist}-${arch}/v${latest_kernel}/thirdparty
 				if [ -f /tmp/thirdparty ] ; then
-					sudo /bin/sh /tmp/thirdparty
-					sudo depmod ${latest_kernel} -a
+					/bin/sh /tmp/thirdparty
+					depmod ${latest_kernel} -a
 				fi
 			fi
 
@@ -235,6 +235,7 @@ if [ ! "x${test_rcnee}" = "x" ] ; then
 		specific_version_repo
 	fi
 	third_party
+	apt-get clean
 else
 	get_device
 	if [ "x${kernel_version}" = "x" ] ; then
