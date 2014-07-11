@@ -250,9 +250,30 @@ check_soc_sh () {
 			echo "Sorry: board undefined in [${DRIVE}/SOC.sh] can not update bootloader safely"
 			exit
 		fi
-	else
-		echo "Sorry: unable to find [${DRIVE}/SOC.sh] can not update bootloader safely"
-		exit
+	fi
+
+	if [ -f /boot/SOC.sh ] ; then
+		. /boot/SOC.sh
+		mkdir -p /tmp/uboot/
+		mount /dev/mmcblk0p1 /tmp/uboot/
+		DRIVE="/tmp/uboot"
+		if [ "x${board}" != "x" ] ; then
+
+			if [ "x${board}" = "xam335x_boneblack" ] ; then
+				#Special eeprom less u-boot, switch them to normal on upgrades
+				sed -i -e 's:am335x_boneblack:am335x_evm:g' ${DRIVE}/SOC.sh
+				board="am335x_evm"
+			fi
+
+			conf_board="${board}"
+			got_board
+		else
+			echo "Sorry: board undefined in [${DRIVE}/SOC.sh] can not update bootloader safely"
+			exit
+		fi
+		sync
+		sync
+		umount /tmp/uboot/ || true
 	fi
 
 	if [ $(uname -m) != "armv7l" ] ; then
