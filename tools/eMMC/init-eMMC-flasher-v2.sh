@@ -178,18 +178,7 @@ cylon_leds () {
 	fi
 }
 
-fdisk_toggle_boot () {
-	fdisk ${destination} <<-__EOF__
-	a
-	1
-	w
-	__EOF__
-	flush_cache
-}
-
 format_boot () {
-	LC_ALL=C fdisk -l ${destination} | grep ${destination}p1 | grep '*' || fdisk_toggle_boot
-
 	mkfs.vfat -F 16 ${destination}p1 -n BEAGLEBONE
 	flush_cache
 }
