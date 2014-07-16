@@ -42,12 +42,14 @@ get_device () {
 }
 
 update_uEnv_txt () {
-	if [ -f /boot/uEnv.txt ] ; then
-		older_kernel=$(grep uname_r /boot/uEnv.txt | awk -F"=" '{print $2}')
-		sed -i -e 's:'${older_kernel}':'${latest_kernel}':g' /boot/uEnv.txt
-		echo "info: /boot/uEnv.txt: `grep uname_r /boot/uEnv.txt`"
-		if [ ! "x${older_kernel}" = "x${latest_kernel}" ] ; then
-			echo "info: [${latest_kernel}] now installed and will be used on the next reboot..."
+	if [ ! -f /etc/kernel/postinst.d/zz-uenv_txt ] ; then
+		if [ -f /boot/uEnv.txt ] ; then
+			older_kernel=$(grep uname_r /boot/uEnv.txt | awk -F"=" '{print $2}')
+			sed -i -e 's:'${older_kernel}':'${latest_kernel}':g' /boot/uEnv.txt
+			echo "info: /boot/uEnv.txt: `grep uname_r /boot/uEnv.txt`"
+			if [ ! "x${older_kernel}" = "x${latest_kernel}" ] ; then
+				echo "info: [${latest_kernel}] now installed and will be used on the next reboot..."
+			fi
 		fi
 	fi
 }
