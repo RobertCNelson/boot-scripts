@@ -207,6 +207,10 @@ copy_boot () {
 	rsync -aAX /boot/uboot/ /tmp/boot/ --exclude={MLO,u-boot.img,uEnv.txt} || write_failure
 	flush_cache
 
+	echo "update-initramfs: generating /boot/initrd.img-`uname -r`"
+	update-initramfs -c -k $(uname -r) -b /tmp/boot/
+	flush_cache
+
 	flush_cache
 	umount /tmp/boot/ || umount -l /tmp/boot/ || write_failure
 	flush_cache
