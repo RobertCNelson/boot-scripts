@@ -193,6 +193,7 @@ partition_drive () {
 
 copy_boot () {
 	echo "Copying: ${source}p1 -> ${destination}p1"
+	mount ${source}p1 /boot/uboot -o ro
 	mkdir -p /tmp/boot/ || true
 	mount ${destination}p1 /tmp/boot/ -o sync
 	#Make sure the BootLoader gets copied first:
