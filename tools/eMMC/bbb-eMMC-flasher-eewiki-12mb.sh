@@ -106,6 +106,17 @@ check_running_system () {
 		echo "Error: [${destination}] does not exist"
 		write_failure
 	fi
+
+	if [ ! -f /boot/config-$(uname -r) ] ; then
+		zcat /proc/config.gz > /boot/config-$(uname -r)
+	fi
+
+	if [ -f /boot/initrd.img-$(uname -r) ] ; then
+		update-initramfs -u -k $(uname -r)
+	else
+		update-initramfs -c -k $(uname -r)
+	fi
+	flush_cache
 }
 
 cylon_leds () {
@@ -192,19 +203,6 @@ partition_drive () {
 }
 
 copy_boot () {
-
-	if [ ! -f /boot/config-$(uname -r) ] ; then
-		zcat /proc/config.gz > /boot/config-$(uname -r)
-	fi
-
-	echo "update-initramfs: generating /boot/initrd.img-$(uname -r)"
-	if [ -f /boot/initrd.img-$(uname -r) ] ; then
-		update-initramfs -u -k $(uname -r)
-	else
-		update-initramfs -c -k $(uname -r)
-	fi
-	flush_cache
-
 	mount ${source}p1 /boot/uboot -o ro
 
 	echo "Copying: ${source}p1 -> ${destination}p1"
