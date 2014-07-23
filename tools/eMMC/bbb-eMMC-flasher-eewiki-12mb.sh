@@ -192,8 +192,22 @@ partition_drive () {
 }
 
 copy_boot () {
-	echo "Copying: ${source}p1 -> ${destination}p1"
+
+	if [ ! -f /boot/config-$(uname -r) ] ; then
+		zcat /proc/config.gz > /boot/config-$(uname -r)
+	fi
+
+	echo "update-initramfs: generating /boot/initrd.img-$(uname -r)"
+	if [ -f /boot/initrd.img-$(uname -r) ] ; then
+		update-initramfs -u -k $(uname -r)
+	else
+		update-initramfs -c -k $(uname -r)
+	fi
+	flush_cache
+
 	mount ${source}p1 /boot/uboot -o ro
+
+	echo "Copying: ${source}p1 -> ${destination}p1"
 	mkdir -p /tmp/boot/ || true
 	mount ${destination}p1 /tmp/boot/ -o sync
 	#Make sure the BootLoader gets copied first:
@@ -205,12 +219,6 @@ copy_boot () {
 
 	echo "rsync: /boot/uboot/ -> /tmp/boot/"
 	rsync -aAX /boot/uboot/ /tmp/boot/ --exclude={MLO,u-boot.img,uEnv.txt} || write_failure
-	flush_cache
-
-	zcat /proc/config.gz > /boot/config-$(uname -r)
-
-	echo "update-initramfs: generating /boot/initrd.img-$(uname -r)"
-	update-initramfs -c -k $(uname -r) -b /tmp/boot/
 	flush_cache
 
 	flush_cache
