@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -e
 
 echo "Acquire::http::Proxy \"http://apt-proxy:3142/\";" > /tmp/apt.conf
 echo "Acquire::PDiffs \"false\";" >> /tmp/apt.conf
