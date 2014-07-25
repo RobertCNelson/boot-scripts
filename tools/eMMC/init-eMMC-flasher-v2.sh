@@ -298,7 +298,7 @@ copy_rootfs () {
 	dd if=${destination} of=/dev/null count=100000
 
 	echo ""
-	echo "This script has now completed it's task"
+	echo "This script has now completed its task"
 	echo "-----------------------------"
 
 	if [ -f /boot/debug.txt ] ; then
