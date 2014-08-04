@@ -35,6 +35,11 @@ if grep -q '[ =/]init-eMMC-flasher-v2.sh\>' /proc/cmdline ; then
 	RUN_AS_INIT=1
 
 	root_drive="$(sed 's:.*root=/dev/\([^ ]*\):\1:;s/[ $].*//' /proc/cmdline)"
+
+	if [ ! "x${root_drive}" = "xmmcblk0p2" ] || [ ! "x${root_drive}" = "xmmcblk1p2" ] ; then
+		root_drive="mmcblk0p2"
+	fi
+
 	boot_drive="${root_drive%?}1"
 
 	mount /dev/$boot_drive /boot/uboot -o ro
