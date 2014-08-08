@@ -85,6 +85,10 @@ latest_version_repo () {
 				apt-get install -y ${pkg}
 				update_uEnv_txt
 			elif [ "x${pkg}" = "x${apt_cache}" ] ; then
+				if [ "x${daily_cron}" = "xenabled" ] ; then
+					apt-get clean
+					exit
+				fi
 				apt-get install -y ${pkg} --reinstall
 				update_uEnv_txt
 			else
@@ -215,6 +219,7 @@ kernel="STABLE"
 mirror="https://rcn-ee.net/deb"
 unset rcn_mirror
 unset kernel_version
+unset daily_cron
 # parse commandline options
 while [ ! -z "$1" ] ; do
 	case $1 in
@@ -225,6 +230,9 @@ while [ ! -z "$1" ] ; do
 	--kernel)
 		checkparm $2
 		kernel_version="$2"
+		;;
+	--daily-cron)
+		daily_cron="enabled"
 		;;
 	--beta-kernel)
 		kernel="TESTING"
