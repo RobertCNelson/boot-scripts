@@ -52,6 +52,10 @@ update_uEnv_txt () {
 			fi
 		fi
 	fi
+
+	if [ "x${daily_cron}" = "xenabled" ] ; then
+		touch /tmp/daily_cron.reboot
+	fi
 }
 
 check_dpkg () {
