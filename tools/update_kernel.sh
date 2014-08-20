@@ -27,18 +27,21 @@ fi
 
 get_device () {
 	machine=$(cat /proc/device-tree/model | sed "s/ /_/g")
-	case "${machine}" in
-	TI_AM335x_BeagleBone)
-		SOC="omap-psp"
-		;;
-	TI_OMAP5_uEVM_board)
-		SOC="armv7-lpae"
-		;;
-	*)
-		echo "Machine: [${machine}]"
-		SOC="armv7"
-		;;
-	esac
+
+	if [ "x${SOC}" = "x" ] ; then
+		case "${machine}" in
+		TI_AM335x_BeagleBone)
+			SOC="omap-psp"
+			;;
+		TI_OMAP5_uEVM_board)
+			SOC="armv7-lpae"
+			;;
+		*)
+			echo "Machine: [${machine}]"
+			SOC="armv7"
+			;;
+		esac
+	fi
 }
 
 update_uEnv_txt () {
@@ -243,6 +246,9 @@ while [ ! -z "$1" ] ; do
 		;;
 	--exp-kernel)
 		kernel="EXPERIMENTAL"
+		;;
+	--ti-kernel)
+		SOC="ti"
 		;;
 	esac
 	shift
