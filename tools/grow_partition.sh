@@ -86,20 +86,21 @@ dd_spl_uboot_boot () {
 }
 
 expand_partition () {
-	echo "${drive}" > /resizerootfs
-
 	if [ -f /boot/SOC.sh ] ; then
 		. /boot/SOC.sh
 	fi
 
 	case "${bootloader_location}" in
 	fatfs_boot)
+		echo "${drive}p2" > /resizerootfs
 		fatfs_boot
 		;;
 	dd_uboot_boot)
+		echo "${drive}p1" > /resizerootfs
 		dd_uboot_boot
 		;;
 	dd_spl_uboot_boot)
+		echo "${drive}p1" > /resizerootfs
 		dd_spl_uboot_boot
 		;;
 	esac
