@@ -31,13 +31,18 @@ if [ ! -f /etc/ssh/ssh_host_ecdsa_key.pub ] ; then
 fi
 
 unset root_drive
-root_drive="$(cat /proc/cmdline | sed 's/ /\n/g' | grep root=UUID= | awk -F 'root=UUID=' '{print $2}' || true)"
+root_drive="$(cat /proc/cmdline | sed 's/ /\n/g' | grep root=UUID= | awk -F 'root=' '{print $2}' || true)"
 if [ ! "x${root_drive}" = "x" ] ; then
-	echo "Error: script halting, could detect drive..."
-	exit 1
+	root_drive="$(/sbin/findfs ${root_drive} || true)"
 else
 	root_drive="$(cat /proc/cmdline | sed 's/ /\n/g' | grep root= | awk -F 'root=' '{print $2}' || true)"
+fi
+
+if [ ! "x${root_drive}" = "x" ] ; then
 	boot_drive="${root_drive%?}1"
+else
+	echo "Error: script halting, could detect drive..."
+	exit 1
 fi
 
 if [ "x${boot_drive}" = "x/dev/mmcblk0p1" ] ; then
@@ -48,6 +53,8 @@ else
 	echo "Error: script halting, could detect drive..."
 	exit 1
 fi
+
+echo "Media: [${drive}]"
 
 fatfs_boot () {
 	conf_boot_startmb=${conf_boot_startmb:-"1"}
