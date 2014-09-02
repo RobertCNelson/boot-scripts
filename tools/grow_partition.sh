@@ -68,11 +68,21 @@ fatfs_boot () {
 }
 
 dd_uboot_boot () {
-	echo "not implemented yet..."
+	conf_boot_startmb=${conf_boot_startmb:-"1"}
+	sfdisk_fstype=${sfdisk_fstype:-"0x83"}
+
+	LC_ALL=C sfdisk --force --no-reread --in-order --Linux --unit M ${drive} <<-__EOF__
+		${conf_boot_startmb},,${sfdisk_fstype},*
+	__EOF__
 }
 
 dd_spl_uboot_boot () {
-	echo "not implemented yet..."
+	conf_boot_startmb=${conf_boot_startmb:-"1"}
+	sfdisk_fstype=${sfdisk_fstype:-"0x83"}
+
+	LC_ALL=C sfdisk --force --no-reread --in-order --Linux --unit M ${drive} <<-__EOF__
+		${conf_boot_startmb},,${sfdisk_fstype},*
+	__EOF__
 }
 
 expand_partition () {
