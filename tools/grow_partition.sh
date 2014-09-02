@@ -42,11 +42,6 @@ else
 	exit 1
 fi
 
-backup_partition () {
-	echo "sfdisk: backing up partition layout."
-	sfdisk -d ${drive} > /etc/sfdisk.backup
-}
-
 expand_partition () {
 	echo "${drive}" > /resizerootfs
 
@@ -63,13 +58,6 @@ expand_partition () {
 	__EOF__
 }
 
-restore_partition () {
-	echo "sfdisk: restoring original layout"
-	sfdisk --force ${drive} < /etc/sfdisk.backup
-}
-
-backup_partition
 expand_partition
 echo "reboot"
-#restore_partition
 #
