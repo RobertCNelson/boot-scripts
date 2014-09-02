@@ -42,12 +42,7 @@ else
 	exit 1
 fi
 
-expand_partition () {
-	echo "${drive}" > /resizerootfs
-
-	if [ -f /boot/SOC.sh ] ; then
-		. /boot/SOC.sh
-	fi
+fatfs_boot () {
 	conf_boot_startmb=${conf_boot_startmb:-"1"}
 	conf_boot_endmb=${conf_boot_endmb:-"96"}
 	sfdisk_fstype=${sfdisk_fstype:-"0xE"}
@@ -56,6 +51,34 @@ expand_partition () {
 		${conf_boot_startmb},${conf_boot_endmb},${sfdisk_fstype},*
 		,,,-
 	__EOF__
+}
+
+dd_uboot_boot () {
+	echo "not implemented yet..."
+}
+
+dd_spl_uboot_boot () {
+	echo "not implemented yet..."
+}
+
+expand_partition () {
+	echo "${drive}" > /resizerootfs
+
+	if [ -f /boot/SOC.sh ] ; then
+		. /boot/SOC.sh
+	fi
+
+	case "${bootloader_location}" in
+	fatfs_boot)
+		fatfs_boot
+		;;
+	dd_uboot_boot)
+		dd_uboot_boot
+		;;
+	dd_spl_uboot_boot)
+		dd_spl_uboot_boot
+		;;
+	esac
 }
 
 expand_partition
