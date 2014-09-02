@@ -45,18 +45,18 @@ else
 	exit 1
 fi
 
-if [ "x${boot_drive}" = "x/dev/mmcblk0p1" ] ; then
-	drive="/dev/mmcblk0"
-elif [ "x${boot_drive}" = "x/dev/mmcblk1p1" ] ; then
-	drive="/dev/mmcblk1"
-else
-	echo "Error: script halting, could detect drive..."
-	exit 1
-fi
+single_partition () {
+	echo "${drive}p1" > /resizerootfs
+	conf_boot_startmb=${conf_boot_startmb:-"1"}
+	sfdisk_fstype=${sfdisk_fstype:-"0x83"}
 
-echo "Media: [${drive}]"
+	LC_ALL=C sfdisk --force --no-reread --in-order --Linux --unit M ${drive} <<-__EOF__
+		${conf_boot_startmb},,${sfdisk_fstype},*
+	__EOF__
+}
 
-fatfs_boot () {
+dual_partition () {
+	echo "${drive}p2" > /resizerootfs
 	conf_boot_startmb=${conf_boot_startmb:-"1"}
 	conf_boot_endmb=${conf_boot_endmb:-"96"}
 	sfdisk_fstype=${sfdisk_fstype:-"0xE"}
@@ -67,43 +67,27 @@ fatfs_boot () {
 	__EOF__
 }
 
-dd_uboot_boot () {
-	conf_boot_startmb=${conf_boot_startmb:-"1"}
-	sfdisk_fstype=${sfdisk_fstype:-"0x83"}
-
-	LC_ALL=C sfdisk --force --no-reread --in-order --Linux --unit M ${drive} <<-__EOF__
-		${conf_boot_startmb},,${sfdisk_fstype},*
-	__EOF__
-}
-
-dd_spl_uboot_boot () {
-	conf_boot_startmb=${conf_boot_startmb:-"1"}
-	sfdisk_fstype=${sfdisk_fstype:-"0x83"}
-
-	LC_ALL=C sfdisk --force --no-reread --in-order --Linux --unit M ${drive} <<-__EOF__
-		${conf_boot_startmb},,${sfdisk_fstype},*
-	__EOF__
-}
-
 expand_partition () {
 	if [ -f /boot/SOC.sh ] ; then
 		. /boot/SOC.sh
 	fi
 
-	case "${bootloader_location}" in
-	fatfs_boot)
-		echo "${drive}p2" > /resizerootfs
-		fatfs_boot
-		;;
-	dd_uboot_boot)
-		echo "${drive}p1" > /resizerootfs
-		dd_uboot_boot
-		;;
-	dd_spl_uboot_boot)
-		echo "${drive}p1" > /resizerootfs
-		dd_spl_uboot_boot
-		;;
-	esac
+	if [ "x${boot_drive}" = "x/dev/mmcblk0p1" ] ; then
+		drive="/dev/mmcblk0"
+	elif [ "x${boot_drive}" = "x/dev/mmcblk1p1" ] ; then
+		drive="/dev/mmcblk1"
+	else
+		echo "Error: script halting, could detect drive..."
+		exit 1
+	fi
+
+	echo "Media: [${drive}]"
+
+	if [ "x${boot_drive}" = "x${root_drive}" ] ; then
+		single_partition
+	else
+		dual_partition
+	fi
 }
 
 expand_partition
