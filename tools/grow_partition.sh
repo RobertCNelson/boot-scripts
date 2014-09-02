@@ -30,12 +30,19 @@ if [ ! -f /etc/ssh/ssh_host_ecdsa_key.pub ] ; then
 	exit 1
 fi
 
-root_drive="$(sed 's:.*root=/dev/\([^ ]*\):\1:;s/[ $].*//' /proc/cmdline)"
-boot_drive="${root_drive%?}1"
+unset root_drive
+root_drive="$(cat /proc/cmdline | sed 's/ /\n/g' | grep root=UUID= | awk -F 'root=UUID=' '{print $2}' || true)"
+if [ ! "x${root_drive}" = "x" ] ; then
+	echo "Error: script halting, could detect drive..."
+	exit 1
+else
+	root_drive="$(cat /proc/cmdline | sed 's/ /\n/g' | grep root= | awk -F 'root=' '{print $2}' || true)"
+	boot_drive="${root_drive%?}1"
+fi
 
-if [ "x${boot_drive}" = "xmmcblk0p1" ] ; then
+if [ "x${boot_drive}" = "x/dev/mmcblk0p1" ] ; then
 	drive="/dev/mmcblk0"
-elif [ "x${boot_drive}" = "xmmcblk1p1" ] ; then
+elif [ "x${boot_drive}" = "x/dev/mmcblk1p1" ] ; then
 	drive="/dev/mmcblk1"
 else
 	echo "Error: script halting, could detect drive..."
