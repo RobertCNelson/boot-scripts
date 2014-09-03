@@ -34,24 +34,26 @@ unset RUN_AS_INIT
 if grep -q '[ =/]init-eMMC-flasher-v2.sh\>' /proc/cmdline ; then
 	RUN_AS_INIT=1
 
-	root_drive="$(sed 's:.*root=/dev/\([^ ]*\):\1:;s/[ $].*//' /proc/cmdline)"
-
-	if [ ! "x${root_drive}" = "xmmcblk0p2" ] || [ ! "x${root_drive}" = "xmmcblk1p2" ] ; then
-		root_drive="mmcblk0p2"
+	unset root_drive
+	root_drive="$(cat /proc/cmdline | sed 's/ /\n/g' | grep root=UUID= | awk -F 'root=' '{print $2}' || true)"
+	if [ ! "x${root_drive}" = "x" ] ; then
+		root_drive="$(/sbin/findfs ${root_drive} || true)"
+	else
+		root_drive="$(cat /proc/cmdline | sed 's/ /\n/g' | grep root= | awk -F 'root=' '{print $2}' || true)"
 	fi
 
 	boot_drive="${root_drive%?}1"
 
-	mount /dev/$boot_drive /boot/uboot -o ro
+	mount ${boot_drive} /boot/uboot -o ro
 	mount -t tmpfs tmpfs /tmp
 fi
 
-if [ "x${boot_drive}" = "xmmcblk0p1" ] ; then
+if [ "x${boot_drive}" = "x/dev/mmcblk0p1" ] ; then
 	source="/dev/mmcblk0"
 	destination="/dev/mmcblk1"
 fi
 
-if [ "x${boot_drive}" = "xmmcblk1p1" ] ; then
+if [ "x${boot_drive}" = "x/dev/mmcblk1p1" ] ; then
 	source="/dev/mmcblk1"
 	destination="/dev/mmcblk0"
 fi
