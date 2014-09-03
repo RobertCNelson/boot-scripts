@@ -224,11 +224,11 @@ dd_bootloader () {
 		dd_uboot="${dd_uboot}bs=${dd_uboot_bs}"
 	fi
 
-	echo "${spl_uboot_name}: dd if=${spl_uboot_name} of=${destination} ${dd_spl_uboot}"
+	echo "dd if=${dd_spl_uboot_backup} of=${destination} ${dd_spl_uboot}"
 	echo "-----------------------------"
 	dd if=${dd_spl_uboot_backup} of=${destination} ${dd_spl_uboot}
 	echo "-----------------------------"
-	echo "${uboot_name}: dd if=${uboot_name} of=${destination} ${dd_uboot}"
+	echo "dd if=${dd_uboot_backup} of=${destination} ${dd_uboot}"
 	echo "-----------------------------"
 	dd if=${dd_uboot_backup} of=${destination} ${dd_uboot}
 }
