@@ -234,17 +234,26 @@ dd_bootloader () {
 }
 
 format_boot () {
+	echo "mkfs.vfat -F 16 ${destination}p1 -n BEAGLEBONE"
+	echo "-----------------------------"
 	mkfs.vfat -F 16 ${destination}p1 -n BEAGLEBONE
+	echo "-----------------------------"
 	flush_cache
 }
 
 format_root () {
+	echo "mkfs.ext4 ${destination}p2 -L rootfs"
+	echo "-----------------------------"
 	mkfs.ext4 ${destination}p2 -L rootfs
+	echo "-----------------------------"
 	flush_cache
 }
 
 format_single_root () {
+	echo "mkfs.ext4 ${destination}p1 -L rootfs"
+	echo "-----------------------------"
 	mkfs.ext4 ${destination}p1 -L rootfs
+	echo "-----------------------------"
 	flush_cache
 }
 
