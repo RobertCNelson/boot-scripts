@@ -297,7 +297,7 @@ copy_rootfs () {
 	fi
 
 	echo "/boot/uEnv.txt: disabling flasher script"
-	script="cmdline=init=/opt/scripts/tools/eMMC/init-eMMC-flasher-v2.sh"
+	script="cmdline=init=/opt/scripts/tools/eMMC/init-eMMC-flasher-v3.sh"
 	sed -i -e 's:'$script':#'$script':g' /tmp/rootfs/boot/uEnv.txt
 	cat /tmp/rootfs/boot/uEnv.txt
 
