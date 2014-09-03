@@ -31,7 +31,7 @@ fi
 
 # Check to see if we're starting as init
 unset RUN_AS_INIT
-if grep -q '[ =/]init-eMMC-flasher-v2.sh\>' /proc/cmdline ; then
+if grep -q '[ =/]init-eMMC-flasher-v3.sh\>' /proc/cmdline ; then
 	RUN_AS_INIT=1
 
 	unset root_drive
@@ -226,11 +226,11 @@ dd_bootloader () {
 
 	echo "${spl_uboot_name}: dd if=${spl_uboot_name} of=${destination} ${dd_spl_uboot}"
 	echo "-----------------------------"
-#	dd if=${SPL} of=${destination} ${dd_spl_uboot}
+	dd if=${dd_spl_uboot_backup} of=${destination} ${dd_spl_uboot}
 	echo "-----------------------------"
 	echo "${uboot_name}: dd if=${uboot_name} of=${destination} ${dd_uboot}"
 	echo "-----------------------------"
-#	dd if=${UBOOT} of=${destination} ${dd_uboot}
+	dd if=${dd_uboot_backup} of=${destination} ${dd_uboot}
 }
 
 format_boot () {
@@ -243,35 +243,9 @@ format_root () {
 	flush_cache
 }
 
-partition_drive () {
-	echo "Erasing: ${destination}"
+format_single_root () {
+	mkfs.ext4 ${destination}p1 -L rootfs
 	flush_cache
-	dd if=/dev/zero of=${destination} bs=1M count=108
-	sync
-	dd if=${destination} of=/dev/null bs=1M count=108
-	sync
-	flush_cache
-
-	if [ -f /boot/SOC.sh ] ; then
-		. /boot/SOC.sh
-	fi
-
-	dd_bootloader
-
-	conf_boot_startmb=${conf_boot_startmb:-"1"}
-	conf_boot_endmb=${conf_boot_endmb:-"96"}
-	sfdisk_fstype=${sfdisk_fstype:-"0xE"}
-
-	echo "Formatting: ${destination}"
-	#96Mb fat formatted boot partition
-	LC_ALL=C sfdisk --force --in-order --Linux --unit M "${destination}" <<-__EOF__
-		${conf_boot_startmb},${conf_boot_endmb},${sfdisk_fstype},*
-		,,,-
-	__EOF__
-
-	flush_cache
-	format_boot
-	format_root
 }
 
 copy_boot () {
@@ -291,9 +265,9 @@ copy_boot () {
 }
 
 copy_rootfs () {
-	echo "Copying: ${source}p2 -> ${destination}p2"
+	echo "Copying: ${source}p${media_rootfs} -> ${destination}p${media_rootfs}"
 	mkdir -p /tmp/rootfs/ || true
-	mount ${destination}p2 /tmp/rootfs/ -o async,noatime
+	mount ${destination}p${media_rootfs} /tmp/rootfs/ -o async,noatime
 
 	echo "rsync: / -> /tmp/rootfs/"
 	rsync -aAX /* /tmp/rootfs/ --exclude={/dev/*,/proc/*,/sys/*,/tmp/*,/run/*,/mnt/*,/media/*,/lost+found,/lib/modules/*} || write_failure
@@ -311,7 +285,7 @@ copy_rootfs () {
 	flush_cache
 
 	unset root_uuid
-	root_uuid=$(/sbin/blkid -c /dev/null -s UUID -o value ${destination}p2)
+	root_uuid=$(/sbin/blkid -c /dev/null -s UUID -o value ${destination}p${media_rootfs})
 	if [ "${root_uuid}" ] ; then
 		sed -i -e 's:uuid=:#uuid=:g' /tmp/rootfs/boot/uEnv.txt
 		echo "uuid=${root_uuid}" >> /tmp/rootfs/boot/uEnv.txt
@@ -319,7 +293,7 @@ copy_rootfs () {
 		root_uuid="UUID=${root_uuid}"
 	else
 		#really a failure...
-		root_uuid="${source}p2"
+		root_uuid="${source}p${media_rootfs}"
 	fi
 
 	echo "/boot/uEnv.txt: disabling flasher script"
@@ -373,10 +347,58 @@ copy_rootfs () {
 	fi
 }
 
+partition_drive () {
+	echo "Erasing: ${destination}"
+	flush_cache
+	dd if=/dev/zero of=${destination} bs=1M count=108
+	sync
+	dd if=${destination} of=/dev/null bs=1M count=108
+	sync
+	flush_cache
+
+	if [ -f /boot/SOC.sh ] ; then
+		. /boot/SOC.sh
+	fi
+
+	dd_bootloader
+
+	if [ "x${conf_boot_endmb}" = "x96" ] ; then
+		conf_boot_startmb=${conf_boot_startmb:-"1"}
+		conf_boot_endmb=${conf_boot_endmb:-"96"}
+		sfdisk_fstype=${sfdisk_fstype:-"0xE"}
+
+		echo "Formatting: ${destination}"
+		LC_ALL=C sfdisk --force --in-order --Linux --unit M "${destination}" <<-__EOF__
+			${conf_boot_startmb},${conf_boot_endmb},${sfdisk_fstype},*
+			,,,-
+		__EOF__
+
+		flush_cache
+		format_boot
+		format_root
+
+		copy_boot
+		media_rootfs="2"
+		copy_rootfs
+	else
+		conf_boot_startmb=${conf_boot_startmb:-"1"}
+		sfdisk_fstype=${sfdisk_fstype:-"0x83"}
+
+		echo "Formatting: ${destination}"
+		LC_ALL=C sfdisk --force --in-order --Linux --unit M "${destination}" <<-__EOF__
+			${conf_boot_startmb},,${sfdisk_fstype},*
+		__EOF__
+
+		flush_cache
+		format_single_root
+
+		media_rootfs="1"
+		copy_rootfs
+	fi
+}
+
 check_eeprom
 check_running_system
 cylon_leds & CYLON_PID=$!
 partition_drive
-dd_bootloader
-copy_boot
-copy_rootfs
+#
