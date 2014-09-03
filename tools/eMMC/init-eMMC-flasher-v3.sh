@@ -279,7 +279,7 @@ copy_rootfs () {
 	mount ${destination}p${media_rootfs} /tmp/rootfs/ -o async,noatime
 
 	echo "rsync: / -> /tmp/rootfs/"
-	rsync -aAX /* /tmp/rootfs/ --exclude={/dev/*,/proc/*,/sys/*,/tmp/*,/run/*,/mnt/*,/media/*,/lost+found,/lib/modules/*} || write_failure
+	rsync -aAX /* /tmp/rootfs/ --exclude={/dev/*,/proc/*,/sys/*,/tmp/*,/run/*,/mnt/*,/media/*,/lost+found,/lib/modules/*,/uEnv.txt} || write_failure
 	flush_cache
 
 	#ssh keys will now get regenerated on the next bootup
