@@ -44,7 +44,9 @@ if grep -q '[ =/]init-eMMC-flasher-v3.sh\>' /proc/cmdline ; then
 
 	boot_drive="${root_drive%?}1"
 
-	mount ${boot_drive} /boot/uboot -o ro
+	if [ ! "x${boot_drive}" = "x${root_drive}" ] ; then
+		mount ${boot_drive} /boot/uboot -o ro
+	fi
 	mount -t tmpfs tmpfs /tmp
 fi
 
@@ -371,7 +373,7 @@ partition_drive () {
 
 	dd_bootloader
 
-	if [ "x${conf_boot_endmb}" = "x96" ] ; then
+	if [ "x${boot_fstype}" = "xfat" ] ; then
 		conf_boot_startmb=${conf_boot_startmb:-"1"}
 		conf_boot_endmb=${conf_boot_endmb:-"96"}
 		sfdisk_fstype=${sfdisk_fstype:-"0xE"}
