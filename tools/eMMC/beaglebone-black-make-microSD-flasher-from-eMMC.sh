@@ -76,11 +76,6 @@ check_running_system () {
 	echo "debug copying: [${source}] -> [${destination}]"
 	lsblk
 	echo "-----------------------------"
-	if [ ! -f /boot/uboot/uEnv.txt ] ; then
-		echo "Error: script halting, system unrecognized..."
-		echo "unable to find: [/boot/uboot/uEnv.txt] is ${source}p1 mounted?"
-		exit 1
-	fi
 }
 
 update_boot_files () {
@@ -90,20 +85,7 @@ update_boot_files () {
 		update-initramfs -u -k $(uname -r)
 	fi
 
-	if [ -f /boot/vmlinuz-$(uname -r) ] ; then
-		cp -v /boot/vmlinuz-$(uname -r) /boot/uboot/zImage
-	fi
-
-	if [ -f /boot/initrd.img-$(uname -r) ] ; then
-		cp -v /boot/initrd.img-$(uname -r) /boot/uboot/initrd.img
-	fi
-
-	mkimage -A arm -O linux -T ramdisk -C none -a 0 -e 0 -n initramfs -d /boot/initrd.img-$(uname -r) /boot/uboot/uInitrd
-}
-
-flush_cache () {
-	sync
-	blockdev --flushbufs ${destination}
+	exit 1
 }
 
 fdisk_toggle_boot () {
