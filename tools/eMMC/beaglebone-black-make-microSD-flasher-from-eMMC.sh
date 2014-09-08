@@ -361,7 +361,6 @@ partition_drive () {
 	fi
 }
 
-check_eeprom
 check_running_system
 cylon_leds & CYLON_PID=$!
 partition_drive
