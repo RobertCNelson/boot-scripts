@@ -28,35 +28,59 @@ if ! id | grep -q root; then
 	exit
 fi
 
-unset boot_drive
-boot_drive=$(LC_ALL=C lsblk -l | grep "/boot/uboot" | awk '{print $1}')
-
-if [ "x${boot_drive}" = "x" ] ; then
-	echo "Error: script halting, system unrecognized..."
-	exit 1
+unset root_drive
+root_drive="$(cat /proc/cmdline | sed 's/ /\n/g' | grep root=UUID= | awk -F 'root=' '{print $2}' || true)"
+if [ ! "x${root_drive}" = "x" ] ; then
+	root_drive="$(/sbin/findfs ${root_drive} || true)"
+else
+	root_drive="$(cat /proc/cmdline | sed 's/ /\n/g' | grep root= | awk -F 'root=' '{print $2}' || true)"
 fi
 
-if [ "x${boot_drive}" = "xmmcblk0p1" ] ; then
+boot_drive="${root_drive%?}1"
+
+if [ "x${boot_drive}" = "x/dev/mmcblk0p1" ] ; then
 	source="/dev/mmcblk0"
 	destination="/dev/mmcblk1"
 fi
 
-if [ "x${boot_drive}" = "xmmcblk1p1" ] ; then
+if [ "x${boot_drive}" = "x/dev/mmcblk1p1" ] ; then
 	source="/dev/mmcblk1"
 	destination="/dev/mmcblk0"
 fi
 
+flush_cache () {
+	sync
+	blockdev --flushbufs ${destination}
+}
+
+write_failure () {
+	echo "writing to [${destination}] failed..."
+
+	[ -e /proc/$CYLON_PID ]  && kill $CYLON_PID > /dev/null 2>&1
+
+	if [ -e /sys/class/leds/beaglebone\:green\:usr0/trigger ] ; then
+		echo heartbeat > /sys/class/leds/beaglebone\:green\:usr0/trigger
+		echo heartbeat > /sys/class/leds/beaglebone\:green\:usr1/trigger
+		echo heartbeat > /sys/class/leds/beaglebone\:green\:usr2/trigger
+		echo heartbeat > /sys/class/leds/beaglebone\:green\:usr3/trigger
+	fi
+	echo "-----------------------------"
+	flush_cache
+	umount ${destination}p1 > /dev/null 2>&1 || true
+	umount ${destination}p2 > /dev/null 2>&1 || true
+	inf_loop
+}
+
 check_running_system () {
+	echo "-----------------------------"
+	echo "debug copying: [${source}] -> [${destination}]"
+	lsblk
+	echo "-----------------------------"
 	if [ ! -f /boot/uboot/uEnv.txt ] ; then
 		echo "Error: script halting, system unrecognized..."
 		echo "unable to find: [/boot/uboot/uEnv.txt] is ${source}p1 mounted?"
 		exit 1
 	fi
-
-	echo "-----------------------------"
-	echo "debug copying: [${source}] -> [${destination}]"
-	lsblk
-	echo "-----------------------------"
 }
 
 update_boot_files () {
