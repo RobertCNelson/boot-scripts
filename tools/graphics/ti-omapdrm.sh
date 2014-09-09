@@ -65,6 +65,8 @@ pkg="libxext-dev:${deb_arch}"
 check_dpkg
 pkg="libdrm-omap1:${deb_arch}"
 check_dpkg
+pkg="libdrm-dev"
+check_dpkg
 
 if [ "${deb_pkgs}" ] ; then
 	echo ""
