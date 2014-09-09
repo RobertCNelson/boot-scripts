@@ -59,20 +59,12 @@ check_dpkg
 pkg="x11-xserver-utils"
 check_dpkg
 
-case "${deb_distro}" in
-wheezy|jessie|sid|raring|saucy|trusty)
-	pkg="libpthread-stubs0-dev:${deb_arch}"
-	check_dpkg
-	pkg="libxext-dev:${deb_arch}"
-	check_dpkg
-	;;
-*)
-	pkg="libpthread-stubs0-dev"
-	check_dpkg
-	pkg="libxext-dev"
-	check_dpkg
-	;;
-esac
+pkg="libpthread-stubs0-dev:${deb_arch}"
+check_dpkg
+pkg="libxext-dev:${deb_arch}"
+check_dpkg
+pkg="libdrm-omap1"
+check_dpkg
 
 if [ "${deb_pkgs}" ] ; then
 	echo ""
@@ -82,48 +74,6 @@ if [ "${deb_pkgs}" ] ; then
 	sudo apt-get clean
 	echo "--------------------"
 fi
-
-git_sha="libdrm-2.4.52"
-project="libdrm"
-server="git://anongit.freedesktop.org/mesa/drm"
-
-if [ ! -f ${HOME}/git/${project}/.git/config ] ; then
-	git clone ${server} ${HOME}/git/${project}/ || true
-fi
-
-if [ ! -f ${HOME}/git/${project}/.git/config ] ; then
-	rm -rf ${HOME}/git/${project}/ || true
-	echo "error: git failure, try re-runing"
-	exit
-fi
-
-echo ""
-echo "Building ${project}"
-echo ""
-
-cd ${HOME}/git/${project}/
-
-make distclean >/dev/null 2>&1 || true
-git checkout master -f
-git pull || true
-
-test_for_branch=$(git branch --list ${git_sha}-build)
-if [ "x${test_for_branch}" != "x" ] ; then
-	git branch ${git_sha}-build -D
-fi
-
-git checkout ${git_sha} -b ${git_sha}-build
-
-./autogen.sh --prefix=/usr --libdir=/usr/lib/`dpkg-architecture -qDEB_HOST_MULTIARCH >/dev/null 2>&1`/ \
---disable-libkms --disable-intel --disable-radeon --disable-nouveau --disable-vmwgfx \
---enable-omap-experimental-api --disable-manpages
-
-#--disable-exynos
-#--disable-freedreno
-
-make
-sudo make install
-make distclean >/dev/null 2>&1 || true
 
 git_sha="origin/master"
 project="xf86-video-omap"
