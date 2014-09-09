@@ -28,44 +28,14 @@ deb_distro=$(lsb_release -cs)
 deb_arch=$(LC_ALL=C dpkg --print-architecture)
 
 unset deb_pkgs
-pkg="build-essential"
-check_dpkg
-
-#autotools
-pkg="autoconf"
-check_dpkg
-pkg="libtool"
-check_dpkg
-pkg="pkg-config"
-check_dpkg
-
-#ddx
-pkg="xutils-dev"
-check_dpkg
-pkg="xserver-xorg-dev"
-check_dpkg
-pkg="x11proto-xf86dri-dev"
-check_dpkg
-pkg="libudev-dev"
-check_dpkg
-
-#git (not installed by default in netinstall)
-pkg="git-core"
-check_dpkg
-
-#utils:
 pkg="read-edid"
 check_dpkg
 pkg="x11-xserver-utils"
 check_dpkg
 
-pkg="libpthread-stubs0-dev:${deb_arch}"
-check_dpkg
-pkg="libxext-dev:${deb_arch}"
-check_dpkg
 pkg="libdrm-omap1:${deb_arch}"
 check_dpkg
-pkg="libdrm-dev"
+pkg="xf86-video-omap"
 check_dpkg
 
 if [ "${deb_pkgs}" ] ; then
@@ -76,42 +46,6 @@ if [ "${deb_pkgs}" ] ; then
 	sudo apt-get clean
 	echo "--------------------"
 fi
-
-git_sha="origin/master"
-project="xf86-video-omap"
-server="git://anongit.freedesktop.org/xorg/driver"
-
-if [ ! -f ${HOME}/git/${project}/.git/config ] ; then
-	git clone ${server}/${project}.git ${HOME}/git/${project}/ || true
-fi
-
-if [ ! -f ${HOME}/git/${project}/.git/config ] ; then
-	rm -rf ${HOME}/git/${project}/ || true
-	echo "error: git failure, try re-runing"
-	exit
-fi
-
-echo ""
-echo "Building ${project}"
-echo ""
-
-cd ${HOME}/git/${project}/
-
-make distclean >/dev/null 2>&1 || true
-git checkout master -f
-git pull || true
-
-test_for_branch=$(git branch --list ${git_sha}-build)
-if [ "x${test_for_branch}" != "x" ] ; then
-	git branch ${git_sha}-build -D
-fi
-
-git checkout ${git_sha} -b ${git_sha}-build
-
-./autogen.sh --prefix=/usr
-make
-sudo make install
-make distclean >/dev/null 2>&1 || true
 
 if [ ! -d /etc/X11/ ] ; then
 	sudo mkdir -p /etc/X11/ || true
