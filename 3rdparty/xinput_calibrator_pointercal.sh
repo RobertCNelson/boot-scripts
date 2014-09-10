@@ -19,7 +19,7 @@ whitelist=`$BINARY --list | sed 's/ /_/g' | awk -F "\"" '{print $2}' | grep EP07
 
 if [ ! "x${whitelist}" = "x" ] ; then
 	CALFILE="/etc/pointercal.xinput.EP0790M09"
-	device_id=`$BINARY --list | grep EP0790M09 | sed 's/ /\n/g' | grep id | awk -F 'id=' '{print #2}'`
+	device_id=`$BINARY --list | grep EP0790M09 | sed 's/ /\n/g' | grep id | awk -F "id=" '{print $2}'`
 
 	if [ -e $CALFILE ] ; then
 	  if grep replace $CALFILE ; then
