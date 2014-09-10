@@ -15,10 +15,9 @@ CALFILE="/etc/pointercal.xinput"
 LOGFILE="/var/log/xinput_calibrator.pointercal.log"
 
 #Device:
-whitelist=`$BINARY --list | sed 's/ /_/g' | awk -F "\"" '{print $2}' || true`
+whitelist=`$BINARY --list | sed 's/ /_/g' | awk -F "\"" '{print $2}' | grep EP0790M09 || true`
 
-case "${whitelist}" in
-EP0790M09)
+if [ ! "x${whitelist}" = "x" ] ; then
 	CALFILE="/etc/pointercal.xinput.EP0790M09"
 	device_id=`$BINARY --list | grep EP0790M09 | sed 's/ /\n/g' | grep id | awk -F 'id=' '{print #2}'`
 
@@ -37,9 +36,7 @@ EP0790M09)
 	  echo $CALDATA > $CALFILE
 	  echo "Calibration data stored in $CALFILE (log in $LOGFILE)"
 	fi
-
-	;;
-*)
+else
 	if [ -e $CALFILE ] ; then
 	  if grep replace $CALFILE ; then
 	    echo "Empty calibration file found, removing it"
@@ -63,5 +60,5 @@ EP0790M09)
 	  echo $CALDATA > $CALFILE
 	  echo "Calibration data stored in $CALFILE (log in $LOGFILE)"
 	fi
-	;;
-esac
+fi
+#
