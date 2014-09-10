@@ -14,26 +14,54 @@ BINARY="xinput_calibrator"
 CALFILE="/etc/pointercal.xinput"
 LOGFILE="/var/log/xinput_calibrator.pointercal.log"
 
-if [ -e $CALFILE ] ; then
-  if grep replace $CALFILE ; then
-    echo "Empty calibration file found, removing it"
-    rm $CALFILE
-  else
-    echo "Using calibration data stored in $CALFILE"
-    . $CALFILE && exit 0
-  fi
-fi
+#Device:
+whitelist=`$BINARY --list | sed 's/ /_/g' | awk -F "\"" '{print $2}' || true`
 
-##BlackList:
-#Logitech USB Keyboard
-unset blacklist
-blacklist=`$BINARY --list | sed 's/ /_/g' | awk -F "\"" '{print $2}' || true`
-if [ "x${blacklist}" = "xLogitech_USB_Keyboard" ] ; then
-	exit 0
-fi
+case "${whitelist}" in
+EP0790M09)
+	CALFILE="/etc/pointercal.xinput.EP0790M09"
+	device_id=`$BINARY --list | grep EP0790M09 | sed 's/ /\n/g' | grep id | awk -F 'id=' '{print #2}'`
 
-CALDATA=`$BINARY --output-type xinput -v | tee $LOGFILE | grep '    xinput set' | sed 's/^    //g; s/$/;/g'`
-if [ ! -z "$CALDATA" ] ; then
-  echo $CALDATA > $CALFILE
-  echo "Calibration data stored in $CALFILE (log in $LOGFILE)"
-fi
+	if [ -e $CALFILE ] ; then
+	  if grep replace $CALFILE ; then
+	    echo "Empty calibration file found, removing it"
+	    rm $CALFILE
+	  else
+	    echo "Using calibration data stored in $CALFILE"
+	    . $CALFILE && exit 0
+	  fi
+	fi
+
+	CALDATA=`$BINARY --device ${device_id} --output-type xinput -v | tee $LOGFILE | grep '    xinput set' | sed 's/^    //g; s/$/;/g'`
+	if [ ! -z "$CALDATA" ] ; then
+	  echo $CALDATA > $CALFILE
+	  echo "Calibration data stored in $CALFILE (log in $LOGFILE)"
+	fi
+
+	;;
+*)
+	if [ -e $CALFILE ] ; then
+	  if grep replace $CALFILE ; then
+	    echo "Empty calibration file found, removing it"
+	    rm $CALFILE
+	  else
+	    echo "Using calibration data stored in $CALFILE"
+	    . $CALFILE && exit 0
+	  fi
+	fi
+
+	##BlackList:
+	#Logitech USB Keyboard
+	unset blacklist
+	blacklist=`$BINARY --list | sed 's/ /_/g' | awk -F "\"" '{print $2}' || true`
+	if [ "x${blacklist}" = "xLogitech_USB_Keyboard" ] ; then
+		exit 0
+	fi
+
+	CALDATA=`$BINARY --output-type xinput -v | tee $LOGFILE | grep '    xinput set' | sed 's/^    //g; s/$/;/g'`
+	if [ ! -z "$CALDATA" ] ; then
+	  echo $CALDATA > $CALFILE
+	  echo "Calibration data stored in $CALFILE (log in $LOGFILE)"
+	fi
+	;;
+esac
