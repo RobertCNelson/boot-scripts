@@ -325,7 +325,6 @@ partition_drive () {
 	fi
 
 	if [ /boot/uboot/MLO ] ; then
-		cp -v /boot/uboot/MLO /opt/backup/uboot/MLO
 		spl_uboot_name=MLO
 		dd_spl_uboot_count="1"
 		dd_spl_uboot_seek="1"
@@ -341,8 +340,13 @@ partition_drive () {
 		echo "dd_spl_uboot_name=${dd_spl_uboot_name}" >> /boot/SOC.sh
 	fi
 
+	if [ ! -f /opt/backup/uboot/MLO ] ; then
+		mkdir -p /opt/backup/uboot/
+		wget --directory-prefix=/opt/backup/uboot/ http://rcn-ee.net/deb/tools/am335x_evm/MLO-am335x_evm-v2014.10-rc2-r2
+		mv /opt/backup/uboot/MLO-am335x_evm-v2014.10-rc2-r2 /opt/backup/uboot/MLO
+	fi
+
 	if [ /boot/uboot/u-boot.img ] ; then
-		cp -v /boot/uboot/u-boot.img /opt/backup/uboot/u-boot.img
 		uboot_name=u-boot.img
 		dd_uboot_count="2"
 		dd_uboot_seek="1"
@@ -358,6 +362,12 @@ partition_drive () {
 		echo "boot_name=u-boot.img" >> /boot/SOC.sh
 
 		echo "dd_uboot_name=${dd_uboot_name}" >> /boot/SOC.sh
+	fi
+
+	if [ ! -f /opt/backup/uboot/u-boot.img ] ; then
+		mkdir -p /opt/backup/uboot/
+		wget --directory-prefix=/opt/backup/uboot/ http://rcn-ee.net/deb/tools/am335x_evm/u-boot-am335x_evm-v2014.10-rc2-r2.img
+		mv /opt/backup/uboot/u-boot-am335x_evm-v2014.10-rc2-r2.img /opt/backup/uboot/u-boot.img
 	fi
 
 	dd_bootloader
