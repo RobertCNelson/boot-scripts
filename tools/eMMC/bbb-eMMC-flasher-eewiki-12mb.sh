@@ -191,7 +191,6 @@ partition_drive () {
 	sfdisk_fstype=${sfdisk_fstype:-"0xE"}
 
 	echo "Formatting: ${destination}"
-	#96Mb fat formatted boot partition
 	LC_ALL=C sfdisk --force --in-order --Linux --unit M "${destination}" <<-__EOF__
 		${conf_boot_startmb},${conf_boot_endmb},${sfdisk_fstype},*
 		,,,-
@@ -234,9 +233,11 @@ copy_rootfs () {
 	rsync -aAX /* /tmp/rootfs/ --exclude={/dev/*,/proc/*,/sys/*,/tmp/*,/run/*,/mnt/*,/media/*,/lost+found,/lib/modules/*} || write_failure
 	flush_cache
 
-	#ssh keys will now get regenerated on the next bootup
-	touch /tmp/rootfs/etc/ssh/ssh.regenerate
-	flush_cache
+	if [ -d /tmp/rootfs/etc/ssh/ ] ; then
+		#ssh keys will now get regenerated on the next bootup
+		touch /tmp/rootfs/etc/ssh/ssh.regenerate
+		flush_cache
+	fi
 
 	mkdir -p /tmp/rootfs/lib/modules/$(uname -r)/ || true
 
@@ -256,11 +257,6 @@ copy_rootfs () {
 		#really a failure...
 		root_uuid="${source}p2"
 	fi
-
-	echo "/boot/uEnv.txt: disabling flasher script"
-	script="cmdline=init=/opt/scripts/tools/eMMC/init-eMMC-flasher-v2.sh"
-	sed -i -e 's:'$script':#'$script':g' /tmp/rootfs/boot/uEnv.txt
-	cat /tmp/rootfs/boot/uEnv.txt
 
 	echo "Generating: /etc/fstab"
 	echo "# /etc/fstab: static file system information." > /tmp/rootfs/etc/fstab
