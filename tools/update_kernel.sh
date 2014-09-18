@@ -30,7 +30,7 @@ get_device () {
 
 	if [ "x${SOC}" = "x" ] ; then
 		case "${machine}" in
-		TI_AM335x_BeagleBone)
+		TI_AM335x_BeagleBone|TI_AM335x_BeagleBone_Black)
 			SOC="omap-psp"
 			;;
 		TI_OMAP5_uEVM_board)
