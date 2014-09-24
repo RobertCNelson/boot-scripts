@@ -1,10 +1,19 @@
-#!/bin/bash -e
+#!bin/bash -e
 
-sudo apt-get update ; sudo apt-get -y install cmake automake gtk-doc-tools libqt4-dev libx11-dev pkg-config libglib2.0-dev libpango1.0-dev valac libmagic-dev libstatgrab-dev libexif-dev
+mkdir -p build
+cd build
 
-git clone git://git.lxde.org/git/lxde/lxqt.git
-cd lxqt
-sed -i -e 's/git@git.lxde.org:/git:\/\/git.lxde.org\/git/g' .gitmodules
-sed -i -e 's/git@gitorious.org:/git:\/\/git.lxde.org\/git\//g' .gitmodules
-git submodule init
-git submodule update --remote --rebase
+mirror="http://packages.siduction.org"
+package="libqtxdg"
+location="lxqt/pool/main/libq/${package}"
+pkg_version="1.0.0"
+deb_version="-1"
+
+wget -c ${mirror}/${location}/${package}_${pkg_version}-${deb_version}.dsc
+wget -c ${mirror}/${location}/${package}_${pkg_version}.orig.tar.gz
+wget -c ${mirror}/${location}/${package}_${pkg_version}-${deb_version}.debian.tar.xz
+
+dpkg-source -x ${package}_${pkg_version}-${deb_version}.dsc
+cd ${package}_${pkg_version}/
+dpkg-buildpackage -rfakeroot -b
+
