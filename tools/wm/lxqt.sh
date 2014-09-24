@@ -2,19 +2,7 @@
 
 files () {
 	echo "file list"
-	#liblxqt-globalkeys-qt5-0 (0.7.96-1) 
-	#liblxqt-globalkeys-qt5-0-dev (0.7.96-1) 
-	#liblxqt-globalkeys-ui-qt5-0 (0.7.96-1) 
-	#liblxqt-globalkeys-ui-qt5-0-dev (0.7.96-1) 
-	#liblxqt-qt5-0 (0.7.96-1) 
-	#liblxqt-qt5-0-dbg (0.7.96-1) 
-	#liblxqt-qt5-0-dev (0.7.96-1) 
-	#liblxqtmount-qt5-0 (0.7.96-1) 
-	#liblxqtmount-qt5-0-dbg (0.7.96-1) 
-	#liblxqtmount-qt5-0-dev (0.7.96-1) 
 
-	#lximage-qt (0.2.0.siduction.5) 
-	#lximage-qt-dbg (0.2.0.siduction.5) 
 	#lxqt-about-qt5 (0.7.96-1) 
 	#lxqt-admin-qt5 (0.7.96-1) 
 	#lxqt-admin-qt5-dbg (0.7.96-1) 
@@ -131,19 +119,37 @@ package="liblxqt-mount"
 location="lxqt/pool/main/libl/${package}"
 pkg_version="0.7.96"
 deb_version="1"
-deb_file="liblxqt-mount-qt5-0-dev_${pkg_version}-${deb_version}_${deb_arch}.deb"
+deb_file="liblxqtmount-qt5-0-dev_${pkg_version}-${deb_version}_${deb_arch}.deb"
 orig_comp="bz2"
 
 build_pkg
 
-
 #sudo dpkg -i build/libqt5xdg-dev_1.0.0-1_amd64.deb  build/libqt5xdg1_1.0.0-1_amd64.deb
+package="liblxqt"
+location="lxqt/pool/main/libl/${package}"
+pkg_version="0.7.96"
+deb_version="1"
+orig_comp="bz2"
+deb_file="liblxqt-qt5-0-dev_${pkg_version}-${deb_version}_${deb_arch}.deb"
+
+build_pkg
+
 package="libsysstat"
 location="lxqt/pool/main/libs/${package}"
 pkg_version="0.1.0"
 deb_version="2"
 orig_comp="bz2"
-deb_file="libsysstat-qt5-0-dev_${pkg_version}_${deb_arch}.deb"
+deb_file="libsysstat-qt5-0-dev_${pkg_version}-${deb_version}_${deb_arch}.deb"
+
+build_pkg
+
+#sudo dpkg -i build/liblxqt-qt5-0-dev_0.7.96-1_amd64.deb build/liblxqt-qt5-0_0.7.96-1_amd64.deb
+package="lxqt-globalkeys"
+location="lxqt/pool/main/l/${package}"
+pkg_version="0.7.96"
+deb_version="1"
+orig_comp="bz2"
+deb_file="liblxqt-globalkeys-qt5-0-dev_${pkg_version}-${deb_version}_${deb_arch}.deb"
 
 build_pkg
 
@@ -154,11 +160,24 @@ deb_file="libfm-dev_${pkg_version}_${deb_arch}.deb"
 
 build_siduction_pkg
 
-#needs: libfm-gtk-dev
-#pcmanfm (1.2.2.siduction.1) 
-#pcmanfm-dbg (1.2.2.siduction.1) 
-#pcmanfm-qt5 (0.8.0-2) 
-#pcmanfm-qt5-dbg (0.8.0-2) 
+#sudo dpkg -i build/libfm4*.deb build/libfm*.deb build/lxmenu-data_0.1.4.siduction.1_all.deb 
+package="pcmanfm-qt"
+location="lxqt/pool/main/p/${package}"
+pkg_version="0.8.0"
+deb_version="2"
+orig_comp="bz2"
+deb_file="x_${pkg_version}-${deb_version}_${deb_arch}.deb"
+
+build_pkg
+
+#sudo dpkg -i build/libfm-qt5-dev_0.8.0-2_amd64.deb build/libfm-qt5-1_0.8.0-2_amd64.deb
+package="lximage-qt"
+location="lxqt/pool/main/l/${package}"
+pkg_version="0.2.0.siduction.5"
+deb_file="lximage-qt_${pkg_version}_${deb_arch}.deb"
+
+build_siduction_pkg
+
 package="pcmanfm"
 location="lxqt/pool/main/p/${package}"
 pkg_version="1.2.2.siduction.1"
@@ -166,24 +185,5 @@ deb_file="x_${pkg_version}_${deb_arch}.deb"
 
 build_siduction_pkg
 
-#libfm-dev
-
-package="pcmanfm-qt"
-deb_package="bconf-qt5"
-location="lxqt/pool/main/p/${package}"
-pkg_version="0.8.0"
-deb_version="2"
-orig_comp="bz2"
-
-#if [ ! -f ${deb_package}_${pkg_version}-${deb_version}_${deb_arch}.deb ] ; then
-	wget -c ${mirror}/${location}/${package}_${pkg_version}-${deb_version}.dsc
-	wget -c ${mirror}/${location}/${package}_${pkg_version}.orig.tar.${orig_comp}
-	wget -c ${mirror}/${location}/${package}_${pkg_version}-${deb_version}.debian.tar.xz
-
-	dpkg-source -x ${package}_${pkg_version}-${deb_version}.dsc
-	cd ${package}-${pkg_version}/
-	dpkg-buildpackage -rfakeroot -b
-	cd ../
-#fi
 
 #
