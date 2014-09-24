@@ -166,9 +166,16 @@ location="lxqt/pool/main/p/${package}"
 pkg_version="0.8.0"
 deb_version="2"
 orig_comp="bz2"
-deb_file="x_${pkg_version}-${deb_version}_${deb_arch}.deb"
+deb_file="pcmanfm-qt5_${pkg_version}-${deb_version}_${deb_arch}.deb"
 
 build_pkg
+
+package="pcmanfm"
+location="lxqt/pool/main/p/${package}"
+pkg_version="1.2.2.siduction.1"
+deb_file="x_${pkg_version}_${deb_arch}.deb"
+
+build_siduction_pkg
 
 #sudo dpkg -i build/libfm-qt5-dev_0.8.0-2_amd64.deb build/libfm-qt5-1_0.8.0-2_amd64.deb
 package="lximage-qt"
@@ -178,12 +185,7 @@ deb_file="lximage-qt_${pkg_version}_${deb_arch}.deb"
 
 build_siduction_pkg
 
-package="pcmanfm"
-location="lxqt/pool/main/p/${package}"
-pkg_version="1.2.2.siduction.1"
-deb_file="x_${pkg_version}_${deb_arch}.deb"
 
-build_siduction_pkg
 
 
 #
