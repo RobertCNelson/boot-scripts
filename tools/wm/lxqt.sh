@@ -2,22 +2,6 @@
 
 files () {
 	echo "file list"
-	#libfm-data (1.2.2.siduction.2) 
-	#libfm-dbg (1.2.2.siduction.2) 
-	#libfm-dev (1.2.2.siduction.2) 
-	#libfm-doc (1.2.2.siduction.2) 
-	#libfm-extra4 (1.2.2.siduction.2) 
-	#libfm-gtk-data (1.2.2.siduction.2) 
-	#libfm-gtk-dbg (1.2.2.siduction.2) 
-	#libfm-gtk-dev (1.2.2.siduction.2) 
-	#libfm-gtk4 (1.2.2.siduction.2) 
-	#libfm-modules (1.2.2.siduction.2) 
-	#libfm-modules-dbg (1.2.2.siduction.2) 
-	#libfm-qt5-1 (0.8.0-2) 
-	#libfm-qt5-dbg (0.8.0-2) 
-	#libfm-qt5-dev (0.8.0-2) 
-	#libfm-tools (1.2.2.siduction.2) 
-	#libfm4 (1.2.2.siduction.2) 
 	#liblxqt-globalkeys-qt5-0 (0.7.96-1) 
 	#liblxqt-globalkeys-qt5-0-dev (0.7.96-1) 
 	#liblxqt-globalkeys-ui-qt5-0 (0.7.96-1) 
@@ -28,11 +12,7 @@ files () {
 	#liblxqtmount-qt5-0 (0.7.96-1) 
 	#liblxqtmount-qt5-0-dbg (0.7.96-1) 
 	#liblxqtmount-qt5-0-dev (0.7.96-1) 
-	#libsysstat-qt5-0 (0.1.0-2) 
-	#libsysstat-qt5-0-dbg (0.1.0-2) 
-	#libsysstat-qt5-0-dev (0.1.0-2) 
-	#lxappearance (0.5.5.siduction.5) 
-	#lxappearance-dbg (0.5.5.siduction.5) 
+
 	#lximage-qt (0.2.0.siduction.5) 
 	#lximage-qt-dbg (0.2.0.siduction.5) 
 	#lxqt-about-qt5 (0.7.96-1) 
@@ -60,10 +40,7 @@ files () {
 	#lxqt-runner-qt5-dbg (0.7.96-1) 
 	#lxqt-session-qt5 (0.7.96-1) 
 	#lxqt-session-qt5-dbg (0.7.96-1) 
-	#pcmanfm (1.2.2.siduction.1) 
-	#pcmanfm-dbg (1.2.2.siduction.1) 
-	#pcmanfm-qt5 (0.8.0-2) 
-	#pcmanfm-qt5-dbg (0.8.0-2) 
+
 }
 
 build_pkg () {
@@ -116,7 +93,6 @@ deb_version="1"
 deb_file="libpolkit-qt-1-dev_${pkg_version}-${deb_version}_${deb_arch}.deb"
 orig_comp="bz2"
 
-
 build_pkg
 
 package="obconf-qt"
@@ -125,7 +101,6 @@ pkg_version="0.1.0"
 deb_version="1"
 deb_file="obconf-qt5_${pkg_version}-${deb_version}_${deb_arch}.deb"
 orig_comp="bz2"
-
 
 build_pkg
 
@@ -146,51 +121,50 @@ deb_file="lxmenu-data_${pkg_version}_all.deb"
 build_siduction_pkg
 
 package="lxappearance"
-deb_package="lxmenu-data"
 location="lxqt/pool/main/l/${package}"
 pkg_version="0.5.5.siduction.5"
 deb_file="lxappearance_${pkg_version}_${deb_arch}.deb"
 
 build_siduction_pkg
 
-#wip:
+package="liblxqt-mount"
+location="lxqt/pool/main/libl/${package}"
+pkg_version="0.7.96"
+deb_version="1"
+deb_file="liblxqt-mount-qt5-0-dev_${pkg_version}-${deb_version}_${deb_arch}.deb"
+orig_comp="bz2"
 
-#needs: lxmenu-data
-
-package="libfm"
-deb_package="obconf-qt5"
-location="lxqt/pool/main/libf/${package}"
-pkg_version="1.2.2.siduction.2"
-
-#if [ ! -f ${deb_package}_${pkg_version}-${deb_version}_${deb_arch}.deb ] ; then
-	wget -c ${mirror}/${location}/${package}_${pkg_version}.dsc
-	wget -c ${mirror}/${location}/${package}_${pkg_version}.tar.xz
-
-	dpkg-source -x ${package}_${pkg_version}.dsc
-	cd ${package}-${pkg_version}/
-	dpkg-buildpackage -rfakeroot -b
-	cd ../
-#fi
+build_pkg
 
 
-#libqt5xdg-dev
+#sudo dpkg -i build/libqt5xdg-dev_1.0.0-1_amd64.deb  build/libqt5xdg1_1.0.0-1_amd64.deb
 package="libsysstat"
-deb_package="obconf-qt5"
 location="lxqt/pool/main/libs/${package}"
 pkg_version="0.1.0"
 deb_version="2"
 orig_comp="bz2"
+deb_file="libsysstat-qt5-0-dev_${pkg_version}_${deb_arch}.deb"
 
-#if [ ! -f ${deb_package}_${pkg_version}-${deb_version}_${deb_arch}.deb ] ; then
-	wget -c ${mirror}/${location}/${package}_${pkg_version}-${deb_version}.dsc
-	wget -c ${mirror}/${location}/${package}_${pkg_version}.orig.tar.${orig_comp}
-	wget -c ${mirror}/${location}/${package}_${pkg_version}-${deb_version}.debian.tar.xz
+build_pkg
 
-	dpkg-source -x ${package}_${pkg_version}-${deb_version}.dsc
-	cd ${package}-${pkg_version}/
-	dpkg-buildpackage -rfakeroot -b
-	cd ../
-#fi
+package="libfm"
+location="lxqt/pool/main/libf/${package}"
+pkg_version="1.2.2.siduction.2"
+deb_file="libfm-dev_${pkg_version}_${deb_arch}.deb"
+
+build_siduction_pkg
+
+#needs: libfm-gtk-dev
+#pcmanfm (1.2.2.siduction.1) 
+#pcmanfm-dbg (1.2.2.siduction.1) 
+#pcmanfm-qt5 (0.8.0-2) 
+#pcmanfm-qt5-dbg (0.8.0-2) 
+package="pcmanfm"
+location="lxqt/pool/main/p/${package}"
+pkg_version="1.2.2.siduction.1"
+deb_file="x_${pkg_version}_${deb_arch}.deb"
+
+build_siduction_pkg
 
 #libfm-dev
 
