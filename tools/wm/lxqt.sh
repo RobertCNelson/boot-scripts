@@ -14,6 +14,6 @@ wget -c ${mirror}/${location}/${package}_${pkg_version}.orig.tar.gz
 wget -c ${mirror}/${location}/${package}_${pkg_version}-${deb_version}.debian.tar.xz
 
 dpkg-source -x ${package}_${pkg_version}-${deb_version}.dsc
-cd ${package}_${pkg_version}/
+cd ${package}-${pkg_version}/
 dpkg-buildpackage -rfakeroot -b
 
