@@ -131,24 +131,26 @@ mirror="http://packages.siduction.org"
 #
 #build_pkg
 
+#on repos.rcn-ee.net
 #sudo dpkg -i build/libqt5xdg-dev_1.0.0-1_amd64.deb  build/libqt5xdg1_1.0.0-1_amd64.deb
-package="liblxqt"
-location="lxqt/pool/main/libl/${package}"
-pkg_version="0.7.96"
-deb_version="1"
-orig_comp="bz2"
-deb_file="liblxqt-qt5-0-dev_${pkg_version}-${deb_version}_${deb_arch}.deb"
+#package="liblxqt"
+#location="lxqt/pool/main/libl/${package}"
+#pkg_version="0.7.96"
+#deb_version="1"
+#orig_comp="bz2"
+#deb_file="liblxqt-qt5-0-dev_${pkg_version}-${deb_version}_${deb_arch}.deb"
+#
+#build_pkg
 
-build_pkg
-
-package="libsysstat"
-location="lxqt/pool/main/libs/${package}"
-pkg_version="0.1.0"
-deb_version="2"
-orig_comp="bz2"
-deb_file="libsysstat-qt5-0-dev_${pkg_version}-${deb_version}_${deb_arch}.deb"
-
-build_pkg
+#on repos.rcn-ee.net
+#package="libsysstat"
+#location="lxqt/pool/main/libs/${package}"
+#pkg_version="0.1.0"
+#deb_version="2"
+#orig_comp="bz2"
+#deb_file="libsysstat-qt5-0-dev_${pkg_version}-${deb_version}_${deb_arch}.deb"
+#
+#build_pkg
 
 #sudo dpkg -i build/liblxqt-qt5-0-dev_0.7.96-1_amd64.deb build/liblxqt-qt5-0_0.7.96-1_amd64.deb
 package="lxqt-globalkeys"
