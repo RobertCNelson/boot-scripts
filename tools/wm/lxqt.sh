@@ -171,15 +171,16 @@ mirror="http://packages.siduction.org"
 #
 #build_siduction_pkg
 
+#on repos.rcn-ee.net
 #sudo dpkg -i build/libfm4*.deb build/libfm*.deb build/lxmenu-data_0.1.4.siduction.1_all.deb 
-package="pcmanfm-qt"
-location="lxqt/pool/main/p/${package}"
-pkg_version="0.8.0"
-deb_version="2"
-orig_comp="bz2"
-deb_file="pcmanfm-qt5_${pkg_version}-${deb_version}_${deb_arch}.deb"
-
-build_pkg
+#package="pcmanfm-qt"
+#location="lxqt/pool/main/p/${package}"
+#pkg_version="0.8.0"
+#deb_version="2"
+#orig_comp="bz2"
+#deb_file="pcmanfm-qt5_${pkg_version}-${deb_version}_${deb_arch}.deb"
+#
+#build_pkg
 
 package="pcmanfm"
 location="lxqt/pool/main/p/${package}"
