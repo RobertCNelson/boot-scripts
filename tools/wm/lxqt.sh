@@ -65,6 +65,17 @@ deb_arch=$(dpkg --print-architecture)
 
 mirror="http://packages.siduction.org"
 
+package="libqtxdg"
+location="lxqt/pool/main/libq/${package}"
+pkg_version="1.0.0"
+deb_version="1"
+deb_file="libqt5xdg-dev_${pkg_version}-${deb_version}_${deb_arch}.deb"
+orig_comp="gz"
+
+build_pkg
+
+exit
+
 package="compton-conf"
 location="lxqt/pool/main/c/${package}"
 pkg_version="0.1.0"
