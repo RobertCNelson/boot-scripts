@@ -152,15 +152,16 @@ mirror="http://packages.siduction.org"
 #
 #build_pkg
 
+#on repos.rcn-ee.net
 #sudo dpkg -i build/liblxqt-qt5-0-dev_0.7.96-1_amd64.deb build/liblxqt-qt5-0_0.7.96-1_amd64.deb
-package="lxqt-globalkeys"
-location="lxqt/pool/main/l/${package}"
-pkg_version="0.7.96"
-deb_version="1"
-orig_comp="bz2"
-deb_file="liblxqt-globalkeys-qt5-0-dev_${pkg_version}-${deb_version}_${deb_arch}.deb"
-
-build_pkg
+#package="lxqt-globalkeys"
+#location="lxqt/pool/main/l/${package}"
+#pkg_version="0.7.96"
+#deb_version="1"
+#orig_comp="bz2"
+#deb_file="liblxqt-globalkeys-qt5-0-dev_${pkg_version}-${deb_version}_${deb_arch}.deb"
+#
+#build_pkg
 
 package="libfm"
 location="lxqt/pool/main/libf/${package}"
