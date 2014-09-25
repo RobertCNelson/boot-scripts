@@ -65,75 +65,71 @@ deb_arch=$(dpkg --print-architecture)
 
 mirror="http://packages.siduction.org"
 
-package="libqtxdg"
-location="lxqt/pool/main/libq/${package}"
-pkg_version="1.0.0"
-deb_version="1"
-deb_file="libqt5xdg-dev_${pkg_version}-${deb_version}_${deb_arch}.deb"
-orig_comp="gz"
+#on repos.rcn-ee.net
+#package="compton-conf"
+#location="lxqt/pool/main/c/${package}"
+#pkg_version="0.1.0"
+#deb_version="1"
+#deb_file="compton-conf-qt5_${pkg_version}-${deb_version}_${deb_arch}.deb"
+#orig_comp="bz2"
+#
+#build_pkg
 
-build_pkg
+#on repos.rcn-ee.net
+#package="polkit-qt-1"
+#location="lxqt/pool/main/p/${package}"
+#pkg_version="0.112.0"
+#deb_version="1"
+#deb_file="libpolkit-qt-1-dev_${pkg_version}-${deb_version}_${deb_arch}.deb"
+#orig_comp="bz2"
+#
+#build_pkg
 
-exit
+#on repos.rcn-ee.net
+#package="obconf-qt"
+#location="lxqt/pool/main/o/${package}"
+#pkg_version="0.1.0"
+#deb_version="1"
+#deb_file="obconf-qt5_${pkg_version}-${deb_version}_${deb_arch}.deb"
+#orig_comp="bz2"
+#
+#build_pkg
 
-package="compton-conf"
-location="lxqt/pool/main/c/${package}"
-pkg_version="0.1.0"
-deb_version="1"
-deb_file="compton-conf-qt5_${pkg_version}-${deb_version}_${deb_arch}.deb"
-orig_comp="bz2"
+#on repos.rcn-ee.net
+#package="libqtxdg"
+#location="lxqt/pool/main/libq/${package}"
+#pkg_version="1.0.0"
+#deb_version="1"
+#deb_file="libqt5xdg-dev_${pkg_version}-${deb_version}_${deb_arch}.deb"
+#orig_comp="gz"
+#
+#build_pkg
 
-build_pkg
+#on repos.rcn-ee.net
+#package="lxmenu-data"
+#location="lxqt/pool/main/l/${package}"
+#pkg_version="0.1.4.siduction.1"
+#deb_file="lxmenu-data_${pkg_version}_all.deb"
+#
+#build_siduction_pkg
 
-package="polkit-qt-1"
-location="lxqt/pool/main/p/${package}"
-pkg_version="0.112.0"
-deb_version="1"
-deb_file="libpolkit-qt-1-dev_${pkg_version}-${deb_version}_${deb_arch}.deb"
-orig_comp="bz2"
+#on repos.rcn-ee.net
+#package="lxappearance"
+#location="lxqt/pool/main/l/${package}"
+#pkg_version="0.5.5.siduction.5"
+#deb_file="lxappearance_${pkg_version}_${deb_arch}.deb"
+#
+#build_siduction_pkg
 
-build_pkg
-
-package="obconf-qt"
-location="lxqt/pool/main/o/${package}"
-pkg_version="0.1.0"
-deb_version="1"
-deb_file="obconf-qt5_${pkg_version}-${deb_version}_${deb_arch}.deb"
-orig_comp="bz2"
-
-build_pkg
-
-package="libqtxdg"
-location="lxqt/pool/main/libq/${package}"
-pkg_version="1.0.0"
-deb_version="1"
-deb_file="libqt5xdg-dev_${pkg_version}-${deb_version}_${deb_arch}.deb"
-orig_comp="gz"
-
-build_pkg
-
-package="lxmenu-data"
-location="lxqt/pool/main/l/${package}"
-pkg_version="0.1.4.siduction.1"
-deb_file="lxmenu-data_${pkg_version}_all.deb"
-
-build_siduction_pkg
-
-package="lxappearance"
-location="lxqt/pool/main/l/${package}"
-pkg_version="0.5.5.siduction.5"
-deb_file="lxappearance_${pkg_version}_${deb_arch}.deb"
-
-build_siduction_pkg
-
-package="liblxqt-mount"
-location="lxqt/pool/main/libl/${package}"
-pkg_version="0.7.96"
-deb_version="1"
-deb_file="liblxqtmount-qt5-0-dev_${pkg_version}-${deb_version}_${deb_arch}.deb"
-orig_comp="bz2"
-
-build_pkg
+#on repos.rcn-ee.net
+#package="liblxqt-mount"
+#location="lxqt/pool/main/libl/${package}"
+#pkg_version="0.7.96"
+#deb_version="1"
+#deb_file="liblxqtmount-qt5-0-dev_${pkg_version}-${deb_version}_${deb_arch}.deb"
+#orig_comp="bz2"
+#
+#build_pkg
 
 #sudo dpkg -i build/libqt5xdg-dev_1.0.0-1_amd64.deb  build/libqt5xdg1_1.0.0-1_amd64.deb
 package="liblxqt"
