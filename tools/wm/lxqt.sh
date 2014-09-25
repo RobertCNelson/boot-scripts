@@ -182,12 +182,13 @@ mirror="http://packages.siduction.org"
 #
 #build_pkg
 
-package="pcmanfm"
-location="lxqt/pool/main/p/${package}"
-pkg_version="1.2.2.siduction.1"
-deb_file="x_${pkg_version}_${deb_arch}.deb"
-
-build_siduction_pkg
+#on repos.rcn-ee.net
+#package="pcmanfm"
+#location="lxqt/pool/main/p/${package}"
+#pkg_version="1.2.2.siduction.1"
+#deb_file="x_${pkg_version}_${deb_arch}.deb"
+#
+#build_siduction_pkg
 
 #sudo dpkg -i build/libfm-qt5-dev_0.8.0-2_amd64.deb build/libfm-qt5-1_0.8.0-2_amd64.deb
 package="lximage-qt"
