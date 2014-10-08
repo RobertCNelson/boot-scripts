@@ -206,7 +206,11 @@ dd_spl_uboot_boot () {
 }
 
 got_board () {
-	BOOTLOADER=${conf_board}
+	case "${conf_board}" in
+	am335x_evm)
+		is_omap
+		;;
+	esac
 
 	case "${bootloader_location}" in
 	omap_fatfs_boot_part|fatfs_boot)

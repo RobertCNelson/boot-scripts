@@ -65,11 +65,13 @@ update_uEnv_txt () {
 }
 
 check_dpkg () {
+	echo "Checking dpkg..."
 	unset deb_pkgs
 	LC_ALL=C dpkg --list | awk '{print $2}' | grep "^${pkg}$" >/dev/null || deb_pkgs="${pkg}"
 }
 
 check_apt_cache () {
+	echo "Checking apt-cache..."
 	unset apt_cache
 	apt_cache=$(LC_ALL=C apt-cache search "^${pkg}$" | awk '{print $1}' || true)
 }
