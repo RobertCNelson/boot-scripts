@@ -31,7 +31,10 @@ get_device () {
 	if [ "x${SOC}" = "x" ] ; then
 		case "${machine}" in
 		TI_AM335x_BeagleBone|TI_AM335x_BeagleBone_Black)
-			SOC="omap-psp"
+			uname -r | grep ti >/dev/null && SOC="ti"
+			if [ "x${SOC}" = "x" ] ; then
+				SOC="omap-psp"
+			fi
 			;;
 		TI_OMAP5_uEVM_board)
 			SOC="armv7-lpae"
@@ -48,7 +51,7 @@ update_uEnv_txt () {
 	if [ ! -f /etc/kernel/postinst.d/zz-uenv_txt ] ; then
 		if [ -f /boot/uEnv.txt ] ; then
 			older_kernel=$(grep uname_r /boot/uEnv.txt | awk -F"=" '{print $2}')
-			sed -i -e 's:'${older_kernel}':'${latest_kernel}':g' /boot/uEnv.txt
+			sed -i -e "s:uname_r=$older_kernel:uname_r=$latest_kernel:g" /boot/uEnv.txt
 			echo "info: /boot/uEnv.txt: `grep uname_r /boot/uEnv.txt`"
 			if [ ! "x${older_kernel}" = "x${latest_kernel}" ] ; then
 				echo "info: [${latest_kernel}] now installed and will be used on the next reboot..."
