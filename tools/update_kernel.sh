@@ -181,12 +181,14 @@ third_party_final () {
 
 third_party () {
 	if [ "x${SOC}" = "xomap-psp" ] ; then
-		apt-get install -y mt7601u-modules-${latest_kernel}
+		apt-get install -o Dpkg::Options::="--force-overwrite" -y mt7601u-modules-${latest_kernel}
+
 		third_party_final
 	fi
 
 	if [ "x${SOC}" = "xti" ] ; then
-		apt-get install -y mt7601u-modules-${latest_kernel}
+		apt-get install -o Dpkg::Options::="--force-overwrite" -y mt7601u-modules-${latest_kernel}
+
 		apt-get install -y ti-sgx-es8-modules-${latest_kernel}
 		third_party_final
 	fi
