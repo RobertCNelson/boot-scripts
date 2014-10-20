@@ -226,6 +226,21 @@ copy_boot () {
 	echo "Copying: ${source}p1 -> ${destination}p1"
 	mkdir -p /tmp/boot/ || true
 
+	umount ${source}p1 || umount -l ${source}p1 || true
+
+	if ! mount -o sync ${source}p1 /boot/uboot/; then
+		echo "-----------------------------"
+		echo "BUG: [mount -o sync ${source}p1 /boot/uboot/] was not available so trying to mount again in 5 seconds..."
+		sync
+		sleep 5
+		echo "-----------------------------"
+
+		if ! mount -o sync ${source}p1 /boot/uboot/; then
+			echo "mounting ${source}p1 failed.."
+			exit
+		fi
+	fi
+
 	if ! mount -o sync ${destination}p1 /tmp/boot/; then
 		echo "-----------------------------"
 		echo "BUG: [mount -o sync ${destination}p1 /tmp/boot/] was not available so trying to mount again in 5 seconds..."
@@ -239,21 +254,14 @@ copy_boot () {
 		fi
 	fi
 
-	if [ -d /media/debian/BEAGLEBONE ] ; then
-		boot_source="/media/debian/BEAGLEBONE/"
-
-	else
-		boot_source="/boot/uboot/"
-	fi
-
-	echo "rsync: ${boot_source} -> /tmp/boot/"
-	rsync -aAX ${boot_source} /tmp/boot/ --exclude={MLO,u-boot.img,uEnv.txt} || write_failure
+	echo "rsync: /boot/uboot/ -> /tmp/boot/"
+	rsync -aAX /boot/uboot/ /tmp/boot/ --exclude={MLO,u-boot.img,uEnv.txt} || write_failure
 	flush_cache
 
 	flush_cache
 	umount /tmp/boot/ || umount -l /tmp/boot/ || write_failure
 	flush_cache
-	umount ${boot_source} || umount -l ${boot_source}
+	umount /boot/uboot/ || umount -l /boot/uboot/
 }
 
 copy_rootfs () {
