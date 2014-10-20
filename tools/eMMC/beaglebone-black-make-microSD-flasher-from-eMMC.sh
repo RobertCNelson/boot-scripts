@@ -267,7 +267,19 @@ copy_boot () {
 copy_rootfs () {
 	echo "Copying: ${source}p${media_rootfs} -> ${destination}p${media_rootfs}"
 	mkdir -p /tmp/rootfs/ || true
-	mount ${destination}p${media_rootfs} /tmp/rootfs/ -o async,noatime
+
+	if ! mount -o async,noatime ${destination}p${media_rootfs} /tmp/rootfs/; then
+		echo "-----------------------------"
+		echo "BUG: [mount -o sync ${destination}p${media_rootfs} /tmp/rootfs/] was not available so trying to mount again in 5 seconds..."
+		sync
+		sleep 5
+		echo "-----------------------------"
+
+		if ! mount -o async,noatime ${destination}p${media_rootfs} /tmp/rootfs/; then
+			echo "mounting ${destination}p${media_rootfs} failed.."
+			exit
+		fi
+	fi
 
 	echo "rsync: / -> /tmp/rootfs/"
 	rsync -aAX /* /tmp/rootfs/ --exclude={/dev/*,/proc/*,/sys/*,/tmp/*,/run/*,/mnt/*,/media/*,/lost+found,/lib/modules/*,/uEnv.txt} || write_failure
