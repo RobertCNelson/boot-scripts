@@ -225,7 +225,20 @@ format_single_root () {
 copy_boot () {
 	echo "Copying: ${source}p1 -> ${destination}p1"
 	mkdir -p /tmp/boot/ || true
-	mount ${destination}p1 /tmp/boot/ -o sync
+
+	if ! mount -o sync ${destination}p1 /tmp/boot/; then
+		echo "-----------------------------"
+		echo "BUG: [mount -o sync ${destination}p1 /tmp/boot/] was not available so trying to mount again in 5 seconds..."
+		sync
+		sleep 5
+		echo "-----------------------------"
+
+		if ! mount -o sync ${destination}p1 /tmp/boot/; then
+			echo "mounting ${destination}p1 failed.."
+			exit
+		fi
+	fi
+
 	#Make sure the BootLoader gets copied first:
 
 	echo "rsync: /boot/uboot/ -> /tmp/boot/"
