@@ -239,16 +239,21 @@ copy_boot () {
 		fi
 	fi
 
-	#Make sure the BootLoader gets copied first:
+	if [ -d /media/debian/BEAGLEBONE ] ; then
+		boot_source="/media/debian/BEAGLEBONE/"
 
-	echo "rsync: /boot/uboot/ -> /tmp/boot/"
-	rsync -aAX /boot/uboot/ /tmp/boot/ --exclude={MLO,u-boot.img,uEnv.txt} || write_failure
+	else
+		boot_source="/boot/uboot/"
+	fi
+
+	echo "rsync: ${boot_source} -> /tmp/boot/"
+	rsync -aAX ${boot_source} /tmp/boot/ --exclude={MLO,u-boot.img,uEnv.txt} || write_failure
 	flush_cache
 
 	flush_cache
 	umount /tmp/boot/ || umount -l /tmp/boot/ || write_failure
 	flush_cache
-	umount /boot/uboot || umount -l /boot/uboot
+	umount ${boot_source} || umount -l ${boot_source}
 }
 
 copy_rootfs () {
