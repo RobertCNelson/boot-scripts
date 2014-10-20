@@ -49,6 +49,18 @@ if [ "x${boot_drive}" = "x/dev/mmcblk1p1" ] ; then
 	destination="/dev/mmcblk0"
 fi
 
+echo ""
+echo "Unmounting Partitions"
+echo "-----------------------------"
+
+NUM_MOUNTS=$(mount | grep -v none | grep "${destination}" | wc -l)
+
+i=0 ; while test $i -le ${NUM_MOUNTS} ; do
+	DRIVE=$(mount | grep -v none | grep "${destination}" | tail -1 | awk '{print $1}')
+	umount ${DRIVE} >/dev/null 2>&1 || true
+	i=$(($i+1))
+done
+
 flush_cache () {
 	sync
 	blockdev --flushbufs ${destination}
