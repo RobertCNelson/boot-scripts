@@ -133,14 +133,13 @@ cylon_leds () {
 				;;
 			*)	echo 255 > ${BASE}0/brightness
 				echo 0   > ${BASE}1/brightness
-				STinit-eMMC-flasher-v2.shATE=2
+				STATE=2
 				;;
 			esac
 			sleep 0.1
 		done
 	fi
 }
-
 
 update_boot_files () {
 	if [ ! -f /boot/initrd.img-$(uname -r) ] ; then
@@ -374,7 +373,7 @@ partition_drive () {
 		. /boot/SOC.sh
 	fi
 
-	if [ /boot/uboot/MLO ] ; then
+	if [ "x${dd_spl_uboot_backup}" = "x" ] ; then
 		spl_uboot_name=MLO
 		dd_spl_uboot_count="1"
 		dd_spl_uboot_seek="1"
@@ -392,11 +391,11 @@ partition_drive () {
 
 	if [ ! -f /opt/backup/uboot/MLO ] ; then
 		mkdir -p /opt/backup/uboot/
-		wget --directory-prefix=/opt/backup/uboot/ http://rcn-ee.net/deb/tools/am335x_evm/MLO-am335x_evm-v2014.10-r1
-		mv /opt/backup/uboot/MLO-am335x_evm-v2014.10-r1 /opt/backup/uboot/MLO
+		wget --directory-prefix=/opt/backup/uboot/ http://rcn-ee.net/deb/tools/am335x_evm/MLO-am335x_evm-v2014.10-r2
+		mv /opt/backup/uboot/MLO-am335x_evm-v2014.10-r2 /opt/backup/uboot/MLO
 	fi
 
-	if [ /boot/uboot/u-boot.img ] ; then
+	if [ "x${dd_uboot_backup}" = "x" ] ; then
 		uboot_name=u-boot.img
 		dd_uboot_count="2"
 		dd_uboot_seek="1"
@@ -416,8 +415,8 @@ partition_drive () {
 
 	if [ ! -f /opt/backup/uboot/u-boot.img ] ; then
 		mkdir -p /opt/backup/uboot/
-		wget --directory-prefix=/opt/backup/uboot/ http://rcn-ee.net/deb/tools/am335x_evm/u-boot-am335x_evm-v2014.10-r1.img
-		mv /opt/backup/uboot/u-boot-am335x_evm-v2014.10-r1.img /opt/backup/uboot/u-boot.img
+		wget --directory-prefix=/opt/backup/uboot/ http://rcn-ee.net/deb/tools/am335x_evm/u-boot-am335x_evm-v2014.10-r2.img
+		mv /opt/backup/uboot/u-boot-am335x_evm-v2014.10-r2.img /opt/backup/uboot/u-boot.img
 	fi
 
 	dd_bootloader
