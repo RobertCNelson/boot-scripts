@@ -179,7 +179,7 @@ cylon_leds () {
 				;;
 			*)	echo 255 > ${BASE}0/brightness
 				echo 0   > ${BASE}1/brightness
-				STinit-eMMC-flasher-v2.shATE=2
+				STATE=2
 				;;
 			esac
 			sleep 0.1
@@ -263,7 +263,15 @@ copy_boot () {
 	echo "Copying: ${source}p1 -> ${destination}p1"
 	mkdir -p /tmp/boot/ || true
 	mount ${destination}p1 /tmp/boot/ -o sync
-	#Make sure the BootLoader gets copied first:
+
+	if [ -f /boot/uboot/MLO ] ; then
+		#Make sure the BootLoader gets copied first:
+		cp -v /boot/uboot/MLO /tmp/boot/MLO || write_failure
+		flush_cache
+
+		cp -v /boot/uboot/u-boot.img /tmp/boot/u-boot.img || write_failure
+		flush_cache
+	fi
 
 	echo "rsync: /boot/uboot/ -> /tmp/boot/"
 	rsync -aAX /boot/uboot/ /tmp/boot/ --exclude={MLO,u-boot.img,uEnv.txt} || write_failure
@@ -284,9 +292,11 @@ copy_rootfs () {
 	rsync -aAX /* /tmp/rootfs/ --exclude={/dev/*,/proc/*,/sys/*,/tmp/*,/run/*,/mnt/*,/media/*,/lost+found,/lib/modules/*,/uEnv.txt} || write_failure
 	flush_cache
 
-	#ssh keys will now get regenerated on the next bootup
-	touch /tmp/rootfs/etc/ssh/ssh.regenerate
-	flush_cache
+	if [ -d /tmp/rootfs/etc/ssh/ ] ; then
+		#ssh keys will now get regenerated on the next bootup
+		touch /tmp/rootfs/etc/ssh/ssh.regenerate
+		flush_cache
+	fi
 
 	mkdir -p /tmp/rootfs/lib/modules/$(uname -r)/ || true
 

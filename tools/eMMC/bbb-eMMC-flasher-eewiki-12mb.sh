@@ -164,55 +164,91 @@ cylon_leds () {
 	fi
 }
 
+dd_bootloader () {
+	echo ""
+	echo "Using dd to place bootloader on [${destination}]"
+	echo "-----------------------------"
+
+	unset dd_spl_uboot
+	if [ ! "x${dd_spl_uboot_count}" = "x" ] ; then
+		dd_spl_uboot="${dd_spl_uboot}count=${dd_spl_uboot_count} "
+	fi
+
+	if [ ! "x${dd_spl_uboot_seek}" = "x" ] ; then
+		dd_spl_uboot="${dd_spl_uboot}seek=${dd_spl_uboot_seek} "
+	fi
+
+	if [ ! "x${dd_spl_uboot_conf}" = "x" ] ; then
+		dd_spl_uboot="${dd_spl_uboot}conv=${dd_spl_uboot_conf} "
+	fi
+
+	if [ ! "x${dd_spl_uboot_bs}" = "x" ] ; then
+		dd_spl_uboot="${dd_spl_uboot}bs=${dd_spl_uboot_bs}"
+	fi
+
+	unset dd_uboot
+	if [ ! "x${dd_uboot_count}" = "x" ] ; then
+		dd_uboot="${dd_uboot}count=${dd_uboot_count} "
+	fi
+
+	if [ ! "x${dd_uboot_seek}" = "x" ] ; then
+		dd_uboot="${dd_uboot}seek=${dd_uboot_seek} "
+	fi
+
+	if [ ! "x${dd_uboot_conf}" = "x" ] ; then
+		dd_uboot="${dd_uboot}conv=${dd_uboot_conf} "
+	fi
+
+	if [ ! "x${dd_uboot_bs}" = "x" ] ; then
+		dd_uboot="${dd_uboot}bs=${dd_uboot_bs}"
+	fi
+
+	echo "dd if=${dd_spl_uboot_backup} of=${destination} ${dd_spl_uboot}"
+	echo "-----------------------------"
+	dd if=${dd_spl_uboot_backup} of=${destination} ${dd_spl_uboot}
+	echo "-----------------------------"
+	echo "dd if=${dd_uboot_backup} of=${destination} ${dd_uboot}"
+	echo "-----------------------------"
+	dd if=${dd_uboot_backup} of=${destination} ${dd_uboot}
+}
+
 format_boot () {
+	echo "mkfs.vfat -F 16 ${destination}p1 -n BEAGLEBONE"
+	echo "-----------------------------"
 	mkfs.vfat -F 16 ${destination}p1 -n BEAGLEBONE
+	echo "-----------------------------"
 	flush_cache
 }
 
 format_root () {
+	echo "mkfs.ext4 ${destination}p2 -L rootfs"
+	echo "-----------------------------"
 	mkfs.ext4 ${destination}p2 -L rootfs
+	echo "-----------------------------"
 	flush_cache
 }
 
-partition_drive () {
-	echo "Erasing: ${destination}"
+format_single_root () {
+	echo "mkfs.ext4 ${destination}p1 -L rootfs"
+	echo "-----------------------------"
+	mkfs.ext4 ${destination}p1 -L rootfs
+	echo "-----------------------------"
 	flush_cache
-	dd if=/dev/zero of=${destination} bs=1M count=20
-	sync
-	dd if=${destination} of=/dev/null bs=1M count=20
-	sync
-	flush_cache
-
-	if [ -f /boot/SOC.sh ] ; then
-		. /boot/SOC.sh
-	fi
-	conf_boot_startmb=${conf_boot_startmb:-"1"}
-	conf_boot_endmb=${conf_boot_endmb:-"12"}
-	sfdisk_fstype=${sfdisk_fstype:-"0xE"}
-
-	echo "Formatting: ${destination}"
-	LC_ALL=C sfdisk --force --in-order --Linux --unit M "${destination}" <<-__EOF__
-		${conf_boot_startmb},${conf_boot_endmb},${sfdisk_fstype},*
-		,,,-
-	__EOF__
-
-	flush_cache
-	format_boot
-	format_root
 }
 
 copy_boot () {
-	mount ${source}p1 /boot/uboot -o ro
-
 	echo "Copying: ${source}p1 -> ${destination}p1"
 	mkdir -p /tmp/boot/ || true
 	mount ${destination}p1 /tmp/boot/ -o sync
-	#Make sure the BootLoader gets copied first:
-	cp -v /boot/uboot/MLO /tmp/boot/MLO || write_failure
-	flush_cache
 
-	cp -v /boot/uboot/u-boot.img /tmp/boot/u-boot.img || write_failure
-	flush_cache
+	if [ -f /boot/uboot/MLO ] ; then
+		#Make sure the BootLoader gets copied first:
+		cp -v /boot/uboot/MLO /tmp/boot/MLO || write_failure
+		flush_cache
+
+		cp -v /boot/uboot/u-boot.img /tmp/boot/u-boot.img || write_failure
+		flush_cache
+	fi
 
 	echo "rsync: /boot/uboot/ -> /tmp/boot/"
 	rsync -aAX /boot/uboot/ /tmp/boot/ --exclude={MLO,u-boot.img,uEnv.txt} || write_failure
@@ -225,9 +261,9 @@ copy_boot () {
 }
 
 copy_rootfs () {
-	echo "Copying: ${source}p2 -> ${destination}p2"
+	echo "Copying: ${source}p${media_rootfs} -> ${destination}p${media_rootfs}"
 	mkdir -p /tmp/rootfs/ || true
-	mount ${destination}p2 /tmp/rootfs/ -o async,noatime
+	mount ${destination}p${media_rootfs} /tmp/rootfs/ -o async,noatime
 
 	echo "rsync: / -> /tmp/rootfs/"
 	rsync -aAX /* /tmp/rootfs/ --exclude={/dev/*,/proc/*,/sys/*,/tmp/*,/run/*,/mnt/*,/media/*,/lost+found,/lib/modules/*} || write_failure
@@ -247,7 +283,7 @@ copy_rootfs () {
 	flush_cache
 
 	unset root_uuid
-	root_uuid=$(/sbin/blkid -c /dev/null -s UUID -o value ${destination}p2)
+	root_uuid=$(/sbin/blkid -c /dev/null -s UUID -o value ${destination}p${media_rootfs})
 	if [ "${root_uuid}" ] ; then
 		sed -i -e 's:uuid=:#uuid=:g' /tmp/rootfs/boot/uEnv.txt
 		echo "uuid=${root_uuid}" >> /tmp/rootfs/boot/uEnv.txt
@@ -255,8 +291,13 @@ copy_rootfs () {
 		root_uuid="UUID=${root_uuid}"
 	else
 		#really a failure...
-		root_uuid="${source}p2"
+		root_uuid="${source}p${media_rootfs}"
 	fi
+
+	#echo "/boot/uEnv.txt: disabling flasher script"
+	#script="cmdline=init=/opt/scripts/tools/eMMC/init-eMMC-flasher-v3.sh"
+	#sed -i -e 's:'$script':#'$script':g' /tmp/rootfs/boot/uEnv.txt
+	#cat /tmp/rootfs/boot/uEnv.txt
 
 	echo "Generating: /etc/fstab"
 	echo "# /etc/fstab: static file system information." > /tmp/rootfs/etc/fstab
@@ -304,9 +345,61 @@ copy_rootfs () {
 	fi
 }
 
+partition_drive () {
+	echo "Erasing: ${destination}"
+	flush_cache
+	dd if=/dev/zero of=${destination} bs=1M count=108
+	sync
+	dd if=${destination} of=/dev/null bs=1M count=108
+	sync
+	flush_cache
+
+	if [ -f /boot/SOC.sh ] ; then
+		. /boot/SOC.sh
+	fi
+
+	#dd_bootloader
+
+
+#	if [ "x${boot_fstype}" = "xfat" ] ; then
+		mount ${source}p1 /boot/uboot -o ro
+
+		conf_boot_startmb=${conf_boot_startmb:-"1"}
+		conf_boot_endmb=${conf_boot_endmb:-"96"}
+		sfdisk_fstype=${sfdisk_fstype:-"0xE"}
+
+		echo "Formatting: ${destination}"
+		LC_ALL=C sfdisk --force --in-order --Linux --unit M "${destination}" <<-__EOF__
+			${conf_boot_startmb},${conf_boot_endmb},${sfdisk_fstype},*
+			,,,-
+		__EOF__
+
+		flush_cache
+		format_boot
+		format_root
+
+		copy_boot
+		media_rootfs="2"
+		copy_rootfs
+#	else
+#		conf_boot_startmb=${conf_boot_startmb:-"1"}
+#		sfdisk_fstype=${sfdisk_fstype:-"0x83"}
+#
+#		echo "Formatting: ${destination}"
+#		LC_ALL=C sfdisk --force --in-order --Linux --unit M "${destination}" <<-__EOF__
+#			${conf_boot_startmb},,${sfdisk_fstype},*
+#		__EOF__
+#
+#		flush_cache
+#		format_single_root
+#
+#		media_rootfs="1"
+#		copy_rootfs
+#	fi
+}
+
 check_eeprom
 check_running_system
 cylon_leds & CYLON_PID=$!
 partition_drive
-copy_boot
-copy_rootfs
+#
