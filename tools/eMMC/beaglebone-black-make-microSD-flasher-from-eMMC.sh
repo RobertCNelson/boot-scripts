@@ -94,6 +94,17 @@ check_running_system () {
 		echo "Error: [${destination}] does not exist"
 		write_failure
 	fi
+
+	if [ ! -f /boot/config-$(uname -r) ] ; then
+		zcat /proc/config.gz > /boot/config-$(uname -r)
+	fi
+
+	if [ -f /boot/initrd.img-$(uname -r) ] ; then
+		update-initramfs -u -k $(uname -r)
+	else
+		update-initramfs -c -k $(uname -r)
+	fi
+	flush_cache
 }
 
 cylon_leds () {
@@ -138,14 +149,6 @@ cylon_leds () {
 			esac
 			sleep 0.1
 		done
-	fi
-}
-
-update_boot_files () {
-	if [ ! -f /boot/initrd.img-$(uname -r) ] ; then
-		update-initramfs -c -k $(uname -r)
-	else
-		update-initramfs -u -k $(uname -r)
 	fi
 }
 
