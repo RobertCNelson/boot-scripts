@@ -140,6 +140,14 @@ check_running_system () {
 		echo "Error: [${destination}] does not exist"
 		write_failure
 	fi
+
+	##FIXME: quick check for rsync 3.1 (jessie)
+	unset rsync_check
+	unset rsync_progress
+	rsync_check=$(LC_ALL=C rsync --version | grep version | awk '{print $3}' || true)
+	if [ "x${rsync_check}" = "x3.1.1" ] ; then
+		rsync_progress="--info=progress2 --human-readable"
+	fi
 }
 
 cylon_leds () {
@@ -274,7 +282,7 @@ copy_boot () {
 	fi
 
 	echo "rsync: /boot/uboot/ -> /tmp/boot/"
-	rsync -aAX /boot/uboot/ /tmp/boot/ --exclude={MLO,u-boot.img,uEnv.txt} || write_failure
+	rsync -aAx ${rsync_progress} /boot/uboot/ /tmp/boot/ --exclude={MLO,u-boot.img,uEnv.txt} || write_failure
 	flush_cache
 
 	flush_cache
@@ -289,7 +297,7 @@ copy_rootfs () {
 	mount ${destination}p${media_rootfs} /tmp/rootfs/ -o async,noatime
 
 	echo "rsync: / -> /tmp/rootfs/"
-	rsync -aAX /* /tmp/rootfs/ --exclude={/dev/*,/proc/*,/sys/*,/tmp/*,/run/*,/mnt/*,/media/*,/lost+found,/lib/modules/*,/uEnv.txt} || write_failure
+	rsync -aAx ${rsync_progress} /* /tmp/rootfs/ --exclude={/dev/*,/proc/*,/sys/*,/tmp/*,/run/*,/mnt/*,/media/*,/lost+found,/lib/modules/*,/uEnv.txt} || write_failure
 	flush_cache
 
 	if [ -d /tmp/rootfs/etc/ssh/ ] ; then
@@ -302,7 +310,7 @@ copy_rootfs () {
 
 	echo "Copying: Kernel modules"
 	echo "rsync: /lib/modules/$(uname -r)/ -> /tmp/rootfs/lib/modules/$(uname -r)/"
-	rsync -aAX /lib/modules/$(uname -r)/* /tmp/rootfs/lib/modules/$(uname -r)/ || write_failure
+	rsync -aAx ${rsync_progress} /lib/modules/$(uname -r)/* /tmp/rootfs/lib/modules/$(uname -r)/ || write_failure
 	flush_cache
 
 	unset root_uuid
