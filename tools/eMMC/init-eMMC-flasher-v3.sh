@@ -282,6 +282,7 @@ copy_boot () {
 	fi
 
 	echo "rsync: /boot/uboot/ -> /tmp/boot/"
+	echo "INFO: ignore the %'s it is not accurate..."
 	rsync -aAx ${rsync_progress} /boot/uboot/ /tmp/boot/ --exclude={MLO,u-boot.img,uEnv.txt} || write_failure
 	flush_cache
 
@@ -297,6 +298,7 @@ copy_rootfs () {
 	mount ${destination}p${media_rootfs} /tmp/rootfs/ -o async,noatime
 
 	echo "rsync: / -> /tmp/rootfs/"
+	echo "INFO: ignore the %'s it is not accurate..."
 	rsync -aAx ${rsync_progress} /* /tmp/rootfs/ --exclude={/dev/*,/proc/*,/sys/*,/tmp/*,/run/*,/mnt/*,/media/*,/lost+found,/lib/modules/*,/uEnv.txt} || write_failure
 	flush_cache
 
@@ -309,6 +311,7 @@ copy_rootfs () {
 	mkdir -p /tmp/rootfs/lib/modules/$(uname -r)/ || true
 
 	echo "Copying: Kernel modules"
+	echo "INFO: ignore the %'s it is not accurate..."
 	echo "rsync: /lib/modules/$(uname -r)/ -> /tmp/rootfs/lib/modules/$(uname -r)/"
 	rsync -aAx ${rsync_progress} /lib/modules/$(uname -r)/* /tmp/rootfs/lib/modules/$(uname -r)/ || write_failure
 	flush_cache
