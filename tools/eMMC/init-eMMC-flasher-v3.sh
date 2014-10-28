@@ -311,8 +311,8 @@ copy_rootfs () {
 	mkdir -p /tmp/rootfs/lib/modules/$(uname -r)/ || true
 
 	echo "Copying: Kernel modules"
-	echo "INFO: ignore the %'s it is not accurate..."
 	echo "rsync: /lib/modules/$(uname -r)/ -> /tmp/rootfs/lib/modules/$(uname -r)/"
+	echo "INFO: ignore the %'s it is not accurate..."
 	rsync -aAx ${rsync_progress} /lib/modules/$(uname -r)/* /tmp/rootfs/lib/modules/$(uname -r)/ || write_failure
 	flush_cache
 
