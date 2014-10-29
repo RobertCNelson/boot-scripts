@@ -1,0 +1,12 @@
+diff --git a/lib/udev/rules.d/70-power-switch.rules b/lib/udev/rules.d/70-power-switch.rules
+index c9207fc..d8e68da 100644
+--- a/lib/udev/rules.d/70-power-switch.rules
++++ b/lib/udev/rules.d/70-power-switch.rules
+@@ -9,5 +9,7 @@
+ 
+ SUBSYSTEM=="input", KERNEL=="event*", SUBSYSTEMS=="acpi", TAG+="power-switch"
+ SUBSYSTEM=="input", KERNEL=="event*", KERNELS=="thinkpad_acpi", TAG+="power-switch"
++SUBSYSTEM=="input", KERNEL=="event*", ATTRS{name}=="twl4030_pwrbutton", TAG+="power-switch"
++SUBSYSTEM=="input", KERNEL=="event*", ATTRS{name}=="tps65217_pwr_but", TAG+="power-switch"
+ 
+ LABEL="power_switch_end"
