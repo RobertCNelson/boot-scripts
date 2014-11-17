@@ -244,25 +244,25 @@ dd_bootloader () {
 }
 
 format_boot () {
-	echo "mkfs.vfat -F 16 ${destination}p1 -n BEAGLEBONE"
+	echo "mkfs.vfat -F 16 ${destination}p1 -n ${boot_label}"
 	echo "-----------------------------"
-	mkfs.vfat -F 16 ${destination}p1 -n BEAGLEBONE
+	mkfs.vfat -F 16 ${destination}p1 -n ${boot_label}
 	echo "-----------------------------"
 	flush_cache
 }
 
 format_root () {
-	echo "mkfs.ext4 ${destination}p2 -L rootfs"
+	echo "mkfs.ext4 ${destination}p2 -L ${rootfs_label}"
 	echo "-----------------------------"
-	mkfs.ext4 ${destination}p2 -L rootfs
+	mkfs.ext4 ${destination}p2 -L ${rootfs_label}
 	echo "-----------------------------"
 	flush_cache
 }
 
 format_single_root () {
-	echo "mkfs.ext4 ${destination}p1 -L rootfs"
+	echo "mkfs.ext4 ${destination}p1 -L ${boot_label}"
 	echo "-----------------------------"
-	mkfs.ext4 ${destination}p1 -L rootfs
+	mkfs.ext4 ${destination}p1 -L ${boot_label}
 	echo "-----------------------------"
 	flush_cache
 }
@@ -398,6 +398,8 @@ partition_drive () {
 		conf_boot_startmb=${conf_boot_startmb:-"1"}
 		conf_boot_endmb=${conf_boot_endmb:-"96"}
 		sfdisk_fstype=${sfdisk_fstype:-"0xE"}
+		boot_label=${boot_label:-"BEAGLEBONE"}
+		rootfs_label=${rootfs_label:-"rootfs"}
 
 		echo "Formatting: ${destination}"
 		LC_ALL=C sfdisk --force --in-order --Linux --unit M "${destination}" <<-__EOF__
@@ -415,6 +417,7 @@ partition_drive () {
 	else
 		conf_boot_startmb=${conf_boot_startmb:-"1"}
 		sfdisk_fstype=${sfdisk_fstype:-"0x83"}
+		boot_label=${boot_label:-"BEAGLEBONE"}
 
 		echo "Formatting: ${destination}"
 		LC_ALL=C sfdisk --force --in-order --Linux --unit M "${destination}" <<-__EOF__
