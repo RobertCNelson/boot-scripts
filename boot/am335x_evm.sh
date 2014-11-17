@@ -77,6 +77,7 @@ modprobe g_multi file=${gadget_partition} cdrom=0 stall=0 removable=1 nofua=1 iS
 
 sleep 1
 
+#Wheezy Image:
 if [ -f /etc/default/udhcpd ] ; then
 	unset udhcp_disabled
 	udhcp_disabled=$(grep \#DHCPD_ENABLED /etc/default/udhcpd || true)
@@ -102,6 +103,11 @@ if [ -f /etc/udhcpd.conf ] ; then
 
 	/sbin/ifconfig usb0 192.168.7.2 netmask 255.255.255.252
 	/usr/sbin/udhcpd -S /etc/udhcpd.conf
+fi
+
+#Jessie Image:
+if [ -f /etc/dnsmasq.d/usb0-dhcp ] ; then
+	/sbin/ifconfig usb0 192.168.7.2 netmask 255.255.255.252
 fi
 
 eth0_addr=$(ip addr list eth0 |grep "inet " |cut -d' ' -f6|cut -d/ -f1)
