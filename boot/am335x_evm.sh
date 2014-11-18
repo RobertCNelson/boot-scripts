@@ -23,25 +23,32 @@
 #Based off:
 #https://github.com/beagleboard/meta-beagleboard/blob/master/meta-beagleboard-extras/recipes-support/usb-gadget/gadget-init/g-ether-load.sh
 
+if [ -f /etc/rcn-ee.conf ] ; then
+	. /etc/rcn-ee.conf
+fi
+
 eeprom="/sys/bus/i2c/devices/0-0050/eeprom"
 
-#Flash BeagleBone Black's eeprom:
-if [ -f /boot/uboot/flash-eMMC.txt ] ; then
-	eeprom_location=$(ls /sys/devices/ocp.*/44e0b000.i2c/i2c-0/0-0050/eeprom 2> /dev/null)
-	eeprom_header=$(hexdump -e '8/1 "%c"' ${eeprom} -s 5 -n 3)
-	if [ "x${eeprom_header}" = "x335" ] ; then
-		echo "Valid EEPROM header found"
-	else
-		echo "Invalid EEPROM header detected"
-		if [ -f /opt/scripts/device/bone/bbb-eeprom.dump ] ; then
-			if [ ! "x${eeprom_location}" = "x" ] ; then
-				echo "Adding header to EEPROM"
-				dd if=/opt/scripts/device/bone/bbb-eeprom.dump of=${eeprom_location}
-				sync
-				#We have to reboot, to load eMMC cape
-				reboot
-				#We shouldnt hit this...
-				exit
+if [ "x${abi}" = "x" ] ; then
+#taken care by the init flasher
+	#Flash BeagleBone Black's eeprom:
+	if [ -f /boot/uboot/flash-eMMC.txt ] ; then
+		eeprom_location=$(ls /sys/devices/ocp.*/44e0b000.i2c/i2c-0/0-0050/eeprom 2> /dev/null)
+		eeprom_header=$(hexdump -e '8/1 "%c"' ${eeprom} -s 5 -n 3)
+		if [ "x${eeprom_header}" = "x335" ] ; then
+			echo "Valid EEPROM header found"
+		else
+			echo "Invalid EEPROM header detected"
+			if [ -f /opt/scripts/device/bone/bbb-eeprom.dump ] ; then
+				if [ ! "x${eeprom_location}" = "x" ] ; then
+					echo "Adding header to EEPROM"
+					dd if=/opt/scripts/device/bone/bbb-eeprom.dump of=${eeprom_location}
+					sync
+					#We have to reboot, to load eMMC cape
+					reboot
+					#We shouldnt hit this...
+					exit
+				fi
 			fi
 		fi
 	fi
@@ -126,29 +133,36 @@ if [ ! "x${usb0_addr}" = "x" ] ; then
 	echo "The IP Address for usb0 is: ${usb0_addr}" >> /etc/issue
 fi
 
-if [ -f /boot/uboot/flash-eMMC.txt ] ; then
-	if [ ! -d /boot/uboot/debug/ ] ; then
-		mkdir -p /boot/uboot/debug/ || true
-	fi
+if [ "x${abi}" = "x" ] ; then
+#taken care by the init flasher
+	if [ -f /boot/uboot/flash-eMMC.txt ] ; then
+		if [ ! -d /boot/uboot/debug/ ] ; then
+			mkdir -p /boot/uboot/debug/ || true
+		fi
 
-	if [ -f /opt/scripts/tools/beaglebone-black-eMMC-flasher.sh ] ; then
-		/bin/bash /opt/scripts/tools/beaglebone-black-eMMC-flasher.sh >/boot/uboot/debug/flash-eMMC.log 2>&1
+		if [ -f /opt/scripts/tools/beaglebone-black-eMMC-flasher.sh ] ; then
+			/bin/bash /opt/scripts/tools/beaglebone-black-eMMC-flasher.sh >/boot/uboot/debug/flash-eMMC.log 2>&1
+		fi
 	fi
 fi
 
-if [ -f /resizerootfs ] ; then
-	if [ ! -d /boot/debug/ ] ; then
-		mkdir -p /boot/debug/ || true
-	fi
+if [ "x${abi}" = "x" ] ; then
+#Taken care by:
+#https://github.com/RobertCNelson/omap-image-builder/blob/master/target/init_scripts/generic-debian.sh#L51
+	if [ -f /resizerootfs ] ; then
+		if [ ! -d /boot/debug/ ] ; then
+			mkdir -p /boot/debug/ || true
+		fi
 
-	drive=$(cat /resizerootfs)
-	if [ "x${drive}" = "x" ] ; then
-		drive="/dev/mmcblk0"
-	fi
+		drive=$(cat /resizerootfs)
+		if [ "x${drive}" = "x" ] ; then
+			drive="/dev/mmcblk0"
+		fi
 
-	#FIXME: only good for two partition "/dev/mmcblkXp2" setups...
-	resize2fs ${drive}p2 >/boot/debug/resize.log 2>&1
-	rm -rf /resizerootfs || true
+		#FIXME: only good for two partition "/dev/mmcblkXp2" setups...
+		resize2fs ${drive}p2 >/boot/debug/resize.log 2>&1
+		rm -rf /resizerootfs || true
+	fi
 fi
 
 #
