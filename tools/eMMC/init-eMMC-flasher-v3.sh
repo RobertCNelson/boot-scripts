@@ -140,7 +140,7 @@ check_eeprom () {
 check_running_system () {
 	message="-----------------------------" ; broadcast
 	message="debug copying: [${source}] -> [${destination}]" ; broadcast
-	lsblk
+	message="`lsblk`" ; broadcast
 	message="-----------------------------" ; broadcast
 
 	if [ ! -b "${destination}" ] ; then
@@ -242,27 +242,27 @@ dd_bootloader () {
 	fi
 
 	echo "dd if=${dd_spl_uboot_backup} of=${destination} ${dd_spl_uboot}"
-	message="-----------------------------" ; broadcast
+	echo "-----------------------------"
 	dd if=${dd_spl_uboot_backup} of=${destination} ${dd_spl_uboot}
-	message="-----------------------------" ; broadcast
+	echo "-----------------------------"
 	echo "dd if=${dd_uboot_backup} of=${destination} ${dd_uboot}"
-	message="-----------------------------" ; broadcast
+	echo "-----------------------------"
 	dd if=${dd_uboot_backup} of=${destination} ${dd_uboot}
 }
 
 format_boot () {
 	message="mkfs.vfat -F 16 ${destination}p1 -n ${boot_label}" ; broadcast
-	message="-----------------------------" ; broadcast
+	echo "-----------------------------"
 	mkfs.vfat -F 16 ${destination}p1 -n ${boot_label}
-	message="-----------------------------" ; broadcast
+	echo "-----------------------------"
 	flush_cache
 }
 
 format_root () {
 	message="mkfs.ext4 ${destination}p2 -L ${rootfs_label}" ; broadcast
-	message="-----------------------------" ; broadcast
+	echo "-----------------------------"
 	mkfs.ext4 ${destination}p2 -L ${rootfs_label}
-	message="-----------------------------" ; broadcast
+	echo "-----------------------------"
 	flush_cache
 }
 
@@ -270,7 +270,7 @@ format_single_root () {
 	message="mkfs.ext4 ${destination}p1 -L ${boot_label}" ; broadcast
 	message="-----------------------------" ; broadcast
 	mkfs.ext4 ${destination}p1 -L ${boot_label}
-	message="-----------------------------" ; broadcast
+	echo "-----------------------------"
 	flush_cache
 }
 
@@ -394,6 +394,7 @@ partition_drive () {
 	dd if=${destination} of=/dev/null bs=1M count=108
 	sync
 	flush_cache
+	message="Erasing: ${destination} complete" ; broadcast
 
 	if [ -f /boot/SOC.sh ] ; then
 		. /boot/SOC.sh
@@ -417,6 +418,7 @@ partition_drive () {
 		flush_cache
 		format_boot
 		format_root
+		message="Formatting: ${destination} complete" ; broadcast
 
 		copy_boot
 		media_rootfs="2"
@@ -433,12 +435,14 @@ partition_drive () {
 
 		flush_cache
 		format_single_root
+		message="Formatting: ${destination} complete" ; broadcast
 
 		media_rootfs="1"
 		copy_rootfs
 	fi
 }
 
+message="Starting eMMC Flasher" ; broadcast
 check_eeprom
 check_running_system
 cylon_leds & CYLON_PID=$!
