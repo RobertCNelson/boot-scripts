@@ -112,17 +112,19 @@ write_failure () {
 check_eeprom () {
 
 	eeprom="/sys/bus/i2c/devices/0-0050/eeprom"
+	message="Checking for Valid BBB EEPROM header" ; broadcast
 
 	#Flash BeagleBone Black's eeprom:
 	eeprom_location=$(ls /sys/devices/ocp.*/44e0b000.i2c/i2c-0/0-0050/eeprom 2> /dev/null)
 	eeprom_header=$(hexdump -e '8/1 "%c"' ${eeprom} -s 5 -n 3)
 	if [ "x${eeprom_header}" = "x335" ] ; then
 		message="Valid EEPROM header found" ; broadcast
+		message="-----------------------------" ; broadcast
 	else
 		message="Invalid EEPROM header detected" ; broadcast
 		if [ -f /opt/scripts/device/bone/bbb-eeprom.dump ] ; then
 			if [ ! "x${eeprom_location}" = "x" ] ; then
-				message="Adding header to EEPROM" ; broadcast
+				message="Writing header to EEPROM" ; broadcast
 				dd if=/opt/scripts/device/bone/bbb-eeprom.dump of=${eeprom_location}
 				sync
 
@@ -203,8 +205,8 @@ cylon_leds () {
 }
 
 dd_bootloader () {
-	message="" ; broadcast
-	message="Using dd to place bootloader on [${destination}]" ; broadcast
+	message="-----------------------------" ; broadcast
+	message="Writing bootloader to [${destination}]" ; broadcast
 	message="-----------------------------" ; broadcast
 
 	unset dd_spl_uboot
@@ -241,13 +243,14 @@ dd_bootloader () {
 		dd_uboot="${dd_uboot}bs=${dd_uboot_bs}"
 	fi
 
-	echo "dd if=${dd_spl_uboot_backup} of=${destination} ${dd_spl_uboot}"
+	message="dd if=${dd_spl_uboot_backup} of=${destination} ${dd_spl_uboot}" ; broadcast
 	echo "-----------------------------"
 	dd if=${dd_spl_uboot_backup} of=${destination} ${dd_spl_uboot}
 	echo "-----------------------------"
-	echo "dd if=${dd_uboot_backup} of=${destination} ${dd_uboot}"
+	message="dd if=${dd_uboot_backup} of=${destination} ${dd_uboot}" ; broadcast
 	echo "-----------------------------"
 	dd if=${dd_uboot_backup} of=${destination} ${dd_uboot}
+	message="-----------------------------" ; broadcast
 }
 
 format_boot () {
@@ -268,7 +271,7 @@ format_root () {
 
 format_single_root () {
 	message="mkfs.ext4 ${destination}p1 -L ${boot_label}" ; broadcast
-	message="-----------------------------" ; broadcast
+	echo "-----------------------------"
 	mkfs.ext4 ${destination}p1 -L ${boot_label}
 	echo "-----------------------------"
 	flush_cache
@@ -375,11 +378,11 @@ copy_rootfs () {
 		fi
 		mount
 
-		message="" ; broadcast
+		message=" " ; broadcast
 		message="-----------------------------" ; broadcast
-		message="" ; broadcast
+		message=" " ; broadcast
 		message="eMMC has been flashed, please remove power and microSD card" ; broadcast
-		message="" ; broadcast
+		message=" " ; broadcast
 		message="-----------------------------" ; broadcast
 
 		halt -f
@@ -395,6 +398,7 @@ partition_drive () {
 	sync
 	flush_cache
 	message="Erasing: ${destination} complete" ; broadcast
+	message="-----------------------------" ; broadcast
 
 	if [ -f /boot/SOC.sh ] ; then
 		. /boot/SOC.sh
@@ -419,6 +423,7 @@ partition_drive () {
 		format_boot
 		format_root
 		message="Formatting: ${destination} complete" ; broadcast
+		message="-----------------------------" ; broadcast
 
 		copy_boot
 		media_rootfs="2"
@@ -436,6 +441,7 @@ partition_drive () {
 		flush_cache
 		format_single_root
 		message="Formatting: ${destination} complete" ; broadcast
+		message="-----------------------------" ; broadcast
 
 		media_rootfs="1"
 		copy_rootfs
