@@ -141,7 +141,11 @@ check_eeprom () {
 
 check_running_system () {
 	message="copying: [${source}] -> [${destination}]" ; broadcast
+	message="lsblk:" ; broadcast
 	message="`lsblk`" ; broadcast
+	message="-----------------------------" ; broadcast
+	message="df -h:" ; broadcast
+	message="`df -h`" ; broadcast
 	message="-----------------------------" ; broadcast
 
 	if [ ! -b "${destination}" ] ; then
