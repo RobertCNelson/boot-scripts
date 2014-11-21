@@ -68,7 +68,7 @@ flush_cache () {
 broadcast () {
 	if [ "x${message}" != "x" ] ; then
 		echo "${message}"
-		echo "${message}" > /dev/tty0
+		echo "${message}" > /dev/tty0 || true
 	fi
 }
 
@@ -118,7 +118,7 @@ check_eeprom () {
 	eeprom_location=$(ls /sys/devices/ocp.*/44e0b000.i2c/i2c-0/0-0050/eeprom 2> /dev/null)
 	eeprom_header=$(hexdump -e '8/1 "%c"' ${eeprom} -s 5 -n 3)
 	if [ "x${eeprom_header}" = "x335" ] ; then
-		message="Valid EEPROM header found" ; broadcast
+		message="Valid BBB EEPROM header found" ; broadcast
 		message="-----------------------------" ; broadcast
 	else
 		message="Invalid EEPROM header detected" ; broadcast
@@ -140,8 +140,7 @@ check_eeprom () {
 }
 
 check_running_system () {
-	message="-----------------------------" ; broadcast
-	message="debug copying: [${source}] -> [${destination}]" ; broadcast
+	message="copying: [${source}] -> [${destination}]" ; broadcast
 	message="`lsblk`" ; broadcast
 	message="-----------------------------" ; broadcast
 
@@ -205,9 +204,7 @@ cylon_leds () {
 }
 
 dd_bootloader () {
-	message="-----------------------------" ; broadcast
 	message="Writing bootloader to [${destination}]" ; broadcast
-	message="-----------------------------" ; broadcast
 
 	unset dd_spl_uboot
 	if [ ! "x${dd_spl_uboot_count}" = "x" ] ; then
@@ -360,7 +357,6 @@ copy_rootfs () {
 	sync
 	dd if=${destination} of=/dev/null count=100000
 
-	message="" ; broadcast
 	message="This script has now completed its task" ; broadcast
 	message="-----------------------------" ; broadcast
 
@@ -449,6 +445,7 @@ partition_drive () {
 }
 
 message="Starting eMMC Flasher" ; broadcast
+message="-----------------------------" ; broadcast
 check_eeprom
 check_running_system
 cylon_leds & CYLON_PID=$!
