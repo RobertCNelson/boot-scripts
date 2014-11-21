@@ -65,6 +65,13 @@ flush_cache () {
 	blockdev --flushbufs ${destination}
 }
 
+broadcast () {
+	if [ "x${message}" != "x" ] ; then
+		echo "${message}"
+		echo "${message}" > /dev/tty0
+	fi
+}
+
 inf_loop () {
 	while read MAGIC ; do
 		case $MAGIC in
@@ -85,7 +92,7 @@ dev2dir () {
 }
 
 write_failure () {
-	echo "writing to [${destination}] failed..."
+	message="writing to [${destination}] failed..." ; broadcast
 
 	[ -e /proc/$CYLON_PID ]  && kill $CYLON_PID > /dev/null 2>&1
 
@@ -95,7 +102,7 @@ write_failure () {
 		echo heartbeat > /sys/class/leds/beaglebone\:green\:usr2/trigger
 		echo heartbeat > /sys/class/leds/beaglebone\:green\:usr3/trigger
 	fi
-	echo "-----------------------------"
+	message="-----------------------------" ; broadcast
 	flush_cache
 	umount $(dev2dir ${destination}p1) > /dev/null 2>&1 || true
 	umount $(dev2dir ${destination}p2) > /dev/null 2>&1 || true
@@ -110,12 +117,12 @@ check_eeprom () {
 	eeprom_location=$(ls /sys/devices/ocp.*/44e0b000.i2c/i2c-0/0-0050/eeprom 2> /dev/null)
 	eeprom_header=$(hexdump -e '8/1 "%c"' ${eeprom} -s 5 -n 3)
 	if [ "x${eeprom_header}" = "x335" ] ; then
-		echo "Valid EEPROM header found"
+		message="Valid EEPROM header found" ; broadcast
 	else
-		echo "Invalid EEPROM header detected"
+		message="Invalid EEPROM header detected" ; broadcast
 		if [ -f /opt/scripts/device/bone/bbb-eeprom.dump ] ; then
 			if [ ! "x${eeprom_location}" = "x" ] ; then
-				echo "Adding header to EEPROM"
+				message="Adding header to EEPROM" ; broadcast
 				dd if=/opt/scripts/device/bone/bbb-eeprom.dump of=${eeprom_location}
 				sync
 
@@ -131,13 +138,13 @@ check_eeprom () {
 }
 
 check_running_system () {
-	echo "-----------------------------"
-	echo "debug copying: [${source}] -> [${destination}]"
+	message="-----------------------------" ; broadcast
+	message="debug copying: [${source}] -> [${destination}]" ; broadcast
 	lsblk
-	echo "-----------------------------"
+	message="-----------------------------" ; broadcast
 
 	if [ ! -b "${destination}" ] ; then
-		echo "Error: [${destination}] does not exist"
+		message="Error: [${destination}] does not exist" ; broadcast
 		write_failure
 	fi
 
@@ -196,9 +203,9 @@ cylon_leds () {
 }
 
 dd_bootloader () {
-	echo ""
-	echo "Using dd to place bootloader on [${destination}]"
-	echo "-----------------------------"
+	message="" ; broadcast
+	message="Using dd to place bootloader on [${destination}]" ; broadcast
+	message="-----------------------------" ; broadcast
 
 	unset dd_spl_uboot
 	if [ ! "x${dd_spl_uboot_count}" = "x" ] ; then
@@ -235,40 +242,40 @@ dd_bootloader () {
 	fi
 
 	echo "dd if=${dd_spl_uboot_backup} of=${destination} ${dd_spl_uboot}"
-	echo "-----------------------------"
+	message="-----------------------------" ; broadcast
 	dd if=${dd_spl_uboot_backup} of=${destination} ${dd_spl_uboot}
-	echo "-----------------------------"
+	message="-----------------------------" ; broadcast
 	echo "dd if=${dd_uboot_backup} of=${destination} ${dd_uboot}"
-	echo "-----------------------------"
+	message="-----------------------------" ; broadcast
 	dd if=${dd_uboot_backup} of=${destination} ${dd_uboot}
 }
 
 format_boot () {
-	echo "mkfs.vfat -F 16 ${destination}p1 -n ${boot_label}"
-	echo "-----------------------------"
+	message="mkfs.vfat -F 16 ${destination}p1 -n ${boot_label}" ; broadcast
+	message="-----------------------------" ; broadcast
 	mkfs.vfat -F 16 ${destination}p1 -n ${boot_label}
-	echo "-----------------------------"
+	message="-----------------------------" ; broadcast
 	flush_cache
 }
 
 format_root () {
-	echo "mkfs.ext4 ${destination}p2 -L ${rootfs_label}"
-	echo "-----------------------------"
+	message="mkfs.ext4 ${destination}p2 -L ${rootfs_label}" ; broadcast
+	message="-----------------------------" ; broadcast
 	mkfs.ext4 ${destination}p2 -L ${rootfs_label}
-	echo "-----------------------------"
+	message="-----------------------------" ; broadcast
 	flush_cache
 }
 
 format_single_root () {
-	echo "mkfs.ext4 ${destination}p1 -L ${boot_label}"
-	echo "-----------------------------"
+	message="mkfs.ext4 ${destination}p1 -L ${boot_label}" ; broadcast
+	message="-----------------------------" ; broadcast
 	mkfs.ext4 ${destination}p1 -L ${boot_label}
-	echo "-----------------------------"
+	message="-----------------------------" ; broadcast
 	flush_cache
 }
 
 copy_boot () {
-	echo "Copying: ${source}p1 -> ${destination}p1"
+	message="Copying: ${source}p1 -> ${destination}p1" ; broadcast
 	mkdir -p /tmp/boot/ || true
 	mount ${destination}p1 /tmp/boot/ -o sync
 
@@ -281,7 +288,7 @@ copy_boot () {
 		flush_cache
 	fi
 
-	echo "rsync: /boot/uboot/ -> /tmp/boot/"
+	message="rsync: /boot/uboot/ -> /tmp/boot/" ; broadcast
 	echo "INFO: ignore the %'s it is not accurate..."
 	rsync -aAx ${rsync_progress} /boot/uboot/ /tmp/boot/ --exclude={MLO,u-boot.img,uEnv.txt} || write_failure
 	flush_cache
@@ -293,11 +300,11 @@ copy_boot () {
 }
 
 copy_rootfs () {
-	echo "Copying: ${source}p${media_rootfs} -> ${destination}p${media_rootfs}"
+	message="Copying: ${source}p${media_rootfs} -> ${destination}p${media_rootfs}" ; broadcast
 	mkdir -p /tmp/rootfs/ || true
 	mount ${destination}p${media_rootfs} /tmp/rootfs/ -o async,noatime
 
-	echo "rsync: / -> /tmp/rootfs/"
+	message="rsync: / -> /tmp/rootfs/" ; broadcast
 	echo "INFO: ignore the %'s it is not accurate..."
 	rsync -aAx ${rsync_progress} /* /tmp/rootfs/ --exclude={/dev/*,/proc/*,/sys/*,/tmp/*,/run/*,/mnt/*,/media/*,/lost+found,/lib/modules/*,/uEnv.txt} || write_failure
 	flush_cache
@@ -310,8 +317,8 @@ copy_rootfs () {
 
 	mkdir -p /tmp/rootfs/lib/modules/$(uname -r)/ || true
 
-	echo "Copying: Kernel modules"
-	echo "rsync: /lib/modules/$(uname -r)/ -> /tmp/rootfs/lib/modules/$(uname -r)/"
+	message="Copying: Kernel modules" ; broadcast
+	message="rsync: /lib/modules/$(uname -r)/ -> /tmp/rootfs/lib/modules/$(uname -r)/" ; broadcast
 	echo "INFO: ignore the %'s it is not accurate..."
 	rsync -aAx ${rsync_progress} /lib/modules/$(uname -r)/* /tmp/rootfs/lib/modules/$(uname -r)/ || write_failure
 	flush_cache
@@ -328,12 +335,12 @@ copy_rootfs () {
 		root_uuid="${source}p${media_rootfs}"
 	fi
 
-	echo "/boot/uEnv.txt: disabling flasher script"
+	message="/boot/uEnv.txt: disabling flasher script" ; broadcast
 	script="cmdline=init=/opt/scripts/tools/eMMC/init-eMMC-flasher-v3.sh"
 	sed -i -e 's:'$script':#'$script':g' /tmp/rootfs/boot/uEnv.txt
 	cat /tmp/rootfs/boot/uEnv.txt
 
-	echo "Generating: /etc/fstab"
+	message="Generating: /etc/fstab" ; broadcast
 	echo "# /etc/fstab: static file system information." > /tmp/rootfs/etc/fstab
 	echo "#" >> /tmp/rootfs/etc/fstab
 	echo "${root_uuid}  /  ext4  noatime,errors=remount-ro  0  1" >> /tmp/rootfs/etc/fstab
@@ -344,21 +351,21 @@ copy_rootfs () {
 
 	[ -e /proc/$CYLON_PID ]  && kill $CYLON_PID
 
-	echo "Syncing: ${destination}"
+	message="Syncing: ${destination}" ; broadcast
 	#https://github.com/beagleboard/meta-beagleboard/blob/master/contrib/bone-flash-tool/emmc.sh#L158-L159
 	# force writeback of eMMC buffers
 	sync
 	dd if=${destination} of=/dev/null count=100000
 
-	echo ""
-	echo "This script has now completed its task"
-	echo "-----------------------------"
+	message="" ; broadcast
+	message="This script has now completed its task" ; broadcast
+	message="-----------------------------" ; broadcast
 
 	if [ -f /boot/debug.txt ] ; then
-		echo "debug: enabled"
+		message="debug: enabled" ; broadcast
 		inf_loop
 	else
-		echo "Shutting Down"
+		message="Shutting Down" ; broadcast
 		umount /tmp || umount -l /tmp
 		if [ -e /sys/class/leds/beaglebone\:green\:usr0/trigger ] ; then
 			echo default-on > /sys/class/leds/beaglebone\:green\:usr0/trigger
@@ -368,19 +375,19 @@ copy_rootfs () {
 		fi
 		mount
 
-		echo ""
-		echo "-----------------------------"
-		echo ""
-		echo "eMMC has been flashed, please remove power and microSD card"
-		echo ""
-		echo "-----------------------------"
+		message="" ; broadcast
+		message="-----------------------------" ; broadcast
+		message="" ; broadcast
+		message="eMMC has been flashed, please remove power and microSD card" ; broadcast
+		message="" ; broadcast
+		message="-----------------------------" ; broadcast
 
 		halt -f
 	fi
 }
 
 partition_drive () {
-	echo "Erasing: ${destination}"
+	message="Erasing: ${destination}" ; broadcast
 	flush_cache
 	dd if=/dev/zero of=${destination} bs=1M count=108
 	sync
@@ -401,7 +408,7 @@ partition_drive () {
 		boot_label=${boot_label:-"BEAGLEBONE"}
 		rootfs_label=${rootfs_label:-"rootfs"}
 
-		echo "Formatting: ${destination}"
+		message="Formatting: ${destination}" ; broadcast
 		LC_ALL=C sfdisk --force --in-order --Linux --unit M "${destination}" <<-__EOF__
 			${conf_boot_startmb},${conf_boot_endmb},${sfdisk_fstype},*
 			,,,-
@@ -419,7 +426,7 @@ partition_drive () {
 		sfdisk_fstype=${sfdisk_fstype:-"0x83"}
 		boot_label=${boot_label:-"BEAGLEBONE"}
 
-		echo "Formatting: ${destination}"
+		message="Formatting: ${destination}" ; broadcast
 		LC_ALL=C sfdisk --force --in-order --Linux --unit M "${destination}" <<-__EOF__
 			${conf_boot_startmb},,${sfdisk_fstype},*
 		__EOF__
