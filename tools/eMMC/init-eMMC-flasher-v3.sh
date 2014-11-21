@@ -327,22 +327,22 @@ copy_rootfs () {
 	rsync -aAx ${rsync_progress} /lib/modules/$(uname -r)/* /tmp/rootfs/lib/modules/$(uname -r)/ || write_failure
 	flush_cache
 
+	message="Copying: ${source}p${media_rootfs} -> ${destination}p${media_rootfs} complete" ; broadcast
+	message="-----------------------------" ; broadcast
+
+	message="Final System Tweaks:" ; broadcast
 	unset root_uuid
 	root_uuid=$(/sbin/blkid -c /dev/null -s UUID -o value ${destination}p${media_rootfs})
 	if [ "${root_uuid}" ] ; then
 		sed -i -e 's:uuid=:#uuid=:g' /tmp/rootfs/boot/uEnv.txt
 		echo "uuid=${root_uuid}" >> /tmp/rootfs/boot/uEnv.txt
 
+		message="UUID=${root_uuid}" ; broadcast
 		root_uuid="UUID=${root_uuid}"
 	else
 		#really a failure...
 		root_uuid="${source}p${media_rootfs}"
 	fi
-
-	message="/boot/uEnv.txt: disabling flasher script" ; broadcast
-	script="cmdline=init=/opt/scripts/tools/eMMC/init-eMMC-flasher-v3.sh"
-	sed -i -e 's:'$script':#'$script':g' /tmp/rootfs/boot/uEnv.txt
-	cat /tmp/rootfs/boot/uEnv.txt
 
 	message="Generating: /etc/fstab" ; broadcast
 	echo "# /etc/fstab: static file system information." > /tmp/rootfs/etc/fstab
@@ -350,6 +350,13 @@ copy_rootfs () {
 	echo "${root_uuid}  /  ext4  noatime,errors=remount-ro  0  1" >> /tmp/rootfs/etc/fstab
 	echo "debugfs  /sys/kernel/debug  debugfs  defaults  0  0" >> /tmp/rootfs/etc/fstab
 	cat /tmp/rootfs/etc/fstab
+
+	message="/boot/uEnv.txt: disabling eMMC flasher script" ; broadcast
+	script="cmdline=init=/opt/scripts/tools/eMMC/init-eMMC-flasher-v3.sh"
+	sed -i -e 's:'$script':#'$script':g' /tmp/rootfs/boot/uEnv.txt
+	cat /tmp/rootfs/boot/uEnv.txt
+	message="-----------------------------" ; broadcast
+
 	flush_cache
 	umount /tmp/rootfs/ || umount -l /tmp/rootfs/ || write_failure
 
@@ -360,15 +367,15 @@ copy_rootfs () {
 	# force writeback of eMMC buffers
 	sync
 	dd if=${destination} of=/dev/null count=100000
-
-	message="This script has now completed its task" ; broadcast
+	message="Syncing: ${destination} complete" ; broadcast
 	message="-----------------------------" ; broadcast
 
 	if [ -f /boot/debug.txt ] ; then
+		message="This script has now completed its task" ; broadcast
+		message="-----------------------------" ; broadcast
 		message="debug: enabled" ; broadcast
 		inf_loop
 	else
-		message="Shutting Down" ; broadcast
 		umount /tmp || umount -l /tmp
 		if [ -e /sys/class/leds/beaglebone\:green\:usr0/trigger ] ; then
 			echo default-on > /sys/class/leds/beaglebone\:green\:usr0/trigger
