@@ -144,8 +144,8 @@ check_running_system () {
 	message="lsblk:" ; broadcast
 	message="`lsblk`" ; broadcast
 	message="-----------------------------" ; broadcast
-	message="df -h:" ; broadcast
-	message="`df -h`" ; broadcast
+	message="df -h | grep rootfs:" ; broadcast
+	message="`df -h | grep rootfs`" ; broadcast
 	message="-----------------------------" ; broadcast
 
 	if [ ! -b "${destination}" ] ; then
@@ -385,11 +385,7 @@ copy_rootfs () {
 		fi
 		mount
 
-		message=" " ; broadcast
-		message="-----------------------------" ; broadcast
-		message=" " ; broadcast
-		message="eMMC has been flashed, please remove power and microSD card" ; broadcast
-		message=" " ; broadcast
+		message="eMMC has been flashed: please remove power and microSD card." ; broadcast
 		message="-----------------------------" ; broadcast
 
 		halt -f
