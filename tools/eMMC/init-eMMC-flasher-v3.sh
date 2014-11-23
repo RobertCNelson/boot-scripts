@@ -142,10 +142,10 @@ check_eeprom () {
 check_running_system () {
 	message="copying: [${source}] -> [${destination}]" ; broadcast
 	message="lsblk:" ; broadcast
-	message="`lsblk`" ; broadcast
+	message="`lsblk || true`" ; broadcast
 	message="-----------------------------" ; broadcast
 	message="df -h | grep rootfs:" ; broadcast
-	message="`df -h | grep rootfs`" ; broadcast
+	message="`df -h | grep rootfs || true`" ; broadcast
 	message="-----------------------------" ; broadcast
 
 	if [ ! -b "${destination}" ] ; then
