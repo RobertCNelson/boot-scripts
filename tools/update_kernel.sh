@@ -241,7 +241,7 @@ done
 
 if [ -f /usr/sbin/ntpdate ] ; then
 	echo "syncing local clock to pool.ntp.org"
-	ntpdate -s pool.ntp.org
+	ntpdate -s pool.ntp.org || true
 fi
 
 test_rcnee=$(cat /etc/apt/sources.list | grep rcn-ee || true)
