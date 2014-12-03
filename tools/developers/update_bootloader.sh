@@ -151,7 +151,7 @@ dd_uboot_boot () {
 		fi
 
 		if [ -f ${TEMPDIR}/dl/${UBOOT} ] ; then
-			sudo dd if=${TEMPDIR}/dl/${UBOOT} of=/dev/mmcblk0 seek=${dd_uboot_seek} bs=${dd_uboot_bs}
+			sudo dd if=${TEMPDIR}/dl/${UBOOT} of=${target} seek=${dd_uboot_seek} bs=${dd_uboot_bs}
 			sync
 		fi
 		echo "-----------------------------"
@@ -196,8 +196,8 @@ dd_spl_uboot_boot () {
 		fi
 
 		if [ -f ${TEMPDIR}/dl/${UBOOT} ] ; then
-			sudo dd if=${TEMPDIR}/dl/${SPL} of=/dev/mmcblk0 seek=${dd_spl_uboot_seek} bs=${dd_spl_uboot_bs}
-			sudo dd if=${TEMPDIR}/dl/${UBOOT} of=/dev/mmcblk0 seek=${dd_uboot_seek} bs=${dd_uboot_bs}
+			sudo dd if=${TEMPDIR}/dl/${SPL} of=${target} seek=${dd_spl_uboot_seek} bs=${dd_spl_uboot_bs}
+			sudo dd if=${TEMPDIR}/dl/${UBOOT} of=${target} seek=${dd_uboot_seek} bs=${dd_uboot_bs}
 			sync
 		fi
 		echo "-----------------------------"
@@ -206,8 +206,13 @@ dd_spl_uboot_boot () {
 }
 
 got_board () {
+	target="/dev/mmcblk0"
 	case "${conf_board}" in
-	am335x_evm|omap5_uevm)
+	am335x_evm)
+		is_omap
+		;;
+	omap5_uevm)
+		target="/dev/mmcblk1"
 		is_omap
 		;;
 	esac
