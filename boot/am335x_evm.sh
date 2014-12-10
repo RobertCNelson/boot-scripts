@@ -72,15 +72,21 @@ if [ -f ${mac_address} ] ; then
 	cpsw_1_mac=$(hexdump -v -e '1/1 "%02X" ":"' ${mac_address} | sed 's/.$//')
 fi
 
-unset boot_partition
-boot_partition=$(LC_ALL=C lsblk -l | grep "/boot/uboot" | awk '{print $1}')
-if [ "x${boot_partition}" = "x" ] ; then
-	gadget_partition="/dev/mmcblk0p1"
+unset root_drive
+root_drive="$(cat /proc/cmdline | sed 's/ /\n/g' | grep root=UUID= | awk -F 'root=' '{print $2}' || true)"
+if [ ! "x${root_drive}" = "x" ] ; then
+	root_drive="$(/sbin/findfs ${root_drive} || true)"
 else
-	gadget_partition="/dev/${boot_partition}"
+	root_drive="$(cat /proc/cmdline | sed 's/ /\n/g' | grep root= | awk -F 'root=' '{print $2}' || true)"
 fi
 
-modprobe g_multi file=${gadget_partition} cdrom=0 stall=0 removable=1 nofua=1 iSerialNumber=${SERIAL_NUMBER} iManufacturer=Circuitco  iProduct=BeagleBone${BLACK} host_addr=${cpsw_1_mac}
+unset usb_gadget_media
+if [ ! "x${root_drive}" = "x/dev/mmcblk0p1" ] || [ ! "x${root_drive}" = "x/dev/mmcblk0p1" ] ; then
+	boot_drive="${root_drive%?}1"
+	usb_gadget_media="file=${boot_drive} cdrom=0 stall=0 removable=1 nofua=1"
+fi
+
+modprobe g_multi ${usb_gadget_media} iSerialNumber=${SERIAL_NUMBER} iManufacturer=Circuitco iProduct=BeagleBone${BLACK} host_addr=${cpsw_1_mac}
 
 sleep 1
 
