@@ -80,7 +80,7 @@ else
 	root_drive="$(cat /proc/cmdline | sed 's/ /\n/g' | grep root= | awk -F 'root=' '{print $2}' || true)"
 fi
 
-unset usb_gadget_media
+usb_gadget_media="file=0 cdrom=0 stall=0 removable=1 nofua=1"
 if [ ! "x${root_drive}" = "x/dev/mmcblk0p1" ] || [ ! "x${root_drive}" = "x/dev/mmcblk0p1" ] ; then
 	boot_drive="${root_drive%?}1"
 	usb_gadget_media="file=${boot_drive} cdrom=0 stall=0 removable=1 nofua=1"
