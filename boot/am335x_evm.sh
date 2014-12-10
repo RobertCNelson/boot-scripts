@@ -85,7 +85,6 @@ if [ "x${root_drive}" = "x/dev/mmcblk0p1" ] || [ "x${root_drive}" = "x/dev/mmcbl
 	modprobe g_serial || true
 	#This shows up as: usb0 (instead of ethX) on host...
 	#modprobe g_ether iSerialNumber=${SERIAL_NUMBER} iManufacturer=Circuitco iProduct=BeagleBone${BLACK} host_addr=${cpsw_1_mac} || true
-fi
 else
 	boot_drive="${root_drive%?}1"
 	modprobe g_multi file=${boot_drive} cdrom=0 ro=0 stall=0 removable=1 nofua=1 iSerialNumber=${SERIAL_NUMBER} iManufacturer=Circuitco iProduct=BeagleBone${BLACK} host_addr=${cpsw_1_mac} || true
