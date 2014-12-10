@@ -80,13 +80,12 @@ else
 	root_drive="$(cat /proc/cmdline | sed 's/ /\n/g' | grep root= | awk -F 'root=' '{print $2}' || true)"
 fi
 
-usb_gadget_media="file=${root_drive} cdrom=0 ro=1 stall=0 removable=1 nofua=1"
-if [ ! "x${root_drive}" = "x/dev/mmcblk0p1" ] || [ ! "x${root_drive}" = "x/dev/mmcblk0p1" ] ; then
+if [ "x${root_drive}" = "x/dev/mmcblk0p1" ] || [ "x${root_drive}" = "x/dev/mmcblk0p1" ] ; then
+	modprobe g_ether host_addr=${cpsw_1_mac}
+else
 	boot_drive="${root_drive%?}1"
-	usb_gadget_media="file=${boot_drive} cdrom=0 ro=0 stall=0 removable=1 nofua=1"
+	modprobe g_multi file=${boot_drive} cdrom=0 ro=0 stall=0 removable=1 nofua=1 iSerialNumber=${SERIAL_NUMBER} iManufacturer=Circuitco iProduct=BeagleBone${BLACK} host_addr=${cpsw_1_mac}
 fi
-
-modprobe g_multi ${usb_gadget_media} iSerialNumber=${SERIAL_NUMBER} iManufacturer=Circuitco iProduct=BeagleBone${BLACK} host_addr=${cpsw_1_mac}
 
 sleep 1
 
