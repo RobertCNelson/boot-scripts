@@ -81,7 +81,9 @@ else
 fi
 
 if [ "x${root_drive}" = "x/dev/mmcblk0p1" ] || [ "x${root_drive}" = "x/dev/mmcblk0p1" ] ; then
-	modprobe g_serial iSerialNumber=${SERIAL_NUMBER} iManufacturer=Circuitco iProduct=BeagleBone${BLACK} || true
+	#serial:
+	#modprobe g_serial || true
+	#usb0
 	modprobe g_ether iSerialNumber=${SERIAL_NUMBER} iManufacturer=Circuitco iProduct=BeagleBone${BLACK} host_addr=${cpsw_1_mac} || true
 fi
 else
@@ -124,9 +126,9 @@ if [ -f /etc/dnsmasq.d/usb0-dhcp ] ; then
 	/sbin/ifconfig usb0 192.168.7.2 netmask 255.255.255.252
 fi
 
-eth0_addr=$(ip addr list eth0 |grep "inet " |cut -d' ' -f6|cut -d/ -f1)
-usb0_addr=$(ip addr list usb0 |grep "inet " |cut -d' ' -f6|cut -d/ -f1)
-wlan0_addr=$(ip addr list wlan0 |grep "inet " |cut -d' ' -f6|cut -d/ -f1)
+eth0_addr=$(ip addr list eth0 |grep "inet " |cut -d' ' -f6|cut -d/ -f1 || true)
+usb0_addr=$(ip addr list usb0 |grep "inet " |cut -d' ' -f6|cut -d/ -f1 || true)
+wlan0_addr=$(ip addr list wlan0 |grep "inet " |cut -d' ' -f6|cut -d/ -f1 || true)
 
 sed -i -e '/Address/d' /etc/issue
 
