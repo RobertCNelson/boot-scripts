@@ -117,13 +117,13 @@ if [ -f /etc/udhcpd.conf ] ; then
 	fi
 	/etc/init.d/udhcpd restart
 
-	/sbin/ifconfig usb0 192.168.7.2 netmask 255.255.255.252
+	/sbin/ifconfig usb0 192.168.7.2 netmask 255.255.255.252 || true
 	/usr/sbin/udhcpd -S /etc/udhcpd.conf
 fi
 
 #Jessie Image:
 if [ -f /etc/dnsmasq.d/usb0-dhcp ] ; then
-	/sbin/ifconfig usb0 192.168.7.2 netmask 255.255.255.252
+	/sbin/ifconfig usb0 192.168.7.2 netmask 255.255.255.252 || true
 fi
 
 eth0_addr=$(ip addr list eth0 |grep "inet " |cut -d' ' -f6|cut -d/ -f1 || true)
