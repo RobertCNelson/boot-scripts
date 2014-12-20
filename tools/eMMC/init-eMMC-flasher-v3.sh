@@ -115,7 +115,7 @@ check_eeprom () {
 	message="Checking for Valid BBB EEPROM header" ; broadcast
 
 	#Flash BeagleBone Black's eeprom:
-	eeprom_location=$(ls /sys/devices/ocp.*/44e0b000.i2c/i2c-0/0-0050/eeprom 2> /dev/null)
+	eeprom_location=$(ls /sys/devices/ocp*/44e0b000.i2c/i2c-0/0-0050/eeprom 2> /dev/null)
 	eeprom_header=$(hexdump -e '8/1 "%c"' ${eeprom} -s 5 -n 3)
 	if [ "x${eeprom_header}" = "x335" ] ; then
 		message="Valid BBB EEPROM header found" ; broadcast
