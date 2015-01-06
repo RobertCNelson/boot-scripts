@@ -80,7 +80,8 @@ else
 	root_drive="$(cat /proc/cmdline | sed 's/ /\n/g' | grep root= | awk -F 'root=' '{print $2}' || true)"
 fi
 
-if [ "x${root_drive}" = "x/dev/mmcblk0p1" ] || [ "x${root_drive}" = "x/dev/mmcblk0p1" ] ; then
+#In a single partition setup, dont load g_multi, as we could trash the linux file system...
+if [ "x${root_drive}" = "x/dev/mmcblk0p1" ] || [ "x${root_drive}" = "x/dev/mmcblk1p1" ] ; then
 	#serial:
 	modprobe g_serial || true
 	#This shows up as: usb0 (instead of ethX) on host...
