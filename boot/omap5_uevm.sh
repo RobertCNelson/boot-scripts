@@ -1,6 +1,6 @@
 #!/bin/sh -e
 #
-# Copyright (c) 2013-2014 Robert Nelson <robertcnelson@gmail.com>
+# Copyright (c) 2013-2015 Robert Nelson <robertcnelson@gmail.com>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -20,6 +20,11 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+#Make sure the cpu_thermal zone is enabled...
+if [ -f /sys/class/thermal/thermal_zone0/mode ] ; then
+	echo enabled /sys/class/thermal/thermal_zone0/mode
+fi
+
 eth0_addr=$(ip addr list eth0 |grep "inet " |cut -d' ' -f6|cut -d/ -f1)
 usb0_addr=$(ip addr list usb0 |grep "inet " |cut -d' ' -f6|cut -d/ -f1)
 wlan0_addr=$(ip addr list wlan0 |grep "inet " |cut -d' ' -f6|cut -d/ -f1)
@@ -34,21 +39,6 @@ if [ ! "x${wlan0_addr}" = "x" ] ; then
 fi
 if [ ! "x${usb0_addr}" = "x" ] ; then
 	echo "The IP Address for usb0 is: ${usb0_addr}" >> /etc/issue
-fi
-
-if [ -f /resizerootfs ] ; then
-	if [ ! -d /boot/debug/ ] ; then
-		mkdir -p /boot/debug/ || true
-	fi
-
-	drive=$(cat /resizerootfs)
-	if [ "x${drive}" = "x" ] ; then
-		drive="/dev/mmcblk1"
-	fi
-
-	#FIXME: only good for two partition "/dev/mmcblkXp2" setups...
-	resize2fs ${drive}p2 >/boot/debug/resize.log 2>&1
-	rm -rf /resizerootfs || true
 fi
 
 #
