@@ -22,7 +22,7 @@
 
 #Make sure the cpu_thermal zone is enabled...
 if [ -f /sys/class/thermal/thermal_zone0/mode ] ; then
-	echo enabled /sys/class/thermal/thermal_zone0/mode
+	echo enabled > /sys/class/thermal/thermal_zone0/mode
 fi
 
 eth0_addr=$(ip addr list eth0 |grep "inet " |cut -d' ' -f6|cut -d/ -f1)
