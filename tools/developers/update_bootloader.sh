@@ -153,6 +153,7 @@ dd_uboot_boot () {
 		if [ -f ${TEMPDIR}/dl/${UBOOT} ] ; then
 			sudo dd if=${TEMPDIR}/dl/${UBOOT} of=${target} seek=${dd_uboot_seek} bs=${dd_uboot_bs}
 			sync
+			flashed=done
 		fi
 		echo "-----------------------------"
 		echo "Bootloader Updated"
@@ -199,6 +200,7 @@ dd_spl_uboot_boot () {
 			sudo dd if=${TEMPDIR}/dl/${SPL} of=${target} seek=${dd_spl_uboot_seek} bs=${dd_spl_uboot_bs}
 			sudo dd if=${TEMPDIR}/dl/${UBOOT} of=${target} seek=${dd_uboot_seek} bs=${dd_uboot_bs}
 			sync
+			flashed=done
 		fi
 		echo "-----------------------------"
 		echo "Bootloader Updated"
@@ -261,52 +263,56 @@ check_soc_sh () {
 		fi
 	fi
 
-	if [ -f /boot/SOC.sh ] ; then
-		. /boot/SOC.sh
-		mkdir -p /tmp/uboot/
-		mount /dev/mmcblk0p1 /tmp/uboot/
-		DRIVE="/tmp/uboot"
-		if [ "x${board}" != "x" ] ; then
+	if [ "x${flashed}" = "x" ] ; then
+		if [ -f /boot/SOC.sh ] ; then
+			. /boot/SOC.sh
+			mkdir -p /tmp/uboot/
+			mount /dev/mmcblk0p1 /tmp/uboot/
+			DRIVE="/tmp/uboot"
+			if [ "x${board}" != "x" ] ; then
 
-			if [ "x${board}" = "xam335x_boneblack" ] ; then
-				#Special eeprom less u-boot, switch them to normal on upgrades
-				sed -i -e 's:am335x_boneblack:am335x_evm:g' ${DRIVE}/SOC.sh
-				board="am335x_evm"
+				if [ "x${board}" = "xam335x_boneblack" ] ; then
+					#Special eeprom less u-boot, switch them to normal on upgrades
+					sed -i -e 's:am335x_boneblack:am335x_evm:g' ${DRIVE}/SOC.sh
+					board="am335x_evm"
+				fi
+
+				conf_board="${board}"
+				got_board
+			else
+				echo "Sorry: board undefined in [${DRIVE}/SOC.sh] can not update bootloader safely"
+				exit
 			fi
-
-			conf_board="${board}"
-			got_board
-		else
-			echo "Sorry: board undefined in [${DRIVE}/SOC.sh] can not update bootloader safely"
-			exit
+			sync
+			sync
+			umount /tmp/uboot/ || true
 		fi
-		sync
-		sync
-		umount /tmp/uboot/ || true
 	fi
 
-	if [ -f /boot/uboot/SOC.sh ] ; then
-		. /boot/uboot/SOC.sh
-		mkdir -p /tmp/uboot/
-		mount /dev/mmcblk0p1 /tmp/uboot/
-		DRIVE="/tmp/uboot"
-		if [ "x${board}" != "x" ] ; then
+	if [ "x${flashed}" = "x" ] ; then
+		if [ -f /boot/uboot/SOC.sh ] ; then
+			. /boot/uboot/SOC.sh
+			mkdir -p /tmp/uboot/
+			mount /dev/mmcblk0p1 /tmp/uboot/
+			DRIVE="/tmp/uboot"
+			if [ "x${board}" != "x" ] ; then
 
-			if [ "x${board}" = "xam335x_boneblack" ] ; then
-				#Special eeprom less u-boot, switch them to normal on upgrades
-				sed -i -e 's:am335x_boneblack:am335x_evm:g' ${DRIVE}/SOC.sh
-				board="am335x_evm"
+				if [ "x${board}" = "xam335x_boneblack" ] ; then
+					#Special eeprom less u-boot, switch them to normal on upgrades
+					sed -i -e 's:am335x_boneblack:am335x_evm:g' ${DRIVE}/SOC.sh
+					board="am335x_evm"
+				fi
+
+				conf_board="${board}"
+				got_board
+			else
+				echo "Sorry: board undefined in [${DRIVE}/SOC.sh] can not update bootloader safely"
+				exit
 			fi
-
-			conf_board="${board}"
-			got_board
-		else
-			echo "Sorry: board undefined in [${DRIVE}/SOC.sh] can not update bootloader safely"
-			exit
+			sync
+			sync
+			umount /tmp/uboot/ || true
 		fi
-		sync
-		sync
-		umount /tmp/uboot/ || true
 	fi
 
 	if [ $(uname -m) != "armv7l" ] ; then
@@ -317,6 +323,7 @@ check_soc_sh () {
 	echo "Bootloader Recovery Complete"
 }
 
+unset flashed
 # parse commandline options
 while [ ! -z "$1" ] ; do
 	case $1 in
