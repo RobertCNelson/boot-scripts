@@ -1,6 +1,6 @@
 #!/bin/bash -e
 #
-# Copyright (c) 2013-2014 Robert Nelson <robertcnelson@gmail.com>
+# Copyright (c) 2013-2015 Robert Nelson <robertcnelson@gmail.com>
 # Portions copyright (c) 2014 Charles Steinkuehler <charles@steinkuehler.net>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -388,7 +388,10 @@ copy_rootfs () {
 		message="eMMC has been flashed: please remove power and microSD card." ; broadcast
 		message="-----------------------------" ; broadcast
 
-		halt -f
+		flush_cache
+		#To properly shudown, /opt/scripts/boot/am335x_evm.sh is going to call halt:
+		exec /sbin/init
+		#halt -f
 	fi
 }
 

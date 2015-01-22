@@ -1,6 +1,6 @@
 #!/bin/sh -e
 #
-# Copyright (c) 2013-2014 Robert Nelson <robertcnelson@gmail.com>
+# Copyright (c) 2013-2015 Robert Nelson <robertcnelson@gmail.com>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -22,6 +22,10 @@
 
 #Based off:
 #https://github.com/beagleboard/meta-beagleboard/blob/master/meta-beagleboard-extras/recipes-support/usb-gadget/gadget-init/g-ether-load.sh
+
+#eMMC flasher just exited single user mode via: [exec /sbin/init]
+#as we can't shudown properly in single user mode..
+cat /proc/cmdline | grep 'init=/opt/scripts/tools/eMMC/init-eMMC-flasher-v3.sh' && halt
 
 if [ -f /etc/rcn-ee.conf ] ; then
 	. /etc/rcn-ee.conf
