@@ -385,7 +385,7 @@ copy_rootfs () {
 		fi
 		mount
 
-		message="eMMC has been flashed: please remove power and microSD card." ; broadcast
+		message="eMMC has been flashed: please wait for device to power down." ; broadcast
 		message="-----------------------------" ; broadcast
 
 		flush_cache
