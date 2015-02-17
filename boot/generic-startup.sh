@@ -12,3 +12,43 @@ if [ -f /etc/ssh/ssh.regenerate ] ; then
 		systemctl start sshd
 	fi
 fi
+
+#Resize drive when requested
+if [ -f /resizerootfs ] ; then
+	drive=$(cat /resizerootfs)
+	if [ ! "x${drive}" = "x" ] ; then
+		if [ "x${drive}" = "x/dev/mmcblk0" ] || [ "x${drive}" = "x/dev/mmcblk1" ] ; then
+			resize2fs ${drive}p2 >/var/log/resize.log 2>&1 || true
+		else
+			resize2fs ${drive} >/var/log/resize.log 2>&1 || true
+		fi
+	fi
+	rm -rf /resizerootfs || true
+	sync
+fi
+
+if [ -f /proc/device-tree/model ] ; then
+	board=$(cat /proc/device-tree/model | sed "s/ /_/g")
+
+	case "${board}" in
+	TI_AM335x_BeagleBone|TI_AM335x_BeagleBone_Black)
+		script="am335x_evm.sh"
+		;;
+	TI_AM5728_BeagleBoard-X15)
+		script="beagle_x15.sh"
+		;;
+	TI_OMAP3_BeagleBoard|TI_OMAP3_BeagleBoard_xM)
+		script="omap3_beagle.sh"
+		;;
+	TI_OMAP5_uEVM_board)
+		script="omap5_uevm.sh"
+		;;
+	*)
+		script="generic.sh"
+		;;
+	esac
+
+	if [ -f "/opt/scripts/boot/${script}" ] ; then
+		/bin/sh /opt/scripts/boot/${script} >/dev/null 2>&1 &
+	fi
+fi
