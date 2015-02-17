@@ -49,6 +49,6 @@ if [ -f /proc/device-tree/model ] ; then
 	esac
 
 	if [ -f "/opt/scripts/boot/${script}" ] ; then
-		/bin/sh /opt/scripts/boot/${script} >/dev/null 2>&1 &
+		/bin/sh /opt/scripts/boot/${script}
 	fi
 fi
