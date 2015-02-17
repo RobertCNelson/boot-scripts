@@ -31,7 +31,7 @@ fi
 
 if [ -f /proc/device-tree/model ] ; then
 	board=$(cat /proc/device-tree/model | sed "s/ /_/g")
-	echo "generic-board-startup: [${board}]"
+	echo "generic-board-startup: [model=${board}]"
 
 	case "${board}" in
 	TI_AM335x_BeagleBone|TI_AM335x_BeagleBone_Black)
@@ -52,7 +52,7 @@ if [ -f /proc/device-tree/model ] ; then
 	esac
 
 	if [ -f "/opt/scripts/boot/${script}" ] ; then
-		echo "generic-board-startup: [${board}=${script}]"
+		echo "generic-board-startup: [startup script=/opt/scripts/boot/${script}]"
 		/bin/sh /opt/scripts/boot/${script}
 	fi
 fi
