@@ -352,7 +352,7 @@ copy_rootfs () {
 	cat /tmp/rootfs/etc/fstab
 
 	message="/boot/uEnv.txt: disabling eMMC flasher script" ; broadcast
-	script="cmdline=init=/opt/scripts/tools/eMMC/init-eMMC-flasher-v3.sh"
+	script="cmdline=init=/opt/scripts/tools/eMMC/init-eMMC-flasher-v3-bbg.sh"
 	sed -i -e 's:'$script':#'$script':g' /tmp/rootfs/boot/uEnv.txt
 	cat /tmp/rootfs/boot/uEnv.txt
 	message="-----------------------------" ; broadcast
