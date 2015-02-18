@@ -26,6 +26,7 @@
 #eMMC flasher just exited single user mode via: [exec /sbin/init]
 #as we can't shudown properly in single user mode..
 cat /proc/cmdline | grep 'init=/opt/scripts/tools/eMMC/init-eMMC-flasher-v3.sh' && halt
+cat /proc/cmdline | grep 'init=/opt/scripts/tools/eMMC/init-eMMC-flasher-v3-bbg.sh' && halt
 
 if [ -f /etc/rcn-ee.conf ] ; then
 	. /etc/rcn-ee.conf
