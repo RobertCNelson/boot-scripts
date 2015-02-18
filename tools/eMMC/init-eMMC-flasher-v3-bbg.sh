@@ -31,7 +31,7 @@ fi
 
 # Check to see if we're starting as init
 unset RUN_AS_INIT
-if grep -q '[ =/]init-eMMC-flasher-v3.sh\>' /proc/cmdline ; then
+if grep -q '[ =/]init-eMMC-flasher-v3-bbg.sh\>' /proc/cmdline ; then
 	RUN_AS_INIT=1
 
 	unset root_drive
