@@ -116,8 +116,8 @@ check_eeprom () {
 
 	#Flash BeagleBone Black's eeprom:
 	eeprom_location=$(ls /sys/devices/ocp*/44e0b000.i2c/i2c-0/0-0050/eeprom 2> /dev/null)
-	eeprom_header=$(hexdump -e '8/1 "%c"' ${eeprom} -s 4 -n 10)
-	if [ "x${eeprom_header}" = "xA335BNLT00" ] ; then
+	eeprom_header=$(hexdump -e '8/1 "%c"' ${eeprom} -s 4 -n 8)
+	if [ "x${eeprom_header}" = "xA335BNLT" ] ; then
 		message="Valid BBG EEPROM header found" ; broadcast
 		message="-----------------------------" ; broadcast
 	else
