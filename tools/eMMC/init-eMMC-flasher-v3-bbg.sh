@@ -127,6 +127,9 @@ check_eeprom () {
 				message="Writing header to EEPROM" ; broadcast
 				dd if=/opt/scripts/device/bone/bbg-eeprom.dump of=${eeprom_location}
 				sync
+				sync
+				eeprom_check=$(hexdump -e '8/1 "%c"' ${eeprom} -s 4 -n 10)
+				echo "eeprom check: [${eeprom_check}]"
 
 				#We have to reboot, as the kernel only loads the eMMC cape
 				# with a valid header
