@@ -210,7 +210,7 @@ dd_spl_uboot_boot () {
 got_board () {
 	target="/dev/mmcblk0"
 	case "${conf_board}" in
-	am335x_evm)
+	am335x_evm|beagle_x15)
 		is_omap
 		;;
 	omap5_uevm)
