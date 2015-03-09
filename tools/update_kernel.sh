@@ -208,6 +208,11 @@ checkparm () {
 	fi
 }
 
+if [ ! -f /usr/bin/lsb_release ] ; then
+	echo "install lsb-release"
+	exit
+fi
+
 dist=$(lsb_release -cs)
 arch=$(dpkg --print-architecture)
 current_kernel=$(uname -r)
