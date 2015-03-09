@@ -90,6 +90,8 @@ latest_version_repo () {
 		wget ${mirror}/${dist}-${arch}/LATEST-${SOC}
 		if [ -f /tmp/LATEST-${SOC} ] ; then
 			latest_kernel=$(cat /tmp/LATEST-${SOC} | grep ${kernel} | awk '{print $3}')
+			echo "debug: your are running: [`uname -r`]"
+			echo "debug: latest is: [${latest_kernel}]"
 
 			pkg="linux-image-${latest_kernel}"
 			#is the package installed?
@@ -97,6 +99,7 @@ latest_version_repo () {
 			#is the package even available to apt?
 			check_apt_cache
 			if [ "x${deb_pkgs}" = "x${apt_cache}" ] ; then
+				echo "debug: installing: [${pkg}]"
 				apt-get install -y ${pkg}
 				update_uEnv_txt
 			elif [ "x${pkg}" = "x${apt_cache}" ] ; then
@@ -104,6 +107,7 @@ latest_version_repo () {
 					apt-get clean
 					exit
 				fi
+				echo "debug: reinstalling: [${pkg}]"
 				apt-get install -y ${pkg} --reinstall
 				update_uEnv_txt
 			else
