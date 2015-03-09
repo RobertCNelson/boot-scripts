@@ -36,6 +36,9 @@ get_device () {
 				SOC="omap-psp"
 			fi
 			;;
+		TI_AM5728_BeagleBoard-X15)
+			SOC="ti"
+			;;
 		TI_OMAP5_uEVM_board)
 			SOC="armv7-lpae"
 			;;
@@ -86,7 +89,7 @@ latest_version_repo () {
 		echo "info: checking archive"
 		wget ${mirror}/${dist}-${arch}/LATEST-${SOC}
 		if [ -f /tmp/LATEST-${SOC} ] ; then
-			latest_kernel=$(cat /tmp/LATEST-${SOC} | grep ${kernel} | awk '{print $3}' | awk -F'/' '{print $6}' | sed 's/^v//')
+			latest_kernel=$(cat /tmp/LATEST-${SOC} | grep ${kernel} | awk '{print $3}')
 
 			pkg="linux-image-${latest_kernel}"
 			#is the package installed?
@@ -111,6 +114,7 @@ latest_version_repo () {
 }
 
 latest_version () {
+	mirror="https://rcn-ee.net/deb"
 	if [ ! "x${SOC}" = "x" ] ; then
 		cd /tmp/
 		if [ -f /tmp/LATEST-${SOC} ] ; then
@@ -142,6 +146,7 @@ latest_version () {
 }
 
 specific_version () {
+	mirror="https://rcn-ee.net/deb"
 	cd /tmp/
 	if [ -f /tmp/install-me.sh ] ; then
 		rm -f /tmp/install-me.sh || true
@@ -158,7 +163,7 @@ specific_version () {
 }
 
 specific_version_repo () {
-	latest_kernel=$(echo ${kernel_version} | sed 's/^v//')
+	latest_kernel=$(echo ${kernel_version})
 
 	pkg="linux-image-${latest_kernel}"
 	#is the package installed?
@@ -208,7 +213,7 @@ arch=$(dpkg --print-architecture)
 current_kernel=$(uname -r)
 
 kernel="STABLE"
-mirror="https://rcn-ee.net/deb"
+mirror="https://repos.rcn-ee.net/latest"
 unset rcn_mirror
 unset kernel_version
 unset daily_cron
