@@ -1,6 +1,6 @@
 #!/bin/sh -e
 #
-# Copyright (c) 2014 Robert Nelson <robertcnelson@gmail.com>
+# Copyright (c) 2014-2015 Robert Nelson <robertcnelson@gmail.com>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -33,7 +33,7 @@ dl_bootloader () {
 	echo ""
 	echo "Downloading Device's Bootloader"
 	echo "-----------------------------"
-	conf_bl_http="http://rcn-ee.net/deb/tools/latest"
+	conf_bl_http="http://repos.rcn-ee.net/bootloader/latest"
 	conf_bl_listfile="bootloader-ng"
 	minimal_boot="1"
 
