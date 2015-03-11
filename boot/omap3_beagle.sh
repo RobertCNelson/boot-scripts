@@ -30,14 +30,8 @@ if [ -f /etc/dnsmasq.d/usb0-dhcp ] ; then
 		root_drive="$(cat /proc/cmdline | sed 's/ /\n/g' | grep root= | awk -F 'root=' '{print $2}' || true)"
 	fi
 
-	#In a single partition setup, dont load g_multi, as we could trash the linux file system...
-	if [ "x${root_drive}" = "x/dev/mmcblk0p1" ] ; then
-		#Make sure (# CONFIG_USB_ETH_EEM is not set), otherwise this shows up as "usb0" instead of ethX on host pc..
-		modprobe g_ether iManufacturer=Circuitco iProduct=BeagleBoard-xM || true
-	else
-		boot_drive="${root_drive%?}1"
-		modprobe g_multi file=${boot_drive} cdrom=0 ro=0 stall=0 removable=1 nofua=1 iManufacturer=Circuitco iProduct=BeagleBoard-xM || true
-	fi
+	boot_drive="${root_drive%?}1"
+	modprobe g_multi file=${boot_drive} cdrom=0 ro=0 stall=0 removable=1 nofua=1 iManufacturer=Circuitco iProduct=BeagleBoard-xM || true
 
 	sleep 1
 
