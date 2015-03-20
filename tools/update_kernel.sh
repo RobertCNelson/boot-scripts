@@ -111,14 +111,14 @@ latest_version_repo () {
 				apt-get install -y ${pkg} --reinstall
 				update_uEnv_txt
 			else
-				echo "info: [${pkg}] (latest) is currently unavailable on [repos.rcn-ee.net]"
+				echo "info: [${pkg}] (latest) is currently unavailable on [rcn-ee.com/repos]"
 			fi
 		fi
 	fi
 }
 
 latest_version () {
-	mirror="https://rcn-ee.net/deb"
+	mirror="https://rcn-ee.com/deb"
 	if [ ! "x${SOC}" = "x" ] ; then
 		cd /tmp/
 		if [ -f /tmp/LATEST-${SOC} ] ; then
@@ -150,7 +150,7 @@ latest_version () {
 }
 
 specific_version () {
-	mirror="https://rcn-ee.net/deb"
+	mirror="https://rcn-ee.com/deb"
 	cd /tmp/
 	if [ -f /tmp/install-me.sh ] ; then
 		rm -f /tmp/install-me.sh || true
@@ -222,7 +222,7 @@ arch=$(dpkg --print-architecture)
 current_kernel=$(uname -r)
 
 kernel="STABLE"
-mirror="https://repos.rcn-ee.net/latest"
+mirror="https://rcn-ee.com/repos/latest"
 unset rcn_mirror
 unset kernel_version
 unset daily_cron

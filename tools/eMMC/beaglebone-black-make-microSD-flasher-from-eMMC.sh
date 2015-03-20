@@ -394,7 +394,7 @@ partition_drive () {
 
 	if [ ! -f /opt/backup/uboot/MLO ] ; then
 		mkdir -p /opt/backup/uboot/
-		wget --directory-prefix=/opt/backup/uboot/ http://rcn-ee.net/deb/tools/am335x_evm/MLO-am335x_evm-v2015.01-r7
+		wget --directory-prefix=/opt/backup/uboot/ http://rcn-ee.com/repos/bootloader/am335x_evm/MLO-am335x_evm-v2015.01-r7
 		mv /opt/backup/uboot/MLO-am335x_evm-v2015.01-r7 /opt/backup/uboot/MLO
 	fi
 
@@ -418,7 +418,7 @@ partition_drive () {
 
 	if [ ! -f /opt/backup/uboot/u-boot.img ] ; then
 		mkdir -p /opt/backup/uboot/
-		wget --directory-prefix=/opt/backup/uboot/ http://rcn-ee.net/deb/tools/am335x_evm/u-boot-am335x_evm-v2015.01-r7.img
+		wget --directory-prefix=/opt/backup/uboot/ http://rcn-ee.com/repos/bootloader/am335x_evm/u-boot-am335x_evm-v2015.01-r7.img
 		mv /opt/backup/uboot/u-boot-am335x_evm-v2015.01-r7.img /opt/backup/uboot/u-boot.img
 	fi
 
