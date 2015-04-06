@@ -29,26 +29,20 @@ if ! id | grep -q root; then
 	exit
 fi
 
-# Check to see if we're starting as init
-unset RUN_AS_INIT
-if grep -q '[ =/]init-eMMC-flasher-v3-bbg.sh\>' /proc/cmdline ; then
-	RUN_AS_INIT=1
-
-	unset root_drive
-	root_drive="$(cat /proc/cmdline | sed 's/ /\n/g' | grep root=UUID= | awk -F 'root=' '{print $2}' || true)"
-	if [ ! "x${root_drive}" = "x" ] ; then
-		root_drive="$(/sbin/findfs ${root_drive} || true)"
-	else
-		root_drive="$(cat /proc/cmdline | sed 's/ /\n/g' | grep root= | awk -F 'root=' '{print $2}' || true)"
-	fi
-
-	boot_drive="${root_drive%?}1"
-
-	if [ ! "x${boot_drive}" = "x${root_drive}" ] ; then
-		mount ${boot_drive} /boot/uboot -o ro
-	fi
-	mount -t tmpfs tmpfs /tmp
+unset root_drive
+root_drive="$(cat /proc/cmdline | sed 's/ /\n/g' | grep root=UUID= | awk -F 'root=' '{print $2}' || true)"
+if [ ! "x${root_drive}" = "x" ] ; then
+	root_drive="$(/sbin/findfs ${root_drive} || true)"
+else
+	root_drive="$(cat /proc/cmdline | sed 's/ /\n/g' | grep root= | awk -F 'root=' '{print $2}' || true)"
 fi
+
+boot_drive="${root_drive%?}1"
+
+if [ ! "x${boot_drive}" = "x${root_drive}" ] ; then
+	mount ${boot_drive} /boot/uboot -o ro
+fi
+mount -t tmpfs tmpfs /tmp
 
 if [ "x${boot_drive}" = "x/dev/mmcblk0p1" ] ; then
 	source="/dev/mmcblk0"

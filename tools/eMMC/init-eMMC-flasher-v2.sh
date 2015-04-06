@@ -1,6 +1,6 @@
 #!/bin/bash -e
 #
-# Copyright (c) 2013-2014 Robert Nelson <robertcnelson@gmail.com>
+# Copyright (c) 2013-2015 Robert Nelson <robertcnelson@gmail.com>
 # Portions copyright (c) 2014 Charles Steinkuehler <charles@steinkuehler.net>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -29,24 +29,18 @@ if ! id | grep -q root; then
 	exit
 fi
 
-# Check to see if we're starting as init
-unset RUN_AS_INIT
-if grep -q '[ =/]init-eMMC-flasher-v2.sh\>' /proc/cmdline ; then
-	RUN_AS_INIT=1
-
-	unset root_drive
-	root_drive="$(cat /proc/cmdline | sed 's/ /\n/g' | grep root=UUID= | awk -F 'root=' '{print $2}' || true)"
-	if [ ! "x${root_drive}" = "x" ] ; then
-		root_drive="$(/sbin/findfs ${root_drive} || true)"
-	else
-		root_drive="$(cat /proc/cmdline | sed 's/ /\n/g' | grep root= | awk -F 'root=' '{print $2}' || true)"
-	fi
-
-	boot_drive="${root_drive%?}1"
-
-	mount ${boot_drive} /boot/uboot -o ro
-	mount -t tmpfs tmpfs /tmp
+unset root_drive
+root_drive="$(cat /proc/cmdline | sed 's/ /\n/g' | grep root=UUID= | awk -F 'root=' '{print $2}' || true)"
+if [ ! "x${root_drive}" = "x" ] ; then
+	root_drive="$(/sbin/findfs ${root_drive} || true)"
+else
+	root_drive="$(cat /proc/cmdline | sed 's/ /\n/g' | grep root= | awk -F 'root=' '{print $2}' || true)"
 fi
+
+boot_drive="${root_drive%?}1"
+
+mount ${boot_drive} /boot/uboot -o ro
+mount -t tmpfs tmpfs /tmp
 
 if [ "x${boot_drive}" = "x/dev/mmcblk0p1" ] ; then
 	source="/dev/mmcblk0"
