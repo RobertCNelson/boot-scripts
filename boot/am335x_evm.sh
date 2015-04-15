@@ -96,7 +96,7 @@ else
 	modprobe g_multi file=${boot_drive} cdrom=0 ro=0 stall=0 removable=1 nofua=1 iSerialNumber=${SERIAL_NUMBER} iManufacturer=Circuitco iProduct=BeagleBone${BLACK} host_addr=${cpsw_1_mac} || true
 fi
 
-sleep 1
+sleep 3
 
 #Wheezy Image:
 if [ -f /etc/default/udhcpd ] ; then
@@ -131,9 +131,9 @@ if [ -f /etc/dnsmasq.d/usb0-dhcp ] ; then
 	/sbin/ifconfig usb0 192.168.7.2 netmask 255.255.255.252 || true
 fi
 
-eth0_addr=$(ip addr list eth0 |grep "inet " |cut -d' ' -f6|cut -d/ -f1 || true)
-usb0_addr=$(ip addr list usb0 |grep "inet " |cut -d' ' -f6|cut -d/ -f1 || true)
-wlan0_addr=$(ip addr list wlan0 |grep "inet " |cut -d' ' -f6|cut -d/ -f1 || true)
+eth0_addr=$(ip addr list eth0 |grep "inet " |cut -d' ' -f6|cut -d/ -f1 2>/dev/null || true)
+usb0_addr=$(ip addr list usb0 |grep "inet " |cut -d' ' -f6|cut -d/ -f1 2>/dev/null || true)
+wlan0_addr=$(ip addr list wlan0 |grep "inet " |cut -d' ' -f6|cut -d/ -f1 2>/dev/null || true)
 
 sed -i -e '/Address/d' /etc/issue
 
