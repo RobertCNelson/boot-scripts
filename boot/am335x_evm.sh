@@ -133,6 +133,7 @@ fi
 #Jessie Image:
 if [ -f /etc/dnsmasq.d/usb0-dhcp ] ; then
 	/sbin/ifconfig usb0 192.168.7.2 netmask 255.255.255.252 || true
+	systemctl restart dnsmasq
 fi
 
 eth0_addr=$(ip addr list eth0 |grep "inet " |cut -d' ' -f6|cut -d/ -f1 2>/dev/null || true)
