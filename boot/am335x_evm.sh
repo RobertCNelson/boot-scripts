@@ -91,10 +91,13 @@ fi
 
 #In a single partition setup, dont load g_multi, as we could trash the linux file system...
 if [ "x${root_drive}" = "x/dev/mmcblk0p1" ] || [ "x${root_drive}" = "x/dev/mmcblk1p1" ] ; then
-	#serial:
-	#modprobe g_serial || true
-	#Make sure (# CONFIG_USB_ETH_EEM is not set), otherwise this shows up as "usb0" instead of ethX on host pc..
-	modprobe g_ether iSerialNumber=${SERIAL_NUMBER} iManufacturer=Circuitco iProduct=BeagleBone${BLACK} host_addr=${cpsw_1_mac} || true
+	if [ -f /usr/sbin/udhcpd ] || [ -f /usr/sbin/dnsmasq ] ; then
+		#Make sure (# CONFIG_USB_ETH_EEM is not set), otherwise this shows up as "usb0" instead of ethX on host pc..
+		modprobe g_ether iSerialNumber=${SERIAL_NUMBER} iManufacturer=Circuitco iProduct=BeagleBone${BLACK} host_addr=${cpsw_1_mac} || true
+	else
+		#serial:
+		modprobe g_serial || true
+	fi
 else
 	boot_drive="${root_drive%?}1"
 	modprobe g_multi file=${boot_drive} cdrom=0 ro=0 stall=0 removable=1 nofua=1 iSerialNumber=${SERIAL_NUMBER} iManufacturer=Circuitco iProduct=BeagleBone${BLACK} host_addr=${cpsw_1_mac} || true
