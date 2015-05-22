@@ -63,22 +63,33 @@ if [ "x${abi}" = "x" ] ; then
 	fi
 fi
 
-SERIAL_NUMBER=$(hexdump -e '8/1 "%c"' ${eeprom} -s 14 -n 2)-$(hexdump -e '8/1 "%c"' ${eeprom} -s 16 -n 12)
-ISBLACK=$(hexdump -e '8/1 "%c"' ${eeprom} -s 8 -n 4)
+SERIAL_NUMBER="0123456789"
+ISBLACK=""
+PRODUCT="am335x_evm"
+if [ -f ${eeprom} ] ; then
+	SERIAL_NUMBER=$(hexdump -e '8/1 "%c"' ${eeprom} -s 14 -n 2)-$(hexdump -e '8/1 "%c"' ${eeprom} -s 16 -n 12)
+	ISBLACK=$(hexdump -e '8/1 "%c"' ${eeprom} -s 8 -n 4)
 
-BLACK=""
-if [ "x${ISBLACK}" = "xBBBK" ] || [ "x${ISBLACK}" = "xBNLT" ] ; then
-	BLACK="Black"
+	PRODUCT="BeagleBone"
+	if [ "x${ISBLACK}" = "xBBBK" ] || [ "x${ISBLACK}" = "xBNLT" ] ; then
+		PRODUCT="BeagleBoneBlack"
+	fi
 fi
 
 mac_address="/proc/device-tree/ocp/ethernet@4a100000/slave@4a100200/mac-address"
 if [ -f ${mac_address} ] ; then
 	cpsw_0_mac=$(hexdump -v -e '1/1 "%02X" ":"' ${mac_address} | sed 's/.$//')
+else
+	#todo: generate random mac... (this is a development tre board in the lab...)
+	cpsw_0_mac="1c:ba:8c:a2:ed:68"
 fi
 
 mac_address="/proc/device-tree/ocp/ethernet@4a100000/slave@4a100300/mac-address"
 if [ -f ${mac_address} ] ; then
 	cpsw_1_mac=$(hexdump -v -e '1/1 "%02X" ":"' ${mac_address} | sed 's/.$//')
+else
+	#todo: generate random mac...
+	cpsw_1_mac="1c:ba:8c:a2:ed:69"
 fi
 
 unset root_drive
@@ -93,7 +104,7 @@ fi
 if [ "x${root_drive}" = "x/dev/mmcblk0p1" ] || [ "x${root_drive}" = "x/dev/mmcblk1p1" ] ; then
 	if [ -f /usr/sbin/udhcpd ] || [ -f /usr/sbin/dnsmasq ] ; then
 		#Make sure (# CONFIG_USB_ETH_EEM is not set), otherwise this shows up as "usb0" instead of ethX on host pc..
-		modprobe g_ether iSerialNumber=${SERIAL_NUMBER} iManufacturer=Circuitco iProduct=BeagleBone${BLACK} host_addr=${cpsw_1_mac} || true
+		modprobe g_ether iSerialNumber=${SERIAL_NUMBER} iManufacturer=Circuitco iProduct=${PRODUCT} host_addr=${cpsw_1_mac} || true
 	else
 		#serial:
 		modprobe g_serial || true
