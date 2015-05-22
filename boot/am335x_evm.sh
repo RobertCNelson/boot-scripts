@@ -66,6 +66,7 @@ fi
 SERIAL_NUMBER="0123456789"
 ISBLACK=""
 PRODUCT="am335x_evm"
+manufacturer="Circuitco"
 if [ -f ${eeprom} ] ; then
 	SERIAL_NUMBER=$(hexdump -e '8/1 "%c"' ${eeprom} -s 14 -n 2)-$(hexdump -e '8/1 "%c"' ${eeprom} -s 16 -n 12)
 	ISBLACK=$(hexdump -e '8/1 "%c"' ${eeprom} -s 8 -n 4)
@@ -104,14 +105,14 @@ fi
 if [ "x${root_drive}" = "x/dev/mmcblk0p1" ] || [ "x${root_drive}" = "x/dev/mmcblk1p1" ] ; then
 	if [ -f /usr/sbin/udhcpd ] || [ -f /usr/sbin/dnsmasq ] ; then
 		#Make sure (# CONFIG_USB_ETH_EEM is not set), otherwise this shows up as "usb0" instead of ethX on host pc..
-		modprobe g_ether iSerialNumber=${SERIAL_NUMBER} iManufacturer=Circuitco iProduct=${PRODUCT} host_addr=${cpsw_1_mac} || true
+		modprobe g_ether iSerialNumber=${SERIAL_NUMBER} iManufacturer=${manufacturer} iProduct=${PRODUCT} host_addr=${cpsw_1_mac} || true
 	else
 		#serial:
 		modprobe g_serial || true
 	fi
 else
 	boot_drive="${root_drive%?}1"
-	modprobe g_multi file=${boot_drive} cdrom=0 ro=0 stall=0 removable=1 nofua=1 iSerialNumber=${SERIAL_NUMBER} iManufacturer=Circuitco iProduct=BeagleBone${BLACK} host_addr=${cpsw_1_mac} || true
+	modprobe g_multi file=${boot_drive} cdrom=0 ro=0 stall=0 removable=1 nofua=1 iSerialNumber=${SERIAL_NUMBER} iManufacturer=${manufacturer} iProduct=${PRODUCT} host_addr=${cpsw_1_mac} || true
 fi
 
 sleep 3
