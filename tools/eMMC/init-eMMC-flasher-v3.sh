@@ -104,15 +104,19 @@ write_failure () {
 }
 
 check_eeprom () {
-
 	eeprom="/sys/bus/i2c/devices/0-0050/eeprom"
 	message="Checking for Valid BBB EEPROM header" ; broadcast
 
-	#Flash BeagleBone Black's eeprom:
-	eeprom_location=$(ls /sys/devices/ocp*/44e0b000.i2c/i2c-0/0-0050/eeprom 2> /dev/null)
+	if [ -f /sys/devices/platform/ocp/44e0b000.i2c/i2c-0/0-0050/eeprom ] ; then
+		#4.1.x
+		eeprom_location="/sys/devices/platform/ocp/44e0b000.i2c/i2c-0/0-0050/eeprom"
+	else
+		eeprom_location=$(ls /sys/devices/ocp*/44e0b000.i2c/i2c-0/0-0050/eeprom 2> /dev/null)
+	fi
+
 	eeprom_header=$(hexdump -e '8/1 "%c"' ${eeprom} -s 5 -n 3)
 	if [ "x${eeprom_header}" = "x335" ] ; then
-		message="Valid BBB EEPROM header found" ; broadcast
+		message="Valid BBB EEPROM header found [${eeprom_header}]" ; broadcast
 		message="-----------------------------" ; broadcast
 	else
 		message="Invalid EEPROM header detected" ; broadcast
