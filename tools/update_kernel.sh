@@ -117,6 +117,7 @@ latest_version_repo () {
 	fi
 }
 
+#Only for the original May 2014 image, everything should use the repo's now..
 latest_version () {
 	if [ ! "x${SOC}" = "x" ] ; then
 		cd /tmp/
@@ -128,49 +129,61 @@ latest_version () {
 		wget ${mirror}/${dist}-${arch}/LATEST-${SOC}
 		if [ -f /tmp/LATEST-${SOC} ] ; then
 			latest_kernel=$(cat /tmp/LATEST-${SOC} | grep ${kernel} | awk '{print $3}')
-			echo "debug: your are running: [`uname -r`]"
+			echo "debug: your are running: [${current_kernel}]"
 			echo "debug: latest is: [${latest_kernel}]"
 
-			if [ "xv${current_kernel}" = "x${latest_kernel}" ] ; then
-				echo "v${current_kernel} is latest"
-			else
+			if [ ! "x${current_kernel}" = "x${latest_kernel}" ] ; then
 				distro=$(lsb_release -is)
 				if [ "x${distro}" = "xDebian" ] ; then
 					wget -c https://rcn-ee.com/repos/debian/pool/main/l/linux-upstream/linux-image-${latest_kernel}_1${dist}_${arch}.deb
 				else
 					wget -c https://rcn-ee.com/repos/ubuntu/pool/main/l/linux-upstream/linux-image-${latest_kernel}_1${dist}_${arch}.deb
 				fi
-				if [ -f linux-image-${latest_kernel}_1${dist}.deb ] ; then
-					sudo dpkg -i linux-image-${latest_kernel}_1${dist}.deb
+				if [ -f /tmp/linux-image-${latest_kernel}_1${dist}_${arch}.deb ] ; then
+					sudo dpkg -i /tmp/linux-image-${latest_kernel}_1${dist}_${arch}.deb
+					sync
+
+					if [ -f /boot/vmlinuz-${latest_kernel} ] ; then
+						bootdir="/boot/uboot"
+
+						if [ -f ${bootdir}/zImage_bak ] ; then
+							sudo rm ${bootdir}/zImage_bak
+							sync
+						fi
+
+						if [ -f ${bootdir}/zImage ] ; then
+							echo "Backing up zImage as zImage_bak..."
+							sudo mv -v ${bootdir}/zImage ${bootdir}/zImage_bak
+							sync
+						fi
+
+						if [ -f ${bootdir}/initrd.bak ] ; then
+							sudo rm ${bootdir}/initrd.bak
+							sync
+						fi
+
+						if [ -f ${bootdir}/initrd.img ] ; then
+							echo "Backing up initrd.img as initrd.bak..."
+							sudo mv -v ${bootdir}/initrd.img ${bootdir}/initrd.bak
+							sync
+						fi
+
+						if [ ! -f /boot/initrd.img-${latest_kernel} ] ; then
+							echo "Creating /boot/initrd.img-${latest_kernel}"
+							sudo update-initramfs -c -k ${latest_kernel}
+							sync
+						else
+							echo "Updating /boot/initrd.img-${latest_kernel}"
+							sudo update-initramfs -u -k ${latest_kernel}
+							sync
+						fi
+
+						sudo cp -v /boot/vmlinuz-${latest_kernel} ${bootdir}/zImage
+						sudo cp -v /boot/initrd.img-${latest_kernel} ${bootdir}/initrd.img
+					fi
 				fi
-#				wget $(cat /tmp/LATEST-${SOC} | grep ${kernel} | awk '{print $3}')
-#				if [ -f /tmp/install-me.sh ] ; then
-#					if [ "x${rcn_mirror}" = "xenabled" ] ; then
-#						sed -i -e 's:disabled:enabled:g' /tmp/install-me.sh
-#					fi
-#					/bin/bash /tmp/install-me.sh
-#				else
-#					echo "error: kernel: ${kernel} not on mirror"
-#				fi
 			fi
 		fi
-	fi
-}
-
-specific_version () {
-	mirror="https://rcn-ee.com/deb"
-	cd /tmp/
-	if [ -f /tmp/install-me.sh ] ; then
-		rm -f /tmp/install-me.sh || true
-	fi
-	wget ${mirror}/${dist}-${arch}/${kernel_version}/install-me.sh
-	if [ -f /tmp/install-me.sh ] ; then
-		if [ "x${rcn_mirror}" = "xenabled" ] ; then
-			sed -i -e 's:disabled:enabled:g' /tmp/install-me.sh
-		fi
-		/bin/bash /tmp/install-me.sh
-	else
-		echo "error: kernel: ${kernel_version} doesnt exist"
 	fi
 }
 
@@ -283,11 +296,7 @@ if [ ! "x${test_rcnee}" = "x" ] ; then
 	apt-get clean
 else
 	get_device
-	if [ "x${kernel_version}" = "x" ] ; then
-		latest_version
-	else
-		specific_version
-	fi
+	latest_version
 fi
 #third_party
 #
