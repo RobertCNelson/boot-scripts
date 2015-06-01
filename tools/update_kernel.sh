@@ -152,7 +152,7 @@ latest_version () {
 						fi
 
 						if [ -f ${bootdir}/zImage ] ; then
-							echo "Backing up zImage as zImage_bak..."
+							echo "Backing up ${bootdir}/zImage as ${bootdir}/zImage_bak..."
 							sudo mv -v ${bootdir}/zImage ${bootdir}/zImage_bak
 							sync
 						fi
@@ -163,8 +163,25 @@ latest_version () {
 						fi
 
 						if [ -f ${bootdir}/initrd.img ] ; then
-							echo "Backing up initrd.img as initrd.bak..."
+							echo "Backing up ${bootdir}/initrd.img as ${bootdir}/initrd.bak..."
 							sudo mv -v ${bootdir}/initrd.img ${bootdir}/initrd.bak
+							sync
+						fi
+
+						if [ -d ${bootdir}/dtbs_bak/ ] ; then
+							rm -rf ${bootdir}/dtbs_bak/ || true
+							sync
+						fi
+
+						if [ -d ${bootdir}/dtbs/ ] ; then
+							echo "Backing up ${bootdir}/dtbs/ as ${bootdir}/dtbs_bak/..."
+							mv ${bootdir}/dtbs/ ${bootdir}/dtbs_bak/ || true
+							sync
+						fi
+
+						if [ -d /boot/dtbs/${latest_kernel}/ ] ; then
+							mkdir -p ${bootdir}/dtbs/
+							sudo cp /boot/dtbs/${latest_kernel}/*.dtb ${bootdir}/dtbs/ 2>/dev/null || true
 							sync
 						fi
 
