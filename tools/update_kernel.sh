@@ -136,9 +136,9 @@ latest_version () {
 			else
 				distro=$(lsb_release -is)
 				if [ "x${distro}" = "xDebian" ] ; then
-					wget -c https://rcn-ee.com/repos/debian/pool/main/l/linux-upstream/linux-image-${latest_kernel}_1${dist}.deb
+					wget -c https://rcn-ee.com/repos/debian/pool/main/l/linux-upstream/linux-image-${latest_kernel}_1${dist}_${arch}.deb
 				else
-					wget -c https://rcn-ee.com/repos/ubuntu/pool/main/l/linux-upstream/linux-image-${latest_kernel}_1${dist}.deb
+					wget -c https://rcn-ee.com/repos/ubuntu/pool/main/l/linux-upstream/linux-image-${latest_kernel}_1${dist}_${arch}.deb
 				fi
 				if [ -f linux-image-${latest_kernel}_1${dist}.deb ] ; then
 					sudo dpkg -i linux-image-${latest_kernel}_1${dist}.deb
