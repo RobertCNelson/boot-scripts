@@ -118,32 +118,40 @@ latest_version_repo () {
 }
 
 latest_version () {
-	mirror="https://rcn-ee.com/deb"
 	if [ ! "x${SOC}" = "x" ] ; then
 		cd /tmp/
 		if [ -f /tmp/LATEST-${SOC} ] ; then
 			rm -f /tmp/LATEST-${SOC} || true
 		fi
-		if [ -f /tmp/install-me.sh ] ; then
-			rm -f /tmp/install-me.sh || true
-		fi
 
 		echo "info: checking archive"
 		wget ${mirror}/${dist}-${arch}/LATEST-${SOC}
 		if [ -f /tmp/LATEST-${SOC} ] ; then
-			latest_kernel=$(cat /tmp/LATEST-${SOC} | grep ${kernel} | awk '{print $3}' | awk -F'/' '{print $6}')
+			latest_kernel=$(cat /tmp/LATEST-${SOC} | grep ${kernel} | awk '{print $3}')
+			echo "debug: your are running: [`uname -r`]"
+			echo "debug: latest is: [${latest_kernel}]"
+
 			if [ "xv${current_kernel}" = "x${latest_kernel}" ] ; then
 				echo "v${current_kernel} is latest"
 			else
-				wget $(cat /tmp/LATEST-${SOC} | grep ${kernel} | awk '{print $3}')
-				if [ -f /tmp/install-me.sh ] ; then
-					if [ "x${rcn_mirror}" = "xenabled" ] ; then
-						sed -i -e 's:disabled:enabled:g' /tmp/install-me.sh
-					fi
-					/bin/bash /tmp/install-me.sh
+				distro=$(lsb_release -is)
+				if [ "x${distro}" = "xDebian" ] ; then
+					wget -c https://rcn-ee.com/repos/debian/pool/main/l/linux-upstream/linux-image-${latest_kernel}_1${dist}.deb
 				else
-					echo "error: kernel: ${kernel} not on mirror"
+					wget -c https://rcn-ee.com/repos/ubuntu/pool/main/l/linux-upstream/linux-image-${latest_kernel}_1${dist}.deb
 				fi
+				if [ -f linux-image-${latest_kernel}_1${dist}.deb ] ; then
+					sudo dpkg -i linux-image-${latest_kernel}_1${dist}.deb
+				fi
+#				wget $(cat /tmp/LATEST-${SOC} | grep ${kernel} | awk '{print $3}')
+#				if [ -f /tmp/install-me.sh ] ; then
+#					if [ "x${rcn_mirror}" = "xenabled" ] ; then
+#						sed -i -e 's:disabled:enabled:g' /tmp/install-me.sh
+#					fi
+#					/bin/bash /tmp/install-me.sh
+#				else
+#					echo "error: kernel: ${kernel} not on mirror"
+#				fi
 			fi
 		fi
 	fi
