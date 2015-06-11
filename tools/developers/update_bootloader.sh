@@ -151,6 +151,7 @@ dd_uboot_boot () {
 		fi
 
 		if [ -f ${TEMPDIR}/dl/${UBOOT} ] ; then
+			echo "dd if=${TEMPDIR}/dl/${UBOOT} of=${target} seek=${dd_uboot_seek} bs=${dd_uboot_bs}"
 			sudo dd if=${TEMPDIR}/dl/${UBOOT} of=${target} seek=${dd_uboot_seek} bs=${dd_uboot_bs}
 			sync
 			flashed=done
@@ -197,7 +198,9 @@ dd_spl_uboot_boot () {
 		fi
 
 		if [ -f ${TEMPDIR}/dl/${UBOOT} ] ; then
+			echo "log: dd if=${TEMPDIR}/dl/${SPL} of=${target} seek=${dd_spl_uboot_seek} bs=${dd_spl_uboot_bs}"
 			sudo dd if=${TEMPDIR}/dl/${SPL} of=${target} seek=${dd_spl_uboot_seek} bs=${dd_spl_uboot_bs}
+			echo "log: dd if=${TEMPDIR}/dl/${UBOOT} of=${target} seek=${dd_uboot_seek} bs=${dd_uboot_bs}"
 			sudo dd if=${TEMPDIR}/dl/${UBOOT} of=${target} seek=${dd_uboot_seek} bs=${dd_uboot_bs}
 			sync
 			flashed=done
