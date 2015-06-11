@@ -140,31 +140,31 @@ latest_version () {
 					wget -c https://rcn-ee.com/repos/ubuntu/pool/main/l/linux-upstream/linux-image-${latest_kernel}_1${dist}_${arch}.deb
 				fi
 				if [ -f /tmp/linux-image-${latest_kernel}_1${dist}_${arch}.deb ] ; then
-					sudo dpkg -i /tmp/linux-image-${latest_kernel}_1${dist}_${arch}.deb
+					dpkg -i /tmp/linux-image-${latest_kernel}_1${dist}_${arch}.deb
 					sync
 
 					if [ -f /boot/vmlinuz-${latest_kernel} ] ; then
 						bootdir="/boot/uboot"
 
 						if [ -f ${bootdir}/zImage_bak ] ; then
-							sudo rm ${bootdir}/zImage_bak
+							rm ${bootdir}/zImage_bak
 							sync
 						fi
 
 						if [ -f ${bootdir}/zImage ] ; then
 							echo "Backing up ${bootdir}/zImage as ${bootdir}/zImage_bak..."
-							sudo mv -v ${bootdir}/zImage ${bootdir}/zImage_bak
+							mv -v ${bootdir}/zImage ${bootdir}/zImage_bak
 							sync
 						fi
 
 						if [ -f ${bootdir}/initrd.bak ] ; then
-							sudo rm ${bootdir}/initrd.bak
+							rm ${bootdir}/initrd.bak
 							sync
 						fi
 
 						if [ -f ${bootdir}/initrd.img ] ; then
 							echo "Backing up ${bootdir}/initrd.img as ${bootdir}/initrd.bak..."
-							sudo mv -v ${bootdir}/initrd.img ${bootdir}/initrd.bak
+							mv -v ${bootdir}/initrd.img ${bootdir}/initrd.bak
 							sync
 						fi
 
@@ -181,22 +181,22 @@ latest_version () {
 
 						if [ -d /boot/dtbs/${latest_kernel}/ ] ; then
 							mkdir -p ${bootdir}/dtbs/
-							sudo cp /boot/dtbs/${latest_kernel}/*.dtb ${bootdir}/dtbs/ 2>/dev/null || true
+							cp /boot/dtbs/${latest_kernel}/*.dtb ${bootdir}/dtbs/ 2>/dev/null || true
 							sync
 						fi
 
 						if [ ! -f /boot/initrd.img-${latest_kernel} ] ; then
 							echo "Creating /boot/initrd.img-${latest_kernel}"
-							sudo update-initramfs -c -k ${latest_kernel}
+							update-initramfs -c -k ${latest_kernel}
 							sync
 						else
 							echo "Updating /boot/initrd.img-${latest_kernel}"
-							sudo update-initramfs -u -k ${latest_kernel}
+							update-initramfs -u -k ${latest_kernel}
 							sync
 						fi
 
-						sudo cp -v /boot/vmlinuz-${latest_kernel} ${bootdir}/zImage
-						sudo cp -v /boot/initrd.img-${latest_kernel} ${bootdir}/initrd.img
+						cp -v /boot/vmlinuz-${latest_kernel} ${bootdir}/zImage
+						cp -v /boot/initrd.img-${latest_kernel} ${bootdir}/initrd.img
 					fi
 				fi
 			fi
