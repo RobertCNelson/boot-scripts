@@ -301,6 +301,10 @@ fi
 
 test_rcnee=$(cat /etc/apt/sources.list | grep rcn-ee || true)
 if [ ! "x${test_rcnee}" = "x" ] ; then
+	net_rcnee=$(cat /etc/apt/sources.list | grep repos.rcn-ee.net || true)
+	if [ ! "x${net_rcnee}" = "x" ] ; then
+		sed -i -e 's:repos.rcn-ee.net:repos.rcn-ee.com:g' /etc/apt/sources.list
+	fi
 	apt-get update
 	get_device
 
