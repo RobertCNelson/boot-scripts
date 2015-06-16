@@ -63,7 +63,7 @@ deb_configure_udhcpd ()
 	# Function expects udhcpd to be installed, and usb_address,
 	# usb_gateway and usb_netmask to be set.
 	#
-	# udhcpd is installed, we may use it for usb0 networking.
+	# if udhcpd is installed, we will use it for usb0 networking.
 
 	unset deb_udhcpd_disabled_regex \
 	      deb_deb_udhcpd_interface \
@@ -76,17 +76,7 @@ deb_configure_udhcpd ()
 	    sed -ir "s/${deb_udhcpd_disabled_regex}/#\0/g" ${deb_udhcpd_default} ) || \
 	  true)
 
-	# Get current configured interface
-	deb_udhcpd_interface=$(sed -nr 's/^[[:space:]]*interface[[:space:]]+(usb0)/\1/p' ${deb_udhcpd_conf})
-
-	# If udhcpd is configured for usb0 we will take control.
-	if [ "x${deb_udhcpd_interface}" = "xusb0" ]; then
-		# Modify /etc/udhcpd.congf if ip-addresses has changed.
-		deb_udhcpd_start=$(sed -nr 's/^[[:space:]]*start[[:space:]]+([0-9.]+)/\1/p' ${deb_udhcpd_conf})
-		deb_udhcpd_mask=$(sed -nr 's/^[[:space:]]*option subnet[[:space:]]+([0-9.]+)/\1/p' ${deb_udhcpd_conf})
-		if [ "x${deb_usb_gateway}${deb_usb_netmask}" != "x${deb_udhcpd_start}${deb_udhcpd_mask}" ] ; then
-			mv ${deb_udhcpd_conf} ${deb_udhcpd_conf}.bak
-			cat <<EOF > ${deb_udhcpd_conf}
+	cat <<EOF > ${deb_udhcpd_conf}
 # Managed by $0 - Do not modify unless you know what you are doing!
 start      ${deb_usb_gateway}
 end        ${deb_usb_gateway}
@@ -94,12 +84,10 @@ interface  usb0
 max_leases 1
 option subnet ${deb_usb_netmask}
 EOF
-		fi
 
-		# Will start or restart udhcpd
-		/sbin/ifconfig usb0 ${deb_usb_address} netmask ${deb_usb_netmask} || true
-		/usr/sbin/udhcpd -S ${deb_udhcpd_conf}
-	fi
+	# Will start or restart udhcpd
+	/sbin/ifconfig usb0 ${deb_usb_address} netmask ${deb_usb_netmask} || true
+	/usr/sbin/udhcpd -S ${deb_udhcpd_conf}
 }
 
 
@@ -180,7 +168,7 @@ if [ "x${deb_usb_address}" != "x" -a\
      "x${deb_usb_gateway}" != "x" -a\
      "x${deb_usb_netmask}" != "x" ] ; then
 	# usb0 is specified!
-	if [ -f ${deb_udhcpd_conf} -a -f ${deb_udhcpd_default} ]; then
+	if [ -a -f ${deb_udhcpd_default} ]; then
 		deb_configure_udhcpd
 
 	elif [ -f ${deb_dnsmasq_conf} -a -f ${deb_dnsmasq_dir}/README ]; then
