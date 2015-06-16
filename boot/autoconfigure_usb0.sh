@@ -35,6 +35,8 @@
 # Get usb0 set-up from /etc/network/interfaces - Used for
 # auto-configuring the usb0 networking.
 
+# RO users, use udhcpd...
+
 unset deb_etc_dir \
       deb_network_interfaces \
       deb_udhcpd_conf \
@@ -51,8 +53,8 @@ deb_ro_dir=$(mktemp -d)
 deb_udhcpd_conf=${deb_ro_dir}/udhcpd.conf
 deb_udhcpd_default=${deb_etc_dir}/default/udhcpd
 
-deb_dnsmasq_conf=${deb_etc_dir}/dnsmasq.conf
-deb_dnsmasq_dir=${deb_etc_dir}/dnsmasq.d
+deb_dnsmasq_conf=${deb_etc_dir}/dnsmasq.d/usb0-dhcp
+deb_dnsmasq_dir=${deb_etc_dir}/dnsmasq.d/
 
 deb_network_interfaces=${deb_etc_dir}/network/interfaces
 
@@ -104,7 +106,7 @@ deb_configure_dnsmasq ()
 	      deb_usb0_handled \
 	      deb_dnsmasq_warning
 
-	deb_generated_dnsmasq_file=usb0-dhcp.generated
+	deb_generated_dnsmasq_file=usb0-dhcp
 
 	# Check if any interface references usb0.
 	# Only dnsmasq default directory and patterns are searched !!!
@@ -121,7 +123,7 @@ deb_configure_dnsmasq ()
 		if [ -f ${deb_dnsmasq_dir}/${deb_generated_dnsmasq_file} -o \
 		     ! -f ${deb_dnsmasq_dir}/${deb_generated_dnsmasq_file}~ -a \
 		     ! -f ${deb_dnsmasq_dir}/.${deb_generated_dnsmasq_file} ] ; then
-			cat <<EOF > ${deb_dnsmasq_dir}/${deb_generated_dnsmasq_file}
+			cat <<EOF > ${deb_dnsmasq_conf}
 # Managed by $0 - Do not modify unless you know what you are doing!
 # Disable this file by prepending "." or appending "~" to the filename.
 # Removing the file will just cause $0 to recreated!
@@ -175,7 +177,7 @@ if [ "x${deb_usb_address}" != "x" -a\
 	if [ -f ${deb_udhcpd_default} ]; then
 		deb_configure_udhcpd
 
-	elif [ -f ${deb_dnsmasq_conf} -a -f ${deb_dnsmasq_dir}/README ]; then
+	elif [ -f ${deb_dnsmasq_dir}/README ]; then
 		deb_configure_dnsmasq
 
 	fi
