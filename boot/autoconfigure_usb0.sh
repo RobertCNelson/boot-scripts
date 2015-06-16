@@ -53,8 +53,9 @@ deb_ro_dir=$(mktemp -d)
 deb_udhcpd_conf=${deb_ro_dir}/udhcpd.conf
 deb_udhcpd_default=${deb_etc_dir}/default/udhcpd
 
-deb_dnsmasq_conf=${deb_etc_dir}/dnsmasq.d/usb0-dhcp
-deb_dnsmasq_dir=${deb_etc_dir}/dnsmasq.d/
+deb_generated_dnsmasq_file=usb0-dhcp
+deb_dnsmasq_conf=${deb_etc_dir}/dnsmasq.d/${deb_generated_dnsmasq_file}
+deb_dnsmasq_dir=${deb_etc_dir}/dnsmasq.d
 
 deb_network_interfaces=${deb_etc_dir}/network/interfaces
 
@@ -102,11 +103,8 @@ deb_configure_dnsmasq ()
 	# Function expects dnsmasq to be installed.
 	# dnsmasq is installed, we may use it for usb0 networking.
 
-	unset deb_generated_dnsmasq_file \
-	      deb_usb0_handled \
+	unset deb_usb0_handled \
 	      deb_dnsmasq_warning
-
-	deb_generated_dnsmasq_file=usb0-dhcp
 
 	# Check if any interface references usb0.
 	# Only dnsmasq default directory and patterns are searched !!!
@@ -123,7 +121,7 @@ deb_configure_dnsmasq ()
 		if [ -f ${deb_dnsmasq_dir}/${deb_generated_dnsmasq_file} -o \
 		     ! -f ${deb_dnsmasq_dir}/${deb_generated_dnsmasq_file}~ -a \
 		     ! -f ${deb_dnsmasq_dir}/.${deb_generated_dnsmasq_file} ] ; then
-			cat <<EOF > ${deb_dnsmasq_conf}
+			cat <<EOF > ${deb_dnsmasq_dir}/${deb_generated_dnsmasq_file}
 # Managed by $0 - Do not modify unless you know what you are doing!
 # Disable this file by prepending "." or appending "~" to the filename.
 # Removing the file will just cause $0 to recreated!
