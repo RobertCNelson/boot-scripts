@@ -168,7 +168,7 @@ if [ "x${deb_usb_address}" != "x" -a\
      "x${deb_usb_gateway}" != "x" -a\
      "x${deb_usb_netmask}" != "x" ] ; then
 	# usb0 is specified!
-	if [ -a -f ${deb_udhcpd_default} ]; then
+	if [ -f ${deb_udhcpd_default} ]; then
 		deb_configure_udhcpd
 
 	elif [ -f ${deb_dnsmasq_conf} -a -f ${deb_dnsmasq_dir}/README ]; then
