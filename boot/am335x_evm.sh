@@ -117,39 +117,10 @@ fi
 
 sleep 3
 
-#Wheezy Image:
-if [ -f /etc/default/udhcpd ] ; then
-	unset udhcp_disabled
-	udhcp_disabled=$(grep \#DHCPD_ENABLED /etc/default/udhcpd || true)
-	if [ "x${udhcp_disabled}" = "x" ] ; then
-		sed -i -e 's:DHCPD_ENABLED="no":#DHCPD_ENABLED="no":g' /etc/default/udhcpd
-	fi
-fi
 
-if [ -f /etc/udhcpd.conf ] ; then
-	#Distro default...
-	unset deb_udhcpd
-	deb_udhcpd=$(grep Sample /etc/udhcpd.conf || true)
-	if [ ! "x${deb_udhcpd}" = "x" ] ; then
-		mv /etc/udhcpd.conf /etc/udhcpd.conf.bak
+# Auto-configuring the usb0 network interface:
+$(dirname $0)/autoconfigure_usb0.sh
 
-		echo "start      192.168.7.1" > /etc/udhcpd.conf
-		echo "end        192.168.7.1" >> /etc/udhcpd.conf
-		echo "interface  usb0" >> /etc/udhcpd.conf
-		echo "max_leases 1" >> /etc/udhcpd.conf
-		echo "option subnet 255.255.255.252" >> /etc/udhcpd.conf
-	fi
-	/etc/init.d/udhcpd restart
-
-	/sbin/ifconfig usb0 192.168.7.2 netmask 255.255.255.252 || true
-	/usr/sbin/udhcpd -S /etc/udhcpd.conf
-fi
-
-#Jessie Image:
-if [ -f /etc/dnsmasq.d/usb0-dhcp ] ; then
-	/sbin/ifconfig usb0 192.168.7.2 netmask 255.255.255.252 || true
-	systemctl restart dnsmasq
-fi
 
 eth0_addr=$(ip addr list eth0 |grep "inet " |cut -d' ' -f6|cut -d/ -f1 2>/dev/null || true)
 usb0_addr=$(ip addr list usb0 |grep "inet " |cut -d' ' -f6|cut -d/ -f1 2>/dev/null || true)
