@@ -88,6 +88,10 @@ EOF
 	# Will start or restart udhcpd
 	/sbin/ifconfig usb0 ${deb_usb_address} netmask ${deb_usb_netmask} || true
 	/usr/sbin/udhcpd -S ${deb_udhcpd_conf}
+
+	#FIXME check for g_ether/usb0 module loaded, as it sometimes takes a little bit...
+	sleep 1
+	/etc/init.d/udhcpd restart
 }
 
 
