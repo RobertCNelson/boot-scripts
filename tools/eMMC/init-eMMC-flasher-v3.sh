@@ -104,8 +104,13 @@ write_failure () {
 }
 
 check_eeprom () {
-	eeprom="/sys/bus/i2c/devices/0-0050/eeprom"
 	message="Checking for Valid BBB EEPROM header" ; broadcast
+
+	if [ -f /sys/class/nvmem/at24-0/nvmem ] ; then
+		eeprom="/sys/class/nvmem/at24-0/nvmem"
+	else
+		eeprom="/sys/bus/i2c/devices/0-0050/eeprom"
+	fi
 
 	if [ -f /sys/devices/platform/ocp/44e0b000.i2c/i2c-0/0-0050/eeprom ] ; then
 		#4.1.x
