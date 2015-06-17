@@ -107,10 +107,15 @@ check_eeprom () {
 	message="Checking for Valid BBB EEPROM header" ; broadcast
 
 	if [ -f /sys/class/nvmem/at24-0/nvmem ] ; then
+		message="4.1.x+ kernel with nvmem detected..." ; broadcast
 		eeprom="/sys/class/nvmem/at24-0/nvmem"
-		#eeprom_header=$(hexdump -e '8/1 "%c"' ${eeprom} -s 5 -n 3)
-		eeprom_header="335"  #wip...
-		eeprom_location="/sys/devices/platform/ocp/44e0b000.i2c/i2c-0/0-0050/eeprom"
+
+		#with 4.1.x: -s 5 isn't working...
+		#eeprom_header=$(hexdump -e '8/1 "%c"' ${eeprom} -s 5 -n 3) = blank...
+		#hexdump -e '8/1 "%c"' ${eeprom} -n 8 = �U3�A335
+		eeprom_header=$(hexdump -e '8/1 "%c"' ${eeprom} -n 8 | cut -b 6-8)
+
+		eeprom_location="/sys/devices/platform/ocp/44e0b000.i2c/i2c-0/0-0050/nvmem/at24-0/nvmem"
 	else
 		eeprom="/sys/bus/i2c/devices/0-0050/eeprom"
 		eeprom_header=$(hexdump -e '8/1 "%c"' ${eeprom} -s 5 -n 3)
@@ -162,6 +167,11 @@ check_running_system () {
 	rsync_check=$(LC_ALL=C rsync --version | grep version | awk '{print $3}' || true)
 	if [ "x${rsync_check}" = "x3.1.1" ] ; then
 		rsync_progress="--info=progress2 --human-readable"
+	fi
+
+	if [ ! -e /sys/class/leds/beaglebone\:green\:usr0/trigger ] ; then
+		modprobe leds_gpio || true
+		sleep 1
 	fi
 }
 
