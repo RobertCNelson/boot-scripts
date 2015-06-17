@@ -296,7 +296,9 @@ copy_boot () {
 	fi
 
 	message="rsync: /boot/uboot/ -> /tmp/boot/" ; broadcast
-	echo "rsync: ignore the % values when shown as they are not accurate..."
+	if [ ! "x${rsync_progress}" = "x" ] ; then
+		echo "rsync: note the % column is useless..."
+	fi
 	rsync -aAx ${rsync_progress} /boot/uboot/ /tmp/boot/ --exclude={MLO,u-boot.img,uEnv.txt} || write_failure
 	flush_cache
 
@@ -312,7 +314,9 @@ copy_rootfs () {
 	mount ${destination}p${media_rootfs} /tmp/rootfs/ -o async,noatime
 
 	message="rsync: / -> /tmp/rootfs/" ; broadcast
-	echo "rsync: ignore the % values when shown as they are not accurate..."
+	if [ ! "x${rsync_progress}" = "x" ] ; then
+		echo "rsync: note the % column is useless..."
+	fi
 	rsync -aAx ${rsync_progress} /* /tmp/rootfs/ --exclude={/dev/*,/proc/*,/sys/*,/tmp/*,/run/*,/mnt/*,/media/*,/lost+found,/lib/modules/*,/uEnv.txt} || write_failure
 	flush_cache
 
@@ -326,7 +330,9 @@ copy_rootfs () {
 
 	message="Copying: Kernel modules" ; broadcast
 	message="rsync: /lib/modules/$(uname -r)/ -> /tmp/rootfs/lib/modules/$(uname -r)/" ; broadcast
-	echo "rsync: ignore the % values when shown as they are not accurate..."
+	if [ ! "x${rsync_progress}" = "x" ] ; then
+		echo "rsync: note the % column is useless..."
+	fi
 	rsync -aAx ${rsync_progress} /lib/modules/$(uname -r)/* /tmp/rootfs/lib/modules/$(uname -r)/ || write_failure
 	flush_cache
 
