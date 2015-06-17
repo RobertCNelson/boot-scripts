@@ -104,17 +104,24 @@ write_failure () {
 }
 
 check_eeprom () {
-	eeprom="/sys/bus/i2c/devices/0-0050/eeprom"
 	message="Checking for Valid BBG EEPROM header" ; broadcast
 
-	if [ -f /sys/devices/platform/ocp/44e0b000.i2c/i2c-0/0-0050/eeprom ] ; then
-		#4.1.x
-		eeprom_location="/sys/devices/platform/ocp/44e0b000.i2c/i2c-0/0-0050/eeprom"
+	if [ -f /sys/class/nvmem/at24-0/nvmem ] ; then
+		message="4.1.x+ kernel with nvmem detected..." ; broadcast
+		eeprom="/sys/class/nvmem/at24-0/nvmem"
+
+		#with 4.1.x: -s 5 isn't working...
+		#eeprom_header=$(hexdump -e '8/1 "%c"' ${eeprom} -s 5 -n 3) = blank...
+		#hexdump -e '8/1 "%c"' ${eeprom} -n 8 = �U3�A335
+		eeprom_header=$(hexdump -e '8/1 "%c"' ${eeprom} -n 14 | cut -b 5-14)
+
+		eeprom_location="/sys/devices/platform/ocp/44e0b000.i2c/i2c-0/0-0050/nvmem/at24-0/nvmem"
 	else
+		eeprom="/sys/bus/i2c/devices/0-0050/eeprom"
+		eeprom_header=$(hexdump -e '8/1 "%c"' ${eeprom} -s 4 -n 10)
 		eeprom_location=$(ls /sys/devices/ocp*/44e0b000.i2c/i2c-0/0-0050/eeprom 2> /dev/null)
 	fi
 
-	eeprom_header=$(hexdump -e '8/1 "%c"' ${eeprom} -s 4 -n 10)
 	if [ "x${eeprom_header}" = "xA335BNLTGR" ] ; then
 		message="Valid BBG EEPROM header found [${eeprom_header}]" ; broadcast
 		message="-----------------------------" ; broadcast
@@ -126,7 +133,11 @@ check_eeprom () {
 				dd if=/opt/scripts/device/bone/bbg-eeprom.dump of=${eeprom_location}
 				sync
 				sync
-				eeprom_check=$(hexdump -e '8/1 "%c"' ${eeprom} -s 4 -n 10)
+				if [ -f /sys/class/nvmem/at24-0/nvmem ] ; then
+					eeprom_check=$(hexdump -e '8/1 "%c"' ${eeprom} -n 14 | cut -b 5-14)
+				else
+					eeprom_check=$(hexdump -e '8/1 "%c"' ${eeprom} -s 4 -n 10)
+				fi
 				echo "eeprom check: [${eeprom_check}]"
 
 				#We have to reboot, as the kernel only loads the eMMC cape
@@ -160,6 +171,11 @@ check_running_system () {
 	rsync_check=$(LC_ALL=C rsync --version | grep version | awk '{print $3}' || true)
 	if [ "x${rsync_check}" = "x3.1.1" ] ; then
 		rsync_progress="--info=progress2 --human-readable"
+	fi
+
+	if [ ! -e /sys/class/leds/beaglebone\:green\:usr0/trigger ] ; then
+		modprobe leds_gpio || true
+		sleep 1
 	fi
 }
 
@@ -294,7 +310,9 @@ copy_boot () {
 	fi
 
 	message="rsync: /boot/uboot/ -> /tmp/boot/" ; broadcast
-	echo "rsync: ignore the % values when shown as they are not accurate..."
+	if [ ! "x${rsync_progress}" = "x" ] ; then
+		echo "rsync: note the % column is useless..."
+	fi
 	rsync -aAx ${rsync_progress} /boot/uboot/ /tmp/boot/ --exclude={MLO,u-boot.img,uEnv.txt} || write_failure
 	flush_cache
 
@@ -310,7 +328,9 @@ copy_rootfs () {
 	mount ${destination}p${media_rootfs} /tmp/rootfs/ -o async,noatime
 
 	message="rsync: / -> /tmp/rootfs/" ; broadcast
-	echo "rsync: ignore the % values when shown as they are not accurate..."
+	if [ ! "x${rsync_progress}" = "x" ] ; then
+		echo "rsync: note the % column is useless..."
+	fi
 	rsync -aAx ${rsync_progress} /* /tmp/rootfs/ --exclude={/dev/*,/proc/*,/sys/*,/tmp/*,/run/*,/mnt/*,/media/*,/lost+found,/lib/modules/*,/uEnv.txt} || write_failure
 	flush_cache
 
@@ -324,7 +344,9 @@ copy_rootfs () {
 
 	message="Copying: Kernel modules" ; broadcast
 	message="rsync: /lib/modules/$(uname -r)/ -> /tmp/rootfs/lib/modules/$(uname -r)/" ; broadcast
-	echo "rsync: ignore the % values when shown as they are not accurate..."
+	if [ ! "x${rsync_progress}" = "x" ] ; then
+		echo "rsync: note the % column is useless..."
+	fi
 	rsync -aAx ${rsync_progress} /lib/modules/$(uname -r)/* /tmp/rootfs/lib/modules/$(uname -r)/ || write_failure
 	flush_cache
 

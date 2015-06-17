@@ -133,7 +133,11 @@ check_eeprom () {
 				dd if=/opt/scripts/device/bone/bbb-eeprom.dump of=${eeprom_location}
 				sync
 				sync
-				eeprom_check=$(hexdump -e '8/1 "%c"' ${eeprom} -s 4 -n 8)
+				if [ -f /sys/class/nvmem/at24-0/nvmem ] ; then
+					eeprom_check=$(hexdump -e '8/1 "%c"' ${eeprom} -n 8 | cut -b 6-8)
+				else
+					eeprom_check=$(hexdump -e '8/1 "%c"' ${eeprom} -s 4 -n 8)
+				fi
 				echo "eeprom check: [${eeprom_check}]"
 
 				#We have to reboot, as the kernel only loads the eMMC cape
