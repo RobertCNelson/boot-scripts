@@ -93,8 +93,17 @@ else
 	cpsw_1_mac="1c:ba:8c:a2:ed:69"
 fi
 
-#temp fake: (should we just x-or the last bits of cpsw0/cpsw1?)
-dev_mac="1c:ba:8c:a2:ed:70"
+#The other option is to xor cpsw_0/cpsw_1, but this should be faster...
+cpsw_0_last=$(echo ${cpsw_0_mac} | awk -F ':' '{print $6}' | cut -c 2)
+cpsw_1_last=$(echo ${cpsw_1_mac} | awk -F ':' '{print $6}' | cut -c 2)
+mac_prefix=$(echo ${cpsw_0_mac} | cut -c 1-16)
+if [ ! "x${cpsw_0_last}" = "x0" ] && [ ! "x${cpsw_1_last}" = "x0" ]; then
+	dev_mac="${mac_prefix}0"
+elif  [ ! "x${cpsw_0_last}" = "x1" ] && [ ! "x${cpsw_1_last}" = "x1" ]; then
+	dev_mac="${mac_prefix}1"
+else
+	dev_mac="${mac_prefix}2"
+fi
 
 unset root_drive
 root_drive="$(cat /proc/cmdline | sed 's/ /\n/g' | grep root=UUID= | awk -F 'root=' '{print $2}' || true)"
