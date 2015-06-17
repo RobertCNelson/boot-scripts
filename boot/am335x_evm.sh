@@ -67,10 +67,22 @@ SERIAL_NUMBER="0123456789"
 ISBLACK=""
 PRODUCT="am335x_evm"
 manufacturer="Circuitco"
+
+eeprom="/sys/bus/i2c/devices/0-0050/eeprom"
 if [ -f ${eeprom} ] ; then
 	SERIAL_NUMBER=$(hexdump -e '8/1 "%c"' ${eeprom} -s 14 -n 2)-$(hexdump -e '8/1 "%c"' ${eeprom} -s 16 -n 12)
 	ISBLACK=$(hexdump -e '8/1 "%c"' ${eeprom} -s 8 -n 4)
 
+	PRODUCT="BeagleBone"
+	if [ "x${ISBLACK}" = "xBBBK" ] || [ "x${ISBLACK}" = "xBNLT" ] ; then
+		PRODUCT="BeagleBoneBlack"
+	fi
+fi
+
+eeprom="/sys/class/nvmem/at24-0/nvmem"
+if [ -f ${eeprom} ] ; then
+	SERIAL_NUMBER=$(hexdump -e '8/1 "%c"' ${eeprom} -n 16 | cut -b 15-16)-$(hexdump -e '8/1 "%c"' ${eeprom} -n 24 | cut -b 13-24)
+	ISBLACK=$(hexdump -e '8/1 "%c"' ${eeprom} -n 12 | cut -b 9-12)
 	PRODUCT="BeagleBone"
 	if [ "x${ISBLACK}" = "xBBBK" ] || [ "x${ISBLACK}" = "xBNLT" ] ; then
 		PRODUCT="BeagleBoneBlack"
