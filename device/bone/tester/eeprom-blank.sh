@@ -6,7 +6,6 @@ if ! id | grep -q root; then
 fi
 
 if [ -f /sys/class/nvmem/at24-0/nvmem ] ; then
-	message="4.1.x+ kernel with nvmem detected..." ; broadcast
 	eeprom="/sys/class/nvmem/at24-0/nvmem"
 
 	#with 4.1.x: -s 5 isn't working...
