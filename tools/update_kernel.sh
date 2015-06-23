@@ -261,16 +261,11 @@ current_kernel=$(uname -r)
 
 kernel="STABLE"
 mirror="https://rcn-ee.com/repos/latest"
-unset rcn_mirror
 unset kernel_version
 unset daily_cron
 # parse commandline options
 while [ ! -z "$1" ] ; do
 	case $1 in
-	--use-rcn-mirror)
-		mirror="http://rcn-ee.homeip.net:81/dl/mirrors/deb"
-		rcn_mirror="enabled"
-		;;
 	--kernel)
 		checkparm $2
 		kernel_version="$2"
