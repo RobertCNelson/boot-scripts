@@ -1,6 +1,6 @@
 #!/bin/sh -e
 #
-# Copyright (c) 2014 Robert Nelson <robertcnelson@gmail.com>
+# Copyright (c) 2014-2015 Robert Nelson <robertcnelson@gmail.com>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -25,19 +25,29 @@ if ! id | grep -q root; then
 	exit
 fi
 
+scan_ti_kernels () {
+	uname -r | grep ti-xenomai >/dev/null && SOC="ti-xenomai"
+	if [ "x${SOC}" = "x" ] ; then
+		uname -r | grep ti-rt >/dev/null && SOC="ti-rt"
+	fi
+	if [ "x${SOC}" = "x" ] ; then
+		uname -r | grep ti >/dev/null && SOC="ti"
+	fi
+}
+
 get_device () {
 	machine=$(cat /proc/device-tree/model | sed "s/ /_/g")
 
 	if [ "x${SOC}" = "x" ] ; then
 		case "${machine}" in
 		TI_AM335x_BeagleBone|TI_AM335x_BeagleBone_Black)
-			uname -r | grep ti >/dev/null && SOC="ti"
+			scan_ti_kernels
 			if [ "x${SOC}" = "x" ] ; then
 				SOC="omap-psp"
 			fi
 			;;
 		TI_AM5728_BeagleBoard-X15)
-			uname -r | grep ti >/dev/null && SOC="ti"
+			scan_ti_kernels
 			if [ "x${SOC}" = "x" ] ; then
 				SOC="armv7-lpae"
 			fi
@@ -276,6 +286,12 @@ while [ ! -z "$1" ] ; do
 	--daily-cron)
 		daily_cron="enabled"
 		;;
+	--lts-kernel)
+		kernel="LTS"
+		;;
+	--stable-kernel)
+		kernel="STABLE"
+		;;
 	--beta-kernel)
 		kernel="TESTING"
 		;;
@@ -284,6 +300,12 @@ while [ ! -z "$1" ] ; do
 		;;
 	--ti-kernel)
 		SOC="ti"
+		;;
+	--ti-rt-kernel)
+		SOC="ti-rt"
+		;;
+	--ti-xenomai-kernel)
+		SOC="ti-xenomai"
 		;;
 	esac
 	shift
