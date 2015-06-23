@@ -37,7 +37,10 @@ get_device () {
 			fi
 			;;
 		TI_AM5728_BeagleBoard-X15)
-			SOC="ti"
+			uname -r | grep ti >/dev/null && SOC="ti"
+			if [ "x${SOC}" = "x" ] ; then
+				SOC="armv7-lpae"
+			fi
 			;;
 		TI_OMAP5_uEVM_board)
 			SOC="armv7-lpae"
