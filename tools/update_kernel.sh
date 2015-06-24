@@ -26,12 +26,20 @@ if ! id | grep -q root; then
 fi
 
 scan_ti_kernels () {
-	uname -r | grep ti-xenomai >/dev/null && SOC="ti-xenomai"
+	if [ "x${SOC}" = "x" ] ; then
+		uname -r | grep ti-xenomai >/dev/null && SOC="ti-xenomai"
+	fi
 	if [ "x${SOC}" = "x" ] ; then
 		uname -r | grep ti-rt >/dev/null && SOC="ti-rt"
 	fi
 	if [ "x${SOC}" = "x" ] ; then
 		uname -r | grep ti >/dev/null && SOC="ti"
+	fi
+}
+
+scan_bone_kernels () {
+	if [ "x${SOC}" = "x" ] ; then
+		uname -r | grep bone >/dev/null && SOC="omap-psp"
 	fi
 }
 
@@ -42,9 +50,7 @@ get_device () {
 		case "${machine}" in
 		TI_AM335x_BeagleBone|TI_AM335x_BeagleBone_Black)
 			scan_ti_kernels
-			if [ "x${SOC}" = "x" ] ; then
-				SOC="omap-psp"
-			fi
+			scan_bone_kernels
 			;;
 		TI_AM5728_BeagleBoard-X15)
 			scan_ti_kernels
