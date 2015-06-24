@@ -152,7 +152,6 @@ latest_version_repo () {
 			if [ "x${current_kernel}" = "x${latest_kernel}" ] ; then
 				if [ "x${daily_cron}" = "xenabled" ] ; then
 					apt-get clean
-					echo "info: [${latest_kernel}] is currently installed."
 					exit
 				fi
 			fi
