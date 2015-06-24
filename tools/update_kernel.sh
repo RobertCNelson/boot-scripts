@@ -28,7 +28,7 @@ fi
 scan_ti_kernels () {
 	if [ "x${SOC}" = "x" ] ; then
 		unset testvalue
-		testvalue=$(echo ${current_kernel} | grep ti-xenomai >/dev/null || true)
+		testvalue=$(echo ${current_kernel} | grep ti-xenomai || true)
 		if [ ! "x${testvalue}" = "x" ] ; then
 			SOC="ti-xenomai"
 		fi
@@ -36,7 +36,7 @@ scan_ti_kernels () {
 
 	if [ "x${SOC}" = "x" ] ; then
 		unset testvalue
-		testvalue=$(echo ${current_kernel} | grep ti-rt >/dev/null || true)
+		testvalue=$(echo ${current_kernel} | grep ti-rt || true)
 		if [ ! "x${testvalue}" = "x" ] ; then
 			SOC="ti-rt"
 		fi
@@ -44,7 +44,7 @@ scan_ti_kernels () {
 
 	if [ "x${SOC}" = "x" ] ; then
 		unset testvalue
-		testvalue=$(echo ${current_kernel} | grep ti >/dev/null || true)
+		testvalue=$(echo ${current_kernel} | grep ti || true)
 		if [ ! "x${testvalue}" = "x" ] ; then
 			SOC="ti"
 		fi
@@ -54,7 +54,7 @@ scan_ti_kernels () {
 scan_bone_kernels () {
 	if [ "x${SOC}" = "x" ] ; then
 		unset testvalue
-		testvalue=$(echo ${current_kernel} | grep bone >/dev/null || true)
+		testvalue=$(echo ${current_kernel} | grep bone || true)
 		if [ ! "x${testvalue}" = "x" ] ; then
 			SOC="omap-psp"
 		fi
@@ -64,14 +64,14 @@ scan_bone_kernels () {
 scan_armv7_kernels () {
 	if [ "x${SOC}" = "x" ] ; then
 		unset testvalue
-		testvalue=$(echo ${current_kernel} | grep lpae >/dev/null || true)
+		testvalue=$(echo ${current_kernel} | grep lpae || true)
 		if [ ! "x${testvalue}" = "x" ] ; then
 			SOC="armv7-lpae"
 		fi
 	fi
 	if [ "x${SOC}" = "x" ] ; then
 		unset testvalue
-		testvalue=$(echo ${current_kernel} | grep armv7 >/dev/null || true)
+		testvalue=$(echo ${current_kernel} | grep armv7 || true)
 		if [ ! "x${testvalue}" = "x" ] ; then
 			SOC="armv7"
 		fi
@@ -144,7 +144,7 @@ latest_version_repo () {
 		wget ${mirror}/${dist}-${arch}/LATEST-${SOC}
 		if [ -f /tmp/LATEST-${SOC} ] ; then
 			latest_kernel=$(cat /tmp/LATEST-${SOC} | grep ${kernel} | awk '{print $3}')
-			echo "debug: your are running: [`uname -r`]"
+			echo "debug: you are running: [${current_kernel}]"
 			echo "debug: latest is: [${latest_kernel}]"
 
 			pkg="linux-image-${latest_kernel}"
@@ -360,7 +360,7 @@ if [ ! -f /lib/systemd/system/systemd-timesyncd.service ] ; then
 	fi
 fi
 
-test_rcnee=$(cat /etc/apt/sources.list | grep rcn-ee || true)
+test_rcnee=$(cat /etc/apt/sources.list | grep repos.rcn-ee || true)
 if [ ! "x${test_rcnee}" = "x" ] ; then
 	net_rcnee=$(cat /etc/apt/sources.list | grep repos.rcn-ee.net || true)
 	if [ ! "x${net_rcnee}" = "x" ] ; then
