@@ -147,6 +147,15 @@ latest_version_repo () {
 			echo "debug: you are running: [${current_kernel}]"
 			echo "debug: latest is: [${latest_kernel}]"
 
+			if [ "x${current_kernel}" = "x${latest_kernel}" ] ; then
+				if [ "x${daily_cron}" = "xenabled" ] ; then
+					apt-get clean
+					echo "info: [${latest_kernel}] is currently installed."
+					exit
+				fi
+			fi
+			apt-get update
+
 			pkg="linux-image-${latest_kernel}"
 			#is the package installed?
 			check_dpkg
@@ -157,10 +166,6 @@ latest_version_repo () {
 				apt-get install -y ${pkg}
 				update_uEnv_txt
 			elif [ "x${pkg}" = "x${apt_cache}" ] ; then
-				if [ "x${daily_cron}" = "xenabled" ] ; then
-					apt-get clean
-					exit
-				fi
 				echo "debug: reinstalling: [${pkg}]"
 				apt-get install -y ${pkg} --reinstall
 				update_uEnv_txt
@@ -260,6 +265,7 @@ latest_version () {
 
 specific_version_repo () {
 	latest_kernel=$(echo ${kernel_version})
+	apt-get update
 
 	pkg="linux-image-${latest_kernel}"
 	#is the package installed?
@@ -366,7 +372,6 @@ if [ ! "x${test_rcnee}" = "x" ] ; then
 	if [ ! "x${net_rcnee}" = "x" ] ; then
 		sed -i -e 's:repos.rcn-ee.net:repos.rcn-ee.com:g' /etc/apt/sources.list
 	fi
-	apt-get update
 	get_device
 
 	if [ "x${kernel_version}" = "x" ] ; then
