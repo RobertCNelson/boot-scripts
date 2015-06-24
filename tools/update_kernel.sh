@@ -28,7 +28,7 @@ fi
 scan_ti_kernels () {
 	if [ "x${SOC}" = "x" ] ; then
 		unset testvalue
-		testvalue=$(echo ${current_kernel} | grep ti-xenomai || true)
+		testvalue=$(echo ${current_kernel} | grep ti-xenomai >/dev/null || true)
 		if [ ! "x${testvalue}" = "x" ] ; then
 			SOC="ti-xenomai"
 		fi
@@ -36,7 +36,7 @@ scan_ti_kernels () {
 
 	if [ "x${SOC}" = "x" ] ; then
 		unset testvalue
-		testvalue=$(echo ${current_kernel} | grep ti-rt || true)
+		testvalue=$(echo ${current_kernel} | grep ti-rt >/dev/null || true)
 		if [ ! "x${testvalue}" = "x" ] ; then
 			SOC="ti-rt"
 		fi
@@ -44,7 +44,7 @@ scan_ti_kernels () {
 
 	if [ "x${SOC}" = "x" ] ; then
 		unset testvalue
-		testvalue=$(echo ${current_kernel} | grep ti || true)
+		testvalue=$(echo ${current_kernel} | grep ti >/dev/null || true)
 		if [ ! "x${testvalue}" = "x" ] ; then
 			SOC="ti"
 		fi
@@ -54,9 +54,26 @@ scan_ti_kernels () {
 scan_bone_kernels () {
 	if [ "x${SOC}" = "x" ] ; then
 		unset testvalue
-		testvalue=$(echo ${current_kernel} | grep bone || true)
+		testvalue=$(echo ${current_kernel} | grep bone >/dev/null || true)
 		if [ ! "x${testvalue}" = "x" ] ; then
 			SOC="omap-psp"
+		fi
+	fi
+}
+
+scan_armv7_kernels () {
+	if [ "x${SOC}" = "x" ] ; then
+		unset testvalue
+		testvalue=$(echo ${current_kernel} | grep lpae >/dev/null || true)
+		if [ ! "x${testvalue}" = "x" ] ; then
+			SOC="armv7-lpae"
+		fi
+	fi
+	if [ "x${SOC}" = "x" ] ; then
+		unset testvalue
+		testvalue=$(echo ${current_kernel} | grep armv7 >/dev/null || true)
+		if [ ! "x${testvalue}" = "x" ] ; then
+			SOC="armv7"
 		fi
 	fi
 }
@@ -69,15 +86,15 @@ get_device () {
 		TI_AM335x_BeagleBone|TI_AM335x_BeagleBone_Black)
 			scan_ti_kernels
 			scan_bone_kernels
+			scan_armv7_kernels
 			;;
 		TI_AM5728_BeagleBoard-X15)
 			scan_ti_kernels
-			if [ "x${SOC}" = "x" ] ; then
-				SOC="armv7-lpae"
-			fi
+			scan_armv7_kernels
 			;;
 		TI_OMAP5_uEVM_board)
-			SOC="armv7-lpae"
+			scan_ti_kernels
+			scan_armv7_kernels
 			;;
 		*)
 			echo "Machine: [${machine}]"
