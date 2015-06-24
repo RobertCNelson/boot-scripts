@@ -141,7 +141,7 @@ latest_version_repo () {
 		fi
 
 		echo "info: checking archive"
-		wget ${mirror}/${dist}-${arch}/LATEST-${SOC}
+		wget --no-verbose ${mirror}/${dist}-${arch}/LATEST-${SOC}
 		if [ -f /tmp/LATEST-${SOC} ] ; then
 			latest_kernel=$(cat /tmp/LATEST-${SOC} | grep ${kernel} | awk '{print $3}')
 			echo "debug: you are running: [${current_kernel}]"
@@ -180,7 +180,7 @@ latest_version () {
 		fi
 
 		echo "info: checking archive"
-		wget ${mirror}/${dist}-${arch}/LATEST-${SOC}
+		wget --no-verbose ${mirror}/${dist}-${arch}/LATEST-${SOC}
 		if [ -f /tmp/LATEST-${SOC} ] ; then
 			latest_kernel=$(cat /tmp/LATEST-${SOC} | grep ${kernel} | awk '{print $3}')
 			echo "debug: your are running: [${current_kernel}]"
@@ -189,9 +189,9 @@ latest_version () {
 			if [ ! "x${current_kernel}" = "x${latest_kernel}" ] ; then
 				distro=$(lsb_release -is)
 				if [ "x${distro}" = "xDebian" ] ; then
-					wget -c https://rcn-ee.com/repos/debian/pool/main/l/linux-upstream/linux-image-${latest_kernel}_1${dist}_${arch}.deb
+					wget --no-verbose -c https://rcn-ee.com/repos/debian/pool/main/l/linux-upstream/linux-image-${latest_kernel}_1${dist}_${arch}.deb
 				else
-					wget -c https://rcn-ee.com/repos/ubuntu/pool/main/l/linux-upstream/linux-image-${latest_kernel}_1${dist}_${arch}.deb
+					wget --no-verbose -c https://rcn-ee.com/repos/ubuntu/pool/main/l/linux-upstream/linux-image-${latest_kernel}_1${dist}_${arch}.deb
 				fi
 				if [ -f /tmp/linux-image-${latest_kernel}_1${dist}_${arch}.deb ] ; then
 					dpkg -i /tmp/linux-image-${latest_kernel}_1${dist}_${arch}.deb
