@@ -79,6 +79,7 @@ scan_armv7_kernels () {
 }
 
 get_device () {
+	unset es8
 	machine=$(cat /proc/device-tree/model | sed "s/ /_/g")
 
 	if [ "x${SOC}" = "x" ] ; then
@@ -87,6 +88,7 @@ get_device () {
 			scan_ti_kernels
 			scan_bone_kernels
 			scan_armv7_kernels
+			es8="enabled"
 			;;
 		TI_AM5728_BeagleBoard-X15)
 			scan_ti_kernels
@@ -291,14 +293,16 @@ third_party_final () {
 third_party () {
 	if [ "x${SOC}" = "xomap-psp" ] ; then
 		apt-get install -o Dpkg::Options::="--force-overwrite" -y mt7601u-modules-${latest_kernel}
-
-		third_party_final
+		if [ "x${es8}" = "xenabled" ] ; then
+			apt-get install -y ti-sgx-es8-modules-${latest_kernel}
+		fi
 	fi
 
 	if [ "x${SOC}" = "xti" ] ; then
 		apt-get install -o Dpkg::Options::="--force-overwrite" -y mt7601u-modules-${latest_kernel}
-
-		apt-get install -y ti-sgx-es8-modules-${latest_kernel}
+		if [ "x${es8}" = "xenabled" ] ; then
+			apt-get install -y ti-sgx-es8-modules-${latest_kernel}
+		fi
 		third_party_final
 	fi
 }
