@@ -27,19 +27,37 @@ fi
 
 scan_ti_kernels () {
 	if [ "x${SOC}" = "x" ] ; then
-		uname -r | grep ti-xenomai >/dev/null && SOC="ti-xenomai"
+		unset testvalue
+		testvalue=$(echo ${current_kernel} | grep ti-xenomai || true)
+		if [ ! "x${testvalue}" = "x" ] ; then
+			SOC="ti-xenomai"
+		fi
 	fi
+
 	if [ "x${SOC}" = "x" ] ; then
-		uname -r | grep ti-rt >/dev/null && SOC="ti-rt"
+		unset testvalue
+		testvalue=$(echo ${current_kernel} | grep ti-rt || true)
+		if [ ! "x${testvalue}" = "x" ] ; then
+			SOC="ti-rt"
+		fi
 	fi
+
 	if [ "x${SOC}" = "x" ] ; then
-		uname -r | grep ti >/dev/null && SOC="ti"
+		unset testvalue
+		testvalue=$(echo ${current_kernel} | grep ti || true)
+		if [ ! "x${testvalue}" = "x" ] ; then
+			SOC="ti"
+		fi
 	fi
 }
 
 scan_bone_kernels () {
 	if [ "x${SOC}" = "x" ] ; then
-		uname -r | grep bone >/dev/null && SOC="omap-psp"
+		unset testvalue
+		testvalue=$(echo ${current_kernel} | grep bone || true)
+		if [ ! "x${testvalue}" = "x" ] ; then
+			SOC="omap-psp"
+		fi
 	fi
 }
 
