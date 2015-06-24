@@ -296,6 +296,7 @@ third_party () {
 		if [ "x${es8}" = "xenabled" ] ; then
 			apt-get install -y ti-sgx-es8-modules-${latest_kernel}
 		fi
+		third_party_final
 	fi
 
 	if [ "x${SOC}" = "xti" ] ; then
