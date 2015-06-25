@@ -445,13 +445,13 @@ partition_drive () {
 		message="Formatting: ${destination}" ; broadcast
 
 		sfdisk_options="--force --Linux --in-order --unit M"
-		test_sfdisk=$(LC_ALL=C sfdisk --help | grep -m 1 -e "--in-order" || true)
-		if [ "x${test_sfdisk}" = "x" ] ; then
-			message="sfdisk: 2.26.x or greater" ; broadcast
-			sfdisk_options="--force"
-			conf_boot_startmb="${conf_boot_startmb}M"
-			conf_boot_endmb="${conf_boot_endmb}M"
-		fi
+		#test_sfdisk=$(LC_ALL=C sfdisk --help | grep -m 1 -e "--in-order" || true)
+		#if [ "x${test_sfdisk}" = "x" ] ; then
+		#	message="sfdisk: 2.26.x or greater" ; broadcast
+		#	sfdisk_options="--force"
+		#	conf_boot_startmb="${conf_boot_startmb}M"
+		#	conf_boot_endmb="${conf_boot_endmb}M"
+		#fi
 
 		LC_ALL=C sfdisk ${sfdisk_options} "${destination}" <<-__EOF__
 			${conf_boot_startmb},${conf_boot_endmb},${sfdisk_fstype},*
@@ -475,13 +475,13 @@ partition_drive () {
 		message="Formatting: ${destination}" ; broadcast
 
 		sfdisk_options="--force --Linux --in-order --unit M"
-		test_sfdisk=$(LC_ALL=C sfdisk --help | grep -m 1 -e "--in-order" || true)
-		if [ "x${test_sfdisk}" = "x" ] ; then
-			message="sfdisk: 2.26.x or greater" ; broadcast
-			sfdisk_options="--force"
-			conf_boot_startmb="${conf_boot_startmb}M"
-			conf_boot_endmb="${conf_boot_endmb}M"
-		fi
+		#test_sfdisk=$(LC_ALL=C sfdisk --help | grep -m 1 -e "--in-order" || true)
+		#if [ "x${test_sfdisk}" = "x" ] ; then
+		#	message="sfdisk: 2.26.x or greater" ; broadcast
+		#	sfdisk_options="--force"
+		#	conf_boot_startmb="${conf_boot_startmb}M"
+		#	conf_boot_endmb="${conf_boot_endmb}M"
+		#fi
 
 		LC_ALL=C sfdisk ${sfdisk_options} "${destination}" <<-__EOF__
 			${conf_boot_startmb},,${sfdisk_fstype},*
