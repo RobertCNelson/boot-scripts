@@ -54,6 +54,13 @@ scan_ti_kernels () {
 scan_bone_kernels () {
 	if [ "x${SOC}" = "x" ] ; then
 		unset testvalue
+		testvalue=$(echo ${current_kernel} | grep bone-rt || true)
+		if [ ! "x${testvalue}" = "x" ] ; then
+			SOC="bone-rt"
+		fi
+	fi
+	if [ "x${SOC}" = "x" ] ; then
+		unset testvalue
 		testvalue=$(echo ${current_kernel} | grep bone || true)
 		if [ ! "x${testvalue}" = "x" ] ; then
 			SOC="omap-psp"
@@ -360,6 +367,12 @@ while [ ! -z "$1" ] ; do
 		;;
 	--exp-kernel)
 		kernel="EXPERIMENTAL"
+		;;
+	--bone-kernel)
+		SOC="omap-psp"
+		;;
+	--bone-rt-kernel)
+		SOC="bone-rt"
 		;;
 	--ti-kernel)
 		SOC="ti"
