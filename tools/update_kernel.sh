@@ -146,7 +146,7 @@ latest_version_repo () {
 		wget --no-verbose ${mirror}/${dist}-${arch}/LATEST-${SOC}
 		if [ -f /tmp/LATEST-${SOC} ] ; then
 			latest_kernel=$(cat /tmp/LATEST-${SOC} | grep ${kernel} | awk '{print $3}')
-			echo "info:  latest is: [${latest_kernel}] you are running: [${current_kernel}]"
+			echo "info: you are running: [${current_kernel}], latest is: [${latest_kernel}] updating..."
 
 			if [ "x${current_kernel}" = "x${latest_kernel}" ] ; then
 				if [ "x${daily_cron}" = "xenabled" ] ; then
@@ -188,7 +188,7 @@ latest_version () {
 		wget --no-verbose ${mirror}/${dist}-${arch}/LATEST-${SOC}
 		if [ -f /tmp/LATEST-${SOC} ] ; then
 			latest_kernel=$(cat /tmp/LATEST-${SOC} | grep ${kernel} | awk '{print $3}')
-			echo "info:  latest is: [${latest_kernel}] you are running: [${current_kernel}]"
+			echo "info: you are running: [${current_kernel}], latest is: [${latest_kernel}] updating..."
 
 			if [ ! "x${current_kernel}" = "x${latest_kernel}" ] ; then
 				distro=$(lsb_release -is)
