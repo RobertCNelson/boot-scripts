@@ -298,6 +298,7 @@ format_single_root () {
 copy_boot () {
 	message="Copying: ${source}p1 -> ${destination}p1" ; broadcast
 	mkdir -p /tmp/boot/ || true
+
 	mount ${destination}p1 /tmp/boot/ -o sync
 
 	if [ -f /boot/uboot/MLO ] ; then
@@ -325,6 +326,7 @@ copy_boot () {
 copy_rootfs () {
 	message="Copying: ${source}p${media_rootfs} -> ${destination}p${media_rootfs}" ; broadcast
 	mkdir -p /tmp/rootfs/ || true
+
 	mount ${destination}p${media_rootfs} /tmp/rootfs/ -o async,noatime
 
 	message="rsync: / -> /tmp/rootfs/" ; broadcast
@@ -445,16 +447,23 @@ partition_drive () {
 		message="Formatting: ${destination}" ; broadcast
 
 		sfdisk_options="--force --Linux --in-order --unit M"
-		#test_sfdisk=$(LC_ALL=C sfdisk --help | grep -m 1 -e "--in-order" || true)
-		#if [ "x${test_sfdisk}" = "x" ] ; then
-		#	message="sfdisk: 2.26.x or greater" ; broadcast
-		#	sfdisk_options="--force"
-		#	conf_boot_startmb="${conf_boot_startmb}M"
-		#	conf_boot_endmb="${conf_boot_endmb}M"
-		#fi
+		sfdisk_boot_startmb="${conf_boot_startmb}"
+		sfdisk_boot_endmb="${conf_boot_endmb}"
+
+		test_sfdisk=$(LC_ALL=C sfdisk --help | grep -m 1 -e "--in-order" || true)
+		if [ "x${test_sfdisk}" = "x" ] ; then
+			message="sfdisk: [2.26.x or greater]" ; broadcast
+			sfdisk_options="--force"
+			sfdisk_boot_startmb="${sfdisk_boot_startmb}M"
+			sfdisk_boot_endmb="${sfdisk_boot_endmb}M"
+		fi
+
+		message="sfdisk: [sfdisk ${sfdisk_options} ${destination}]" ; broadcast
+		message="sfdisk: [${sfdisk_boot_startmb},${sfdisk_boot_endmb},${sfdisk_fstype},*]" ; broadcast
+		message="sfdisk: [,,,-]" ; broadcast
 
 		LC_ALL=C sfdisk ${sfdisk_options} "${destination}" <<-__EOF__
-			${conf_boot_startmb},${conf_boot_endmb},${sfdisk_fstype},*
+			${sfdisk_boot_startmb},${sfdisk_boot_endmb},${sfdisk_fstype},*
 			,,,-
 		__EOF__
 
@@ -475,16 +484,20 @@ partition_drive () {
 		message="Formatting: ${destination}" ; broadcast
 
 		sfdisk_options="--force --Linux --in-order --unit M"
-		#test_sfdisk=$(LC_ALL=C sfdisk --help | grep -m 1 -e "--in-order" || true)
-		#if [ "x${test_sfdisk}" = "x" ] ; then
-		#	message="sfdisk: 2.26.x or greater" ; broadcast
-		#	sfdisk_options="--force"
-		#	conf_boot_startmb="${conf_boot_startmb}M"
-		#	conf_boot_endmb="${conf_boot_endmb}M"
-		#fi
+		sfdisk_boot_startmb="${conf_boot_startmb}"
+
+		test_sfdisk=$(LC_ALL=C sfdisk --help | grep -m 1 -e "--in-order" || true)
+		if [ "x${test_sfdisk}" = "x" ] ; then
+			message="sfdisk: [2.26.x or greater]" ; broadcast
+			sfdisk_options="--force"
+			sfdisk_boot_startmb="${sfdisk_boot_startmb}M"
+		fi
+
+		message="sfdisk: [sfdisk ${sfdisk_options} ${destination}]" ; broadcast
+		message="sfdisk: [${sfdisk_boot_startmb},${sfdisk_boot_endmb},${sfdisk_fstype},*]" ; broadcast
 
 		LC_ALL=C sfdisk ${sfdisk_options} "${destination}" <<-__EOF__
-			${conf_boot_startmb},,${sfdisk_fstype},*
+			${sfdisk_boot_startmb},,${sfdisk_fstype},*
 		__EOF__
 
 		flush_cache

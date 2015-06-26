@@ -1,6 +1,6 @@
 #!/bin/bash -e
 #
-# Copyright (c) 2013-2014 Robert Nelson <robertcnelson@gmail.com>
+# Copyright (c) 2013-2015 Robert Nelson <robertcnelson@gmail.com>
 # Portions copyright (c) 2014 Charles Steinkuehler <charles@steinkuehler.net>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -23,6 +23,9 @@
 
 #This script assumes, these packages are installed, as network may not be setup
 #dosfstools initramfs-tools rsync u-boot-tools
+
+http_spl="MLO-am335x_evm-v2015.07-rc2-r1"
+http_uboot="u-boot-am335x_evm-v2015.07-rc2-r1.img"
 
 if ! id | grep -q root; then
 	echo "must be run as root"
@@ -66,8 +69,15 @@ flush_cache () {
 	blockdev --flushbufs ${destination}
 }
 
+broadcast () {
+	if [ "x${message}" != "x" ] ; then
+		echo "${message}"
+		#echo "${message}" > /dev/tty0 || true
+	fi
+}
+
 write_failure () {
-	echo "writing to [${destination}] failed..."
+	message="writing to [${destination}] failed..." ; broadcast
 
 	[ -e /proc/$CYLON_PID ]  && kill $CYLON_PID > /dev/null 2>&1
 
@@ -77,7 +87,7 @@ write_failure () {
 		echo heartbeat > /sys/class/leds/beaglebone\:green\:usr2/trigger
 		echo heartbeat > /sys/class/leds/beaglebone\:green\:usr3/trigger
 	fi
-	echo "-----------------------------"
+	message="-----------------------------" ; broadcast
 	flush_cache
 	umount ${destination}p1 > /dev/null 2>&1 || true
 	umount ${destination}p2 > /dev/null 2>&1 || true
@@ -85,13 +95,16 @@ write_failure () {
 }
 
 check_running_system () {
-	echo "-----------------------------"
-	echo "debug copying: [${source}] -> [${destination}]"
-	lsblk
-	echo "-----------------------------"
+	message="copying: [${source}] -> [${destination}]" ; broadcast
+	message="lsblk:" ; broadcast
+	message="`lsblk || true`" ; broadcast
+	message="-----------------------------" ; broadcast
+	message="df -h | grep rootfs:" ; broadcast
+	message="`df -h | grep rootfs || true`" ; broadcast
+	message="-----------------------------" ; broadcast
 
 	if [ ! -b "${destination}" ] ; then
-		echo "Error: [${destination}] does not exist"
+		message="Error: [${destination}] does not exist" ; broadcast
 		write_failure
 	fi
 
@@ -105,6 +118,19 @@ check_running_system () {
 		update-initramfs -c -k $(uname -r)
 	fi
 	flush_cache
+
+	##FIXME: quick check for rsync 3.1 (jessie)
+	unset rsync_check
+	unset rsync_progress
+	rsync_check=$(LC_ALL=C rsync --version | grep version | awk '{print $3}' || true)
+	if [ "x${rsync_check}" = "x3.1.1" ] ; then
+		rsync_progress="--info=progress2 --human-readable"
+	fi
+
+	if [ ! -e /sys/class/leds/beaglebone\:green\:usr0/trigger ] ; then
+		modprobe leds_gpio || true
+		sleep 1
+	fi
 }
 
 cylon_leds () {
@@ -153,9 +179,7 @@ cylon_leds () {
 }
 
 dd_bootloader () {
-	echo ""
-	echo "Using dd to place bootloader on [${destination}]"
-	echo "-----------------------------"
+	message="Writing bootloader to [${destination}]" ; broadcast
 
 	unset dd_spl_uboot
 	if [ ! "x${dd_spl_uboot_count}" = "x" ] ; then
@@ -191,41 +215,42 @@ dd_bootloader () {
 		dd_uboot="${dd_uboot}bs=${dd_uboot_bs}"
 	fi
 
-	echo "dd if=${dd_spl_uboot_backup} of=${destination} ${dd_spl_uboot}"
+	message="dd if=${dd_spl_uboot_backup} of=${destination} ${dd_spl_uboot}" ; broadcast
 	echo "-----------------------------"
 	dd if=${dd_spl_uboot_backup} of=${destination} ${dd_spl_uboot}
 	echo "-----------------------------"
-	echo "dd if=${dd_uboot_backup} of=${destination} ${dd_uboot}"
+	message="dd if=${dd_uboot_backup} of=${destination} ${dd_uboot}" ; broadcast
 	echo "-----------------------------"
 	dd if=${dd_uboot_backup} of=${destination} ${dd_uboot}
+	message="-----------------------------" ; broadcast
 }
 
 format_boot () {
-	echo "mkfs.vfat -F 16 ${destination}p1 -n BEAGLEBONE"
+	message="mkfs.vfat -F 16 ${destination}p1 -n ${boot_label}" ; broadcast
 	echo "-----------------------------"
-	mkfs.vfat -F 16 ${destination}p1 -n BEAGLEBONE
+	mkfs.vfat -F 16 ${destination}p1 -n ${boot_label}
 	echo "-----------------------------"
 	flush_cache
 }
 
 format_root () {
-	echo "mkfs.ext4 ${destination}p2 -L rootfs"
+	message="mkfs.ext4 ${destination}p2 -L ${rootfs_label}" ; broadcast
 	echo "-----------------------------"
-	mkfs.ext4 ${destination}p2 -L rootfs
+	mkfs.ext4 ${destination}p2 -L ${rootfs_label}
 	echo "-----------------------------"
 	flush_cache
 }
 
 format_single_root () {
-	echo "mkfs.ext4 ${destination}p1 -L rootfs"
+	message="mkfs.ext4 ${destination}p1 -L ${boot_label}" ; broadcast
 	echo "-----------------------------"
-	mkfs.ext4 ${destination}p1 -L rootfs
+	mkfs.ext4 ${destination}p1 -L ${boot_label}
 	echo "-----------------------------"
 	flush_cache
 }
 
 copy_boot () {
-	echo "Copying: ${source}p1 -> ${destination}p1"
+	message="Copying: ${source}p1 -> ${destination}p1" ; broadcast
 	mkdir -p /tmp/boot/ || true
 
 	umount ${source}p1 || umount -l ${source}p1 || true
@@ -256,18 +281,30 @@ copy_boot () {
 		fi
 	fi
 
-	echo "rsync: /boot/uboot/ -> /tmp/boot/"
-	rsync -aAX /boot/uboot/ /tmp/boot/ --exclude={MLO,u-boot.img,uEnv.txt} || write_failure
+	if [ -f /boot/uboot/MLO ] ; then
+		#Make sure the BootLoader gets copied first:
+		cp -v /boot/uboot/MLO /tmp/boot/MLO || write_failure
+		flush_cache
+
+		cp -v /boot/uboot/u-boot.img /tmp/boot/u-boot.img || write_failure
+		flush_cache
+	fi
+
+	message="rsync: /boot/uboot/ -> /tmp/boot/" ; broadcast
+	if [ ! "x${rsync_progress}" = "x" ] ; then
+		echo "rsync: note the % column is useless..."
+	fi
+	rsync -aAx ${rsync_progress} /boot/uboot/ /tmp/boot/ --exclude={MLO,u-boot.img,uEnv.txt} || write_failure
 	flush_cache
 
 	flush_cache
 	umount /tmp/boot/ || umount -l /tmp/boot/ || write_failure
 	flush_cache
-	umount /boot/uboot/ || umount -l /boot/uboot/
+	umount /boot/uboot || umount -l /boot/uboot
 }
 
 copy_rootfs () {
-	echo "Copying: ${source}p${media_rootfs} -> ${destination}p${media_rootfs}"
+	message="Copying: ${source}p${media_rootfs} -> ${destination}p${media_rootfs}" ; broadcast
 	mkdir -p /tmp/rootfs/ || true
 
 	if ! mount -o async,noatime ${destination}p${media_rootfs} /tmp/rootfs/; then
@@ -283,23 +320,34 @@ copy_rootfs () {
 		fi
 	fi
 
-	echo "rsync: / -> /tmp/rootfs/"
-	rsync -aAX /* /tmp/rootfs/ --exclude={/dev/*,/proc/*,/sys/*,/tmp/*,/run/*,/mnt/*,/media/*,/lost+found,/lib/modules/*,/uEnv.txt} || write_failure
+	message="rsync: / -> /tmp/rootfs/" ; broadcast
+	if [ ! "x${rsync_progress}" = "x" ] ; then
+		echo "rsync: note the % column is useless..."
+	fi
+	rsync -aAx ${rsync_progress} /* /tmp/rootfs/ --exclude={/dev/*,/proc/*,/sys/*,/tmp/*,/run/*,/mnt/*,/media/*,/lost+found,/lib/modules/*,/uEnv.txt} || write_failure
 	flush_cache
 
 	mkdir -p /tmp/rootfs/lib/modules/$(uname -r)/ || true
 
-	echo "Copying: Kernel modules"
-	echo "rsync: /lib/modules/$(uname -r)/ -> /tmp/rootfs/lib/modules/$(uname -r)/"
-	rsync -aAX /lib/modules/$(uname -r)/* /tmp/rootfs/lib/modules/$(uname -r)/ || write_failure
+	message="Copying: Kernel modules" ; broadcast
+	message="rsync: /lib/modules/$(uname -r)/ -> /tmp/rootfs/lib/modules/$(uname -r)/" ; broadcast
+	if [ ! "x${rsync_progress}" = "x" ] ; then
+		echo "rsync: note the % column is useless..."
+	fi
+	rsync -aAx ${rsync_progress} /lib/modules/$(uname -r)/* /tmp/rootfs/lib/modules/$(uname -r)/ || write_failure
 	flush_cache
 
+	message="Copying: ${source}p${media_rootfs} -> ${destination}p${media_rootfs} complete" ; broadcast
+	message="-----------------------------" ; broadcast
+
+	message="Final System Tweaks:" ; broadcast
 	unset root_uuid
 	root_uuid=$(/sbin/blkid -c /dev/null -s UUID -o value ${destination}p${media_rootfs})
 	if [ "${root_uuid}" ] ; then
 		sed -i -e 's:uuid=:#uuid=:g' /tmp/rootfs/boot/uEnv.txt
 		echo "uuid=${root_uuid}" >> /tmp/rootfs/boot/uEnv.txt
 
+		message="UUID=${root_uuid}" ; broadcast
 		root_uuid="UUID=${root_uuid}"
 	else
 		#really a failure...
@@ -312,37 +360,38 @@ copy_rootfs () {
 		sudo chmod +x /opt/scripts/tools/eMMC/init-eMMC-flasher-v3.sh
 	fi
 
-	echo "/boot/uEnv.txt: enabling flasher script"
-	script="cmdline=init=/opt/scripts/tools/eMMC/init-eMMC-flasher-v3.sh"
-	echo "${script}" >> /tmp/rootfs/boot/uEnv.txt
-	cat /tmp/rootfs/boot/uEnv.txt
-
-	echo "Generating: /etc/fstab"
+	message="Generating: /etc/fstab" ; broadcast
 	echo "# /etc/fstab: static file system information." > /tmp/rootfs/etc/fstab
 	echo "#" >> /tmp/rootfs/etc/fstab
 	echo "${root_uuid}  /  ext4  noatime,errors=remount-ro  0  1" >> /tmp/rootfs/etc/fstab
 	echo "debugfs  /sys/kernel/debug  debugfs  defaults  0  0" >> /tmp/rootfs/etc/fstab
 	cat /tmp/rootfs/etc/fstab
+
+	message="/boot/uEnv.txt: enabling eMMC flasher script" ; broadcast
+	script="cmdline=init=/opt/scripts/tools/eMMC/init-eMMC-flasher-v3.sh"
+	echo "${script}" >> /tmp/rootfs/boot/uEnv.txt
+	cat /tmp/rootfs/boot/uEnv.txt
+	message="-----------------------------" ; broadcast
+
 	flush_cache
 	umount /tmp/rootfs/ || umount -l /tmp/rootfs/ || write_failure
 
 	[ -e /proc/$CYLON_PID ]  && kill $CYLON_PID
 
-	echo "Syncing: ${destination}"
+	message="Syncing: ${destination}" ; broadcast
 	#https://github.com/beagleboard/meta-beagleboard/blob/master/contrib/bone-flash-tool/emmc.sh#L158-L159
 	# force writeback of eMMC buffers
 	sync
 	dd if=${destination} of=/dev/null count=100000
-
-	echo ""
-	echo "This script has now completed its task"
-	echo "-----------------------------"
+	message="Syncing: ${destination} complete" ; broadcast
+	message="-----------------------------" ; broadcast
 
 	if [ -f /boot/debug.txt ] ; then
-		echo "debug: enabled"
+		message="This script has now completed its task" ; broadcast
+		message="-----------------------------" ; broadcast
+		message="debug: enabled" ; broadcast
 		inf_loop
 	else
-		echo "Shutting Down"
 		umount /tmp || umount -l /tmp
 		if [ -e /sys/class/leds/beaglebone\:green\:usr0/trigger ] ; then
 			echo default-on > /sys/class/leds/beaglebone\:green\:usr0/trigger
@@ -352,25 +401,23 @@ copy_rootfs () {
 		fi
 		mount
 
-		echo ""
-		echo "-----------------------------"
-		echo ""
-		echo "eMMC has been flashed, please remove power and microSD card"
-		echo ""
-		echo "-----------------------------"
+		message="eMMC has been flashed: please wait for device to power down." ; broadcast
+		message="-----------------------------" ; broadcast
 
 		halt -f
 	fi
 }
 
 partition_drive () {
-	echo "Erasing: ${destination}"
+	message="Erasing: ${destination}" ; broadcast
 	flush_cache
 	dd if=/dev/zero of=${destination} bs=1M count=108
 	sync
 	dd if=${destination} of=/dev/null bs=1M count=108
 	sync
 	flush_cache
+	message="Erasing: ${destination} complete" ; broadcast
+	message="-----------------------------" ; broadcast
 
 	if [ -f /boot/SOC.sh ] ; then
 		. /boot/SOC.sh
@@ -394,8 +441,8 @@ partition_drive () {
 
 	if [ ! -f /opt/backup/uboot/MLO ] ; then
 		mkdir -p /opt/backup/uboot/
-		wget --directory-prefix=/opt/backup/uboot/ http://rcn-ee.com/repos/bootloader/am335x_evm/MLO-am335x_evm-v2015.01-r7
-		mv /opt/backup/uboot/MLO-am335x_evm-v2015.01-r7 /opt/backup/uboot/MLO
+		wget --directory-prefix=/opt/backup/uboot/ http://rcn-ee.com/repos/bootloader/am335x_evm/${http_spl}
+		mv /opt/backup/uboot/${http_spl} /opt/backup/uboot/MLO
 	fi
 
 	if [ "x${dd_uboot_backup}" = "x" ] ; then
@@ -418,8 +465,8 @@ partition_drive () {
 
 	if [ ! -f /opt/backup/uboot/u-boot.img ] ; then
 		mkdir -p /opt/backup/uboot/
-		wget --directory-prefix=/opt/backup/uboot/ http://rcn-ee.com/repos/bootloader/am335x_evm/u-boot-am335x_evm-v2015.01-r7.img
-		mv /opt/backup/uboot/u-boot-am335x_evm-v2015.01-r7.img /opt/backup/uboot/u-boot.img
+		wget --directory-prefix=/opt/backup/uboot/ http://rcn-ee.com/repos/bootloader/am335x_evm/${http_uboot}
+		mv /opt/backup/uboot/${http_uboot} /opt/backup/uboot/u-boot.img
 	fi
 
 	dd_bootloader
@@ -428,16 +475,37 @@ partition_drive () {
 		conf_boot_startmb=${conf_boot_startmb:-"1"}
 		conf_boot_endmb=${conf_boot_endmb:-"96"}
 		sfdisk_fstype=${sfdisk_fstype:-"0xE"}
+		boot_label=${boot_label:-"BEAGLEBONE"}
+		rootfs_label=${rootfs_label:-"rootfs"}
 
-		echo "Formatting: ${destination}"
-		LC_ALL=C sfdisk --force --in-order --Linux --unit M "${destination}" <<-__EOF__
-			${conf_boot_startmb},${conf_boot_endmb},${sfdisk_fstype},*
+		message="Formatting: ${destination}" ; broadcast
+
+		sfdisk_options="--force --Linux --in-order --unit M"
+		sfdisk_boot_startmb="${conf_boot_startmb}"
+		sfdisk_boot_endmb="${conf_boot_endmb}"
+
+		test_sfdisk=$(LC_ALL=C sfdisk --help | grep -m 1 -e "--in-order" || true)
+		if [ "x${test_sfdisk}" = "x" ] ; then
+			message="sfdisk: [2.26.x or greater]" ; broadcast
+			sfdisk_options="--force"
+			sfdisk_boot_startmb="${sfdisk_boot_startmb}M"
+			sfdisk_boot_endmb="${sfdisk_boot_endmb}M"
+		fi
+
+		message="sfdisk: [sfdisk ${sfdisk_options} ${destination}]" ; broadcast
+		message="sfdisk: [${sfdisk_boot_startmb},${sfdisk_boot_endmb},${sfdisk_fstype},*]" ; broadcast
+		message="sfdisk: [,,,-]" ; broadcast
+
+		LC_ALL=C sfdisk ${sfdisk_options} "${destination}" <<-__EOF__
+			${sfdisk_boot_startmb},${sfdisk_boot_endmb},${sfdisk_fstype},*
 			,,,-
 		__EOF__
 
 		flush_cache
 		format_boot
 		format_root
+		message="Formatting: ${destination} complete" ; broadcast
+		message="-----------------------------" ; broadcast
 
 		copy_boot
 		media_rootfs="2"
@@ -445,14 +513,31 @@ partition_drive () {
 	else
 		conf_boot_startmb=${conf_boot_startmb:-"1"}
 		sfdisk_fstype=${sfdisk_fstype:-"0x83"}
+		boot_label=${boot_label:-"BEAGLEBONE"}
 
-		echo "Formatting: ${destination}"
-		LC_ALL=C sfdisk --force --in-order --Linux --unit M "${destination}" <<-__EOF__
-			${conf_boot_startmb},,${sfdisk_fstype},*
+		message="Formatting: ${destination}" ; broadcast
+
+		sfdisk_options="--force --Linux --in-order --unit M"
+		sfdisk_boot_startmb="${conf_boot_startmb}"
+
+		test_sfdisk=$(LC_ALL=C sfdisk --help | grep -m 1 -e "--in-order" || true)
+		if [ "x${test_sfdisk}" = "x" ] ; then
+			message="sfdisk: [2.26.x or greater]" ; broadcast
+			sfdisk_options="--force"
+			sfdisk_boot_startmb="${sfdisk_boot_startmb}M"
+		fi
+
+		message="sfdisk: [sfdisk ${sfdisk_options} ${destination}]" ; broadcast
+		message="sfdisk: [${sfdisk_boot_startmb},${sfdisk_boot_endmb},${sfdisk_fstype},*]" ; broadcast
+
+		LC_ALL=C sfdisk ${sfdisk_options} "${destination}" <<-__EOF__
+			${sfdisk_boot_startmb},,${sfdisk_fstype},*
 		__EOF__
 
 		flush_cache
 		format_single_root
+		message="Formatting: ${destination} complete" ; broadcast
+		message="-----------------------------" ; broadcast
 
 		media_rootfs="1"
 		copy_rootfs

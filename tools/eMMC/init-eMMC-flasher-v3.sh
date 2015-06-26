@@ -298,6 +298,7 @@ format_single_root () {
 copy_boot () {
 	message="Copying: ${source}p1 -> ${destination}p1" ; broadcast
 	mkdir -p /tmp/boot/ || true
+
 	mount ${destination}p1 /tmp/boot/ -o sync
 
 	if [ -f /boot/uboot/MLO ] ; then
@@ -325,6 +326,7 @@ copy_boot () {
 copy_rootfs () {
 	message="Copying: ${source}p${media_rootfs} -> ${destination}p${media_rootfs}" ; broadcast
 	mkdir -p /tmp/rootfs/ || true
+
 	mount ${destination}p${media_rootfs} /tmp/rootfs/ -o async,noatime
 
 	message="rsync: / -> /tmp/rootfs/" ; broadcast
