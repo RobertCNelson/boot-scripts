@@ -317,9 +317,23 @@ if [ ! -f /usr/bin/lsb_release ] ; then
 	exit
 fi
 
-dist=$(lsb_release -cs)
+dist=$(lsb_release -cs | sed 's/\//_/g')
 arch=$(dpkg --print-architecture)
 current_kernel=$(uname -r)
+
+#Debian testing...
+if [ "x${dist}" = "xn_a" ] ; then
+	deb_lsb_rs=$(lsb_release -rs | awk '{print $1}' | sed 's/\//_/g')
+
+	#Distributor ID:	Debian
+	#Description:	Debian GNU/Linux testing/unstable
+	#Release:	testing/unstable
+	#Codename:	n/a
+
+	if [ "x${deb_lsb_rs}" = "xtesting_unstable" ] ; then
+		dist="stretch"
+	fi
+fi
 
 kernel="STABLE"
 mirror="https://rcn-ee.com/repos/latest"
