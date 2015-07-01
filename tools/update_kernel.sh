@@ -297,8 +297,10 @@ third_party_final () {
 third_party () {
 	if [ "x${SOC}" = "xomap-psp" ] ; then
 		apt-get install -o Dpkg::Options::="--force-overwrite" -y mt7601u-modules-${latest_kernel}
-		if [ "x${es8}" = "xenabled" ] ; then
-			apt-get install -y ti-sgx-es8-modules-${latest_kernel}
+		if [ ! "x${kernel}" = "xSTABLE" ] ; then
+			if [ "x${es8}" = "xenabled" ] ; then
+				apt-get install -y ti-sgx-es8-modules-${latest_kernel}
+			fi
 		fi
 		third_party_final
 	fi
