@@ -48,9 +48,9 @@ unset deb_etc_dir \
 # Separated /etc variable to ease test on host system (by changing
 # etc_dir during test).
 deb_etc_dir=/etc
-deb_ro_dir=$(mktemp -d)
+#deb_ro_dir=$(mktemp -d)
 
-deb_udhcpd_conf=${deb_ro_dir}/udhcpd.conf
+deb_udhcpd_conf=${deb_etc_dir}/udhcpd.conf
 deb_udhcpd_default=${deb_etc_dir}/default/udhcpd
 
 deb_generated_dnsmasq_file=usb0-dhcp
