@@ -364,31 +364,31 @@ while [ ! -z "$1" ] ; do
 	--daily-cron)
 		daily_cron="enabled"
 		;;
-	--lts-kernel)
+	--lts-kernel|--lts)
 		kernel="LTS"
 		;;
-	--stable-kernel)
+	--stable-kernel|--stable)
 		kernel="STABLE"
 		;;
-	--beta-kernel)
+	--beta-kernel|--beta)
 		kernel="TESTING"
 		;;
-	--exp-kernel)
+	--exp-kernel|--exp)
 		kernel="EXPERIMENTAL"
 		;;
-	--bone-kernel)
+	--bone-kernel|--bone-channel)
 		SOC="omap-psp"
 		;;
-	--bone-rt-kernel)
+	--bone-rt-kernel|--bone-rt-channel)
 		SOC="bone-rt"
 		;;
-	--ti-kernel)
+	--ti-kernel|--ti-channel)
 		SOC="ti"
 		;;
-	--ti-rt-kernel)
+	--ti-rt-kernel|--ti-rt-channel)
 		SOC="ti-rt"
 		;;
-	--ti-xenomai-kernel)
+	--ti-xenomai-kernel|--ti-xenomai-channel)
 		SOC="ti-xenomai"
 		;;
 	esac
