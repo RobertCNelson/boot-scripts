@@ -270,7 +270,7 @@ check_soc_sh () {
 		if [ -f /boot/SOC.sh ] ; then
 			. /boot/SOC.sh
 			mkdir -p /tmp/uboot/
-			mount /dev/mmcblk0p1 /tmp/uboot/
+			mount ${target}p1 /tmp/uboot/
 			DRIVE="/tmp/uboot"
 			if [ "x${board}" != "x" ] ; then
 
@@ -296,7 +296,7 @@ check_soc_sh () {
 		if [ -f /boot/uboot/SOC.sh ] ; then
 			. /boot/uboot/SOC.sh
 			mkdir -p /tmp/uboot/
-			mount /dev/mmcblk0p1 /tmp/uboot/
+			mount ${target}p1 /tmp/uboot/
 			DRIVE="/tmp/uboot"
 			if [ "x${board}" != "x" ] ; then
 
