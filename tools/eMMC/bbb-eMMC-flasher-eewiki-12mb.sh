@@ -24,8 +24,8 @@
 #This script assumes, these packages are installed, as network may not be setup
 #dosfstools initramfs-tools rsync u-boot-tools
 
-http_spl="MLO-am335x_evm-v2015.07-rc2-r1"
-http_uboot="u-boot-am335x_evm-v2015.07-rc2-r1.img"
+http_spl="MLO-am335x_evm-v2015.07-r1"
+http_uboot="u-boot-am335x_evm-v2015.07-r1.img"
 
 if ! id | grep -q root; then
 	echo "must be run as root"
