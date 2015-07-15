@@ -210,14 +210,22 @@ dd_spl_uboot_boot () {
 	fi
 }
 
-got_board () {
-	target="/dev/mmcblk0"
-	case "${conf_board}" in
-	am335x_evm|beagle_x15)
-		is_omap
-		;;
-	omap5_uevm)
+get_device () {
+	machine=$(cat /proc/device-tree/model | sed "s/ /_/g")
+
+	case "${machine}" in
+	TI_OMAP5_uEVM_board)
 		target="/dev/mmcblk1"
+		;;
+	*)
+		target="/dev/mmcblk0"
+		;;
+	esac
+}
+
+got_board () {
+	case "${conf_board}" in
+	am335x_evm|beagle_x15|omap5_uevm)
 		is_omap
 		;;
 	esac
@@ -241,6 +249,7 @@ got_board () {
 }
 
 check_soc_sh () {
+	get_device
 	echo "Bootloader Recovery"
 	if [ ! "x$(uname -m)" = "xarmv7l" ] ; then
 		echo "Warning, this is only half implemented to make it work on x86..."
