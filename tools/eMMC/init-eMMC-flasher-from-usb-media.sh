@@ -37,22 +37,8 @@ else
 	root_drive="$(cat /proc/cmdline | sed 's/ /\n/g' | grep root= | awk -F 'root=' '{print $2}' || true)"
 fi
 
-boot_drive="${root_drive%?}1"
-
-if [ ! "x${boot_drive}" = "x${root_drive}" ] ; then
-	mount ${boot_drive} /boot/uboot -o ro
-fi
-mount -t tmpfs tmpfs /tmp
-
-if [ "x${boot_drive}" = "x/dev/mmcblk0p1" ] ; then
-	source="/dev/mmcblk0"
-	destination="/dev/mmcblk1"
-fi
-
-if [ "x${boot_drive}" = "x/dev/mmcblk1p1" ] ; then
-	source="/dev/mmcblk1"
-	destination="/dev/mmcblk0"
-fi
+destination="/dev/mmcblk1"
+usb_drive="/dev/sda"
 
 flush_cache () {
 	sync
@@ -115,10 +101,10 @@ check_usb_media () {
 	message="`lsblk || true`" ; broadcast
 	message="-----------------------------" ; broadcast
 
-	num_partitions=$(LC_ALL=C fdisk -l 2>/dev/null | grep "^/dev/sda" | grep -v "Extended" | grep -v "swap" | wc -l)
+	num_partitions=$(LC_ALL=C fdisk -l 2>/dev/null | grep "^${usb_drive}" | grep -v "Extended" | grep -v "swap" | wc -l)
 
 	i=0 ; while test $i -le ${num_partitions} ; do
-		partition=$(LC_ALL=C fdisk -l 2>/dev/null | grep "^/dev/sda" | grep -v "Extended" | grep -v "swap" | head -${i} | tail -1 | awk '{print $1}')
+		partition=$(LC_ALL=C fdisk -l 2>/dev/null | grep "^${usb_drive}" | grep -v "Extended" | grep -v "swap" | head -${i} | tail -1 | awk '{print $1}')
 		if [ ! "x${partition}" = "x" ] ; then
 			message="Trying: [${partition}]" ; broadcast
 
