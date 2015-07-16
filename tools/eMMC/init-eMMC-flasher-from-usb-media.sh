@@ -40,10 +40,10 @@ fi
 destination="/dev/mmcblk1"
 usb_drive="/dev/sda"
 
-while [ ! -d /sys/dev/block ] ; do
-	sleep 1
-done
-sleep 1
+#while [ ! -d /sys/dev/block ] ; do
+#	sleep 1
+#done
+#sleep 1
 
 flush_cache () {
 	sync
@@ -536,8 +536,12 @@ partition_drive () {
 	fi
 }
 
+sleep 2
+clear
+message="-----------------------------" ; broadcast
 message="Starting eMMC Flasher from usb media" ; broadcast
 message="-----------------------------" ; broadcast
+sleep 2
 
 check_usb_media
 #check_eeprom
