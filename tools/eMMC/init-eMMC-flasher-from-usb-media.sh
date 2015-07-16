@@ -24,6 +24,8 @@
 #This script assumes, these packages are installed, as network may not be setup
 #dosfstools initramfs-tools rsync u-boot-tools
 
+#WARNING make sure to run this with an initrd...
+
 if ! id | grep -q root; then
 	echo "must be run as root"
 	exit
@@ -37,13 +39,10 @@ else
 	root_drive="$(cat /proc/cmdline | sed 's/ /\n/g' | grep root= | awk -F 'root=' '{print $2}' || true)"
 fi
 
+mount -t tmpfs tmpfs /tmp
+
 destination="/dev/mmcblk1"
 usb_drive="/dev/sda"
-
-#while [ ! -d /sys/dev/block ] ; do
-#	sleep 1
-#done
-#sleep 1
 
 flush_cache () {
 	sync
@@ -113,33 +112,8 @@ print_eeprom () {
 		eeprom_location=$(ls /sys/devices/ocp*/44e0b000.i2c/i2c-0/0-0050/eeprom 2> /dev/null)
 	fi
 
-#	if [ "x${eeprom_header}" = "x335" ] ; then
 	message="Current EEPROM: [${eeprom_header}]" ; broadcast
 	message="-----------------------------" ; broadcast
-#	else
-#		message="Invalid EEPROM header detected" ; broadcast
-#		if [ -f /opt/scripts/device/bone/bbb-eeprom.dump ] ; then
-#			if [ ! "x${eeprom_location}" = "x" ] ; then
-#				message="Writing header to EEPROM" ; broadcast
-#				dd if=/opt/scripts/device/bone/bbb-eeprom.dump of=${eeprom_location}
-#				sync
-#				sync
-#				if [ -f /sys/class/nvmem/at24-0/nvmem ] ; then
-#					eeprom_check=$(hexdump -e '8/1 "%c"' ${eeprom} -n 8 | cut -b 6-8)
-#				else
-#					eeprom_check=$(hexdump -e '8/1 "%c"' ${eeprom} -s 4 -n 8)
-#				fi
-#				echo "eeprom check: [${eeprom_check}]"
-
-#				#We have to reboot, as the kernel only loads the eMMC cape
-#				# with a valid header
-#				reboot -f
-
-#				#We shouldnt hit this...
-#				exit
-#			fi
-#		fi
-#	fi
 }
 
 process_job_file () {
