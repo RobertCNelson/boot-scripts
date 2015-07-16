@@ -40,7 +40,7 @@ fi
 destination="/dev/mmcblk1"
 usb_drive="/dev/sda"
 
-while [ ! -f /sys/dev/block ] ; do
+while [ ! -d /sys/dev/block ] ; do
 	sleep 1
 done
 sleep 1
