@@ -301,7 +301,7 @@ set_uuid () {
 			echo "uuid=${root_uuid}" >> /tmp/rootfs/boot/uEnv.txt
 		fi
 	fi
-	message="`cat /tmp/rootfs/boot/uEnv.txt`" ; broadcast
+	message="`cat /tmp/rootfs/boot/uEnv.txt | grep uuid`" ; broadcast
 	message="-----------------------------" ; broadcast
 	flush_cache
 
