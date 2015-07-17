@@ -137,19 +137,148 @@ flash_emmc () {
 	fi
 }
 
-resize_emmc () {
-	conf_boot_startmb=${conf_boot_startmb:-"1"}
-	sfdisk_fstype=${sfdisk_fstype:-"0x83"}
+quad_partition () {
+	message="LC_ALL=C sfdisk --force --no-reread --in-order --Linux --unit M ${destination}" ; broadcast
+	message="${conf_partition1_startmb},${conf_partition1_endmb},${conf_partition1_fstype},*" ; broadcast
+	message=",${conf_partition2_endmb},${conf_partition2_fstype},-" ; broadcast
+	message=",${conf_partition3_endmb},${conf_partition3_fstype},-" ; broadcast
+	message=",,${conf_partition4_fstype},-" ; broadcast
+	message="-----------------------------" ; broadcast
 
 	LC_ALL=C sfdisk --force --no-reread --in-order --Linux --unit M ${destination} <<-__EOF__
-		${conf_boot_startmb},,${sfdisk_fstype},*
+		${conf_partition1_startmb},${conf_partition1_endmb},${conf_partition1_fstype},*
+		,${conf_partition2_endmb},${conf_partition2_fstype},-
+		,${conf_partition3_endmb},${conf_partition3_fstype},-
+		,,${conf_partition4_fstype},-
 	__EOF__
 
+	message="-----------------------------" ; broadcast
+	message="e2fsck -f ${destination}p1" ; broadcast
 	e2fsck -f ${destination}p1
+	message="e2fsck -f ${destination}p2" ; broadcast
+	e2fsck -f ${destination}p2
+	message="e2fsck -f ${destination}p3" ; broadcast
+	e2fsck -f ${destination}p3
+	message="e2fsck -f ${destination}p4" ; broadcast
+	e2fsck -f ${destination}p4
+	message="resize2fs ${destination}p4" ; broadcast
+	resize2fs ${destination}p4
+	message="-----------------------------" ; broadcast
+}
+
+tri_partition () {
+	message="LC_ALL=C sfdisk --force --no-reread --in-order --Linux --unit M ${destination}" ; broadcast
+	message="${conf_partition1_startmb},${conf_partition1_endmb},${conf_partition1_fstype},*" ; broadcast
+	message=",${conf_partition2_endmb},${conf_partition2_fstype},-" ; broadcast
+	message=",,${conf_partition3_fstype},-" ; broadcast
+	message="-----------------------------" ; broadcast
+
+	LC_ALL=C sfdisk --force --no-reread --in-order --Linux --unit M ${destination} <<-__EOF__
+		${conf_partition1_startmb},${conf_partition1_endmb},${conf_partition1_fstype},*
+		,${conf_partition2_endmb},${conf_partition2_fstype},-
+		,,${conf_partition3_fstype},-
+	__EOF__
+
+	message="-----------------------------" ; broadcast
+	message="e2fsck -f ${destination}p1" ; broadcast
+	e2fsck -f ${destination}p1
+	message="e2fsck -f ${destination}p2" ; broadcast
+	e2fsck -f ${destination}p2
+	message="e2fsck -f ${destination}p3" ; broadcast
+	e2fsck -f ${destination}p3
+	message="resize2fs ${destination}p3" ; broadcast
+	resize2fs ${destination}p3
+	message="-----------------------------" ; broadcast
+}
+
+dual_partition () {
+	message="LC_ALL=C sfdisk --force --no-reread --in-order --Linux --unit M ${destination}" ; broadcast
+	message="${conf_partition1_startmb},${conf_partition1_endmb},${conf_partition1_fstype},*" ; broadcast
+	message=",,${conf_partition2_fstype},-" ; broadcast
+	message="-----------------------------" ; broadcast
+
+	LC_ALL=C sfdisk --force --no-reread --in-order --Linux --unit M ${destination} <<-__EOF__
+		${conf_partition1_startmb},${conf_partition1_endmb},${conf_partition1_fstype},*
+		,,${conf_partition2_fstype},-
+	__EOF__
+
+	message="-----------------------------" ; broadcast
+	message="e2fsck -f ${destination}p1" ; broadcast
+	e2fsck -f ${destination}p1
+	message="e2fsck -f ${destination}p2" ; broadcast
+	e2fsck -f ${destination}p2
+	message="resize2fs ${destination}p2" ; broadcast
+	resize2fs ${destination}p2
+	message="-----------------------------" ; broadcast
+}
+
+single_partition () {
+	message="LC_ALL=C sfdisk --force --no-reread --in-order --Linux --unit M ${destination}" ; broadcast
+	message="${conf_partition1_startmb},${conf_partition1_endmb},${conf_partition1_fstype},*" ; broadcast
+	message="-----------------------------" ; broadcast
+
+	LC_ALL=C sfdisk --force --no-reread --in-order --Linux --unit M ${destination} <<-__EOF__
+		${conf_partition1_startmb},,${conf_partition1_fstype},*
+	__EOF__
+
+	message="-----------------------------" ; broadcast
+	message="e2fsck -f ${destination}p1" ; broadcast
+	e2fsck -f ${destination}p1
+	message="resize2fs ${destination}p1" ; broadcast
 	resize2fs ${destination}p1
+	message="-----------------------------" ; broadcast}
+}
+
+resize_emmc () {
+	unset resized
+
+	conf_partition1_startmb=$(cat /tmp/usb/job.txt | grep conf_partition1_startmb | awk -F '=' '{print $2}' || true)
+	conf_partition1_fstype=$(cat /tmp/usb/job.txt | grep conf_partition1_fstype | awk -F '=' '{print $2}' || true)
+	conf_partition1_endmb=$(cat /tmp/usb/job.txt | grep conf_partition1_endmb | awk -F '=' '{print $2}' || true)
+
+	conf_partition2_fstype=$(cat /tmp/usb/job.txt | grep conf_partition2_fstype | awk -F '=' '{print $2}' || true)
+	conf_partition2_endmb=$(cat /tmp/usb/job.txt | grep conf_partition2_endmb | awk -F '=' '{print $2}' || true)
+
+	conf_partition3_fstype=$(cat /tmp/usb/job.txt | grep conf_partition3_fstype | awk -F '=' '{print $2}' || true)
+	conf_partition3_endmb=$(cat /tmp/usb/job.txt | grep conf_partition3_endmb | awk -F '=' '{print $2}' || true)
+
+	conf_partition4_fstype=$(cat /tmp/usb/job.txt | grep conf_partition4_fstype | awk -F '=' '{print $2}' || true)
+
+	if [ ! "x${conf_partition4_fstype}" = "x" ] ; then
+		quad_partition
+		resized="done"
+	fi
+
+	if [ ! "x${conf_partition3_fstype}" = "x" ] && [ ! "x${resized}" = "xdone" ] ; then
+		tri_partition
+		resized="done"
+	fi
+
+	if [ ! "x${conf_partition2_fstype}" = "x" ] && [ ! "x${resized}" = "xdone" ] ; then
+		dual_partition
+		resized="done"
+	fi
+
+	if [ ! "x${conf_partition1_fstype}" = "x" ] && [ ! "x${resized}" = "xdone" ] ; then
+		single_partition
+		resized="done"
+	fi
+}
+
+set_uuid () {
+	unset root_uuid
+	root_uuid=$(/sbin/blkid -c /dev/null -s UUID -o value ${destination}p${conf_root_partition})
+	if [ ! "x${root_uuid}" = "x" ] ; then
+#		sed -i -e 's:uuid=:#uuid=:g' /tmp/rootfs/boot/uEnv.txt
+#		echo "uuid=${root_uuid}" >> /tmp/rootfs/boot/uEnv.txt
+
+		message="UUID=${root_uuid}" ; broadcast
+#		root_uuid="UUID=${root_uuid}"
+	fi
 }
 
 process_job_file () {
+	job_file=found
 	message="Processing job.txt" ; broadcast
 	message="job.txt:" ; broadcast
 	message="`cat /tmp/usb/job.txt`" ; broadcast
@@ -161,7 +290,15 @@ process_job_file () {
 		conf_bmap=$(cat /tmp/usb/job.txt | grep conf_bmap | awk -F '=' '{print $2}' || true)
 		if [ -f /tmp/usb/${conf_image} ] ; then
 			flash_emmc
-			resize_emmc
+			conf_resize=$(cat /tmp/usb/job.txt | grep conf_resize | awk -F '=' '{print $2}' || true)
+			if [ "x${conf_resize}" = "xenable" ] ; then
+				message="resizing eMMC" ; broadcast
+				message="-----------------------------" ; broadcast
+				resize_emmc
+			fi
+			if [ ! "x${conf_root_partition}" = "x" ] ; then
+				set_uuid
+			fi
 		else
 			message="error: image not found [/tmp/usb/${conf_image}]" ; broadcast
 		fi
@@ -176,6 +313,7 @@ check_usb_media () {
 	message="lsblk:" ; broadcast
 	message="`lsblk || true`" ; broadcast
 	message="-----------------------------" ; broadcast
+	unset job_file
 
 	num_partitions=$(LC_ALL=C fdisk -l 2>/dev/null | grep "^${usb_drive}" | grep -v "Extended" | grep -v "swap" | wc -l)
 
@@ -199,8 +337,36 @@ check_usb_media () {
 	i=$(($i+1))
 	done
 
+	if [ ! "x${job_file}" = "xfound" ] ; then
+		message="job.txt: format" ; broadcast
+		message="-----------------------------" ; broadcast
+		message="abi=aaa" ; broadcast
+		message="conf_image=<file>.img.xz" ; broadcast
+		message="conf_bmap=<file>.bmap" ; broadcast
+		message="conf_resize=enable|<blank>" ; broadcast
+		message="conf_partition1_startmb=1" ; broadcast
+		message="conf_partition1_fstype=" ; broadcast
+
+		message="#last endmb is ignored as it just uses the rest of the drive..." ; broadcast
+		message="conf_partition1_endmb=" ; broadcast
+
+		message="conf_partition2_fstype=" ; broadcast
+		message="conf_partition2_endmb=" ; broadcast
+
+		message="conf_partition3_fstype=" ; broadcast
+		message="conf_partition3_endmb=" ; broadcast
+
+		message="conf_partition4_fstype=" ; broadcast
+
+		message="conf_root_partition=1|2|3|4" ; broadcast
+		message="-----------------------------" ; broadcast
+		sleep 100
+	fi
+
 	message="eMMC has been flashed: please wait for device to power down." ; broadcast
 	message="-----------------------------" ; broadcast
+
+	sleep 20
 
 	#To properly shudown, /opt/scripts/boot/am335x_evm.sh is going to call halt:
 	exec /sbin/init
