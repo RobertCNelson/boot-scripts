@@ -30,6 +30,11 @@
 #uas                    14300  0 
 #usb_storage            53318  1 uas
 
+#job.txt
+#abi=aaa
+#conf_image=
+#conf_bmap=
+
 if ! id | grep -q root; then
 	echo "must be run as root"
 	exit
@@ -123,12 +128,12 @@ print_eeprom () {
 flash_emmc () {
 	message="Flashing eMMC" ; broadcast
 	message="-----------------------------" ; broadcast
-	if [ -f /usr/bin/bmaptool ] && [ -f /tmp/usb/${bmap} ] ; then
-		message="bmaptool copy --bmap /tmp/usb/${bmap} /tmp/usb/${image} ${destination}" ; broadcast
-		/usr/bin/bmaptool copy --bmap /tmp/usb/${bmap} /tmp/usb/${image} ${destination}
+	if [ -f /usr/bin/bmaptool ] && [ -f /tmp/usb/${conf_bmap} ] ; then
+		message="bmaptool copy --bmap /tmp/usb/${conf_bmap} /tmp/usb/${conf_image} ${destination}" ; broadcast
+		/usr/bin/bmaptool copy --bmap /tmp/usb/${conf_bmap} /tmp/usb/${conf_image} ${destination}
 	else
-		message="xzcat /tmp/usb/${image} | dd of=${destination} bs=1M" ; broadcast
-		xzcat /tmp/usb/${image} | dd of=${destination} bs=1M
+		message="xzcat /tmp/usb/${conf_image} | dd of=${destination} bs=1M" ; broadcast
+		xzcat /tmp/usb/${conf_image} | dd of=${destination} bs=1M
 	fi
 }
 
@@ -140,7 +145,8 @@ resize_emmc () {
 		${conf_boot_startmb},,${sfdisk_fstype},*
 	__EOF__
 
-	resize2fs ${destination}
+	e2fsck -f ${destination}p1
+	resize2fs ${destination}p1
 }
 
 process_job_file () {
@@ -151,13 +157,13 @@ process_job_file () {
 
 	abi=$(cat /tmp/usb/job.txt | grep abi | awk -F '=' '{print $2}' || true)
 	if [ "x${abi}" = "xaaa" ] ; then
-		image=$(cat /tmp/usb/job.txt | grep image | awk -F '=' '{print $2}' || true)
-		bmap=$(cat /tmp/usb/job.txt | grep bmap | awk -F '=' '{print $2}' || true)
-		if [ -f /tmp/usb/${image} ] ; then
+		conf_image=$(cat /tmp/usb/job.txt | grep conf_image | awk -F '=' '{print $2}' || true)
+		conf_bmap=$(cat /tmp/usb/job.txt | grep conf_bmap | awk -F '=' '{print $2}' || true)
+		if [ -f /tmp/usb/${conf_image} ] ; then
 			flash_emmc
 			resize_emmc
 		else
-			message="error: image not found [/tmp/usb/${image}]" ; broadcast
+			message="error: image not found [/tmp/usb/${conf_image}]" ; broadcast
 		fi
 	fi
 }
