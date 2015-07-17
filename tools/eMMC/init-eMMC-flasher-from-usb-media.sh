@@ -25,6 +25,10 @@
 #dosfstools initramfs-tools rsync u-boot-tools
 
 #WARNING make sure to run this with an initrd...
+#lsmod:
+#Module                  Size  Used by
+#uas                    14300  0 
+#usb_storage            53318  1 uas
 
 if ! id | grep -q root; then
 	echo "must be run as root"
@@ -121,7 +125,7 @@ flash_emmc () {
 	message="-----------------------------" ; broadcast
 	if [ -f /usr/bin/bmaptool ] && [ -f /tmp/usb/${bmap} ] ; then
 		message="bmaptool copy --bmap /tmp/usb/${bmap} /tmp/usb/${image} ${destination}" ; broadcast
-		bmaptool copy --bmap /tmp/usb/${bmap} /tmp/usb/${image} ${destination}
+		/usr/bin/bmaptool copy --bmap /tmp/usb/${bmap} /tmp/usb/${image} ${destination}
 	else
 		message="xzcat /tmp/usb/${image} | dd of=${destination} bs=1M" ; broadcast
 		xzcat /tmp/usb/${image} | dd of=${destination} bs=1M
@@ -134,10 +138,10 @@ process_job_file () {
 	message="`cat /tmp/usb/job.txt`" ; broadcast
 	message="-----------------------------" ; broadcast
 
-	abi=$(grep abi /tmp/usb/job.txt | awk -F '=' '{print $1}')
+	abi=$(cat /tmp/usb/job.txt | grep abi | awk -F '=' '{print $1}' || true)
 	if [ "x${abi}" = "xaaa" ] ; then
-		image=$(grep image /tmp/usb/job.txt | awk -F '=' '{print $1}')
-		bmap=$(grep bmap /tmp/usb/job.txt | awk -F '=' '{print $1}')
+		image=$(cat /tmp/usb/job.txt | grep image | awk -F '=' '{print $1}' || true)
+		bmap=$(cat /tmp/usb/job.txt | grep bmap | awk -F '=' '{print $1}' || true)
 		if [ -f /tmp/usb/${image} ] ; then
 			flash_emmc
 		else
