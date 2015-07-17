@@ -126,14 +126,18 @@ print_eeprom () {
 }
 
 flash_emmc () {
-	message="Flashing eMMC" ; broadcast
-	message="-----------------------------" ; broadcast
 	if [ -f /usr/bin/bmaptool ] && [ -f /tmp/usb/${conf_bmap} ] ; then
+		message="Flashing eMMC with bmaptool" ; broadcast
+		message="-----------------------------" ; broadcast
 		message="bmaptool copy --bmap /tmp/usb/${conf_bmap} /tmp/usb/${conf_image} ${destination}" ; broadcast
 		/usr/bin/bmaptool copy --bmap /tmp/usb/${conf_bmap} /tmp/usb/${conf_image} ${destination}
+		message="-----------------------------" ; broadcast
 	else
+		message="Flashing eMMC with dd" ; broadcast
+		message="-----------------------------" ; broadcast
 		message="xzcat /tmp/usb/${conf_image} | dd of=${destination} bs=1M" ; broadcast
 		xzcat /tmp/usb/${conf_image} | dd of=${destination} bs=1M
+		message="-----------------------------" ; broadcast
 	fi
 }
 
@@ -300,6 +304,8 @@ set_uuid () {
 			echo "uuid=${root_uuid}" >> /tmp/rootfs/boot/uEnv.txt
 		fi
 	fi
+	message="`cat /tmp/rootfs/boot/uEnv.txt`" ; broadcast
+	message="-----------------------------" ; broadcast
 
 	message="UUID=${root_uuid}" ; broadcast
 	root_uuid="UUID=${root_uuid}"
@@ -309,7 +315,9 @@ set_uuid () {
 	echo "#" >> /tmp/rootfs/etc/fstab
 	echo "${root_uuid}  /  ext4  noatime,errors=remount-ro  0  1" >> /tmp/rootfs/etc/fstab
 	echo "debugfs  /sys/kernel/debug  debugfs  defaults  0  0" >> /tmp/rootfs/etc/fstab
-	cat /tmp/rootfs/etc/fstab
+	message="`cat /tmp/rootfs/etc/fstab`" ; broadcast
+	message="-----------------------------" ; broadcast
+
 
 	umount /tmp/rootfs/ || umount -l /tmp/rootfs/ || write_failure
 }
