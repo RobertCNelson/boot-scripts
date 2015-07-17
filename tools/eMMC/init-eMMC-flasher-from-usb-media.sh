@@ -30,11 +30,6 @@
 #uas                    14300  0 
 #usb_storage            53318  1 uas
 
-#job.txt
-#abi=aaa
-#conf_image=
-#conf_bmap=
-
 if ! id | grep -q root; then
 	echo "must be run as root"
 	exit
