@@ -1,4 +1,4 @@
-#!/bin/bash -ex
+#!/bin/bash -e
 #
 # Copyright (c) 2013-2015 Robert Nelson <robertcnelson@gmail.com>
 # Portions copyright (c) 2014 Charles Steinkuehler <charles@steinkuehler.net>
@@ -226,7 +226,7 @@ single_partition () {
 	e2fsck -f ${destination}p1
 	message="resize2fs ${destination}p1" ; broadcast
 	resize2fs ${destination}p1
-	message="-----------------------------" ; broadcast}
+	message="-----------------------------" ; broadcast
 }
 
 resize_emmc () {
