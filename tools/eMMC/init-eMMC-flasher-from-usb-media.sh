@@ -116,10 +116,26 @@ print_eeprom () {
 	message="-----------------------------" ; broadcast
 }
 
+flash_emmc () {
+	if [ -f /usr/bin/bmaptool ] ; then
+		bmaptool copy --bmap /tmp/usb/${bmap} /tmp/usb/${image} ${destination}
+	else
+		xzcat /tmp/usb/${image} | dd of=${destination} bs=1M
+	fi
+}
+
 process_job_file () {
 	message="Processing job.txt" ; broadcast
 	message="job.txt:" ; broadcast
 	message="`cat /tmp/usb/job.txt`" ; broadcast
+	message="-----------------------------" ; broadcast
+
+	abi=$(grep abi /tmp/usb/job.txt | awk -F '=' '{print $1}')
+	if [ "x${abi}" = "xaaa" ] ; then
+		image=$(grep image /tmp/usb/job.txt | awk -F '=' '{print $1}')
+		bmap=$(grep bmap /tmp/usb/job.txt | awk -F '=' '{print $1}')
+		flash_emmc
+	fi
 }
 
 check_usb_media () {
@@ -153,6 +169,9 @@ check_usb_media () {
 
 check_running_system () {
 	message="copying: [${source}] -> [${destination}]" ; broadcast
+	message="lsmod:" ; broadcast
+	message="`lsmod || true`" ; broadcast
+	message="-----------------------------" ; broadcast
 	message="lsblk:" ; broadcast
 	message="`lsblk || true`" ; broadcast
 	message="-----------------------------" ; broadcast
