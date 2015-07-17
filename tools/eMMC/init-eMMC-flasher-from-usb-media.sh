@@ -92,14 +92,11 @@ write_failure () {
 	fi
 	message="-----------------------------" ; broadcast
 	flush_cache
-	umount $(dev2dir ${destination}p1) > /dev/null 2>&1 || true
-	umount $(dev2dir ${destination}p2) > /dev/null 2>&1 || true
 	inf_loop
 }
 
 print_eeprom () {
 	if [ -f /sys/class/nvmem/at24-0/nvmem ] ; then
-		message="4.1.x+ kernel with nvmem detected..." ; broadcast
 		eeprom="/sys/class/nvmem/at24-0/nvmem"
 
 		#with 4.1.x: -s 5 isn't working...
@@ -132,30 +129,32 @@ flash_emmc () {
 		xzcat /tmp/usb/${conf_image} | dd of=${destination} bs=1M
 		message="-----------------------------" ; broadcast
 	fi
+	flush_cache
 }
 
 auto_fsck () {
 	message="-----------------------------" ; broadcast
 	if [ "x${conf_partition1_fstype}" = "x0x83" ] ; then
-		message="e2fsck -f ${destination}p1" ; broadcast
+		message="e2fsck -f -p ${destination}p1" ; broadcast
 		e2fsck -f -p ${destination}p1
 		message="-----------------------------" ; broadcast
 	fi
 	if [ "x${conf_partition2_fstype}" = "x0x83" ] ; then
-		message="e2fsck -f ${destination}p2" ; broadcast
+		message="e2fsck -f -p ${destination}p2" ; broadcast
 		e2fsck -f -p ${destination}p2
 		message="-----------------------------" ; broadcast
 	fi
 	if [ "x${conf_partition3_fstype}" = "x0x83" ] ; then
-		message="e2fsck -f ${destination}p3" ; broadcast
+		message="e2fsck -f -p ${destination}p3" ; broadcast
 		e2fsck -f -p ${destination}p3
 		message="-----------------------------" ; broadcast
 	fi
 	if [ "x${conf_partition4_fstype}" = "x0x83" ] ; then
-		message="e2fsck -f ${destination}p4" ; broadcast
+		message="e2fsck -f -p ${destination}p4" ; broadcast
 		e2fsck -f -p ${destination}p4
 		message="-----------------------------" ; broadcast
 	fi
+	flush_cache
 }
 
 quad_partition () {
@@ -264,6 +263,7 @@ resize_emmc () {
 		single_partition
 		resized="done"
 	fi
+	flush_cache
 }
 
 set_uuid () {
@@ -303,6 +303,7 @@ set_uuid () {
 	fi
 	message="`cat /tmp/rootfs/boot/uEnv.txt`" ; broadcast
 	message="-----------------------------" ; broadcast
+	flush_cache
 
 	message="UUID=${root_uuid}" ; broadcast
 	root_uuid="UUID=${root_uuid}"
@@ -314,14 +315,13 @@ set_uuid () {
 	echo "debugfs  /sys/kernel/debug  debugfs  defaults  0  0" >> /tmp/rootfs/etc/fstab
 	message="`cat /tmp/rootfs/etc/fstab`" ; broadcast
 	message="-----------------------------" ; broadcast
-
+	flush_cache
 
 	umount /tmp/rootfs/ || umount -l /tmp/rootfs/ || write_failure
 }
 
 check_eeprom () {
 	if [ -f /sys/class/nvmem/at24-0/nvmem ] ; then
-		message="4.1.x+ kernel with nvmem detected..." ; broadcast
 		eeprom="/sys/class/nvmem/at24-0/nvmem"
 
 		#with 4.1.x: -s 5 isn't working...
@@ -343,7 +343,7 @@ check_eeprom () {
 		message="Invalid EEPROM header detected" ; broadcast
 		if [ ! "x${eeprom_location}" = "x" ] ; then
 			message="Writing header to EEPROM" ; broadcast
-			dd if=/tmp/usb/${conf_eeprom_file} of=${eeprom_location}
+			dd if=/tmp/usb/${conf_eeprom_file} of=${eeprom_location} || write_failure
 			sync
 			sync
 			if [ -f /sys/class/nvmem/at24-0/nvmem ] ; then
@@ -504,115 +504,25 @@ check_usb_media () {
 
 		message="conf_root_partition=1|2|3|4" ; broadcast
 		message="-----------------------------" ; broadcast
-		sleep 100
+		write_failure
 	fi
 
 	message="eMMC has been flashed: please wait for device to power down." ; broadcast
 	message="-----------------------------" ; broadcast
+
+	umount /tmp || umount -l /tmp
+	if [ -e /sys/class/leds/beaglebone\:green\:usr0/trigger ] ; then
+		echo default-on > /sys/class/leds/beaglebone\:green\:usr0/trigger
+		echo default-on > /sys/class/leds/beaglebone\:green\:usr1/trigger
+		echo default-on > /sys/class/leds/beaglebone\:green\:usr2/trigger
+		echo default-on > /sys/class/leds/beaglebone\:green\:usr3/trigger
+	fi
 
 	sleep 20
 
 	#To properly shudown, /opt/scripts/boot/am335x_evm.sh is going to call halt:
 	exec /sbin/init
 	#halt -f
-}
-
-
-copy_rootfs () {
-	message="Copying: ${source}p${media_rootfs} -> ${destination}p${media_rootfs}" ; broadcast
-	mkdir -p /tmp/rootfs/ || true
-
-	mount ${destination}p${media_rootfs} /tmp/rootfs/ -o async,noatime
-
-	message="rsync: / -> /tmp/rootfs/" ; broadcast
-	if [ ! "x${rsync_progress}" = "x" ] ; then
-		echo "rsync: note the % column is useless..."
-	fi
-	rsync -aAx ${rsync_progress} /* /tmp/rootfs/ --exclude={/dev/*,/proc/*,/sys/*,/tmp/*,/run/*,/mnt/*,/media/*,/lost+found,/lib/modules/*,/uEnv.txt} || write_failure
-	flush_cache
-
-	if [ -d /tmp/rootfs/etc/ssh/ ] ; then
-		#ssh keys will now get regenerated on the next bootup
-		touch /tmp/rootfs/etc/ssh/ssh.regenerate
-		flush_cache
-	fi
-
-	mkdir -p /tmp/rootfs/lib/modules/$(uname -r)/ || true
-
-	message="Copying: Kernel modules" ; broadcast
-	message="rsync: /lib/modules/$(uname -r)/ -> /tmp/rootfs/lib/modules/$(uname -r)/" ; broadcast
-	if [ ! "x${rsync_progress}" = "x" ] ; then
-		echo "rsync: note the % column is useless..."
-	fi
-	rsync -aAx ${rsync_progress} /lib/modules/$(uname -r)/* /tmp/rootfs/lib/modules/$(uname -r)/ || write_failure
-	flush_cache
-
-	message="Copying: ${source}p${media_rootfs} -> ${destination}p${media_rootfs} complete" ; broadcast
-	message="-----------------------------" ; broadcast
-
-	message="Final System Tweaks:" ; broadcast
-	unset root_uuid
-	root_uuid=$(/sbin/blkid -c /dev/null -s UUID -o value ${destination}p${media_rootfs})
-	if [ "${root_uuid}" ] ; then
-		sed -i -e 's:uuid=:#uuid=:g' /tmp/rootfs/boot/uEnv.txt
-		echo "uuid=${root_uuid}" >> /tmp/rootfs/boot/uEnv.txt
-
-		message="UUID=${root_uuid}" ; broadcast
-		root_uuid="UUID=${root_uuid}"
-	else
-		#really a failure...
-		root_uuid="${source}p${media_rootfs}"
-	fi
-
-	message="Generating: /etc/fstab" ; broadcast
-	echo "# /etc/fstab: static file system information." > /tmp/rootfs/etc/fstab
-	echo "#" >> /tmp/rootfs/etc/fstab
-	echo "${root_uuid}  /  ext4  noatime,errors=remount-ro  0  1" >> /tmp/rootfs/etc/fstab
-	echo "debugfs  /sys/kernel/debug  debugfs  defaults  0  0" >> /tmp/rootfs/etc/fstab
-	cat /tmp/rootfs/etc/fstab
-
-	message="/boot/uEnv.txt: disabling eMMC flasher script" ; broadcast
-	script="cmdline=init=/opt/scripts/tools/eMMC/init-eMMC-flasher-v3.sh"
-	sed -i -e 's:'$script':#'$script':g' /tmp/rootfs/boot/uEnv.txt
-	cat /tmp/rootfs/boot/uEnv.txt
-	message="-----------------------------" ; broadcast
-
-	flush_cache
-	umount /tmp/rootfs/ || umount -l /tmp/rootfs/ || write_failure
-
-	[ -e /proc/$CYLON_PID ]  && kill $CYLON_PID
-
-	message="Syncing: ${destination}" ; broadcast
-	#https://github.com/beagleboard/meta-beagleboard/blob/master/contrib/bone-flash-tool/emmc.sh#L158-L159
-	# force writeback of eMMC buffers
-	sync
-	dd if=${destination} of=/dev/null count=100000
-	message="Syncing: ${destination} complete" ; broadcast
-	message="-----------------------------" ; broadcast
-
-	if [ -f /boot/debug.txt ] ; then
-		message="This script has now completed its task" ; broadcast
-		message="-----------------------------" ; broadcast
-		message="debug: enabled" ; broadcast
-		inf_loop
-	else
-		umount /tmp || umount -l /tmp
-		if [ -e /sys/class/leds/beaglebone\:green\:usr0/trigger ] ; then
-			echo default-on > /sys/class/leds/beaglebone\:green\:usr0/trigger
-			echo default-on > /sys/class/leds/beaglebone\:green\:usr1/trigger
-			echo default-on > /sys/class/leds/beaglebone\:green\:usr2/trigger
-			echo default-on > /sys/class/leds/beaglebone\:green\:usr3/trigger
-		fi
-		mount
-
-		message="eMMC has been flashed: please wait for device to power down." ; broadcast
-		message="-----------------------------" ; broadcast
-
-		flush_cache
-		#To properly shudown, /opt/scripts/boot/am335x_evm.sh is going to call halt:
-		exec /sbin/init
-		#halt -f
-	fi
 }
 
 sleep 5
