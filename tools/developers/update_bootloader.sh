@@ -267,6 +267,10 @@ check_soc_sh () {
 				board="am335x_evm"
 			fi
 
+			if [ "x${bbb_blank}" = "xenable" ] ; then
+				board="am335x_boneblack"
+			fi
+
 			conf_board="${board}"
 			got_board
 		else
@@ -287,6 +291,10 @@ check_soc_sh () {
 					#Special eeprom less u-boot, switch them to normal on upgrades
 					sed -i -e 's:am335x_boneblack:am335x_evm:g' ${DRIVE}/SOC.sh
 					board="am335x_evm"
+				fi
+
+				if [ "x${bbb_blank}" = "xenable" ] ; then
+					board="am335x_boneblack"
 				fi
 
 				conf_board="${board}"
@@ -315,6 +323,10 @@ check_soc_sh () {
 					board="am335x_evm"
 				fi
 
+				if [ "x${bbb_blank}" = "xenable" ] ; then
+					board="am335x_boneblack"
+				fi
+
 				conf_board="${board}"
 				got_board
 			else
@@ -341,6 +353,9 @@ while [ ! -z "$1" ] ; do
 	case $1 in
 	--use-beta-bootloader)
 		USE_BETA_BOOTLOADER=1
+		;;
+	--bbb-blank)
+		bbb_blank=enable
 		;;
 	esac
 	shift
