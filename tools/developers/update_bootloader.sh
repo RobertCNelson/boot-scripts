@@ -267,11 +267,10 @@ check_soc_sh () {
 				board="am335x_evm"
 			fi
 
-			if [ "x${bbb_blank}" = "xenable" ] ; then
-				board="am335x_boneblack"
-			fi
-
 			conf_board="${board}"
+			if [ "x${bbb_blank}" = "xenable" ] ; then
+				conf_board="am335x_boneblack"
+			fi
 			got_board
 		else
 			echo "Sorry: board undefined in [${DRIVE}/SOC.sh] can not update bootloader safely"
@@ -293,11 +292,10 @@ check_soc_sh () {
 					board="am335x_evm"
 				fi
 
-				if [ "x${bbb_blank}" = "xenable" ] ; then
-					board="am335x_boneblack"
-				fi
-
 				conf_board="${board}"
+				if [ "x${bbb_blank}" = "xenable" ] ; then
+					conf_board="am335x_boneblack"
+				fi
 				got_board
 			else
 				echo "Sorry: board undefined in [${DRIVE}/SOC.sh] can not update bootloader safely"
@@ -323,11 +321,10 @@ check_soc_sh () {
 					board="am335x_evm"
 				fi
 
-				if [ "x${bbb_blank}" = "xenable" ] ; then
-					board="am335x_boneblack"
-				fi
-
 				conf_board="${board}"
+				if [ "x${bbb_blank}" = "xenable" ] ; then
+					conf_board="am335x_boneblack"
+				fi
 				got_board
 			else
 				echo "Sorry: board undefined in [${DRIVE}/SOC.sh] can not update bootloader safely"
