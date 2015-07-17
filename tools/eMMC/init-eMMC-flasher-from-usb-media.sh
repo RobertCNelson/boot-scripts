@@ -132,6 +132,17 @@ flash_emmc () {
 	fi
 }
 
+resize_emmc () {
+	conf_boot_startmb=${conf_boot_startmb:-"1"}
+	sfdisk_fstype=${sfdisk_fstype:-"0x83"}
+
+	LC_ALL=C sfdisk --force --no-reread --in-order --Linux --unit M ${destination} <<-__EOF__
+		${conf_boot_startmb},,${sfdisk_fstype},*
+	__EOF__
+
+	resize2fs ${destination}
+}
+
 process_job_file () {
 	message="Processing job.txt" ; broadcast
 	message="job.txt:" ; broadcast
@@ -144,6 +155,7 @@ process_job_file () {
 		bmap=$(cat /tmp/usb/job.txt | grep bmap | awk -F '=' '{print $2}' || true)
 		if [ -f /tmp/usb/${image} ] ; then
 			flash_emmc
+			resize_emmc
 		else
 			message="error: image not found [/tmp/usb/${image}]" ; broadcast
 		fi
@@ -180,6 +192,13 @@ check_usb_media () {
 		fi
 	i=$(($i+1))
 	done
+
+	message="eMMC has been flashed: please wait for device to power down." ; broadcast
+	message="-----------------------------" ; broadcast
+
+	#To properly shudown, /opt/scripts/boot/am335x_evm.sh is going to call halt:
+	exec /sbin/init
+	#halt -f
 }
 
 check_running_system () {
