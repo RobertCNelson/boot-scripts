@@ -305,7 +305,7 @@ set_uuid () {
 	unset uuid_uevntxt
 	uuid_uevntxt=$(cat /tmp/rootfs/boot/uEnv.txt | grep -v '#' | grep cmdline | awk -F '=' '{print $2}' || true)
 	if [ ! "x${uuid_uevntxt}" = "x" ] ; then
-		sed -i -e "s:#cmdline=init:#cmdline=init:g" /tmp/rootfs/boot/uEnv.txt
+		sed -i -e "s:cmdline=init:#cmdline=init:g" /tmp/rootfs/boot/uEnv.txt
 	fi
 
 	message="`cat /tmp/rootfs/boot/uEnv.txt | grep uuid`" ; broadcast
