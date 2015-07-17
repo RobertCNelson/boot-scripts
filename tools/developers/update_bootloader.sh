@@ -225,7 +225,7 @@ get_device () {
 
 got_board () {
 	case "${conf_board}" in
-	am335x_evm|beagle_x15|omap5_uevm)
+	am335x_boneblack|am335x_evm|beagle_x15|omap5_uevm)
 		is_omap
 		;;
 	esac
