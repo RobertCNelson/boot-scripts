@@ -525,7 +525,7 @@ check_usb_media () {
 		echo default-on > /sys/class/leds/beaglebone\:green\:usr3/trigger
 	fi
 
-	sleep 20
+	sleep 1
 
 	#To properly shudown, /opt/scripts/boot/am335x_evm.sh is going to call halt:
 	exec /sbin/init
