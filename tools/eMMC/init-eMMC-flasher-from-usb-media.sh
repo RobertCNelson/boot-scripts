@@ -138,10 +138,10 @@ process_job_file () {
 	message="`cat /tmp/usb/job.txt`" ; broadcast
 	message="-----------------------------" ; broadcast
 
-	abi=$(cat /tmp/usb/job.txt | grep abi | awk -F '=' '{print $1}' || true)
+	abi=$(cat /tmp/usb/job.txt | grep abi | awk -F '=' '{print $2}' || true)
 	if [ "x${abi}" = "xaaa" ] ; then
-		image=$(cat /tmp/usb/job.txt | grep image | awk -F '=' '{print $1}' || true)
-		bmap=$(cat /tmp/usb/job.txt | grep bmap | awk -F '=' '{print $1}' || true)
+		image=$(cat /tmp/usb/job.txt | grep image | awk -F '=' '{print $2}' || true)
+		bmap=$(cat /tmp/usb/job.txt | grep bmap | awk -F '=' '{print $2}' || true)
 		if [ -f /tmp/usb/${image} ] ; then
 			flash_emmc
 		else
