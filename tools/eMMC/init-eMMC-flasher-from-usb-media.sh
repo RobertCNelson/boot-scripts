@@ -134,6 +134,30 @@ flash_emmc () {
 	fi
 }
 
+auto_fsck () {
+	message="-----------------------------" ; broadcast
+	if [ "x${conf_partition1_fstype}" = "x0x83" ] ; then
+		message="e2fsck -f ${destination}p1" ; broadcast
+		e2fsck -f -p ${destination}p1
+		message="-----------------------------" ; broadcast
+	fi
+	if [ "x${conf_partition2_fstype}" = "x0x83" ] ; then
+		message="e2fsck -f ${destination}p2" ; broadcast
+		e2fsck -f -p ${destination}p2
+		message="-----------------------------" ; broadcast
+	fi
+	if [ "x${conf_partition3_fstype}" = "x0x83" ] ; then
+		message="e2fsck -f ${destination}p3" ; broadcast
+		e2fsck -f -p ${destination}p3
+		message="-----------------------------" ; broadcast
+	fi
+	if [ "x${conf_partition4_fstype}" = "x0x83" ] ; then
+		message="e2fsck -f ${destination}p4" ; broadcast
+		e2fsck -f -p ${destination}p4
+		message="-----------------------------" ; broadcast
+	fi
+}
+
 quad_partition () {
 	message="LC_ALL=C sfdisk --force --no-reread --in-order --Linux --unit M ${destination}" ; broadcast
 	message="${conf_partition1_startmb},${conf_partition1_endmb},${conf_partition1_fstype},*" ; broadcast
@@ -149,19 +173,7 @@ quad_partition () {
 		,,${conf_partition4_fstype},-
 	__EOF__
 
-	message="-----------------------------" ; broadcast
-	message="e2fsck -f ${destination}p1" ; broadcast
-	e2fsck -f ${destination}p1
-	message="-----------------------------" ; broadcast
-	message="e2fsck -f ${destination}p2" ; broadcast
-	e2fsck -f ${destination}p2
-	message="-----------------------------" ; broadcast
-	message="e2fsck -f ${destination}p3" ; broadcast
-	e2fsck -f ${destination}p3
-	message="-----------------------------" ; broadcast
-	message="e2fsck -f ${destination}p4" ; broadcast
-	e2fsck -f ${destination}p4
-	message="-----------------------------" ; broadcast
+	auto_fsck
 	message="resize2fs ${destination}p4" ; broadcast
 	resize2fs ${destination}p4
 	message="-----------------------------" ; broadcast
@@ -180,16 +192,7 @@ tri_partition () {
 		,,${conf_partition3_fstype},-
 	__EOF__
 
-	message="-----------------------------" ; broadcast
-	message="e2fsck -f ${destination}p1" ; broadcast
-	e2fsck -f ${destination}p1
-	message="-----------------------------" ; broadcast
-	message="e2fsck -f ${destination}p2" ; broadcast
-	e2fsck -f ${destination}p2
-	message="-----------------------------" ; broadcast
-	message="e2fsck -f ${destination}p3" ; broadcast
-	e2fsck -f ${destination}p3
-	message="-----------------------------" ; broadcast
+	auto_fsck
 	message="resize2fs ${destination}p3" ; broadcast
 	resize2fs ${destination}p3
 	message="-----------------------------" ; broadcast
@@ -206,13 +209,7 @@ dual_partition () {
 		,,${conf_partition2_fstype},-
 	__EOF__
 
-	message="-----------------------------" ; broadcast
-	message="e2fsck -f ${destination}p1" ; broadcast
-	e2fsck -f ${destination}p1
-	message="-----------------------------" ; broadcast
-	message="e2fsck -f ${destination}p2" ; broadcast
-	e2fsck -f ${destination}p2
-	message="-----------------------------" ; broadcast
+	auto_fsck
 	message="resize2fs ${destination}p2" ; broadcast
 	resize2fs ${destination}p2
 	message="-----------------------------" ; broadcast
@@ -227,10 +224,7 @@ single_partition () {
 		${conf_partition1_startmb},,${conf_partition1_fstype},*
 	__EOF__
 
-	message="-----------------------------" ; broadcast
-	message="e2fsck -f ${destination}p1" ; broadcast
-	e2fsck -f ${destination}p1
-	message="-----------------------------" ; broadcast
+	auto_fsck
 	message="resize2fs ${destination}p1" ; broadcast
 	resize2fs ${destination}p1
 	message="-----------------------------" ; broadcast
