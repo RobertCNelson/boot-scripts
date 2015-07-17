@@ -267,14 +267,33 @@ resize_emmc () {
 
 set_uuid () {
 	unset root_uuid
-	root_uuid=$(/sbin/blkid -c /dev/null -s UUID -o value ${destination}p${conf_root_partition})
-	if [ ! "x${root_uuid}" = "x" ] ; then
-#		sed -i -e 's:uuid=:#uuid=:g' /tmp/rootfs/boot/uEnv.txt
-#		echo "uuid=${root_uuid}" >> /tmp/rootfs/boot/uEnv.txt
+	root_uuid=$(/sbin/blkid -c /dev/null -s UUID -o value ${destination}p${conf_root_partition} || true)
+	mkdir -p /tmp/rootfs/
+	mkdir -p /tmp/boot/
 
-		message="UUID=${root_uuid}" ; broadcast
-#		root_uuid="UUID=${root_uuid}"
+	mount ${destination}p${conf_root_partition} /tmp/rootfs/ -o async,noatime
+	if [ ! "x${conf_root_partition}" = "x1" ] ; then
+		mount ${destination}p1 /tmp/boot/ -o sync
 	fi
+
+	if [ -f /tmp/rootfs/boot/uEnv.txt ] && [ -f /tmp/boot/uEnv.txt ] ; then
+		rm -f /tmp/boot/uEnv.txt
+		umount /tmp/boot/ || umount -l /tmp/boot/ || write_failure
+	fi
+
+	sed -i -e 's:#uuid=:uuid=${root_uuid}:g' /tmp/rootfs/boot/uEnv.txt
+
+	message="UUID=${root_uuid}" ; broadcast
+	root_uuid="UUID=${root_uuid}"
+
+	message="Generating: /etc/fstab" ; broadcast
+	echo "# /etc/fstab: static file system information." > /tmp/rootfs/etc/fstab
+	echo "#" >> /tmp/rootfs/etc/fstab
+	echo "${root_uuid}  /  ext4  noatime,errors=remount-ro  0  1" >> /tmp/rootfs/etc/fstab
+	echo "debugfs  /sys/kernel/debug  debugfs  defaults  0  0" >> /tmp/rootfs/etc/fstab
+	cat /tmp/rootfs/etc/fstab
+
+	umount /tmp/rootfs/ || umount -l /tmp/rootfs/ || write_failure
 }
 
 process_job_file () {
@@ -296,6 +315,7 @@ process_job_file () {
 				message="-----------------------------" ; broadcast
 				resize_emmc
 			fi
+			conf_root_partition=$(cat /tmp/usb/job.txt | grep conf_root_partition | awk -F '=' '{print $2}' || true)
 			if [ ! "x${conf_root_partition}" = "x" ] ; then
 				set_uuid
 			fi
@@ -307,9 +327,6 @@ process_job_file () {
 
 check_usb_media () {
 	message="Checking external usb media" ; broadcast
-	message="lsmod:" ; broadcast
-	message="`lsmod || true`" ; broadcast
-	message="-----------------------------" ; broadcast
 	message="lsblk:" ; broadcast
 	message="`lsblk || true`" ; broadcast
 	message="-----------------------------" ; broadcast
