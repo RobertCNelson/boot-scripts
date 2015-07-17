@@ -117,9 +117,13 @@ print_eeprom () {
 }
 
 flash_emmc () {
-	if [ -f /usr/bin/bmaptool ] ; then
+	message="Flashing eMMC" ; broadcast
+	message="-----------------------------" ; broadcast
+	if [ -f /usr/bin/bmaptool ] && [ -f /tmp/usb/${bmap} ] ; then
+		message="bmaptool copy --bmap /tmp/usb/${bmap} /tmp/usb/${image} ${destination}" ; broadcast
 		bmaptool copy --bmap /tmp/usb/${bmap} /tmp/usb/${image} ${destination}
 	else
+		message="xzcat /tmp/usb/${image} | dd of=${destination} bs=1M" ; broadcast
 		xzcat /tmp/usb/${image} | dd of=${destination} bs=1M
 	fi
 }
@@ -134,12 +138,19 @@ process_job_file () {
 	if [ "x${abi}" = "xaaa" ] ; then
 		image=$(grep image /tmp/usb/job.txt | awk -F '=' '{print $1}')
 		bmap=$(grep bmap /tmp/usb/job.txt | awk -F '=' '{print $1}')
-		flash_emmc
+		if [ -f /tmp/usb/${image} ] ; then
+			flash_emmc
+		else
+			message="error: image not found [/tmp/usb/${image}]" ; broadcast
+		fi
 	fi
 }
 
 check_usb_media () {
 	message="Checking external usb media" ; broadcast
+	message="lsmod:" ; broadcast
+	message="`lsmod || true`" ; broadcast
+	message="-----------------------------" ; broadcast
 	message="lsblk:" ; broadcast
 	message="`lsblk || true`" ; broadcast
 	message="-----------------------------" ; broadcast
@@ -169,9 +180,6 @@ check_usb_media () {
 
 check_running_system () {
 	message="copying: [${source}] -> [${destination}]" ; broadcast
-	message="lsmod:" ; broadcast
-	message="`lsmod || true`" ; broadcast
-	message="-----------------------------" ; broadcast
 	message="lsblk:" ; broadcast
 	message="`lsblk || true`" ; broadcast
 	message="-----------------------------" ; broadcast
