@@ -143,20 +143,20 @@ flash_emmc () {
 			message="Flashing eMMC with bmaptool" ; broadcast
 			message="-----------------------------" ; broadcast
 			message="bmaptool copy --bmap /tmp/usb/${conf_bmap} /tmp/usb/${conf_image} ${destination}" ; broadcast
-			/usr/bin/bmaptool copy --bmap /tmp/usb/${conf_bmap} /tmp/usb/${conf_image} ${destination}
+			/usr/bin/bmaptool copy --bmap /tmp/usb/${conf_bmap} /tmp/usb/${conf_image} ${destination} || write_failure
 			message="-----------------------------" ; broadcast
 		else
 			message="Flashing eMMC with dd" ; broadcast
 			message="-----------------------------" ; broadcast
 			message="xzcat /tmp/usb/${conf_image} | dd of=${destination} bs=1M" ; broadcast
-			xzcat /tmp/usb/${conf_image} | dd of=${destination} bs=1M
+			xzcat /tmp/usb/${conf_image} | dd of=${destination} bs=1M || write_failure
 			message="-----------------------------" ; broadcast
 		fi
 	else
 		message="Flashing eMMC with dd" ; broadcast
 		message="-----------------------------" ; broadcast
 		message="xzcat /tmp/usb/${conf_image} | dd of=${destination} bs=1M" ; broadcast
-		xzcat /tmp/usb/${conf_image} | dd of=${destination} bs=1M
+		xzcat /tmp/usb/${conf_image} | dd of=${destination} bs=1M || write_failure
 		message="-----------------------------" ; broadcast
 	fi
 	flush_cache
@@ -479,8 +479,8 @@ process_job_file () {
 		fi
 
 		conf_image=$(cat /tmp/usb/job.txt | grep -v '#' | grep conf_image | awk -F '=' '{print $2}' || true)
-		conf_bmap=$(cat /tmp/usb/job.txt | grep -v '#' | grep conf_bmap | awk -F '=' '{print $2}' || true)
 		if [ -f /tmp/usb/${conf_image} ] ; then
+			conf_bmap=$(cat /tmp/usb/job.txt | grep -v '#' | grep conf_bmap | awk -F '=' '{print $2}' || true)
 			cylon_leds & CYLON_PID=$!
 			flash_emmc
 			conf_resize=$(cat /tmp/usb/job.txt | grep -v '#' | grep conf_resize | awk -F '=' '{print $2}' || true)
