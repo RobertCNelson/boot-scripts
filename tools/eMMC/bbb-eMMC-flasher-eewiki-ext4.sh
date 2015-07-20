@@ -81,8 +81,22 @@ write_failure () {
 check_eeprom () {
 	message="Checking for Valid BBB EEPROM header" ; broadcast
 
-	if [ -f /sys/class/nvmem/at24-0/nvmem ] ; then
-		message="4.1.x+ kernel with nvmem detected..." ; broadcast
+	unset got_eeprom
+
+	#v8 of nvmem...
+	if [ -f /sys/bus/nvmem/devices/at24-0/nvmem ] && [ "x${got_eeprom}" = "x" ] ; then
+		eeprom="/sys/bus/nvmem/devices/at24-0/nvmem"
+
+		#eeprom_header=$(hexdump -e '8/1 "%c"' ${eeprom} -s 5 -n 3) = blank...
+		#hexdump -e '8/1 "%c"' ${eeprom} -n 8 = �U3�A335
+		eeprom_header=$(hexdump -e '8/1 "%c"' ${eeprom} -n 8 | cut -b 6-8)
+
+		eeprom_location="/sys/devices/platform/ocp/44e0b000.i2c/i2c-0/0-0050/at24-0/nvmem"
+		got_eeprom="true"
+	fi
+
+	#pre-v8 of nvmem...
+	if [ -f /sys/class/nvmem/at24-0/nvmem ] && [ "x${got_eeprom}" = "x" ] ; then
 		eeprom="/sys/class/nvmem/at24-0/nvmem"
 
 		#with 4.1.x: -s 5 isn't working...
@@ -91,36 +105,39 @@ check_eeprom () {
 		eeprom_header=$(hexdump -e '8/1 "%c"' ${eeprom} -n 8 | cut -b 6-8)
 
 		eeprom_location="/sys/devices/platform/ocp/44e0b000.i2c/i2c-0/0-0050/nvmem/at24-0/nvmem"
-	else
+		got_eeprom="true"
+	fi
+
+	#eeprom...
+	if [ -f /sys/bus/i2c/devices/0-0050/eeprom ] && [ "x${got_eeprom}" = "x" ] ; then
 		eeprom="/sys/bus/i2c/devices/0-0050/eeprom"
 		eeprom_header=$(hexdump -e '8/1 "%c"' ${eeprom} -s 5 -n 3)
 		eeprom_location=$(ls /sys/devices/ocp*/44e0b000.i2c/i2c-0/0-0050/eeprom 2> /dev/null)
+		got_eeprom="true"
 	fi
 
-	if [ "x${eeprom_header}" = "x335" ] ; then
-		message="Valid BBB EEPROM header found [${eeprom_header}]" ; broadcast
-		message="-----------------------------" ; broadcast
-	else
-		message="Invalid EEPROM header detected" ; broadcast
-		if [ -f /opt/scripts/device/bone/bbb-eeprom.dump ] ; then
-			if [ ! "x${eeprom_location}" = "x" ] ; then
-				message="Writing header to EEPROM" ; broadcast
-				dd if=/opt/scripts/device/bone/bbb-eeprom.dump of=${eeprom_location}
-				sync
-				sync
-				if [ -f /sys/class/nvmem/at24-0/nvmem ] ; then
+	if [ "x${got_eeprom}" = "xtrue" ] ; then
+		if [ "x${eeprom_header}" = "x335" ] ; then
+			message="Valid BBB EEPROM header found [${eeprom_header}]" ; broadcast
+			message="-----------------------------" ; broadcast
+		else
+			message="Invalid EEPROM header detected" ; broadcast
+			if [ -f /opt/scripts/device/bone/bbb-eeprom.dump ] ; then
+				if [ ! "x${eeprom_location}" = "x" ] ; then
+					message="Writing header to EEPROM" ; broadcast
+					dd if=/opt/scripts/device/bone/bbb-eeprom.dump of=${eeprom_location}
+					sync
+					sync
 					eeprom_check=$(hexdump -e '8/1 "%c"' ${eeprom} -n 8 | cut -b 6-8)
-				else
-					eeprom_check=$(hexdump -e '8/1 "%c"' ${eeprom} -s 4 -n 8)
+					echo "eeprom check: [${eeprom_check}]"
+
+					#We have to reboot, as the kernel only loads the eMMC cape
+					# with a valid header
+					reboot -f
+
+					#We shouldnt hit this...
+					exit
 				fi
-				echo "eeprom check: [${eeprom_check}]"
-
-				#We have to reboot, as the kernel only loads the eMMC cape
-				# with a valid header
-				reboot -f
-
-				#We shouldnt hit this...
-				exit
 			fi
 		fi
 	fi
