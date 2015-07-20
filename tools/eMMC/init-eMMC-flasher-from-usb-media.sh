@@ -138,12 +138,20 @@ print_eeprom () {
 }
 
 flash_emmc () {
-	if [ -f /usr/bin/bmaptool ] && [ -f /tmp/usb/${conf_bmap} ] ; then
-		message="Flashing eMMC with bmaptool" ; broadcast
-		message="-----------------------------" ; broadcast
-		message="bmaptool copy --bmap /tmp/usb/${conf_bmap} /tmp/usb/${conf_image} ${destination}" ; broadcast
-		/usr/bin/bmaptool copy --bmap /tmp/usb/${conf_bmap} /tmp/usb/${conf_image} ${destination}
-		message="-----------------------------" ; broadcast
+	if [ ! "x${conf_bmap}" = "x" ] ; then
+		if [ -f /usr/bin/bmaptool ] && [ -f /tmp/usb/${conf_bmap} ] ; then
+			message="Flashing eMMC with bmaptool" ; broadcast
+			message="-----------------------------" ; broadcast
+			message="bmaptool copy --bmap /tmp/usb/${conf_bmap} /tmp/usb/${conf_image} ${destination}" ; broadcast
+			/usr/bin/bmaptool copy --bmap /tmp/usb/${conf_bmap} /tmp/usb/${conf_image} ${destination}
+			message="-----------------------------" ; broadcast
+		else
+			message="Flashing eMMC with dd" ; broadcast
+			message="-----------------------------" ; broadcast
+			message="xzcat /tmp/usb/${conf_image} | dd of=${destination} bs=1M" ; broadcast
+			xzcat /tmp/usb/${conf_image} | dd of=${destination} bs=1M
+			message="-----------------------------" ; broadcast
+		fi
 	else
 		message="Flashing eMMC with dd" ; broadcast
 		message="-----------------------------" ; broadcast
