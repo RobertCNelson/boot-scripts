@@ -209,4 +209,41 @@ if [ "x${abi}" = "x" ] ; then
 	fi
 fi
 
+#loading cape-universal...
+if [ -f /sys/devices/platform/bone_capemgr/slots ] ; then
+	unset stop_cape_load
+
+	#Make sure bone_capemgr.enable_partno wasn't passed to cmdline...
+	if [ "x${stop_cape_load}" = "x" ] ; then
+		check_enable_partno=$(grep bone_capemgr.enable_partno /proc/cmdline || true)
+		if [ ! "x${check_enable_partno}" = "x" ] ; then
+			stop_cape_load="stop"
+		fi
+	fi
+
+	#Make sure we load the correct overlay based on lack/custom dtb's...
+	if [ "x${stop_cape_load}" = "x" ] ; then
+		check_dtb=$(cat /boot/uEnv.txt | grep -v '#' | grep dtb | tail -1 | awk -F '=' '{print $2}' || true)
+		if [ "x${check_dtb}" = "x" ] ; then
+			overlay="cape-universal"
+			dtbo="${overlay}-00A0.dtbo"
+		else
+			stop_cape_load="stop"
+		fi
+	fi
+
+	#Make sure no custom overlays are loaded...
+	if [ "x${stop_cape_load}" = "x" ] ; then
+		check_cape_loaded=$(cat /sys/devices/platform/bone_capemgr/slots | awk '{print $3}' | grep 0 | tail -1 || true)
+		if [ ! "x${check_cape_loaded}" = "x" ] ; then
+			stop_cape_load="stop"
+		fi
+	fi
+
+	if [ "x${stop_cape_load}" = "x" ] ; then
+		if [ -f /lib/firmware/${dtbo} ] ; then
+			config-pin overlay ${overlay}
+		fi
+	fi
+fi
 #
