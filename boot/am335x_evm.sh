@@ -268,7 +268,7 @@ if [ -f /sys/devices/platform/bone_capemgr/slots ] ; then
 				config-pin overlay cape-univ-audio
 				config-pin overlay cape-univ-emmc
 				;;
-			*)
+			esac
 		fi
 	fi
 fi
