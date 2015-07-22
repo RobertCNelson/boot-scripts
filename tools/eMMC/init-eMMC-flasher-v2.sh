@@ -24,6 +24,8 @@
 #This script assumes, these packages are installed, as network may not be setup
 #dosfstools initramfs-tools rsync u-boot-tools
 
+version_message="1.001: 2015-07-21: Better then never, version #..."
+
 if ! id | grep -q root; then
 	echo "must be run as root"
 	exit
@@ -57,6 +59,12 @@ flush_cache () {
 	blockdev --flushbufs ${destination}
 }
 
+broadcast () {
+	if [ "x${message}" != "x" ] ; then
+		echo "${message}"
+	fi
+}
+
 inf_loop () {
 	while read MAGIC ; do
 		case $MAGIC in
@@ -77,7 +85,7 @@ dev2dir () {
 }
 
 write_failure () {
-	echo "writing to [${destination}] failed..."
+	message="writing to [${destination}] failed..." ; broadcast
 
 	[ -e /proc/$CYLON_PID ]  && kill $CYLON_PID > /dev/null 2>&1
 
@@ -87,7 +95,7 @@ write_failure () {
 		echo heartbeat > /sys/class/leds/beaglebone\:green\:usr2/trigger
 		echo heartbeat > /sys/class/leds/beaglebone\:green\:usr3/trigger
 	fi
-	echo "-----------------------------"
+	message="-----------------------------" ; broadcast
 	flush_cache
 	umount $(dev2dir ${destination}p1) > /dev/null 2>&1 || true
 	umount $(dev2dir ${destination}p2) > /dev/null 2>&1 || true
@@ -171,7 +179,7 @@ cylon_leds () {
 				;;
 			*)	echo 255 > ${BASE}0/brightness
 				echo 0   > ${BASE}1/brightness
-				STinit-eMMC-flasher-v2.shATE=2
+				STATE=2
 				;;
 			esac
 			sleep 0.1
@@ -320,6 +328,13 @@ copy_rootfs () {
 		halt -f
 	fi
 }
+
+sleep 5
+clear
+message="-----------------------------" ; broadcast
+message="Starting eMMC Flasher from microSD media" ; broadcast
+message="Version: [${version_message}]" ; broadcast
+message="-----------------------------" ; broadcast
 
 check_eeprom
 check_running_system

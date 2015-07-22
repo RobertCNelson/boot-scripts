@@ -24,6 +24,8 @@
 #This script assumes, these packages are installed, as network may not be setup
 #dosfstools initramfs-tools rsync u-boot-tools
 
+version_message="1.001: 2015-07-21: Better then never, version #..."
+
 #WARNING make sure to run this with an initrd...
 #lsmod:
 #Module                  Size  Used by
@@ -584,6 +586,7 @@ sleep 5
 clear
 message="-----------------------------" ; broadcast
 message="Starting eMMC Flasher from usb media" ; broadcast
+message="Version: [${version_message}]" ; broadcast
 message="-----------------------------" ; broadcast
 
 print_eeprom

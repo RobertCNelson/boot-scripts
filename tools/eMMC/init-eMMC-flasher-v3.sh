@@ -24,6 +24,8 @@
 #This script assumes, these packages are installed, as network may not be setup
 #dosfstools initramfs-tools rsync u-boot-tools
 
+version_message="1.001: 2015-07-21: Better then never, version #..."
+
 if ! id | grep -q root; then
 	echo "must be run as root"
 	exit
@@ -527,8 +529,13 @@ partition_drive () {
 	fi
 }
 
-message="Starting eMMC Flasher" ; broadcast
+sleep 5
+clear
 message="-----------------------------" ; broadcast
+message="Starting eMMC Flasher from microSD media" ; broadcast
+message="Version: [${version_message}]" ; broadcast
+message="-----------------------------" ; broadcast
+
 check_eeprom
 check_running_system
 cylon_leds & CYLON_PID=$!

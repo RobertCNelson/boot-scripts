@@ -24,6 +24,8 @@
 #This script assumes, these packages are installed, as network may not be setup
 #dosfstools initramfs-tools rsync u-boot-tools
 
+version_message="1.001: 2015-07-21: Better then never, version #..."
+
 http_spl="MLO-am335x_evm-v2015.07-r1"
 http_uboot="u-boot-am335x_evm-v2015.07-r1.img"
 
@@ -558,6 +560,11 @@ partition_drive () {
 		copy_rootfs
 	fi
 }
+
+clear
+message="-----------------------------" ; broadcast
+message="Version: [${version_message}]" ; broadcast
+message="-----------------------------" ; broadcast
 
 check_eeprom
 check_running_system
