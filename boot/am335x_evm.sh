@@ -238,28 +238,32 @@ if [ -f /sys/devices/platform/bone_capemgr/slots ] ; then
 
 	#Make sure we load the correct overlay based on lack/custom dtb's...
 	if [ "x${stop_cape_load}" = "x" ] ; then
+		unset overlay
 		check_dtb=$(cat /boot/uEnv.txt | grep -v '#' | grep dtb | tail -1 | awk -F '=' '{print $2}' || true)
 		if [ "x${check_dtb}" = "x" ] ; then
 			#am335x-boneblack.dtb
-			config-pin overlay cape-universaln
+			overlay="cape-universaln"
 		else
 			case "${check_dtb}" in
 			am335x-boneblack-overlay.dtb)
-				config-pin overlay cape-universal
-				#config-pin overlay cape-univ-hdmi
-				#config-pin overlay cape-univ-audio
-				#config-pin overlay cape-univ-emmc
+				overlay="univ-all"
 				;;
 			am335x-boneblack-emmc-overlay.dtb)
-				config-pin overlay univ-emmc
+				overlay="univ-emmc"
 				;;
 			am335x-boneblack-hdmi-overlay.dtb)
-				config-pin overlay univ-hdmi
+				overlay="univ-hdmi"
 				;;
 			am335x-boneblack-nhdmi-overlay.dtb)
-				config-pin overlay univ-nhdmi
+				overlay="univ-nhdmi"
 				;;
 			esac
+		fi
+		if [ ! "x${overlay}" = "x" ] ; then
+			dtbo="${overlay}-00A0.dtbo"
+			if [ -f /lib/firmware/${dtbo} ] ; then
+				config-pin overlay ${overlay}
+			fi
 		fi
 	fi
 fi
