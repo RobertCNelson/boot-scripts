@@ -254,10 +254,7 @@ if [ -f /sys/devices/platform/bone_capemgr/slots ] ; then
 				config-pin overlay univ-emmc
 				;;
 			am335x-boneblack-hdmi-overlay.dtb)
-				config-pin overlay cape-universal
-				##config-pin overlay cape-univ-hdmi
-				##config-pin overlay cape-univ-audio
-				#config-pin overlay cape-univ-emmc
+				config-pin overlay univ-hdmi
 				;;
 			am335x-boneblack-nhdmi-overlay.dtb)
 				config-pin overlay cape-universal
