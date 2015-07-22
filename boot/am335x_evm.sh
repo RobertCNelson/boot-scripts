@@ -228,24 +228,6 @@ if [ -f /sys/devices/platform/bone_capemgr/slots ] ; then
 		fi
 	fi
 
-	#Make sure we load the correct overlay based on lack/custom dtb's...
-	if [ "x${stop_cape_load}" = "x" ] ; then
-		check_dtb=$(cat /boot/uEnv.txt | grep -v '#' | grep dtb | tail -1 | awk -F '=' '{print $2}' || true)
-		if [ "x${check_dtb}" = "x" ] ; then
-			overlay="cape-universaln"
-		else
-			case "${check_dtb}" in
-			am335x-boneblack-nhdmi-overlay.dtb)
-				overlay="cape-universal"
-				;;
-			*)
-				stop_cape_load="stop"
-				;;
-			esac
-		fi
-		dtbo="${overlay}-00A0.dtbo"
-	fi
-
 	#Make sure no custom overlays are loaded...
 	if [ "x${stop_cape_load}" = "x" ] ; then
 		check_cape_loaded=$(cat /sys/devices/platform/bone_capemgr/slots | awk '{print $3}' | grep 0 | tail -1 || true)
@@ -254,9 +236,39 @@ if [ -f /sys/devices/platform/bone_capemgr/slots ] ; then
 		fi
 	fi
 
+	#Make sure we load the correct overlay based on lack/custom dtb's...
 	if [ "x${stop_cape_load}" = "x" ] ; then
-		if [ -f /lib/firmware/${dtbo} ] ; then
-			config-pin overlay ${overlay}
+		check_dtb=$(cat /boot/uEnv.txt | grep -v '#' | grep dtb | tail -1 | awk -F '=' '{print $2}' || true)
+		if [ "x${check_dtb}" = "x" ] ; then
+			#am335x-boneblack.dtb
+			config-pin overlay cape-universaln
+		else
+			case "${check_dtb}" in
+			am335x-boneblack-overlay.dtb)
+				config-pin overlay cape-universal
+				config-pin overlay cape-univ-hdmi
+				config-pin overlay cape-univ-audio
+				config-pin overlay cape-univ-emmc
+				;;
+			am335x-boneblack-emmc-overlay.dtb)
+				config-pin overlay cape-universal
+				config-pin overlay cape-univ-hdmi
+				config-pin overlay cape-univ-audio
+				#config-pin overlay cape-univ-emmc
+				;;
+			am335x-boneblack-hdmi-overlay.dtb)
+				config-pin overlay cape-universal
+				#config-pin overlay cape-univ-hdmi
+				#config-pin overlay cape-univ-audio
+				config-pin overlay cape-univ-emmc
+				;;
+			am335x-boneblack-nhdmi-overlay.dtb)
+				config-pin overlay cape-universal
+				#config-pin overlay cape-univ-hdmi
+				config-pin overlay cape-univ-audio
+				config-pin overlay cape-univ-emmc
+				;;
+			*)
 		fi
 	fi
 fi
