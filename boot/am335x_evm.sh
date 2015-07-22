@@ -211,6 +211,13 @@ fi
 
 #loading cape-universal...
 if [ -f /sys/devices/platform/bone_capemgr/slots ] ; then
+
+	#cape-universal Exports all pins not used by HDMIN and eMMC (including audio)
+	#cape-universaln Exports all pins not used by HDMI and eMMC (no audio pins are exported)
+	#cape-univ-emmc Exports pins used by eMMC, load if eMMC is disabled
+	#cape-univ-hdmi Exports pins used by HDMI video, load if HDMI is disabled
+	#cape-univ-audio Exports pins used by HDMI audio
+
 	unset stop_cape_load
 
 	#Make sure bone_capemgr.enable_partno wasn't passed to cmdline...
@@ -225,11 +232,18 @@ if [ -f /sys/devices/platform/bone_capemgr/slots ] ; then
 	if [ "x${stop_cape_load}" = "x" ] ; then
 		check_dtb=$(cat /boot/uEnv.txt | grep -v '#' | grep dtb | tail -1 | awk -F '=' '{print $2}' || true)
 		if [ "x${check_dtb}" = "x" ] ; then
-			overlay="cape-universal"
-			dtbo="${overlay}-00A0.dtbo"
+			overlay="cape-universaln"
 		else
-			stop_cape_load="stop"
+			case "${check_dtb}" in
+			am335x-boneblack-nhdmi-overlay.dtb)
+				overlay="cape-universal"
+				;;
+			*)
+				stop_cape_load="stop"
+				;;
+			esac
 		fi
+		dtbo="${overlay}-00A0.dtbo"
 	fi
 
 	#Make sure no custom overlays are loaded...
