@@ -112,9 +112,16 @@ get_device () {
 	fi
 
 	unset es8
+	unset kernel_headers
 	case "${machine}" in
 	TI_AM335x_BeagleBone|TI_AM335x_BeagleBone_Black)
 		es8="enabled"
+		;;
+	TI_AM5728_BeagleBoard-X15)
+		kernel_headers="enabled"
+		;;
+	TI_OMAP5_uEVM_board)
+		kernel_headers="enabled"
 		;;
 	esac
 }
@@ -178,6 +185,9 @@ latest_version_repo () {
 			#is the package even available to apt?
 			check_apt_cache
 			if [ "x${deb_pkgs}" = "x${apt_cache}" ] ; then
+				if [ "x${kernel_headers}" = "xenabled" ] ; then
+					pkg="${pkg} linux-headers-${latest_kernel}"
+				fi
 				echo "debug: installing: [${pkg}]"
 				apt-get install -y ${pkg}
 				update_uEnv_txt
@@ -291,6 +301,9 @@ specific_version_repo () {
 	#is the package even available to apt?
 	check_apt_cache
 	if [ "x${deb_pkgs}" = "x${apt_cache}" ] ; then
+		if [ "x${kernel_headers}" = "xenabled" ] ; then
+			pkg="${pkg} linux-headers-${latest_kernel}"
+		fi
 		apt-get install -y ${pkg}
 		update_uEnv_txt
 	elif [ "x${pkg}" = "x${apt_cache}" ] ; then
