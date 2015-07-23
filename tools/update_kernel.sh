@@ -86,7 +86,6 @@ scan_armv7_kernels () {
 }
 
 get_device () {
-	unset es8
 	machine=$(cat /proc/device-tree/model | sed "s/ /_/g")
 
 	if [ "x${SOC}" = "x" ] ; then
@@ -111,6 +110,13 @@ get_device () {
 			;;
 		esac
 	fi
+
+	unset es8
+	case "${machine}" in
+	TI_AM335x_BeagleBone|TI_AM335x_BeagleBone_Black)
+		es8="enabled"
+		;;
+	esac
 }
 
 update_uEnv_txt () {
@@ -302,19 +308,25 @@ third_party_final () {
 
 third_party () {
 	if [ "x${SOC}" = "xomap-psp" ] ; then
-		apt-get install -o Dpkg::Options::="--force-overwrite" -y mt7601u-modules-${latest_kernel}
+		#3.8 only...
+		if [ "x${kernel}" = "xSTABLE" ] ; then
+			apt-get install -o Dpkg::Options::="--force-overwrite" -y mt7601u-modules-${latest_kernel} || true
+		fi
 		if [ ! "x${kernel}" = "xSTABLE" ] ; then
 			if [ "x${es8}" = "xenabled" ] ; then
-				apt-get install -y ti-sgx-es8-modules-${latest_kernel}
+				apt-get install -y ti-sgx-es8-modules-${latest_kernel} || true
 			fi
 		fi
 		third_party_final
 	fi
 
-	if [ "x${SOC}" = "xti" ] ; then
-		apt-get install -o Dpkg::Options::="--force-overwrite" -y mt7601u-modules-${latest_kernel}
+	if [ "x${SOC}" = "xti" ] || [ "x${SOC}" = "xti-rt" ] || [ "x${SOC}" = "xti-xenomai" ] ; then
+		#3.14 only...
+		if [ "x${kernel}" = "xSTABLE" ] ; then
+			apt-get install -o Dpkg::Options::="--force-overwrite" -y mt7601u-modules-${latest_kernel} || true
+		fi
 		if [ "x${es8}" = "xenabled" ] ; then
-			apt-get install -y ti-sgx-es8-modules-${latest_kernel}
+			apt-get install -y ti-sgx-es8-modules-${latest_kernel} || true
 		fi
 		third_party_final
 	fi
