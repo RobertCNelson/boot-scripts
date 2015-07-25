@@ -59,14 +59,24 @@ mkfs.ext4 ${destination}1
 sync ; sleep 2
 
 mkdir -p /tmp/rootfs/
-mount ${destination}1  /tmp/rootfs/
+mount ${destination}1 /tmp/rootfs/
 
 sync ; sleep 2
 
+message="rsync: / -> /tmp/rootfs/" ; broadcast
 if [ ! "x${rsync_progress}" = "x" ] ; then
 	echo "rsync: note the % column is useless..."
 fi
-rsync -aAx ${rsync_progress} /* /tmp/rootfs/ --exclude={/dev/*,/proc/*,/sys/*,/tmp/*,/run/*,/mnt/*,/media/*,/lost+found}
+rsync -aAx ${rsync_progress} /* /tmp/rootfs/ --exclude={/dev/*,/proc/*,/sys/*,/tmp/*,/run/*,/mnt/*,/media/*,/lost+found,/lib/modules/*,/uEnv.txt}
+
+mkdir -p /tmp/rootfs/lib/modules/$(uname -r)/ || true
+
+message="Copying: Kernel modules" ; broadcast
+message="rsync: /lib/modules/$(uname -r)/ -> /tmp/rootfs/lib/modules/$(uname -r)/" ; broadcast
+if [ ! "x${rsync_progress}" = "x" ] ; then
+	echo "rsync: note the % column is useless..."
+fi
+rsync -aAx ${rsync_progress} /lib/modules/$(uname -r)/* /tmp/rootfs/lib/modules/$(uname -r)/
 
 sync ; sleep 2
 
@@ -74,7 +84,7 @@ message="-----------------------------" ; broadcast
 
 message="Final System Tweaks:" ; broadcast
 unset root_uuid
-root_uuid=$(/sbin/blkid -c /dev/null -s UUID -o value /dev/sdc1)
+root_uuid=$(/sbin/blkid -c /dev/null -s UUID -o value ${destination}1)
 if [ "${root_uuid}" ] ; then
 	sed -i -e 's:uuid=:#uuid=:g' /boot/uEnv.txt
 	echo "uuid=${root_uuid}" >> /boot/uEnv.txt
