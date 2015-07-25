@@ -32,6 +32,8 @@ broadcast () {
 	fi
 }
 
+umount /dev/sda1
+
 dd if=/dev/zero of=/dev/sda bs=1M count=10
 
 sync ; sleep 2
