@@ -70,7 +70,7 @@ copy_rootfs () {
 	message="Copying: ${source}p${media_rootfs} -> ${destination}${media_rootfs}" ; broadcast
 	mkdir -p /tmp/rootfs/ || true
 
-	mount ${destination}p${media_rootfs} /tmp/rootfs/ -o async,noatime
+	mount ${destination}${media_rootfs} /tmp/rootfs/ -o async,noatime
 
 	message="rsync: / -> /tmp/rootfs/" ; broadcast
 	if [ ! "x${rsync_progress}" = "x" ] ; then
