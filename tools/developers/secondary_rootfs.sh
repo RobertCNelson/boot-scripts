@@ -26,6 +26,7 @@ if ! id | grep -q root; then
 fi
 
 destination="/dev/sda"
+source="/dev/mmcblk0"
 
 broadcast () {
 	if [ "x${message}" != "x" ] ; then
@@ -44,61 +45,112 @@ fi
 
 umount ${destination}1 || true
 
-dd if=/dev/zero of=${destination} bs=1M count=10
+format_boot () {
+	message="mkfs.vfat -F 16 ${destination}p1 -n ${boot_label}" ; broadcast
+	echo "-----------------------------"
+	mkfs.vfat -F 16 ${destination}p1 -n ${boot_label}
+	echo "-----------------------------"
+}
 
-sync ; sleep 2
+format_root () {
+	message="mkfs.ext4 ${destination}p2 -L ${rootfs_label}" ; broadcast
+	echo "-----------------------------"
+	mkfs.ext4 ${destination}p2 -L ${rootfs_label}
+	echo "-----------------------------"
+}
 
-sfdisk --in-order --Linux --unit M ${destination} <<-__EOF__
-1,,0x83,*
-__EOF__
+format_single_root () {
+	message="mkfs.ext4 ${destination}1 -L ${boot_label}" ; broadcast
+	echo "-----------------------------"
+	mkfs.ext4 ${destination}1 -L ${boot_label}
+	echo "-----------------------------"
+}
 
-sync ; sleep 2
+copy_rootfs () {
+	message="Copying: ${source}p${media_rootfs} -> ${destination}${media_rootfs}" ; broadcast
+	mkdir -p /tmp/rootfs/ || true
 
-mkfs.ext4 ${destination}1
+	mount ${destination}p${media_rootfs} /tmp/rootfs/ -o async,noatime
 
-sync ; sleep 2
+	message="rsync: / -> /tmp/rootfs/" ; broadcast
+	if [ ! "x${rsync_progress}" = "x" ] ; then
+		echo "rsync: note the % column is useless..."
+	fi
+	rsync -aAx ${rsync_progress} /* /tmp/rootfs/ --exclude={/dev/*,/proc/*,/sys/*,/tmp/*,/run/*,/mnt/*,/media/*,/lost+found,/lib/modules/*,/uEnv.txt}
+	#flush_cache
 
-mkdir -p /tmp/rootfs/
-mount ${destination}1 /tmp/rootfs/
+	mkdir -p /tmp/rootfs/lib/modules/$(uname -r)/ || true
 
-sync ; sleep 2
+	message="Copying: Kernel modules" ; broadcast
+	message="rsync: /lib/modules/$(uname -r)/ -> /tmp/rootfs/lib/modules/$(uname -r)/" ; broadcast
+	if [ ! "x${rsync_progress}" = "x" ] ; then
+		echo "rsync: note the % column is useless..."
+	fi
+	rsync -aAx ${rsync_progress} /lib/modules/$(uname -r)/* /tmp/rootfs/lib/modules/$(uname -r)/
+	#flush_cache
 
-message="rsync: / -> /tmp/rootfs/" ; broadcast
-if [ ! "x${rsync_progress}" = "x" ] ; then
-	echo "rsync: note the % column is useless..."
-fi
-rsync -aAx ${rsync_progress} /* /tmp/rootfs/ --exclude={/dev/*,/proc/*,/sys/*,/tmp/*,/run/*,/mnt/*,/media/*,/lost+found,/lib/modules/*,/uEnv.txt}
+	message="Copying: ${source}p${media_rootfs} -> ${destination}${media_rootfs} complete" ; broadcast
+	message="-----------------------------" ; broadcast
 
-mkdir -p /tmp/rootfs/lib/modules/$(uname -r)/ || true
+	message="Final System Tweaks:" ; broadcast
+	unset root_uuid
+	root_uuid=$(/sbin/blkid -c /dev/null -s UUID -o value ${destination}${media_rootfs})
+	if [ "${root_uuid}" ] ; then
+		sed -i -e 's:uuid=:#uuid=:g' /boot/uEnv.txt
+		echo "uuid=${root_uuid}" >> /boot/uEnv.txt
 
-message="Copying: Kernel modules" ; broadcast
-message="rsync: /lib/modules/$(uname -r)/ -> /tmp/rootfs/lib/modules/$(uname -r)/" ; broadcast
-if [ ! "x${rsync_progress}" = "x" ] ; then
-	echo "rsync: note the % column is useless..."
-fi
-rsync -aAx ${rsync_progress} /lib/modules/$(uname -r)/* /tmp/rootfs/lib/modules/$(uname -r)/
+		message="UUID=${root_uuid}" ; broadcast
+		root_uuid="UUID=${root_uuid}"
+	else
+		#really a failure...
+		root_uuid="${source}p${media_rootfs}"
+	fi
 
-sync ; sleep 2
+	message="Generating: /etc/fstab" ; broadcast
+	echo "# /etc/fstab: static file system information." > /tmp/rootfs/etc/fstab
+	echo "#" >> /tmp/rootfs/etc/fstab
+	echo "${root_uuid}  /  ext4  noatime,errors=remount-ro  0  1" >> /tmp/rootfs/etc/fstab
+	echo "debugfs  /sys/kernel/debug  debugfs  defaults  0  0" >> /tmp/rootfs/etc/fstab
+	cat /tmp/rootfs/etc/fstab
 
-message="-----------------------------" ; broadcast
+	umount /tmp/rootfs/ || umount -l /tmp/rootfs/
+}
 
-message="Final System Tweaks:" ; broadcast
-unset root_uuid
-root_uuid=$(/sbin/blkid -c /dev/null -s UUID -o value ${destination}1)
-if [ "${root_uuid}" ] ; then
-	sed -i -e 's:uuid=:#uuid=:g' /boot/uEnv.txt
-	echo "uuid=${root_uuid}" >> /boot/uEnv.txt
+partition_drive () {
+	message="Erasing: ${destination}" ; broadcast
+	dd if=/dev/zero of=${destination} bs=1M count=108
+	sync
+	dd if=${destination} of=/dev/null bs=1M count=108
+	sync
+	message="Erasing: ${destination} complete" ; broadcast
+	message="-----------------------------" ; broadcast
 
-	message="UUID=${root_uuid}" ; broadcast
-	root_uuid="UUID=${root_uuid}"
-else
-	#really a failure...
-	root_uuid="${source}p${media_rootfs}"
-fi
+	conf_boot_startmb=${conf_boot_startmb:-"1"}
+	sfdisk_fstype=${sfdisk_fstype:-"0x83"}
+	boot_label=${boot_label:-"rootfs"}
 
-message="Generating: /etc/fstab" ; broadcast
-echo "# /etc/fstab: static file system information." > /tmp/rootfs/etc/fstab
-echo "#" >> /tmp/rootfs/etc/fstab
-echo "${root_uuid}  /  ext4  noatime,errors=remount-ro  0  1" >> /tmp/rootfs/etc/fstab
-echo "debugfs  /sys/kernel/debug  debugfs  defaults  0  0" >> /tmp/rootfs/etc/fstab
-cat /tmp/rootfs/etc/fstab
+	message="Formatting: ${destination}" ; broadcast
+
+	sfdisk_options="--force --Linux --in-order --unit M"
+	sfdisk_boot_startmb="${conf_boot_startmb}"
+
+	test_sfdisk=$(LC_ALL=C sfdisk --help | grep -m 1 -e "--in-order" || true)
+	if [ "x${test_sfdisk}" = "x" ] ; then
+		message="sfdisk: [2.26.x or greater]" ; broadcast
+		sfdisk_options="--force"
+		sfdisk_boot_startmb="${sfdisk_boot_startmb}M"
+	fi
+
+	message="sfdisk: [sfdisk ${sfdisk_options} ${destination}]" ; broadcast
+	message="sfdisk: [${sfdisk_boot_startmb},${sfdisk_boot_endmb},${sfdisk_fstype},*]" ; broadcast
+
+	LC_ALL=C sfdisk ${sfdisk_options} "${destination}" <<-__EOF__
+		${sfdisk_boot_startmb},,${sfdisk_fstype},*
+	__EOF__
+
+}
+
+partition_drive
+format_single_root
+media_rootfs="1"
+copy_rootfs
