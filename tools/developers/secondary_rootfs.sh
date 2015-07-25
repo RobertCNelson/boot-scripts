@@ -25,6 +25,8 @@ if ! id | grep -q root; then
 	exit
 fi
 
+destination="/dev/sda"
+
 broadcast () {
 	if [ "x${message}" != "x" ] ; then
 		echo "${message}"
@@ -32,24 +34,24 @@ broadcast () {
 	fi
 }
 
-umount /dev/sda1
+umount ${destination}1 || true
 
-dd if=/dev/zero of=/dev/sda bs=1M count=10
+dd if=/dev/zero of=${destination} bs=1M count=10
 
 sync ; sleep 2
 
-sfdisk --in-order --Linux --unit M /dev/sda <<-__EOF__
+sfdisk --in-order --Linux --unit M ${destination} <<-__EOF__
 1,,0x83,*
 __EOF__
 
 sync ; sleep 2
 
-mkfs.ext4 /dev/sda1
+mkfs.ext4 ${destination}1
 
 sync ; sleep 2
 
 mkdir -p /tmp/rootfs/
-mount /dev/sda1  /tmp/rootfs/
+mount ${destination}1  /tmp/rootfs/
 
 sync ; sleep 2
 
