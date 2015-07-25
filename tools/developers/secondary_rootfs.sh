@@ -34,6 +34,14 @@ broadcast () {
 	fi
 }
 
+##FIXME: quick check for rsync 3.1 (jessie)
+unset rsync_check
+unset rsync_progress
+rsync_check=$(LC_ALL=C rsync --version | grep version | awk '{print $3}' || true)
+if [ "x${rsync_check}" = "x3.1.1" ] ; then
+	rsync_progress="--info=progress2 --human-readable"
+fi
+
 umount ${destination}1 || true
 
 dd if=/dev/zero of=${destination} bs=1M count=10
@@ -55,7 +63,10 @@ mount ${destination}1  /tmp/rootfs/
 
 sync ; sleep 2
 
-rsync -aAXv /* /tmp/rootfs/ --exclude={/dev/*,/proc/*,/sys/*,/tmp/*,/run/*,/mnt/*,/media/*,/lost+found}
+if [ ! "x${rsync_progress}" = "x" ] ; then
+	echo "rsync: note the % column is useless..."
+fi
+rsync -aAx ${rsync_progress} /* /tmp/rootfs/ --exclude={/dev/*,/proc/*,/sys/*,/tmp/*,/run/*,/mnt/*,/media/*,/lost+found}
 
 sync ; sleep 2
 
