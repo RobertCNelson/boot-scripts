@@ -24,7 +24,7 @@
 #This script assumes, these packages are installed, as network may not be setup
 #dosfstools initramfs-tools rsync u-boot-tools
 
-version_message="1.001: 2015-07-21: Better then never, version #..."
+version_message="1.002: 2015-07-27: job.txt filter out windows evil line return..."
 
 #WARNING make sure to run this with an initrd...
 #lsmod:
