@@ -264,17 +264,17 @@ single_partition () {
 resize_emmc () {
 	unset resized
 
-	conf_partition1_startmb=$(cat /tmp/usb/job.txt | grep -v '#' | grep conf_partition1_startmb | awk -F '=' '{print $2}' || true)
-	conf_partition1_fstype=$(cat /tmp/usb/job.txt | grep -v '#' | grep conf_partition1_fstype | awk -F '=' '{print $2}' || true)
-	conf_partition1_endmb=$(cat /tmp/usb/job.txt | grep -v '#' | grep conf_partition1_endmb | awk -F '=' '{print $2}' || true)
+	conf_partition1_startmb=$(cat ${wfile} | grep -v '#' | grep conf_partition1_startmb | awk -F '=' '{print $2}' || true)
+	conf_partition1_fstype=$(cat ${wfile} | grep -v '#' | grep conf_partition1_fstype | awk -F '=' '{print $2}' || true)
+	conf_partition1_endmb=$(cat ${wfile} | grep -v '#' | grep conf_partition1_endmb | awk -F '=' '{print $2}' || true)
 
-	conf_partition2_fstype=$(cat /tmp/usb/job.txt | grep -v '#' | grep conf_partition2_fstype | awk -F '=' '{print $2}' || true)
-	conf_partition2_endmb=$(cat /tmp/usb/job.txt | grep -v '#' | grep conf_partition2_endmb | awk -F '=' '{print $2}' || true)
+	conf_partition2_fstype=$(cat ${wfile} | grep -v '#' | grep conf_partition2_fstype | awk -F '=' '{print $2}' || true)
+	conf_partition2_endmb=$(cat ${wfile} | grep -v '#' | grep conf_partition2_endmb | awk -F '=' '{print $2}' || true)
 
-	conf_partition3_fstype=$(cat /tmp/usb/job.txt | grep -v '#' | grep conf_partition3_fstype | awk -F '=' '{print $2}' || true)
-	conf_partition3_endmb=$(cat /tmp/usb/job.txt | grep -v '#' | grep conf_partition3_endmb | awk -F '=' '{print $2}' || true)
+	conf_partition3_fstype=$(cat ${wfile} | grep -v '#' | grep conf_partition3_fstype | awk -F '=' '{print $2}' || true)
+	conf_partition3_endmb=$(cat ${wfile} | grep -v '#' | grep conf_partition3_endmb | awk -F '=' '{print $2}' || true)
 
-	conf_partition4_fstype=$(cat /tmp/usb/job.txt | grep -v '#' | grep conf_partition4_fstype | awk -F '=' '{print $2}' || true)
+	conf_partition4_fstype=$(cat ${wfile} | grep -v '#' | grep conf_partition4_fstype | awk -F '=' '{print $2}' || true)
 
 	if [ ! "x${conf_partition4_fstype}" = "x" ] ; then
 		quad_partition
@@ -469,29 +469,39 @@ cylon_leds () {
 process_job_file () {
 	job_file=found
 	message="Processing job.txt:" ; broadcast
-	message="`cat /tmp/usb/job.txt | grep -v '#'`" ; broadcast
+	message="`cat ${wfile} | grep -v '#'`" ; broadcast
 	message="-----------------------------" ; broadcast
 
-	abi=$(cat /tmp/usb/job.txt | grep -v '#' | grep abi | awk -F '=' '{print $2}' || true)
+	abi=$(cat ${wfile} | grep -v '#' | grep abi | awk -F '=' '{print $2}' || true)
+
+	if [ "x${abi}" = "xaaa\r" ] ; then
+		if [ ! -f /usr/bin/dos2unix ] ; then
+			message="Error: job.txt in windows format and no dos2unix isntalled." ; broadcast
+			message="Error: Use Linux." ; broadcast
+			message="-----------------------------" ; broadcast
+			sleep 10
+			write_failure
+		fi
+	fi
 	if [ "x${abi}" = "xaaa" ] ; then
-		conf_eeprom_file=$(cat /tmp/usb/job.txt | grep -v '#' | grep conf_eeprom_file | awk -F '=' '{print $2}' || true)
-		conf_eeprom_compare=$(cat /tmp/usb/job.txt | grep -v '#' | grep conf_eeprom_compare | awk -F '=' '{print $2}' || true)
+		conf_eeprom_file=$(cat ${wfile} | grep -v '#' | grep conf_eeprom_file | awk -F '=' '{print $2}' || true)
+		conf_eeprom_compare=$(cat ${wfile} | grep -v '#' | grep conf_eeprom_compare | awk -F '=' '{print $2}' || true)
 		if [ -f /tmp/usb/${conf_eeprom_file} ] ; then
 			check_eeprom
 		fi
 
-		conf_image=$(cat /tmp/usb/job.txt | grep -v '#' | grep conf_image | awk -F '=' '{print $2}' || true)
+		conf_image=$(cat ${wfile} | grep -v '#' | grep conf_image | awk -F '=' '{print $2}' || true)
 		if [ -f /tmp/usb/${conf_image} ] ; then
-			conf_bmap=$(cat /tmp/usb/job.txt | grep -v '#' | grep conf_bmap | awk -F '=' '{print $2}' || true)
+			conf_bmap=$(cat ${wfile} | grep -v '#' | grep conf_bmap | awk -F '=' '{print $2}' || true)
 			cylon_leds & CYLON_PID=$!
 			flash_emmc
-			conf_resize=$(cat /tmp/usb/job.txt | grep -v '#' | grep conf_resize | awk -F '=' '{print $2}' || true)
+			conf_resize=$(cat ${wfile} | grep -v '#' | grep conf_resize | awk -F '=' '{print $2}' || true)
 			if [ "x${conf_resize}" = "xenable" ] ; then
 				message="resizing eMMC" ; broadcast
 				message="-----------------------------" ; broadcast
 				resize_emmc
 			fi
-			conf_root_partition=$(cat /tmp/usb/job.txt | grep -v '#' | grep conf_root_partition | awk -F '=' '{print $2}' || true)
+			conf_root_partition=$(cat ${wfile} | grep -v '#' | grep conf_root_partition | awk -F '=' '{print $2}' || true)
 			if [ ! "x${conf_root_partition}" = "x" ] ; then
 				set_uuid
 			fi
@@ -503,6 +513,7 @@ process_job_file () {
 }
 
 check_usb_media () {
+	wfile="/tmp/usb/job.txt"
 	message="Checking external usb media" ; broadcast
 	message="lsblk:" ; broadcast
 	message="`lsblk || true`" ; broadcast
@@ -527,7 +538,7 @@ check_usb_media () {
 
 			sync ; sync ; sleep 5
 
-			if [ ! -f /tmp/usb/job.txt ] ; then
+			if [ ! -f ${wfile} ] ; then
 				umount "/tmp/usb/" || true
 			else
 				process_job_file
