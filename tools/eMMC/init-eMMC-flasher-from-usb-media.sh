@@ -507,7 +507,7 @@ process_job_file () {
 			message="error: image not found [/tmp/usb/${conf_image}]" ; broadcast
 		fi
 	else
-		message="error: unable to decode job.txt]" ; broadcast
+		message="error: unable to decode: [job.txt]" ; broadcast
 		sleep 10
 		write_failure
 	fi
