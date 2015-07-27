@@ -473,6 +473,7 @@ process_job_file () {
 	message="-----------------------------" ; broadcast
 	if [ ! -f /usr/bin/dos2unix ] ; then
 		message="Warning: dos2unix not installed, dont use windows to create job.txt file." ; broadcast
+		sleep 1
 	else
 		dos2unix -n ${wfile} /tmp/job.txt
 		wfile="/tmp/job.txt"
@@ -505,6 +506,10 @@ process_job_file () {
 		else
 			message="error: image not found [/tmp/usb/${conf_image}]" ; broadcast
 		fi
+	else
+		message="error: unable to decode job.txt]" ; broadcast
+		sleep 10
+		write_failure
 	fi
 }
 
