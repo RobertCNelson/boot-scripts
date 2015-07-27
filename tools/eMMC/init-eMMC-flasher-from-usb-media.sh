@@ -24,7 +24,7 @@
 #This script assumes, these packages are installed, as network may not be setup
 #dosfstools initramfs-tools rsync u-boot-tools
 
-version_message="1.002: 2015-07-27: job.txt filter out windows evil line return..."
+version_message="1.003: 2015-07-27: windows job.txt files will work if dos2unix is installed..."
 
 #WARNING make sure to run this with an initrd...
 #lsmod:
@@ -471,18 +471,14 @@ process_job_file () {
 	message="Processing job.txt:" ; broadcast
 	message="`cat ${wfile} | grep -v '#'`" ; broadcast
 	message="-----------------------------" ; broadcast
+	if [ ! -f /usr/bin/dos2unix ] ; then
+		message="Warning: dos2unix not installed, dont use windows to create job.txt file." ; broadcast
+	else
+		dos2unix -n ${wfile} /tmp/job.txt
+		wfile="/tmp/job.txt"
+	fi
 
 	abi=$(cat ${wfile} | grep -v '#' | grep abi | awk -F '=' '{print $2}' || true)
-
-	if [ "x${abi}" = "xaaa\r" ] ; then
-		if [ ! -f /usr/bin/dos2unix ] ; then
-			message="Error: job.txt in windows format and no dos2unix isntalled." ; broadcast
-			message="Error: Use Linux." ; broadcast
-			message="-----------------------------" ; broadcast
-			sleep 10
-			write_failure
-		fi
-	fi
 	if [ "x${abi}" = "xaaa" ] ; then
 		conf_eeprom_file=$(cat ${wfile} | grep -v '#' | grep conf_eeprom_file | awk -F '=' '{print $2}' || true)
 		conf_eeprom_compare=$(cat ${wfile} | grep -v '#' | grep conf_eeprom_compare | awk -F '=' '{print $2}' || true)
