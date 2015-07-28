@@ -205,8 +205,8 @@ quad_partition () {
 	__EOF__
 
 	auto_fsck
-	message="resize2fs ${destination}p4" ; broadcast
-	resize2fs ${destination}p4 || write_failure
+	message="resize2fs -f ${destination}p4" ; broadcast
+	resize2fs -f ${destination}p4 || write_failure
 	message="-----------------------------" ; broadcast
 }
 
@@ -224,8 +224,8 @@ tri_partition () {
 	__EOF__
 
 	auto_fsck
-	message="resize2fs ${destination}p3" ; broadcast
-	resize2fs ${destination}p3 || write_failure
+	message="resize2fs -f ${destination}p3" ; broadcast
+	resize2fs -f ${destination}p3 || write_failure
 	message="-----------------------------" ; broadcast
 }
 
@@ -241,8 +241,8 @@ dual_partition () {
 	__EOF__
 
 	auto_fsck
-	message="resize2fs ${destination}p2" ; broadcast
-	resize2fs ${destination}p2 || write_failure
+	message="resize2fs -f ${destination}p2" ; broadcast
+	resize2fs -f ${destination}p2 || write_failure
 	message="-----------------------------" ; broadcast
 }
 
@@ -256,8 +256,8 @@ single_partition () {
 	__EOF__
 
 	auto_fsck
-	message="resize2fs ${destination}p1" ; broadcast
-	resize2fs ${destination}p1 || write_failure
+	message="resize2fs -f ${destination}p1" ; broadcast
+	resize2fs -f ${destination}p1 || write_failure
 	message="-----------------------------" ; broadcast
 }
 
