@@ -167,23 +167,23 @@ flash_emmc () {
 auto_fsck () {
 	message="-----------------------------" ; broadcast
 	if [ "x${conf_partition1_fstype}" = "x0x83" ] ; then
-		message="e2fsck -f -p ${destination}p1" ; broadcast
-		e2fsck -f -p ${destination}p1
+		message="e2fsck -f ${destination}p1" ; broadcast
+		e2fsck -f ${destination}p1
 		message="-----------------------------" ; broadcast
 	fi
 	if [ "x${conf_partition2_fstype}" = "x0x83" ] ; then
-		message="e2fsck -f -p ${destination}p2" ; broadcast
-		e2fsck -f -p ${destination}p2
+		message="e2fsck -f ${destination}p2" ; broadcast
+		e2fsck -f ${destination}p2
 		message="-----------------------------" ; broadcast
 	fi
 	if [ "x${conf_partition3_fstype}" = "x0x83" ] ; then
-		message="e2fsck -f -p ${destination}p3" ; broadcast
-		e2fsck -f -p ${destination}p3
+		message="e2fsck -f ${destination}p3" ; broadcast
+		e2fsck -f ${destination}p3
 		message="-----------------------------" ; broadcast
 	fi
 	if [ "x${conf_partition4_fstype}" = "x0x83" ] ; then
-		message="e2fsck -f -p ${destination}p4" ; broadcast
-		e2fsck -f -p ${destination}p4
+		message="e2fsck -f ${destination}p4" ; broadcast
+		e2fsck -f ${destination}p4
 		message="-----------------------------" ; broadcast
 	fi
 	flush_cache
