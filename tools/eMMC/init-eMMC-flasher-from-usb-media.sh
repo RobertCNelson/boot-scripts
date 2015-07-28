@@ -167,23 +167,23 @@ flash_emmc () {
 auto_fsck () {
 	message="-----------------------------" ; broadcast
 	if [ "x${conf_partition1_fstype}" = "x0x83" ] ; then
-		message="e2fsck -f ${destination}p1" ; broadcast
-		e2fsck -f ${destination}p1
+		message="e2fsck -fy ${destination}p1" ; broadcast
+		e2fsck -fy ${destination}p1 || write_failure
 		message="-----------------------------" ; broadcast
 	fi
 	if [ "x${conf_partition2_fstype}" = "x0x83" ] ; then
-		message="e2fsck -f ${destination}p2" ; broadcast
-		e2fsck -f ${destination}p2
+		message="e2fsck -fy ${destination}p2" ; broadcast
+		e2fsck -fy ${destination}p2 || write_failure
 		message="-----------------------------" ; broadcast
 	fi
 	if [ "x${conf_partition3_fstype}" = "x0x83" ] ; then
-		message="e2fsck -f ${destination}p3" ; broadcast
-		e2fsck -f ${destination}p3
+		message="e2fsck -fy ${destination}p3" ; broadcast
+		e2fsck -fy ${destination}p3 || write_failure
 		message="-----------------------------" ; broadcast
 	fi
 	if [ "x${conf_partition4_fstype}" = "x0x83" ] ; then
-		message="e2fsck -f ${destination}p4" ; broadcast
-		e2fsck -f ${destination}p4
+		message="e2fsck -fy ${destination}p4" ; broadcast
+		e2fsck -fy ${destination}p4 || write_failure
 		message="-----------------------------" ; broadcast
 	fi
 	flush_cache
@@ -206,7 +206,7 @@ quad_partition () {
 
 	auto_fsck
 	message="resize2fs ${destination}p4" ; broadcast
-	resize2fs ${destination}p4
+	resize2fs ${destination}p4 || write_failure
 	message="-----------------------------" ; broadcast
 }
 
@@ -225,7 +225,7 @@ tri_partition () {
 
 	auto_fsck
 	message="resize2fs ${destination}p3" ; broadcast
-	resize2fs ${destination}p3
+	resize2fs ${destination}p3 || write_failure
 	message="-----------------------------" ; broadcast
 }
 
@@ -242,7 +242,7 @@ dual_partition () {
 
 	auto_fsck
 	message="resize2fs ${destination}p2" ; broadcast
-	resize2fs ${destination}p2
+	resize2fs ${destination}p2 || write_failure
 	message="-----------------------------" ; broadcast
 }
 
@@ -257,7 +257,7 @@ single_partition () {
 
 	auto_fsck
 	message="resize2fs ${destination}p1" ; broadcast
-	resize2fs ${destination}p1
+	resize2fs ${destination}p1 || write_failure
 	message="-----------------------------" ; broadcast
 }
 
