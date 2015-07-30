@@ -28,8 +28,11 @@ arp -i eth1 -s 10.60.0.1 ${mac_eth0}
 
 ping -c 1 10.60.1.1
 
-echo "server"
+echo ""
+
+echo "#Start Server"
 echo "iperf -B 10.50.0.1 -s -u -w 256k -l 1KB &"
-echo "client"
+echo ""
+echo "#Run Client"
 echo "iperf -B 10.50.1.1 -c 10.60.0.1 -u -b 600M -w 256k -l 1KB -P 10 -t 60"
 
