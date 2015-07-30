@@ -36,3 +36,11 @@ echo ""
 echo "#Run Client"
 echo "iperf -B 10.50.1.1 -c 10.60.0.1 -u -b 1000M -w 320k -l 1KB -P 10 -t 60"
 
+#-l 1KB
+#[SUM]  0.0-60.0 sec  1.37 GBytes   197 Mbits/sec
+
+#-l 4KB
+#[SUM]  0.0-60.3 sec  1.14 GBytes   163 Mbits/sec
+
+#-l 8KB
+#[SUM]  0.0-60.3 sec   405 MBytes  56.3 Mbits/sec

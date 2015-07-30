@@ -150,6 +150,12 @@ partition_drive () {
 
 }
 
+if [ ! -f /boot/initrd.img-$(uname -r) ] ; then
+	update-initramfs -c -k $(uname -r)
+else
+	update-initramfs -u -k $(uname -r)
+fi
+
 partition_drive
 format_single_root
 media_rootfs="1"
