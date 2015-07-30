@@ -95,16 +95,26 @@ copy_rootfs () {
 	message="Final System Tweaks:" ; broadcast
 	unset root_uuid
 	root_uuid=$(/sbin/blkid -c /dev/null -s UUID -o value ${destination}${media_rootfs})
-	if [ "${root_uuid}" ] ; then
-		sed -i -e 's:uuid=:#uuid=:g' /boot/uEnv.txt
-		echo "uuid=${root_uuid}" >> /boot/uEnv.txt
 
-		message="UUID=${root_uuid}" ; broadcast
-		root_uuid="UUID=${root_uuid}"
+	unset uuid_uevntxt
+	uuid_uevntxt=$(cat /tmp/rootfs/boot/uEnv.txt | grep -v '#' | grep uuid | awk -F '=' '{print $2}' || true)
+	if [ ! "x${uuid_uevntxt}" = "x" ] ; then
+		sed -i -e "s:uuid=$uuid_uevntxt:uuid=$root_uuid:g" /tmp/rootfs/boot/uEnv.txt
 	else
-		#really a failure...
-		root_uuid="${source}p${media_rootfs}"
+		sed -i -e "s:#uuid=:uuid=$root_uuid:g" /tmp/rootfs/boot/uEnv.txt
+		unset uuid_uevntxt
+		uuid_uevntxt=$(cat /tmp/rootfs/boot/uEnv.txt | grep -v '#' | grep uuid | awk -F '=' '{print $2}' || true)
+		if [ "x${uuid_uevntxt}" = "x" ] ; then
+			echo "uuid=${root_uuid}" >> /tmp/rootfs/boot/uEnv.txt
+		fi
 	fi
+
+	#Also update microSD /boot/uEnv.txt encase u-boot can't read /dev/sda1
+	sed -i -e 's:uuid=:#uuid=:g' /boot/uEnv.txt
+	echo "uuid=${root_uuid}" >> /boot/uEnv.txt
+
+	message="UUID=${root_uuid}" ; broadcast
+	root_uuid="UUID=${root_uuid}"
 
 	message="Generating: /etc/fstab" ; broadcast
 	echo "# /etc/fstab: static file system information." > /tmp/rootfs/etc/fstab
