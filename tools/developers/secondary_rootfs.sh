@@ -109,10 +109,6 @@ copy_rootfs () {
 		fi
 	fi
 
-	#Also update microSD /boot/uEnv.txt encase u-boot can't read /dev/sda1
-	sed -i -e 's:uuid=:#uuid=:g' /boot/uEnv.txt
-	echo "uuid=${root_uuid}" >> /boot/uEnv.txt
-
 	message="UUID=${root_uuid}" ; broadcast
 	root_uuid="UUID=${root_uuid}"
 
