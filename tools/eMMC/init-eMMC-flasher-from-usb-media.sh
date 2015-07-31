@@ -24,7 +24,7 @@
 #This script assumes, these packages are installed, as network may not be setup
 #dosfstools initramfs-tools rsync u-boot-tools
 
-version_message="1.003: 2015-07-27: windows job.txt files will work if dos2unix is installed..."
+version_message="1.004: 2015-07-31: we want to use this on the x15 too.."
 
 #WARNING make sure to run this with an initrd...
 #lsmod:
@@ -81,16 +81,29 @@ dev2dir () {
 	grep -m 1 '^$1 ' /proc/mounts | while read LINE ; do set -- $LINE ; echo $2 ; done
 }
 
+get_device () {
+	is_bbb="enable"
+	machine=$(cat /proc/device-tree/model | sed "s/ /_/g")
+
+	case "${machine}" in
+	TI_AM5728_BeagleBoard-X15)
+		unset is_bbb
+		;;
+	esac
+}
+
 write_failure () {
 	message="writing to [${destination}] failed..." ; broadcast
 
-	[ -e /proc/$CYLON_PID ]  && kill $CYLON_PID > /dev/null 2>&1
+	if [ "x${is_bbb}" = "xenable" ] ; then
+		[ -e /proc/$CYLON_PID ]  && kill $CYLON_PID > /dev/null 2>&1
 
-	if [ -e /sys/class/leds/beaglebone\:green\:usr0/trigger ] ; then
-		echo heartbeat > /sys/class/leds/beaglebone\:green\:usr0/trigger
-		echo heartbeat > /sys/class/leds/beaglebone\:green\:usr1/trigger
-		echo heartbeat > /sys/class/leds/beaglebone\:green\:usr2/trigger
-		echo heartbeat > /sys/class/leds/beaglebone\:green\:usr3/trigger
+		if [ -e /sys/class/leds/beaglebone\:green\:usr0/trigger ] ; then
+			echo heartbeat > /sys/class/leds/beaglebone\:green\:usr0/trigger
+			echo heartbeat > /sys/class/leds/beaglebone\:green\:usr1/trigger
+			echo heartbeat > /sys/class/leds/beaglebone\:green\:usr2/trigger
+			echo heartbeat > /sys/class/leds/beaglebone\:green\:usr3/trigger
+		fi
 	fi
 	message="-----------------------------" ; broadcast
 	flush_cache
@@ -395,73 +408,77 @@ check_eeprom () {
 		got_eeprom="true"
 	fi
 
-	if [ "x${got_eeprom}" = "xtrue" ] ; then
-		if [ "x${eeprom_header}" = "x${conf_eeprom_compare}" ] ; then
-			message="Valid EEPROM header found [${eeprom_header}]" ; broadcast
-			message="-----------------------------" ; broadcast
-		else
-			message="Invalid EEPROM header detected" ; broadcast
-			if [ ! "x${eeprom_location}" = "x" ] ; then
-				message="Writing header to EEPROM" ; broadcast
-				dd if=/tmp/usb/${conf_eeprom_file} of=${eeprom_location} || write_failure
-				sync
-				sync
-				eeprom_check=$(hexdump -e '8/1 "%c"' ${eeprom} -n 8 | cut -b 6-8)
-				echo "eeprom check: [${eeprom_check}]"
+	if [ "x${is_bbb}" = "xenable" ] ; then
+		if [ "x${got_eeprom}" = "xtrue" ] ; then
+			if [ "x${eeprom_header}" = "x${conf_eeprom_compare}" ] ; then
+				message="Valid EEPROM header found [${eeprom_header}]" ; broadcast
+				message="-----------------------------" ; broadcast
+			else
+				message="Invalid EEPROM header detected" ; broadcast
+				if [ ! "x${eeprom_location}" = "x" ] ; then
+					message="Writing header to EEPROM" ; broadcast
+					dd if=/tmp/usb/${conf_eeprom_file} of=${eeprom_location} || write_failure
+					sync
+					sync
+					eeprom_check=$(hexdump -e '8/1 "%c"' ${eeprom} -n 8 | cut -b 6-8)
+					echo "eeprom check: [${eeprom_check}]"
 
-				#We have to reboot, as the kernel only loads the eMMC cape
-				# with a valid header
-				reboot -f
+					#We have to reboot, as the kernel only loads the eMMC cape
+					# with a valid header
+					reboot -f
 
-				#We shouldnt hit this...
-				exit
+					#We shouldnt hit this...
+					exit
+				fi
 			fi
 		fi
 	fi
 }
 
 cylon_leds () {
-	if [ -e /sys/class/leds/beaglebone\:green\:usr0/trigger ] ; then
-		BASE=/sys/class/leds/beaglebone\:green\:usr
-		echo none > ${BASE}0/trigger
-		echo none > ${BASE}1/trigger
-		echo none > ${BASE}2/trigger
-		echo none > ${BASE}3/trigger
+	if [ "x${is_bbb}" = "xenable" ] ; then
+		if [ -e /sys/class/leds/beaglebone\:green\:usr0/trigger ] ; then
+			BASE=/sys/class/leds/beaglebone\:green\:usr
+			echo none > ${BASE}0/trigger
+			echo none > ${BASE}1/trigger
+			echo none > ${BASE}2/trigger
+			echo none > ${BASE}3/trigger
 
-		STATE=1
-		while : ; do
-			case $STATE in
-			1)	echo 255 > ${BASE}0/brightness
-				echo 0   > ${BASE}1/brightness
-				STATE=2
-				;;
-			2)	echo 255 > ${BASE}1/brightness
-				echo 0   > ${BASE}0/brightness
-				STATE=3
-				;;
-			3)	echo 255 > ${BASE}2/brightness
-				echo 0   > ${BASE}1/brightness
-				STATE=4
-				;;
-			4)	echo 255 > ${BASE}3/brightness
-				echo 0   > ${BASE}2/brightness
-				STATE=5
-				;;
-			5)	echo 255 > ${BASE}2/brightness
-				echo 0   > ${BASE}3/brightness
-				STATE=6
-				;;
-			6)	echo 255 > ${BASE}1/brightness
-				echo 0   > ${BASE}2/brightness
-				STATE=1
-				;;
-			*)	echo 255 > ${BASE}0/brightness
-				echo 0   > ${BASE}1/brightness
-				STATE=2
-				;;
-			esac
-			sleep 0.1
-		done
+			STATE=1
+			while : ; do
+				case $STATE in
+				1)	echo 255 > ${BASE}0/brightness
+					echo 0   > ${BASE}1/brightness
+					STATE=2
+					;;
+				2)	echo 255 > ${BASE}1/brightness
+					echo 0   > ${BASE}0/brightness
+					STATE=3
+					;;
+				3)	echo 255 > ${BASE}2/brightness
+					echo 0   > ${BASE}1/brightness
+					STATE=4
+					;;
+				4)	echo 255 > ${BASE}3/brightness
+					echo 0   > ${BASE}2/brightness
+					STATE=5
+					;;
+				5)	echo 255 > ${BASE}2/brightness
+					echo 0   > ${BASE}3/brightness
+					STATE=6
+					;;
+				6)	echo 255 > ${BASE}1/brightness
+					echo 0   > ${BASE}2/brightness
+					STATE=1
+					;;
+				*)	echo 255 > ${BASE}0/brightness
+					echo 0   > ${BASE}1/brightness
+					STATE=2
+					;;
+				esac
+				sleep 0.1
+			done
+		fi
 	fi
 }
 
@@ -483,28 +500,39 @@ process_job_file () {
 	if [ "x${abi}" = "xaaa" ] ; then
 		conf_eeprom_file=$(cat ${wfile} | grep -v '#' | grep conf_eeprom_file | awk -F '=' '{print $2}' || true)
 		conf_eeprom_compare=$(cat ${wfile} | grep -v '#' | grep conf_eeprom_compare | awk -F '=' '{print $2}' || true)
-		if [ -f /tmp/usb/${conf_eeprom_file} ] ; then
-			check_eeprom
+		if [ ! "x${conf_eeprom_file}" = "x" ] ; then
+			if [ -f /tmp/usb/${conf_eeprom_file} ] ; then
+				check_eeprom
+			fi
 		fi
 
 		conf_image=$(cat ${wfile} | grep -v '#' | grep conf_image | awk -F '=' '{print $2}' || true)
-		if [ -f /tmp/usb/${conf_image} ] ; then
-			conf_bmap=$(cat ${wfile} | grep -v '#' | grep conf_bmap | awk -F '=' '{print $2}' || true)
-			cylon_leds & CYLON_PID=$!
-			flash_emmc
-			conf_resize=$(cat ${wfile} | grep -v '#' | grep conf_resize | awk -F '=' '{print $2}' || true)
-			if [ "x${conf_resize}" = "xenable" ] ; then
-				message="resizing eMMC" ; broadcast
-				message="-----------------------------" ; broadcast
-				resize_emmc
+		if [ ! "x${conf_image}" = "x" ] ; then
+			if [ -f /tmp/usb/${conf_image} ] ; then
+				conf_bmap=$(cat ${wfile} | grep -v '#' | grep conf_bmap | awk -F '=' '{print $2}' || true)
+				if [ "x${is_bbb}" = "xenable" ] ; then
+					cylon_leds & CYLON_PID=$!
+				fi
+				flash_emmc
+				conf_resize=$(cat ${wfile} | grep -v '#' | grep conf_resize | awk -F '=' '{print $2}' || true)
+				if [ "x${conf_resize}" = "xenable" ] ; then
+					message="resizing eMMC" ; broadcast
+					message="-----------------------------" ; broadcast
+					resize_emmc
+				fi
+				conf_root_partition=$(cat ${wfile} | grep -v '#' | grep conf_root_partition | awk -F '=' '{print $2}' || true)
+				if [ ! "x${conf_root_partition}" = "x" ] ; then
+					set_uuid
+				fi
+
+				if [ "x${is_bbb}" = "xenable" ] ; then
+					[ -e /proc/$CYLON_PID ]  && kill $CYLON_PID
+				fi
+			else
+				message="error: image not found [/tmp/usb/${conf_image}]" ; broadcast
 			fi
-			conf_root_partition=$(cat ${wfile} | grep -v '#' | grep conf_root_partition | awk -F '=' '{print $2}' || true)
-			if [ ! "x${conf_root_partition}" = "x" ] ; then
-				set_uuid
-			fi
-			[ -e /proc/$CYLON_PID ]  && kill $CYLON_PID
 		else
-			message="error: image not found [/tmp/usb/${conf_image}]" ; broadcast
+			message="error: image not defined [conf_image=${conf_image}]" ; broadcast
 		fi
 	else
 		message="error: unable to decode: [job.txt]" ; broadcast
@@ -520,9 +548,11 @@ check_usb_media () {
 	message="`lsblk || true`" ; broadcast
 	message="-----------------------------" ; broadcast
 
-	if [ ! -e /sys/class/leds/beaglebone\:green\:usr0/trigger ] ; then
-		modprobe leds_gpio || true
-		sleep 1
+	if [ "x${is_bbb}" = "xenable" ] ; then
+		if [ ! -e /sys/class/leds/beaglebone\:green\:usr0/trigger ] ; then
+			modprobe leds_gpio || true
+			sleep 1
+		fi
 	fi
 
 	unset job_file
@@ -580,11 +610,14 @@ check_usb_media () {
 	message="-----------------------------" ; broadcast
 
 	umount /tmp || umount -l /tmp
-	if [ -e /sys/class/leds/beaglebone\:green\:usr0/trigger ] ; then
-		echo default-on > /sys/class/leds/beaglebone\:green\:usr0/trigger
-		echo default-on > /sys/class/leds/beaglebone\:green\:usr1/trigger
-		echo default-on > /sys/class/leds/beaglebone\:green\:usr2/trigger
-		echo default-on > /sys/class/leds/beaglebone\:green\:usr3/trigger
+
+	if [ "x${is_bbb}" = "xenable" ] ; then
+		if [ -e /sys/class/leds/beaglebone\:green\:usr0/trigger ] ; then
+			echo default-on > /sys/class/leds/beaglebone\:green\:usr0/trigger
+			echo default-on > /sys/class/leds/beaglebone\:green\:usr1/trigger
+			echo default-on > /sys/class/leds/beaglebone\:green\:usr2/trigger
+			echo default-on > /sys/class/leds/beaglebone\:green\:usr3/trigger
+		fi
 	fi
 
 	sleep 1
@@ -601,6 +634,7 @@ message="Starting eMMC Flasher from usb media" ; broadcast
 message="Version: [${version_message}]" ; broadcast
 message="-----------------------------" ; broadcast
 
+get_device
 print_eeprom
 check_usb_media
 #
