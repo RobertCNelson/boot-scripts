@@ -1,6 +1,6 @@
 #!/bin/bash -e
 
-#needs: alsa-utils
+#software: alsa-utils
 
 if ! id | grep -q root; then
 	echo "must be run as root"
