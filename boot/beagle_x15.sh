@@ -25,6 +25,16 @@ if [ -f /sys/class/thermal/thermal_zone0/mode ] ; then
 	echo enabled > /sys/class/thermal/thermal_zone0/mode
 fi
 
+if [ -f /usr/bin/amixer ] ; then
+	#setup rca jacks for audio in/out:
+	amixer -c0 sset 'PCM' 119
+	amixer -c0 sset 'Line DAC' 108
+	amixer -c0 sset 'Left PGA Mixer Mic2L' unmute
+	amixer -c0 sset 'Right PGA Mixer Mic2R' unmute
+	#amixer -c0 sset 'PGA' 10
+	amixer -c0 sset 'PGA' 30
+fi
+
 eth0_addr=$(ip addr list eth0 |grep "inet " |cut -d' ' -f6|cut -d/ -f1)
 eth1_addr=$(ip addr list eth1 |grep "inet " |cut -d' ' -f6|cut -d/ -f1)
 usb0_addr=$(ip addr list usb0 |grep "inet " |cut -d' ' -f6|cut -d/ -f1)
