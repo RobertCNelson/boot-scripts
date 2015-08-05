@@ -14,6 +14,9 @@ amixer -c0 sset 'Right PGA Mixer Mic2R' unmute
 #amixer -c0 sset 'PGA' 10
 amixer -c0 sset 'PGA' 30
 
+echo "#speaker-test"
+speaker-test -Dplughw:0,0 -c2 -l2 -t sine
+
 echo "#Recording: 4 seconds"
 arecord -Dplughw:0,0 -fcd -d4 -c2 > /tmp/music.wav
 
