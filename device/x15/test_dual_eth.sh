@@ -2,7 +2,8 @@
 
 #based on: http://www.embeddedsystemtesting.com/2015/03/how-to-run-iperf-traffic-on-same.html?m=1
 
-#needs: iperf
+#hardware: cross over cable between eth0 & eth1
+#softwarew: iperf
 
 if ! id | grep -q root; then
 	echo "must be run as root"
