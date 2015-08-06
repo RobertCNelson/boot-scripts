@@ -133,6 +133,7 @@ interface=usb0
 dhcp-range=${deb_usb_gateway},${deb_usb_gateway}
 dhcp-option=3
 except-interface=lo
+except-interface=eth0
 listen-address=${deb_usb_address}
 EOF
 			/sbin/ifconfig usb0 ${deb_usb_address} netmask ${deb_usb_netmask} || true
