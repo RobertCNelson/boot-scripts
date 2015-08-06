@@ -4,6 +4,6 @@ rm -rf /home/${USER}/.config/lxqt || true
 rm -rf /home/${USER}/.config/openbox || true
 rm -rf /home/${USER}/.config/pcmanfm-qt || true
 
-cp -rv /opt/scripts/desktop-defaults/jessie/lxqt/* /home/${USER}/.config
+cp -rf /opt/scripts/desktop-defaults/jessie/lxqt/* /home/${USER}/.config
 
 sync
