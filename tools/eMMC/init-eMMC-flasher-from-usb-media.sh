@@ -485,9 +485,6 @@ cylon_leds () {
 
 process_job_file () {
 	job_file=found
-	message="Processing job.txt:" ; broadcast
-	message="`cat ${wfile} | grep -v '#'`" ; broadcast
-	message="-----------------------------" ; broadcast
 	if [ ! -f /usr/bin/dos2unix ] ; then
 		message="Warning: dos2unix not installed, dont use windows to create job.txt file." ; broadcast
 		sleep 1
@@ -495,6 +492,9 @@ process_job_file () {
 		dos2unix -n ${wfile} /tmp/job.txt
 		wfile="/tmp/job.txt"
 	fi
+	message="Processing job.txt:" ; broadcast
+	message="`cat ${wfile} | grep -v '#'`" ; broadcast
+	message="-----------------------------" ; broadcast
 
 	abi=$(cat ${wfile} | grep -v '#' | grep abi | awk -F '=' '{print $2}' || true)
 	if [ "x${abi}" = "xaaa" ] ; then
