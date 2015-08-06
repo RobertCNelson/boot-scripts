@@ -181,6 +181,9 @@ etc_mtab_symlink () {
 	message="-----------------------------" ; broadcast
 	message="Setting up: ln -s /proc/mounts /etc/mtab" ; broadcast
 	mount -o rw,remount / || write_failure
+	if [ -f /etc/mtab ] ; then
+		rm -f /etc/mtab || write_failure
+	fi
 	ln -s /proc/mounts /etc/mtab || write_failure
 	mount -o ro,remount / || write_failure
 	message="-----------------------------" ; broadcast
