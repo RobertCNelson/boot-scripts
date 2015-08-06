@@ -177,7 +177,17 @@ flash_emmc () {
 	flush_cache
 }
 
+etc_mtab_symlink () {
+	message="-----------------------------" ; broadcast
+	message="Setting up: ln -s /proc/mounts /etc/mtab" ; broadcast
+	mount -o rw,remount / || write_failure
+	ln -s /proc/mounts /etc/mtab || write_failure
+	mount -o ro,remount / || write_failure
+	message="-----------------------------" ; broadcast
+}
+
 auto_fsck () {
+	etc_mtab_symlink
 	message="-----------------------------" ; broadcast
 	if [ "x${conf_partition1_fstype}" = "x0x83" ] ; then
 		message="e2fsck -fy ${destination}p1" ; broadcast
