@@ -1,0 +1,11 @@
+Production:
+
+BeagleBone Black:
+A5A: A335BNLT 0A5A
+A5B: A335BNLT 0A5B
+A5C: A335BNLT 0A5C
+ A6: A335BNLT 00A6
+  C: A335BNLT 000C
+
+BeagleBone Green:
+  1: A335BNLT 0x1a 000
