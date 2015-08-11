@@ -133,7 +133,7 @@ check_eeprom () {
 	fi
 
 	if [ "x${got_eeprom}" = "xtrue" ] ; then
-		eeprom_header=$(hexdump -e '8/1 "%c"' ${eeprom} -n 28 | cut -b 5-28)
+		eeprom_header=$(hexdump -e '8/1 "%c"' ${eeprom} -n 8 | cut -b 6-8)
 		if [ "x${eeprom_header}" = "x335" ] ; then
 			message="Valid ${device_eeprom} header found [${eeprom_header}]" ; broadcast
 			message="-----------------------------" ; broadcast
