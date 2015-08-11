@@ -90,7 +90,7 @@ get_device () {
 
 	if [ "x${SOC}" = "x" ] ; then
 		case "${machine}" in
-		TI_AM335x_BeagleBone|TI_AM335x_BeagleBone_Black)
+		TI_AM335x_BeagleBone|TI_AM335x_BeagleBone_Black|TI_AM335x_BeagleBone_Green)
 			scan_ti_kernels
 			scan_bone_kernels
 			scan_armv7_kernels
