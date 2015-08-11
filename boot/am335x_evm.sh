@@ -240,10 +240,7 @@ if [ -f /sys/devices/platform/bone_capemgr/slots ] ; then
 	if [ "x${stop_cape_load}" = "x" ] ; then
 		unset overlay
 		check_dtb=$(cat /boot/uEnv.txt | grep -v '#' | grep dtb | tail -1 | awk -F '=' '{print $2}' || true)
-		if [ "x${check_dtb}" = "x" ] ; then
-			#am335x-boneblack.dtb
-			overlay="cape-universaln"
-		else
+		if [ ! "x${check_dtb}" = "x" ] ; then
 			case "${check_dtb}" in
 			am335x-boneblack-overlay.dtb)
 				overlay="univ-all"
@@ -256,6 +253,22 @@ if [ -f /sys/devices/platform/bone_capemgr/slots ] ; then
 				;;
 			am335x-boneblack-nhdmi-overlay.dtb)
 				overlay="univ-nhdmi"
+				;;
+			am335x-bonegreen-overlay.dtb)
+				overlay="univ-all"
+				;;
+			esac
+		else
+			machine=$(cat /proc/device-tree/model | sed "s/ /_/g")
+			case "${machine}" in
+			TI_AM335x_BeagleBone)
+				overlay="univ-all"
+				;;
+			TI_AM335x_BeagleBone_Black)
+				overlay="cape-universaln"
+				;;
+			TI_AM335x_BeagleBone_Green)
+				overlay="univ-emmc"
 				;;
 			esac
 		fi
