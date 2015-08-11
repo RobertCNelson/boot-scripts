@@ -116,11 +116,6 @@ print_eeprom () {
 	#v8 of nvmem...
 	if [ -f /sys/bus/nvmem/devices/at24-0/nvmem ] && [ "x${got_eeprom}" = "x" ] ; then
 		eeprom="/sys/bus/nvmem/devices/at24-0/nvmem"
-
-		#eeprom_header=$(hexdump -e '8/1 "%c"' ${eeprom} -s 5 -n 3) = blank...
-		#hexdump -e '8/1 "%c"' ${eeprom} -n 8 = �U3�A335
-		eeprom_header=$(hexdump -e '8/1 "%c"' ${eeprom} -n 28 | cut -b 5-28)
-
 		eeprom_location="/sys/devices/platform/ocp/44e0b000.i2c/i2c-0/0-0050/at24-0/nvmem"
 		got_eeprom="true"
 	fi
@@ -128,12 +123,6 @@ print_eeprom () {
 	#pre-v8 of nvmem...
 	if [ -f /sys/class/nvmem/at24-0/nvmem ] && [ "x${got_eeprom}" = "x" ] ; then
 		eeprom="/sys/class/nvmem/at24-0/nvmem"
-
-		#with 4.1.x: -s 5 isn't working...
-		#eeprom_header=$(hexdump -e '8/1 "%c"' ${eeprom} -s 5 -n 3) = blank...
-		#hexdump -e '8/1 "%c"' ${eeprom} -n 8 = �U3�A335
-		eeprom_header=$(hexdump -e '8/1 "%c"' ${eeprom} -n 28 | cut -b 5-28)
-
 		eeprom_location="/sys/devices/platform/ocp/44e0b000.i2c/i2c-0/0-0050/nvmem/at24-0/nvmem"
 		got_eeprom="true"
 	fi
@@ -141,12 +130,12 @@ print_eeprom () {
 	#eeprom...
 	if [ -f /sys/bus/i2c/devices/0-0050/eeprom ] && [ "x${got_eeprom}" = "x" ] ; then
 		eeprom="/sys/bus/i2c/devices/0-0050/eeprom"
-		eeprom_header=$(hexdump -e '8/1 "%c"' ${eeprom} -s 5 -n 25)
 		eeprom_location=$(ls /sys/devices/ocp*/44e0b000.i2c/i2c-0/0-0050/eeprom 2> /dev/null)
 		got_eeprom="true"
 	fi
 
 	if [ "x${got_eeprom}" = "xtrue" ] ; then
+		eeprom_header=$(hexdump -e '8/1 "%c"' ${eeprom} -n 28 | cut -b 5-28)
 		message="EEPROM: [${eeprom_header}]" ; broadcast
 		message="-----------------------------" ; broadcast
 	fi
@@ -391,11 +380,6 @@ check_eeprom () {
 	#v8 of nvmem...
 	if [ -f /sys/bus/nvmem/devices/at24-0/nvmem ] && [ "x${got_eeprom}" = "x" ] ; then
 		eeprom="/sys/bus/nvmem/devices/at24-0/nvmem"
-
-		#eeprom_header=$(hexdump -e '8/1 "%c"' ${eeprom} -s 5 -n 3) = blank...
-		#hexdump -e '8/1 "%c"' ${eeprom} -n 8 = �U3�A335
-		eeprom_header=$(hexdump -e '8/1 "%c"' ${eeprom} -n 8 | cut -b 6-8)
-
 		eeprom_location="/sys/devices/platform/ocp/44e0b000.i2c/i2c-0/0-0050/at24-0/nvmem"
 		got_eeprom="true"
 	fi
@@ -403,12 +387,6 @@ check_eeprom () {
 	#pre-v8 of nvmem...
 	if [ -f /sys/class/nvmem/at24-0/nvmem ] && [ "x${got_eeprom}" = "x" ] ; then
 		eeprom="/sys/class/nvmem/at24-0/nvmem"
-
-		#with 4.1.x: -s 5 isn't working...
-		#eeprom_header=$(hexdump -e '8/1 "%c"' ${eeprom} -s 5 -n 3) = blank...
-		#hexdump -e '8/1 "%c"' ${eeprom} -n 8 = �U3�A335
-		eeprom_header=$(hexdump -e '8/1 "%c"' ${eeprom} -n 8 | cut -b 6-8)
-
 		eeprom_location="/sys/devices/platform/ocp/44e0b000.i2c/i2c-0/0-0050/nvmem/at24-0/nvmem"
 		got_eeprom="true"
 	fi
@@ -416,13 +394,13 @@ check_eeprom () {
 	#eeprom...
 	if [ -f /sys/bus/i2c/devices/0-0050/eeprom ] && [ "x${got_eeprom}" = "x" ] ; then
 		eeprom="/sys/bus/i2c/devices/0-0050/eeprom"
-		eeprom_header=$(hexdump -e '8/1 "%c"' ${eeprom} -s 5 -n 3)
 		eeprom_location=$(ls /sys/devices/ocp*/44e0b000.i2c/i2c-0/0-0050/eeprom 2> /dev/null)
 		got_eeprom="true"
 	fi
 
 	if [ "x${is_bbb}" = "xenable" ] ; then
 		if [ "x${got_eeprom}" = "xtrue" ] ; then
+			eeprom_header=$(hexdump -e '8/1 "%c"' ${eeprom} -n 8 | cut -b 6-8)
 			if [ "x${eeprom_header}" = "x${conf_eeprom_compare}" ] ; then
 				message="Valid EEPROM header found [${eeprom_header}]" ; broadcast
 				message="-----------------------------" ; broadcast
@@ -597,6 +575,7 @@ check_usb_media () {
 		message="-----------------------------" ; broadcast
 		message="abi=aaa" ; broadcast
 		message="conf_eeprom_file=<file>" ; broadcast
+		message="conf_eeprom_compare=<6-8>" ; broadcast
 		message="conf_image=<file>.img.xz" ; broadcast
 		message="conf_bmap=<file>.bmap" ; broadcast
 		message="conf_resize=enable|<blank>" ; broadcast
