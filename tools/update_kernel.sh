@@ -395,7 +395,7 @@ while [ ! -z "$1" ] ; do
 	--stable-kernel|--stable)
 		kernel="STABLE"
 		;;
-	--beta-kernel|--beta)
+	--beta-kernel|--beta|--testing-kernel|--testing)
 		kernel="TESTING"
 		;;
 	--exp-kernel|--exp)
