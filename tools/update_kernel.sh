@@ -114,7 +114,7 @@ get_device () {
 	unset es8
 	unset kernel_headers
 	case "${machine}" in
-	TI_AM335x_BeagleBone|TI_AM335x_BeagleBone_Black)
+	TI_AM335x_BeagleBone|TI_AM335x_BeagleBone_Black|TI_AM335x_BeagleBone_Green)
 		es8="enabled"
 		;;
 	TI_AM5728_BeagleBoard-X15)
@@ -412,6 +412,10 @@ while [ ! -z "$1" ] ; do
 		;;
 	--bone-rt-kernel|--bone-rt-channel)
 		SOC="bone-rt"
+		;;
+	--omap2plus-channel)
+		SOC="omap2plus"
+		kernel="STABLE"
 		;;
 	--ti-kernel|--ti-channel)
 		SOC="ti"
