@@ -165,6 +165,12 @@ latest_version_repo () {
 		echo "info: checking archive"
 		wget --no-verbose ${mirror}/${dist}-${arch}/LATEST-${SOC}
 		if [ -f /tmp/LATEST-${SOC} ] ; then
+
+			echo "-----------------------------"
+			echo "Kernel Options:"
+			cat /tmp/LATEST-${SOC}
+			echo "-----------------------------"
+
 			latest_kernel=$(cat /tmp/LATEST-${SOC} | grep ${kernel} | awk '{print $3}')
 			echo "info: you are running: [${current_kernel}], latest is: [${latest_kernel}] updating..."
 			if [ "x${latest_kernel}" = "x" ] ; then
