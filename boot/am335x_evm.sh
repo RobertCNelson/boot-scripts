@@ -275,7 +275,9 @@ if [ -f /sys/devices/platform/bone_capemgr/slots ] ; then
 		if [ ! "x${overlay}" = "x" ] ; then
 			dtbo="${overlay}-00A0.dtbo"
 			if [ -f /lib/firmware/${dtbo} ] ; then
-				config-pin overlay ${overlay}
+				if [ -f /usr/local/bin/config-pin ] ; then
+					config-pin overlay ${overlay}
+				fi
 			fi
 		fi
 	fi
