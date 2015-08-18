@@ -78,6 +78,13 @@ scan_armv7_kernels () {
 	fi
 	if [ "x${SOC}" = "x" ] ; then
 		unset testvalue
+		testvalue=$(echo ${current_kernel} | grep armv7-rt || true)
+		if [ ! "x${testvalue}" = "x" ] ; then
+			SOC="armv7-rt"
+		fi
+	fi
+	if [ "x${SOC}" = "x" ] ; then
+		unset testvalue
 		testvalue=$(echo ${current_kernel} | grep armv7 || true)
 		if [ ! "x${testvalue}" = "x" ] ; then
 			SOC="armv7"
@@ -406,6 +413,12 @@ while [ ! -z "$1" ] ; do
 		;;
 	--exp-kernel|--exp)
 		kernel="EXPERIMENTAL"
+		;;
+	--armv7-channel)
+		SOC="armv7"
+		;;
+	--armv7-rt-channel)
+		SOC="armv7-rt"
 		;;
 	--bone-kernel|--bone-channel)
 		SOC="omap-psp"
