@@ -24,7 +24,7 @@
 #This script assumes, these packages are installed, as network may not be setup
 #dosfstools initramfs-tools rsync u-boot-tools
 
-version_message="1.002: 2015-08-07: use device_eeprom for bbb-eeprom/bbg-eeprom..."
+version_message="1.003: 2015-08-31: use on x15 too..."
 
 if ! id | grep -q root; then
 	echo "must be run as root"
@@ -87,16 +87,29 @@ dev2dir () {
 	grep -m 1 '^$1 ' /proc/mounts | while read LINE ; do set -- $LINE ; echo $2 ; done
 }
 
+get_device () {
+	is_bbb="enable"
+	machine=$(cat /proc/device-tree/model | sed "s/ /_/g")
+
+	case "${machine}" in
+	TI_AM5728_BeagleBoard-X15)
+		unset is_bbb
+		;;
+	esac
+}
+
 write_failure () {
 	message="writing to [${destination}] failed..." ; broadcast
 
-	[ -e /proc/$CYLON_PID ]  && kill $CYLON_PID > /dev/null 2>&1
+	if [ "x${is_bbb}" = "xenable" ] ; then
+		[ -e /proc/$CYLON_PID ]  && kill $CYLON_PID > /dev/null 2>&1
 
-	if [ -e /sys/class/leds/beaglebone\:green\:usr0/trigger ] ; then
-		echo heartbeat > /sys/class/leds/beaglebone\:green\:usr0/trigger
-		echo heartbeat > /sys/class/leds/beaglebone\:green\:usr1/trigger
-		echo heartbeat > /sys/class/leds/beaglebone\:green\:usr2/trigger
-		echo heartbeat > /sys/class/leds/beaglebone\:green\:usr3/trigger
+		if [ -e /sys/class/leds/beaglebone\:green\:usr0/trigger ] ; then
+			echo heartbeat > /sys/class/leds/beaglebone\:green\:usr0/trigger
+			echo heartbeat > /sys/class/leds/beaglebone\:green\:usr1/trigger
+			echo heartbeat > /sys/class/leds/beaglebone\:green\:usr2/trigger
+			echo heartbeat > /sys/class/leds/beaglebone\:green\:usr3/trigger
+		fi
 	fi
 	message="-----------------------------" ; broadcast
 	flush_cache
@@ -132,28 +145,30 @@ check_eeprom () {
 		got_eeprom="true"
 	fi
 
-	if [ "x${got_eeprom}" = "xtrue" ] ; then
-		eeprom_header=$(hexdump -e '8/1 "%c"' ${eeprom} -n 8 | cut -b 6-8)
-		if [ "x${eeprom_header}" = "x335" ] ; then
-			message="Valid ${device_eeprom} header found [${eeprom_header}]" ; broadcast
-			message="-----------------------------" ; broadcast
-		else
-			message="Invalid EEPROM header detected" ; broadcast
-			if [ -f /opt/scripts/device/bone/${device_eeprom}.dump ] ; then
-				if [ ! "x${eeprom_location}" = "x" ] ; then
-					message="Writing header to EEPROM" ; broadcast
-					dd if=/opt/scripts/device/bone/${device_eeprom}.dump of=${eeprom_location}
-					sync
-					sync
-					eeprom_check=$(hexdump -e '8/1 "%c"' ${eeprom} -n 8 | cut -b 6-8)
-					echo "eeprom check: [${eeprom_check}]"
+	if [ "x${is_bbb}" = "xenable" ] ; then
+		if [ "x${got_eeprom}" = "xtrue" ] ; then
+			eeprom_header=$(hexdump -e '8/1 "%c"' ${eeprom} -n 8 | cut -b 6-8)
+			if [ "x${eeprom_header}" = "x335" ] ; then
+				message="Valid ${device_eeprom} header found [${eeprom_header}]" ; broadcast
+				message="-----------------------------" ; broadcast
+			else
+				message="Invalid EEPROM header detected" ; broadcast
+				if [ -f /opt/scripts/device/bone/${device_eeprom}.dump ] ; then
+					if [ ! "x${eeprom_location}" = "x" ] ; then
+						message="Writing header to EEPROM" ; broadcast
+						dd if=/opt/scripts/device/bone/${device_eeprom}.dump of=${eeprom_location}
+						sync
+						sync
+						eeprom_check=$(hexdump -e '8/1 "%c"' ${eeprom} -n 8 | cut -b 6-8)
+						echo "eeprom check: [${eeprom_check}]"
 
-					#We have to reboot, as the kernel only loads the eMMC cape
-					# with a valid header
-					reboot -f
+						#We have to reboot, as the kernel only loads the eMMC cape
+						# with a valid header
+						reboot -f
 
-					#We shouldnt hit this...
-					exit
+						#We shouldnt hit this...
+						exit
+					fi
 				fi
 			fi
 		fi
@@ -182,54 +197,58 @@ check_running_system () {
 		rsync_progress="--info=progress2 --human-readable"
 	fi
 
-	if [ ! -e /sys/class/leds/beaglebone\:green\:usr0/trigger ] ; then
-		modprobe leds_gpio || true
-		sleep 1
+	if [ "x${is_bbb}" = "xenable" ] ; then
+		if [ ! -e /sys/class/leds/beaglebone\:green\:usr0/trigger ] ; then
+			modprobe leds_gpio || true
+			sleep 1
+		fi
 	fi
 }
 
 cylon_leds () {
-	if [ -e /sys/class/leds/beaglebone\:green\:usr0/trigger ] ; then
-		BASE=/sys/class/leds/beaglebone\:green\:usr
-		echo none > ${BASE}0/trigger
-		echo none > ${BASE}1/trigger
-		echo none > ${BASE}2/trigger
-		echo none > ${BASE}3/trigger
+	if [ "x${is_bbb}" = "xenable" ] ; then
+		if [ -e /sys/class/leds/beaglebone\:green\:usr0/trigger ] ; then
+			BASE=/sys/class/leds/beaglebone\:green\:usr
+			echo none > ${BASE}0/trigger
+			echo none > ${BASE}1/trigger
+			echo none > ${BASE}2/trigger
+			echo none > ${BASE}3/trigger
 
-		STATE=1
-		while : ; do
-			case $STATE in
-			1)	echo 255 > ${BASE}0/brightness
-				echo 0   > ${BASE}1/brightness
-				STATE=2
-				;;
-			2)	echo 255 > ${BASE}1/brightness
-				echo 0   > ${BASE}0/brightness
-				STATE=3
-				;;
-			3)	echo 255 > ${BASE}2/brightness
-				echo 0   > ${BASE}1/brightness
-				STATE=4
-				;;
-			4)	echo 255 > ${BASE}3/brightness
-				echo 0   > ${BASE}2/brightness
-				STATE=5
-				;;
-			5)	echo 255 > ${BASE}2/brightness
-				echo 0   > ${BASE}3/brightness
-				STATE=6
-				;;
-			6)	echo 255 > ${BASE}1/brightness
-				echo 0   > ${BASE}2/brightness
-				STATE=1
-				;;
-			*)	echo 255 > ${BASE}0/brightness
-				echo 0   > ${BASE}1/brightness
-				STATE=2
-				;;
-			esac
-			sleep 0.1
-		done
+			STATE=1
+			while : ; do
+				case $STATE in
+				1)	echo 255 > ${BASE}0/brightness
+					echo 0   > ${BASE}1/brightness
+					STATE=2
+					;;
+				2)	echo 255 > ${BASE}1/brightness
+					echo 0   > ${BASE}0/brightness
+					STATE=3
+					;;
+				3)	echo 255 > ${BASE}2/brightness
+					echo 0   > ${BASE}1/brightness
+					STATE=4
+					;;
+				4)	echo 255 > ${BASE}3/brightness
+					echo 0   > ${BASE}2/brightness
+					STATE=5
+					;;
+				5)	echo 255 > ${BASE}2/brightness
+					echo 0   > ${BASE}3/brightness
+					STATE=6
+					;;
+				6)	echo 255 > ${BASE}1/brightness
+					echo 0   > ${BASE}2/brightness
+					STATE=1
+					;;
+				*)	echo 255 > ${BASE}0/brightness
+					echo 0   > ${BASE}1/brightness
+					STATE=2
+					;;
+				esac
+				sleep 0.1
+			done
+		fi
 	fi
 }
 
@@ -394,7 +413,9 @@ copy_rootfs () {
 	flush_cache
 	umount /tmp/rootfs/ || umount -l /tmp/rootfs/ || write_failure
 
-	[ -e /proc/$CYLON_PID ]  && kill $CYLON_PID
+	if [ "x${is_bbb}" = "xenable" ] ; then
+		[ -e /proc/$CYLON_PID ]  && kill $CYLON_PID
+	fi
 
 	message="Syncing: ${destination}" ; broadcast
 	#https://github.com/beagleboard/meta-beagleboard/blob/master/contrib/bone-flash-tool/emmc.sh#L158-L159
@@ -411,11 +432,13 @@ copy_rootfs () {
 		inf_loop
 	else
 		umount /tmp || umount -l /tmp
-		if [ -e /sys/class/leds/beaglebone\:green\:usr0/trigger ] ; then
-			echo default-on > /sys/class/leds/beaglebone\:green\:usr0/trigger
-			echo default-on > /sys/class/leds/beaglebone\:green\:usr1/trigger
-			echo default-on > /sys/class/leds/beaglebone\:green\:usr2/trigger
-			echo default-on > /sys/class/leds/beaglebone\:green\:usr3/trigger
+		if [ "x${is_bbb}" = "xenable" ] ; then
+			if [ -e /sys/class/leds/beaglebone\:green\:usr0/trigger ] ; then
+				echo default-on > /sys/class/leds/beaglebone\:green\:usr0/trigger
+				echo default-on > /sys/class/leds/beaglebone\:green\:usr1/trigger
+				echo default-on > /sys/class/leds/beaglebone\:green\:usr2/trigger
+				echo default-on > /sys/class/leds/beaglebone\:green\:usr3/trigger
+			fi
 		fi
 		mount
 
@@ -526,8 +549,11 @@ message="Starting eMMC Flasher from microSD media" ; broadcast
 message="Version: [${version_message}]" ; broadcast
 message="-----------------------------" ; broadcast
 
+get_device
 check_eeprom
 check_running_system
-cylon_leds & CYLON_PID=$!
+if [ "x${is_bbb}" = "xenable" ] ; then
+	cylon_leds & CYLON_PID=$!
+fi
 partition_drive
 #
