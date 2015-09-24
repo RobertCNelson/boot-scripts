@@ -1,6 +1,10 @@
 #!/bin/bash -e
 
-dist=$(lsb_release -cs)
+if [ "$(which lsb_release)" ] ; then
+	dist=$(lsb_release -cs)
+else
+	dist="jessie"
+fi
 
 echo "sudo mkdir /tmp/rootfs/"
 echo "sudo mount -t nfs -o rw,nfsvers=3,rsize=8192,wsize=8192 192.168.0.10:/opt/${dist}/ /tmp/rootfs/"
