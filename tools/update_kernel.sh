@@ -426,6 +426,10 @@ while [ ! -z "$1" ] ; do
 	--bone-rt-kernel|--bone-rt-channel)
 		SOC="bone-rt"
 		;;
+	--multiv7-channel)
+		SOC="multiv7"
+		kernel="STABLE"
+		;;
 	--omap2plus-channel)
 		SOC="omap2plus"
 		kernel="STABLE"
@@ -438,6 +442,10 @@ while [ ! -z "$1" ] ; do
 		;;
 	--ti-xenomai-kernel|--ti-xenomai-channel)
 		SOC="ti-xenomai"
+		;;
+	--ti-omap2plus-channel)
+		SOC="ti-omap2plus"
+		kernel="TESTING"
 		;;
 	esac
 	shift
