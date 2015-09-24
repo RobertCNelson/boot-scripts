@@ -16,7 +16,7 @@ if [ -d /tmp/rootfs/ ] ; then
 	if [ -f /tmp/rootfs/lib/systemd/system/connman.service ] ; then
 		unset check_connman
 		check_connman=$(cat /tmp/rootfs/lib/systemd/system/connman.service | grep ExecStart | grep eth0 || true)
-		if [ ! "x${check_connman}" = "x" ] ; then
+		if [ "x${check_connman}" = "x" ] ; then
 			sudo sed -i -e 's:-n:-n -I eth0:g' /tmp/rootfs/lib/systemd/system/connman.service
 		fi
 	fi
