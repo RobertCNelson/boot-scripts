@@ -21,6 +21,7 @@ if [ -d /tmp/rootfs/ ] ; then
 		fi
 	fi
 
+	echo "#uname_r=`uname -r`"
 	echo "client_ip=`ip addr list eth0 | grep \"inet \" |cut -d' ' -f6|cut -d/ -f1`"
 	echo "server_ip=192.168.0.10"
 	echo "gw_ip=192.168.0.1"
