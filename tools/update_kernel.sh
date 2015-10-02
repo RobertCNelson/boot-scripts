@@ -426,6 +426,10 @@ while [ ! -z "$1" ] ; do
 	--bone-rt-kernel|--bone-rt-channel)
 		SOC="bone-rt"
 		;;
+	--bone-xenomai-kernel|--bone-xenomai-channel)
+		SOC="xenomai"
+		kernel="STABLE"
+		;;
 	--multiv7-channel)
 		SOC="multiv7"
 		kernel="STABLE"
