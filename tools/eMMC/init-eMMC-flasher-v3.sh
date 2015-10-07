@@ -24,7 +24,7 @@
 #This script assumes, these packages are installed, as network may not be setup
 #dosfstools initramfs-tools rsync u-boot-tools
 
-version_message="1.003: 2015-08-31: use on x15 too..."
+version_message="1.20151007: gpt partitions with raw boot..."
 
 if ! id | grep -q root; then
 	echo "must be run as root"
@@ -524,10 +524,15 @@ partition_drive () {
 		test_sfdisk=$(LC_ALL=C sfdisk --help | grep -m 1 -e "--in-order" || true)
 		if [ "x${test_sfdisk}" = "x" ] ; then
 			message="sfdisk: [2.26.x or greater]" ; broadcast
-			sfdisk_options="--force"
+			if [ "x${bootrom_gpt}" = "xenable" ] ; then
+				sfdisk_options="--force --label gpt"
+			else
+				sfdisk_options="--force"
+			fi
 			sfdisk_boot_startmb="${sfdisk_boot_startmb}M"
 		fi
 
+		message="sfdisk: [$(LC_ALL=C sfdisk --version)]" ; broadcast
 		message="sfdisk: [sfdisk ${sfdisk_options} ${destination}]" ; broadcast
 		message="sfdisk: [${sfdisk_boot_startmb},${sfdisk_boot_endmb},${sfdisk_fstype},*]" ; broadcast
 
