@@ -510,7 +510,10 @@ partition_drive () {
 		copy_rootfs
 	else
 		conf_boot_startmb=${conf_boot_startmb:-"1"}
-		sfdisk_fstype=${sfdisk_fstype:-"0x83"}
+		sfdisk_fstype=${sfdisk_fstype:-"L"}
+		if [ "x${sfdisk_fstype}" = "x0x83" ] ; then
+			sfdisk_fstype="L"
+		fi
 		boot_label=${boot_label:-"BEAGLEBONE"}
 
 		message="Formatting: ${destination}" ; broadcast
