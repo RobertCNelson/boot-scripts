@@ -23,15 +23,6 @@
 #Based off:
 #https://github.com/beagleboard/meta-beagleboard/blob/master/meta-beagleboard-extras/recipes-support/usb-gadget/gadget-init/g-ether-load.sh
 
-#eMMC flasher just exited single user mode via: [exec /sbin/init]
-#as we can't shudown properly in single user mode..
-unset are_we_flasher
-are_we_flasher=$(grep init-eMMC-flasher /proc/cmdline || true)
-if [ ! "x${are_we_flasher}" = "x" ] ; then
-	halt
-	exit
-fi
-
 if [ -f /etc/rcn-ee.conf ] ; then
 	. /etc/rcn-ee.conf
 fi

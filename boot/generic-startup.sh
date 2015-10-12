@@ -1,5 +1,14 @@
 #!/bin/sh -e
 
+#eMMC flasher just exited single user mode via: [exec /sbin/init]
+#as we can't shudown properly in single user mode..
+unset are_we_flasher
+are_we_flasher=$(grep init-eMMC-flasher /proc/cmdline || true)
+if [ ! "x${are_we_flasher}" = "x" ] ; then
+	halt
+	exit
+fi
+
 #Regenerate ssh host keys
 if [ -f /etc/ssh/ssh.regenerate ] ; then
 	echo "generic-board-startup: regnerating ssh keys"
