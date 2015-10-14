@@ -330,46 +330,52 @@ specific_version_repo () {
 }
 
 third_party_final () {
-	depmod -a ${latest_kernel}
-	update-initramfs -uk ${latest_kernel}
+	if [ "x${run_depmod_initramfs}" = "xenabled" ] ; then
+		depmod -a ${latest_kernel}
+		update-initramfs -uk ${latest_kernel}
+	fi
 }
 
 third_party () {
-	if [ "x${SOC}" = "xomap-psp" ] ; then
-		#3.8 only...
-		if [ "x${kernel}" = "xSTABLE" ] ; then
+	unset run_depmod_initramfs
+
+	case "${SOC}" in
+	omap-psp)
+		case "${kernel}" in
+		STABLE)
+			#3.8 only...
 			apt-get install -o Dpkg::Options::="--force-overwrite" -y mt7601u-modules-${latest_kernel} || true
-			third_party_final
-		fi
-		if [ ! "x${kernel}" = "xSTABLE" ] ; then
+			run_depmod_initramfs="enabled"
+			;;
+		LTS|TESTING|EXPERIMENTAL)
+			if [ "x${es8}" = "xenabled" ] ; then
+				apt-get install -y ti-sgx-es8-modules-${latest_kernel} || true
+				run_depmod_initramfs="enabled"
+			fi
+			;;
+		esac
+		;;
+	ti|ti-rt|ti-xenomai|ti-omap2plus)
+		case "${kernel}" in
+		STABLE)
+			#3.14 only...
+			apt-get install -o Dpkg::Options::="--force-overwrite" -y mt7601u-modules-${latest_kernel} || true
 			if [ "x${es8}" = "xenabled" ] ; then
 				apt-get install -y ti-sgx-es8-modules-${latest_kernel} || true
 			fi
-			third_party_final
-		fi
-	fi
-
-	if [ "x${SOC}" = "xti" ] || [ "x${SOC}" = "xti-rt" ] || [ "x${SOC}" = "xti-xenomai" ] ; then
-		#3.14 only...
-		if [ "x${kernel}" = "xSTABLE" ] ; then
-			apt-get install -o Dpkg::Options::="--force-overwrite" -y mt7601u-modules-${latest_kernel} || true
-			third_party_final
-		fi
-		if [ "x${es8}" = "xenabled" ] ; then
-			apt-get install -y ti-sgx-es8-modules-${latest_kernel} || true
-			third_party_final
-		fi
-	fi
-
-	#ti v4.1.x is testing as 3.14.x is in stable..
-	if [ "x${SOC}" = "xti" ] || [ "x${SOC}" = "xti-rt" ] || [ "x${SOC}" = "xti-omap2plus" ] ; then
-		if [ "x${kernel}" = "xTESTING" ] ; then
+			run_depmod_initramfs="enabled"
+			;;
+		TESTING)
 			if [ "x${sgx5430}" = "xenabled" ] ; then
 				apt-get install -y ti-sgx-5430-modules-${latest_kernel} || true
+				run_depmod_initramfs="enabled"
 			fi
-			third_party_final
-		fi
-	fi
+			;;
+		esac
+		;;
+	esac
+
+	third_party_final
 }
 
 checkparm () {
