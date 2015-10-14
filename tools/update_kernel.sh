@@ -119,12 +119,14 @@ get_device () {
 	fi
 
 	unset es8
+	unset sgx5430
 	unset kernel_headers
 	case "${machine}" in
 	TI_AM335x_BeagleBone|TI_AM335x_BeagleBone_Black|TI_AM335x_BeagleBone_Green)
 		es8="enabled"
 		;;
 	TI_AM5728_BeagleBoard-X15)
+		sgx5430="enabled"
 		kernel_headers="enabled"
 		;;
 	TI_OMAP5_uEVM_board)
@@ -337,24 +339,44 @@ third_party () {
 		#3.8 only...
 		if [ "x${kernel}" = "xSTABLE" ] ; then
 			apt-get install -o Dpkg::Options::="--force-overwrite" -y mt7601u-modules-${latest_kernel} || true
+			third_party_final
 		fi
 		if [ ! "x${kernel}" = "xSTABLE" ] ; then
 			if [ "x${es8}" = "xenabled" ] ; then
 				apt-get install -y ti-sgx-es8-modules-${latest_kernel} || true
 			fi
+			third_party_final
 		fi
-		third_party_final
 	fi
 
 	if [ "x${SOC}" = "xti" ] || [ "x${SOC}" = "xti-rt" ] || [ "x${SOC}" = "xti-xenomai" ] ; then
 		#3.14 only...
 		if [ "x${kernel}" = "xSTABLE" ] ; then
 			apt-get install -o Dpkg::Options::="--force-overwrite" -y mt7601u-modules-${latest_kernel} || true
+			third_party_final
 		fi
 		if [ "x${es8}" = "xenabled" ] ; then
 			apt-get install -y ti-sgx-es8-modules-${latest_kernel} || true
+			third_party_final
 		fi
-		third_party_final
+	fi
+
+	if [ "x${SOC}" = "xti" ] || [ "x${SOC}" = "xti-rt" ] ; then
+		if [ "x${kernel}" = "xTESTING" ] ; then
+			if [ "x${sgx5430}" = "xenabled" ] ; then
+				apt-get install -y ti-sgx-5430-modules-${latest_kernel} || true
+			fi
+			third_party_final
+		fi
+	fi
+
+	if [ "x${SOC}" = "xti-omap2plus" ] ; then
+		if [ "x${kernel}" = "xSTABLE" ] ; then
+			if [ "x${sgx5430}" = "xenabled" ] ; then
+				apt-get install -y ti-sgx-5430-modules-${latest_kernel} || true
+			fi
+			third_party_final
+		fi
 	fi
 }
 
