@@ -361,17 +361,9 @@ third_party () {
 		fi
 	fi
 
-	if [ "x${SOC}" = "xti" ] || [ "x${SOC}" = "xti-rt" ] ; then
+	#ti v4.1.x is testing as 3.14.x is in stable..
+	if [ "x${SOC}" = "xti" ] || [ "x${SOC}" = "xti-rt" ] || [ "x${SOC}" = "xti-omap2plus" ] ; then
 		if [ "x${kernel}" = "xTESTING" ] ; then
-			if [ "x${sgx5430}" = "xenabled" ] ; then
-				apt-get install -y ti-sgx-5430-modules-${latest_kernel} || true
-			fi
-			third_party_final
-		fi
-	fi
-
-	if [ "x${SOC}" = "xti-omap2plus" ] ; then
-		if [ "x${kernel}" = "xSTABLE" ] ; then
 			if [ "x${sgx5430}" = "xenabled" ] ; then
 				apt-get install -y ti-sgx-5430-modules-${latest_kernel} || true
 			fi
@@ -389,6 +381,7 @@ checkparm () {
 
 if [ ! -f /usr/bin/lsb_release ] ; then
 	echo "install lsb-release"
+	echo "sudo apt-get install lsb-release"
 	exit
 fi
 
