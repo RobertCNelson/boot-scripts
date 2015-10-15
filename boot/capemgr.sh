@@ -7,7 +7,13 @@ fi
 #CAPE="cape-bone-proto"
 
 cape_list=$(echo ${CAPE} | sed "s/ //g" | sed "s/,/ /g")
-capemgr=$(ls /sys/devices/bone_capemgr.*/slots 2> /dev/null || true)
+
+#v4.1.x-capemgr added platform directory
+if [ -f /sys/devices/platform/bone_capemgr/slots ] ; then
+	capemgr="/sys/devices/platform/bone_capemgr/slots"
+else
+	capemgr=$(ls /sys/devices/bone_capemgr.*/slots 2> /dev/null || true)
+fi
 
 load_overlay () {
 	echo ${overlay} > ${capemgr}
