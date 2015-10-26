@@ -5,7 +5,7 @@
 unset are_we_flasher
 are_we_flasher=$(grep init-eMMC-flasher /proc/cmdline || true)
 if [ ! "x${are_we_flasher}" = "x" ] ; then
-	halt
+	systemctl poweroff || halt
 	exit
 fi
 
