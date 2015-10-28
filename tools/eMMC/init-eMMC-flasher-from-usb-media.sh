@@ -24,7 +24,7 @@
 #This script assumes, these packages are installed, as network may not be setup
 #dosfstools initramfs-tools rsync u-boot-tools
 
-version_message="1.004: 2015-07-31: we want to use this on the x15 too.."
+version_message="1.20151028: try to read /opt/emmc/job.txt as backup"
 
 #WARNING make sure to run this with an initrd...
 #lsmod:
@@ -143,24 +143,24 @@ print_eeprom () {
 
 flash_emmc () {
 	if [ ! "x${conf_bmap}" = "x" ] ; then
-		if [ -f /usr/bin/bmaptool ] && [ -f /tmp/usb/${conf_bmap} ] ; then
+		if [ -f /usr/bin/bmaptool ] && [ -f ${wdir}/${conf_bmap} ] ; then
 			message="Flashing eMMC with bmaptool" ; broadcast
 			message="-----------------------------" ; broadcast
-			message="bmaptool copy --bmap /tmp/usb/${conf_bmap} /tmp/usb/${conf_image} ${destination}" ; broadcast
-			/usr/bin/bmaptool copy --bmap /tmp/usb/${conf_bmap} /tmp/usb/${conf_image} ${destination} || write_failure
+			message="bmaptool copy --bmap ${wdir}/${conf_bmap} ${wdir}/${conf_image} ${destination}" ; broadcast
+			/usr/bin/bmaptool copy --bmap ${wdir}/${conf_bmap} ${wdir}/${conf_image} ${destination} || write_failure
 			message="-----------------------------" ; broadcast
 		else
 			message="Flashing eMMC with dd" ; broadcast
 			message="-----------------------------" ; broadcast
-			message="xzcat /tmp/usb/${conf_image} | dd of=${destination} bs=1M" ; broadcast
-			xzcat /tmp/usb/${conf_image} | dd of=${destination} bs=1M || write_failure
+			message="xzcat ${wdir}/${conf_image} | dd of=${destination} bs=1M" ; broadcast
+			xzcat ${wdir}/${conf_image} | dd of=${destination} bs=1M || write_failure
 			message="-----------------------------" ; broadcast
 		fi
 	else
 		message="Flashing eMMC with dd" ; broadcast
 		message="-----------------------------" ; broadcast
-		message="xzcat /tmp/usb/${conf_image} | dd of=${destination} bs=1M" ; broadcast
-		xzcat /tmp/usb/${conf_image} | dd of=${destination} bs=1M || write_failure
+		message="xzcat ${wdir}/${conf_image} | dd of=${destination} bs=1M" ; broadcast
+		xzcat ${wdir}/${conf_image} | dd of=${destination} bs=1M || write_failure
 		message="-----------------------------" ; broadcast
 	fi
 	flush_cache
@@ -408,7 +408,7 @@ check_eeprom () {
 				message="Invalid EEPROM header detected" ; broadcast
 				if [ ! "x${eeprom_location}" = "x" ] ; then
 					message="Writing header to EEPROM" ; broadcast
-					dd if=/tmp/usb/${conf_eeprom_file} of=${eeprom_location} || write_failure
+					dd if=${wdir}/${conf_eeprom_file} of=${eeprom_location} || write_failure
 					sync
 					sync
 					eeprom_check=$(hexdump -e '8/1 "%c"' ${eeprom} -n 8 | cut -b 6-8)
@@ -492,14 +492,14 @@ process_job_file () {
 		conf_eeprom_file=$(cat ${wfile} | grep -v '#' | grep conf_eeprom_file | awk -F '=' '{print $2}' || true)
 		conf_eeprom_compare=$(cat ${wfile} | grep -v '#' | grep conf_eeprom_compare | awk -F '=' '{print $2}' || true)
 		if [ ! "x${conf_eeprom_file}" = "x" ] ; then
-			if [ -f /tmp/usb/${conf_eeprom_file} ] ; then
+			if [ -f ${wdir}/${conf_eeprom_file} ] ; then
 				check_eeprom
 			fi
 		fi
 
 		conf_image=$(cat ${wfile} | grep -v '#' | grep conf_image | awk -F '=' '{print $2}' || true)
 		if [ ! "x${conf_image}" = "x" ] ; then
-			if [ -f /tmp/usb/${conf_image} ] ; then
+			if [ -f ${wdir}/${conf_image} ] ; then
 				conf_bmap=$(cat ${wfile} | grep -v '#' | grep conf_bmap | awk -F '=' '{print $2}' || true)
 				if [ "x${is_bbb}" = "xenable" ] ; then
 					cylon_leds & CYLON_PID=$!
@@ -520,7 +520,7 @@ process_job_file () {
 					[ -e /proc/$CYLON_PID ]  && kill $CYLON_PID
 				fi
 			else
-				message="error: image not found [/tmp/usb/${conf_image}]" ; broadcast
+				message="error: image not found [${wdir}/${conf_image}]" ; broadcast
 			fi
 		else
 			message="error: image not defined [conf_image=${conf_image}]" ; broadcast
@@ -534,6 +534,7 @@ process_job_file () {
 
 check_usb_media () {
 	wfile="/tmp/usb/job.txt"
+	wdir="/tmp/usb"
 	message="Checking external usb media" ; broadcast
 	message="lsblk:" ; broadcast
 	message="`lsblk || true`" ; broadcast
@@ -571,31 +572,37 @@ check_usb_media () {
 	done
 
 	if [ ! "x${job_file}" = "xfound" ] ; then
-		message="job.txt: format" ; broadcast
-		message="-----------------------------" ; broadcast
-		message="abi=aaa" ; broadcast
-		message="conf_eeprom_file=<file>" ; broadcast
-		message="conf_eeprom_compare=<6-8>" ; broadcast
-		message="conf_image=<file>.img.xz" ; broadcast
-		message="conf_bmap=<file>.bmap" ; broadcast
-		message="conf_resize=enable|<blank>" ; broadcast
-		message="conf_partition1_startmb=1" ; broadcast
-		message="conf_partition1_fstype=" ; broadcast
+		if [ -f /opt/emmc/job.txt ] ; then
+			wfile="/opt/emmc/job.txt"
+			wdir="/opt/emmc"
+			process_job_file
+		else
+			message="job.txt: format" ; broadcast
+			message="-----------------------------" ; broadcast
+			message="abi=aaa" ; broadcast
+			message="conf_eeprom_file=<file>" ; broadcast
+			message="conf_eeprom_compare=<6-8>" ; broadcast
+			message="conf_image=<file>.img.xz" ; broadcast
+			message="conf_bmap=<file>.bmap" ; broadcast
+			message="conf_resize=enable|<blank>" ; broadcast
+			message="conf_partition1_startmb=1" ; broadcast
+			message="conf_partition1_fstype=" ; broadcast
 
-		message="#last endmb is ignored as it just uses the rest of the drive..." ; broadcast
-		message="conf_partition1_endmb=" ; broadcast
+			message="#last endmb is ignored as it just uses the rest of the drive..." ; broadcast
+			message="conf_partition1_endmb=" ; broadcast
 
-		message="conf_partition2_fstype=" ; broadcast
-		message="conf_partition2_endmb=" ; broadcast
+			message="conf_partition2_fstype=" ; broadcast
+			message="conf_partition2_endmb=" ; broadcast
 
-		message="conf_partition3_fstype=" ; broadcast
-		message="conf_partition3_endmb=" ; broadcast
+			message="conf_partition3_fstype=" ; broadcast
+			message="conf_partition3_endmb=" ; broadcast
 
-		message="conf_partition4_fstype=" ; broadcast
+			message="conf_partition4_fstype=" ; broadcast
 
-		message="conf_root_partition=1|2|3|4" ; broadcast
-		message="-----------------------------" ; broadcast
-		write_failure
+			message="conf_root_partition=1|2|3|4" ; broadcast
+			message="-----------------------------" ; broadcast
+			write_failure
+		fi
 	fi
 
 	message="eMMC has been flashed: please wait for device to power down." ; broadcast
