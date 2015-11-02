@@ -130,9 +130,13 @@ else
 fi
 
 g_network="iSerialNumber=${SERIAL_NUMBER} iManufacturer=${manufacturer} iProduct=${PRODUCT} host_addr=${cpsw_1_mac} dev_addr=${dev_mac}"
-
+usm_image_file="/var/local/usb_mass_storage.img"
+ 
+#If image file is found, use it for g_multi
+if [ -f ${usm_image_file} ] ; then
+        modprobe g_multi file=${usb_image_file} cdrom=0 ro=0 stall=0 removable=1 nofua=1 ${g_network} || true
 #In a single partition setup, dont load g_multi, as we could trash the linux file system...
-if [ "x${root_drive}" = "x/dev/mmcblk0p1" ] || [ "x${root_drive}" = "x/dev/mmcblk1p1" ] ; then
+elif [ "x${root_drive}" = "x/dev/mmcblk0p1" ] || [ "x${root_drive}" = "x/dev/mmcblk1p1" ] ; then
 	if [ -f /usr/sbin/udhcpd ] || [ -f /usr/sbin/dnsmasq ] ; then
 		#Make sure (# CONFIG_USB_ETH_EEM is not set), otherwise this shows up as "usb0" instead of ethX on host pc..
 		modprobe g_ether ${g_network} || true
