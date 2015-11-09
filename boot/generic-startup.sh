@@ -43,7 +43,7 @@ if [ -f /proc/device-tree/model ] ; then
 	echo "generic-board-startup: [model=${board}]"
 
 	case "${board}" in
-	TI_AM335x_BeagleBone|TI_AM335x_BeagleBone_Black|TI_AM335x_BeagleBone_Green|TI_AM335x_Arduino_Tre)
+	TI_AM335x_BeagleBone|TI_AM335x_BeagleBone_Black|TI_AM335x_BeagleBone_Green|TI_AM335x_Arduino_Tre|Arrow_BeagleBone_Black_Industrial)
 		script="am335x_evm.sh"
 		;;
 	TI_AM5728_BeagleBoard-X15)
