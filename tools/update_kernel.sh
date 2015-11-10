@@ -120,10 +120,12 @@ get_device () {
 
 	unset es8
 	unset sgx5430
+	unset sgx335x
 	unset kernel_headers
 	case "${machine}" in
 	TI_AM335x_BeagleBone|TI_AM335x_BeagleBone_Black|TI_AM335x_BeagleBone_Green)
 		es8="enabled"
+		sgx335x="enabled"
 		;;
 	TI_AM5728_BeagleBoard-X15)
 		sgx5430="enabled"
@@ -366,6 +368,10 @@ third_party () {
 			run_depmod_initramfs="enabled"
 			;;
 		TESTING)
+			if [ "x${sgx335x}" = "xenabled" ] ; then
+				apt-get install -y ti-sgx-335x-modules-${latest_kernel} || true
+				run_depmod_initramfs="enabled"
+			fi
 			if [ "x${sgx5430}" = "xenabled" ] ; then
 				apt-get install -y ti-sgx-5430-modules-${latest_kernel} || true
 				run_depmod_initramfs="enabled"
