@@ -447,6 +447,9 @@ while [ ! -z "$1" ] ; do
 	--armv7-rt-channel)
 		SOC="armv7-rt"
 		;;
+	--armv7-lpae-channel)
+		SOC="armv7-lpae"
+		;;
 	--bone-kernel|--bone-channel)
 		SOC="omap-psp"
 		;;
