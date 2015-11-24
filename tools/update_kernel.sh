@@ -391,13 +391,28 @@ checkparm () {
 	fi
 }
 
-if [ ! -f /usr/bin/lsb_release ] ; then
-	echo "install lsb-release"
-	echo "sudo apt-get install lsb-release"
-	exit
-fi
+get_dist=$(cat /etc/apt/sources.list | grep -v deb-src | grep armhf | grep repos.rcn-ee.com | awk '{print $4}' || true)
+case "${get_dist}" in
+wheezy|jessie|stretch|sid)
+	dist="${get_dist}"
+	;;
+trusty|utopic|vivid|wily|xenial)
+	dist="${get_dist}"
+	;;
+*)
+	dist=""
+	;;
+esac
 
-dist=$(lsb_release -cs | sed 's/\//_/g')
+if [ "x${dist}" = "x" ] ; then
+	if [ ! -f /usr/bin/lsb_release ] ; then
+		echo "install lsb-release"
+		echo "sudo apt-get install lsb-release"
+		exit
+	fi
+
+	dist=$(lsb_release -cs | sed 's/\//_/g')
+fi
 arch=$(dpkg --print-architecture)
 current_kernel=$(uname -r)
 
