@@ -391,7 +391,7 @@ checkparm () {
 	fi
 }
 
-get_dist=$(cat /etc/apt/sources.list | grep -v deb-src | grep armhf | grep repos.rcn-ee.com | awk '{print $4}' || true)
+get_dist=$(cat /etc/apt/sources.list | grep -v deb-src | grep armhf | grep repos.rcn-ee.com | head -1 | awk '{print $4}' || true)
 case "${get_dist}" in
 wheezy|jessie|stretch|sid)
 	dist="${get_dist}"
