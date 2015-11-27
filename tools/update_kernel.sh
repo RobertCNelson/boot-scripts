@@ -357,7 +357,7 @@ third_party () {
 			;;
 		esac
 		;;
-	ti|ti-rt|ti-xenomai|ti-omap2plus)
+	ti-xenomai)
 		case "${kernel}" in
 		STABLE)
 			#3.14 only...
@@ -367,7 +367,11 @@ third_party () {
 			fi
 			run_depmod_initramfs="enabled"
 			;;
-		TESTING)
+		esac
+		;;
+	ti|ti-rt|ti-omap2plus)
+		case "${kernel}" in
+		STABLE|TESTING)
 			if [ "x${sgx335x}" = "xenabled" ] ; then
 				apt-get install -y ti-sgx-335x-modules-${latest_kernel} || true
 				run_depmod_initramfs="enabled"
@@ -494,7 +498,6 @@ while [ ! -z "$1" ] ; do
 		;;
 	--ti-omap2plus-channel)
 		SOC="ti-omap2plus"
-		kernel="TESTING"
 		;;
 	esac
 	shift
