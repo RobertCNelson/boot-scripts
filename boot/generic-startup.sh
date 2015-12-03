@@ -14,6 +14,14 @@ if [ -f /etc/ssh/ssh.regenerate ] ; then
 	echo "generic-board-startup: regnerating ssh keys"
 	systemctl stop sshd
 	rm -rf /etc/ssh/ssh_host_* || true
+
+	if [ -f /dev/hwrng ] ; then
+		# Mix in the output of the HWRNG to the kernel before generating ssh keys
+		dd if=/dev/hwrng of=/dev/urandom count=1 bs=4096 2>/dev/null
+	else
+		echo "generic-board-startup: WARNING /dev/hwrng wasn't available"
+	fi
+
 	dpkg-reconfigure openssh-server
 	sync
 	if [ -s /etc/ssh/ssh_host_ed25519_key.pub ] ; then
