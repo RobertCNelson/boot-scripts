@@ -11,13 +11,14 @@ fi
 
 #Regenerate ssh host keys
 if [ -f /etc/ssh/ssh.regenerate ] ; then
-	echo "generic-board-startup: regnerating ssh keys"
+	echo "generic-board-startup: regenerating ssh keys"
 	systemctl stop sshd
 	rm -rf /etc/ssh/ssh_host_* || true
 
-	if [ -f /dev/hwrng ] ; then
+	if [ -e /dev/hwrng ] ; then
 		# Mix in the output of the HWRNG to the kernel before generating ssh keys
 		dd if=/dev/hwrng of=/dev/urandom count=1 bs=4096 2>/dev/null
+		echo "generic-board-startup: if=/dev/hwrng of=/dev/urandom count=1 bs=4096"
 	else
 		echo "generic-board-startup: WARNING /dev/hwrng wasn't available"
 	fi
