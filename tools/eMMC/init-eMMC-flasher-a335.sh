@@ -21,12 +21,19 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-version_message="1.20151203: gpt partitions with raw boot..."
+version_message="1.20151203: just eeprom..."
 
 if ! id | grep -q root; then
 	echo "must be run as root"
 	exit
 fi
+
+broadcast () {
+	if [ "x${message}" != "x" ] ; then
+		echo "${message}"
+		echo "${message}" > /dev/tty0 || true
+	fi
+}
 
 check_eeprom () {
 	device_eeprom="A335-eeprom"
