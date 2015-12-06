@@ -438,6 +438,7 @@ kernel="STABLE"
 mirror="https://rcn-ee.com/repos/latest"
 unset kernel_version
 unset daily_cron
+unset old_rootfs
 # parse commandline options
 while [ ! -z "$1" ] ; do
 	case $1 in
@@ -499,6 +500,9 @@ while [ ! -z "$1" ] ; do
 	--ti-omap2plus-channel)
 		SOC="ti-omap2plus"
 		;;
+	--pre-fall-2014-rootfs)
+		old_rootfs="enable"
+		;;
 	esac
 	shift
 done
@@ -512,7 +516,7 @@ if [ ! -f /lib/systemd/system/systemd-timesyncd.service ] ; then
 fi
 
 test_rcnee=$(cat /etc/apt/sources.list | grep repos.rcn-ee || true)
-if [ ! "x${test_rcnee}" = "x" ] ; then
+if [ ! "x${test_rcnee}" = "x" ] && [ "x${old_rootfs}" = "x" ] ; then
 	net_rcnee=$(cat /etc/apt/sources.list | grep repos.rcn-ee.net || true)
 	if [ ! "x${net_rcnee}" = "x" ] ; then
 		sed -i -e 's:repos.rcn-ee.net:repos.rcn-ee.com:g' /etc/apt/sources.list
