@@ -189,14 +189,6 @@ check_running_system () {
 		write_failure
 	fi
 
-	##FIXME: quick check for rsync 3.1 (jessie)
-	unset rsync_check
-	unset rsync_progress
-	rsync_check=$(LC_ALL=C rsync --version | grep version | awk '{print $3}' || true)
-	if [ "x${rsync_check}" = "x3.1.1" ] ; then
-		rsync_progress="--info=progress2 --human-readable"
-	fi
-
 	if [ "x${is_bbb}" = "xenable" ] ; then
 		if [ ! -e /sys/class/leds/beaglebone\:green\:usr0/trigger ] ; then
 			modprobe leds_gpio || true
@@ -339,10 +331,7 @@ copy_boot () {
 	fi
 
 	message="rsync: /boot/uboot/ -> /tmp/boot/" ; broadcast
-	if [ ! "x${rsync_progress}" = "x" ] ; then
-		echo "rsync: note the % column is useless..."
-	fi
-	rsync -aAx ${rsync_progress} /boot/uboot/ /tmp/boot/ --exclude={MLO,u-boot.img,uEnv.txt} || write_failure
+	rsync -aAx /boot/uboot/ /tmp/boot/ --exclude={MLO,u-boot.img,uEnv.txt} || write_failure
 	flush_cache
 
 	flush_cache
@@ -358,10 +347,7 @@ copy_rootfs () {
 	mount ${destination}p${media_rootfs} /tmp/rootfs/ -o async,noatime
 
 	message="rsync: / -> /tmp/rootfs/" ; broadcast
-	if [ ! "x${rsync_progress}" = "x" ] ; then
-		echo "rsync: note the % column is useless..."
-	fi
-	rsync -aAx ${rsync_progress} /* /tmp/rootfs/ --exclude={/dev/*,/proc/*,/sys/*,/tmp/*,/run/*,/mnt/*,/media/*,/lost+found,/lib/modules/*,/uEnv.txt} || write_failure
+	rsync -aAx /* /tmp/rootfs/ --exclude={/dev/*,/proc/*,/sys/*,/tmp/*,/run/*,/mnt/*,/media/*,/lost+found,/lib/modules/*,/uEnv.txt} || write_failure
 	flush_cache
 
 	if [ -d /tmp/rootfs/etc/ssh/ ] ; then
@@ -374,10 +360,7 @@ copy_rootfs () {
 
 	message="Copying: Kernel modules" ; broadcast
 	message="rsync: /lib/modules/$(uname -r)/ -> /tmp/rootfs/lib/modules/$(uname -r)/" ; broadcast
-	if [ ! "x${rsync_progress}" = "x" ] ; then
-		echo "rsync: note the % column is useless..."
-	fi
-	rsync -aAx ${rsync_progress} /lib/modules/$(uname -r)/* /tmp/rootfs/lib/modules/$(uname -r)/ || write_failure
+	rsync -aAx /lib/modules/$(uname -r)/* /tmp/rootfs/lib/modules/$(uname -r)/ || write_failure
 	flush_cache
 
 	message="Copying: ${source}p${media_rootfs} -> ${destination}p${media_rootfs} complete" ; broadcast
