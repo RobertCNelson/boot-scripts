@@ -39,12 +39,12 @@ check_dpkg
 pkg="libdrm-etnaviv0:${deb_arch}"
 check_dpkg
 #devel
-pkg="libdrm-dev"
+pkg="libdrm-dev:${deb_arch}"
 check_dpkg
-
 pkg="git-core"
 check_dpkg
-
+pkg="build-essential"
+check_dpkg
 
 if [ "${deb_pkgs}" ] ; then
 	echo ""
