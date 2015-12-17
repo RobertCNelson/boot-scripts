@@ -71,7 +71,7 @@ if [ ! -f ${HOME}/git/${project}/.git/config ] ; then
 fi
 
 cd ${HOME}/git/${project}/
-make clean
+make clean || true
 git checkout master -f
 git pull || true
 
@@ -81,6 +81,9 @@ if [ "x${test_for_branch}" != "x" ] ; then
 fi
 
 git checkout ${git_sha} -b ${git_sha}-build
+./autogen.sh --prefix=/usr
+make
+sudo make install
 
 exit
 
