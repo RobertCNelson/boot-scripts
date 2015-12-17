@@ -32,10 +32,16 @@ unset deb_pkgs
 #utils:
 pkg="read-edid"
 check_dpkg
-pkg="xserver-xorg-video-modesetting"
-check_dpkg
+#pkg="xserver-xorg-video-modesetting"
+#check_dpkg
 pkg="x11-xserver-utils"
 check_dpkg
+pkg="libdrm-etnaviv0:${deb_arch}"
+check_dpkg
+#devel
+pkg="libdrm-dev"
+check_dpkg
+
 
 if [ "${deb_pkgs}" ] ; then
 	echo ""
@@ -45,6 +51,8 @@ if [ "${deb_pkgs}" ] ; then
 	sudo apt-get clean
 	echo "--------------------"
 fi
+
+exit
 
 if [ ! -d /etc/X11/ ] ; then
 	sudo mkdir -p /etc/X11/ || true
