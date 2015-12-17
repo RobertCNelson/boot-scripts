@@ -42,6 +42,9 @@ check_dpkg
 pkg="libdrm-dev"
 check_dpkg
 
+pkg="git-core"
+check_dpkg
+
 
 if [ "${deb_pkgs}" ] ; then
 	echo ""
@@ -51,6 +54,33 @@ if [ "${deb_pkgs}" ] ; then
 	sudo apt-get clean
 	echo "--------------------"
 fi
+
+#git_sha="origin/master"
+git_sha="origin/unstable-devel"
+project="xf86-video-armada"
+server="git://ftp.arm.linux.org.uk/~rmk"
+
+if [ ! -f ${HOME}/git/${project}/.git/config ] ; then
+	git clone ${server}/${project}.git ${HOME}/git/${project}/
+fi
+
+if [ ! -f ${HOME}/git/${project}/.git/config ] ; then
+	rm -rf ${HOME}/git/${project}/ || true
+	echo "error: git failure, try re-runing"
+	exit
+fi
+
+cd ${HOME}/git/${project}/
+make clean
+git checkout master -f
+git pull || true
+
+test_for_branch=$(git branch --list ${git_sha}-build)
+if [ "x${test_for_branch}" != "x" ] ; then
+	git branch ${git_sha}-build -D
+fi
+
+git checkout ${git_sha} -b ${git_sha}-build
 
 exit
 
