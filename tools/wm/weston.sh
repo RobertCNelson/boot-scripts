@@ -13,4 +13,5 @@ export EGL_LOG_LEVEL=debug
 export LIBGL_DEBUG=verbose
 export WAYLAND_DEBUG=1
 
-weston-launch
+#weston-launch
+sudo openvt -v -c 5 -- /usr/bin/weston-launch --tty=/dev/tty5 --user=voodoo -- --log=weston.log
