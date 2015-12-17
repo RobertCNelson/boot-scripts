@@ -29,14 +29,12 @@ deb_arch=$(LC_ALL=C dpkg --print-architecture)
 
 unset deb_pkgs
 
+pkg="libdrm-etnaviv0:${deb_arch}"
+check_dpkg
 #utils:
 pkg="read-edid"
 check_dpkg
-#pkg="xserver-xorg-video-modesetting"
-#check_dpkg
 pkg="x11-xserver-utils"
-check_dpkg
-pkg="libdrm-etnaviv0:${deb_arch}"
 check_dpkg
 #devel
 pkg="libdrm-dev:${deb_arch}"
@@ -44,6 +42,16 @@ check_dpkg
 pkg="git-core"
 check_dpkg
 pkg="build-essential"
+check_dpkg
+pkg="autoconf"
+check_dpkg
+pkg="libtool"
+check_dpkg
+pkg="pkg-config"
+check_dpkg
+pkg="xutils-dev"
+check_dpkg
+pkg="xserver-xorg-dev"
 check_dpkg
 
 if [ "${deb_pkgs}" ] ; then
@@ -81,7 +89,7 @@ if [ "x${test_for_branch}" != "x" ] ; then
 fi
 
 git checkout ${git_sha} -b ${git_sha}-build
-./autogen.sh --prefix=/usr
+./autogen.sh --prefix=/usr --enable-etnadrm
 make
 sudo make install
 
