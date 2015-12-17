@@ -53,6 +53,8 @@ pkg="xutils-dev"
 check_dpkg
 pkg="xserver-xorg-dev"
 check_dpkg
+pkg="libudev-dev:${deb_arch}"
+check_dpkg
 
 if [ "${deb_pkgs}" ] ; then
 	echo ""
@@ -89,7 +91,7 @@ if [ "x${test_for_branch}" != "x" ] ; then
 fi
 
 git checkout ${git_sha} -b ${git_sha}-build
-./autogen.sh --prefix=/usr --enable-etnadrm
+./autogen.sh --prefix=/usr --disable-etnaviv
 make
 sudo make install
 
