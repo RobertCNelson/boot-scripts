@@ -182,7 +182,12 @@ latest_version_repo () {
 			cat /tmp/LATEST-${SOC}
 			echo "-----------------------------"
 
-			latest_kernel=$(cat /tmp/LATEST-${SOC} | grep ${kernel} | awk '{print $3}')
+			if [ "x${lts_grep}" = "xtrue" ] ; then
+				latest_kernel=$(cat /tmp/LATEST-${SOC} | grep -v LTS44 | grep ${kernel} | awk '{print $3}')
+			else
+				latest_kernel=$(cat /tmp/LATEST-${SOC} | grep ${kernel} | awk '{print $3}')
+			fi
+
 			echo "info: you are running: [${current_kernel}], latest is: [${latest_kernel}] updating..."
 			if [ "x${latest_kernel}" = "x" ] ; then
 				exit
@@ -230,7 +235,13 @@ latest_version () {
 		echo "info: checking archive"
 		wget --no-verbose ${mirror}/${dist}-${arch}/LATEST-${SOC}
 		if [ -f /tmp/LATEST-${SOC} ] ; then
-			latest_kernel=$(cat /tmp/LATEST-${SOC} | grep ${kernel} | awk '{print $3}')
+
+			if [ "x${lts_grep}" = "xtrue" ] ; then
+				latest_kernel=$(cat /tmp/LATEST-${SOC} | grep -v LTS44 | grep ${kernel} | awk '{print $3}')
+			else
+				latest_kernel=$(cat /tmp/LATEST-${SOC} | grep ${kernel} | awk '{print $3}')
+			fi
+
 			echo "info: you are running: [${current_kernel}], latest is: [${latest_kernel}] updating..."
 			if [ "x${latest_kernel}" = "x" ] ; then
 				exit
@@ -439,6 +450,7 @@ mirror="https://rcn-ee.com/repos/latest"
 unset kernel_version
 unset daily_cron
 unset old_rootfs
+unset lts_grep
 # parse commandline options
 while [ ! -z "$1" ] ; do
 	case $1 in
@@ -450,6 +462,7 @@ while [ ! -z "$1" ] ; do
 		daily_cron="enabled"
 		;;
 	--lts-kernel|--lts|--lts-4_1-kernel|--lts-4_1)
+		lts_grep="true"
 		kernel="LTS"
 		;;
 	--lts-4_4-kernel|--lts-4_4)
