@@ -349,7 +349,7 @@ third_party () {
 			apt-get install -o Dpkg::Options::="--force-overwrite" -y mt7601u-modules-${latest_kernel} || true
 			run_depmod_initramfs="enabled"
 			;;
-		LTS|TESTING|EXPERIMENTAL)
+		LTS|LTS44|TESTING|EXPERIMENTAL)
 			if [ "x${es8}" = "xenabled" ] ; then
 				apt-get install -y ti-sgx-es8-modules-${latest_kernel} || true
 				run_depmod_initramfs="enabled"
@@ -449,8 +449,11 @@ while [ ! -z "$1" ] ; do
 	--daily-cron)
 		daily_cron="enabled"
 		;;
-	--lts-kernel|--lts)
+	--lts-kernel|--lts|--lts-4_1-kernel|--lts-4_1)
 		kernel="LTS"
+		;;
+	--lts-4_4-kernel|--lts-4_4)
+		kernel="LTS44"
 		;;
 	--stable-kernel|--stable)
 		kernel="STABLE"
@@ -480,12 +483,20 @@ while [ ! -z "$1" ] ; do
 		SOC="xenomai"
 		kernel="STABLE"
 		;;
+	--imxv6v7-channel)
+		SOC="imxv6v7"
+		kernel="STABLE"
+		;;
 	--multiv7-channel)
 		SOC="multiv7"
 		kernel="STABLE"
 		;;
 	--omap2plus-channel)
 		SOC="omap2plus"
+		kernel="STABLE"
+		;;
+	--tegra-channel)
+		SOC="tegra"
 		kernel="STABLE"
 		;;
 	--ti-kernel|--ti-channel)
