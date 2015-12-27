@@ -325,7 +325,7 @@ copy_boot () {
 	flush_cache
 	umount /tmp/boot/ || umount -l /tmp/boot/ || write_failure
 	flush_cache
-	umount /boot/uboot || umount -l /boot/uboot
+	umount /boot/uboot || umount -l /boot/uboot || true
 }
 
 copy_rootfs () {
