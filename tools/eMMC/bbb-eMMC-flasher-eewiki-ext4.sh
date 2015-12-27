@@ -419,7 +419,7 @@ copy_rootfs () {
 		message="-----------------------------" ; broadcast
 
 		flush_cache
-		halt -f
+		halt
 	fi
 }
 
