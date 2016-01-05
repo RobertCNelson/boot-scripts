@@ -1,6 +1,6 @@
 #!/bin/sh -e
 #
-# Copyright (c) 2014-2015 Robert Nelson <robertcnelson@gmail.com>
+# Copyright (c) 2014-2016 Robert Nelson <robertcnelson@gmail.com>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -183,7 +183,7 @@ latest_version_repo () {
 			echo "-----------------------------"
 
 			if [ "x${lts_grep}" = "xtrue" ] ; then
-				latest_kernel=$(cat /tmp/LATEST-${SOC} | grep -v LTS44 | grep ${kernel} | awk '{print $3}')
+				latest_kernel=$(cat /tmp/LATEST-${SOC} | grep -v LTS44 | grep -v LTS41 | grep ${kernel} | awk '{print $3}')
 			else
 				latest_kernel=$(cat /tmp/LATEST-${SOC} | grep ${kernel} | awk '{print $3}')
 			fi
@@ -237,7 +237,7 @@ latest_version () {
 		if [ -f /tmp/LATEST-${SOC} ] ; then
 
 			if [ "x${lts_grep}" = "xtrue" ] ; then
-				latest_kernel=$(cat /tmp/LATEST-${SOC} | grep -v LTS44 | grep ${kernel} | awk '{print $3}')
+				latest_kernel=$(cat /tmp/LATEST-${SOC} | grep -v LTS44 | grep -v LTS41 | grep ${kernel} | awk '{print $3}')
 			else
 				latest_kernel=$(cat /tmp/LATEST-${SOC} | grep ${kernel} | awk '{print $3}')
 			fi
