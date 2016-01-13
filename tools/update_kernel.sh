@@ -183,7 +183,10 @@ latest_version_repo () {
 			echo "-----------------------------"
 
 			if [ "x${lts_grep}" = "xtrue" ] ; then
-				latest_kernel=$(cat /tmp/LATEST-${SOC} | grep -v LTS44 | grep -v LTS41 | grep ${kernel} | awk '{print $3}')
+				latest_kernel=$(cat /tmp/LATEST-${SOC} | grep ${kernel} | awk '{print $3}')
+				if [ "x${latest_kernel}" = "x" ] ; then
+					latest_kernel=$(cat /tmp/LATEST-${SOC} | grep -v LTS44 | grep -v LTS41 | grep LTS | awk '{print $3}')
+				fi
 			else
 				latest_kernel=$(cat /tmp/LATEST-${SOC} | grep ${kernel} | awk '{print $3}')
 			fi
@@ -237,7 +240,10 @@ latest_version () {
 		if [ -f /tmp/LATEST-${SOC} ] ; then
 
 			if [ "x${lts_grep}" = "xtrue" ] ; then
-				latest_kernel=$(cat /tmp/LATEST-${SOC} | grep -v LTS44 | grep -v LTS41 | grep ${kernel} | awk '{print $3}')
+				latest_kernel=$(cat /tmp/LATEST-${SOC} | grep ${kernel} | awk '{print $3}')
+				if [ "x${latest_kernel}" = "x" ] ; then
+					latest_kernel=$(cat /tmp/LATEST-${SOC} | grep -v LTS44 | grep -v LTS41 | grep LTS | awk '{print $3}')
+				fi
 			else
 				latest_kernel=$(cat /tmp/LATEST-${SOC} | grep ${kernel} | awk '{print $3}')
 			fi
@@ -360,7 +366,7 @@ third_party () {
 			apt-get install -o Dpkg::Options::="--force-overwrite" -y mt7601u-modules-${latest_kernel} || true
 			run_depmod_initramfs="enabled"
 			;;
-		LTS|LTS44|TESTING|EXPERIMENTAL)
+		LTS|LTS41|LTS44|TESTING|EXPERIMENTAL)
 			if [ "x${es8}" = "xenabled" ] ; then
 				apt-get install -y ti-sgx-es8-modules-${latest_kernel} || true
 				run_depmod_initramfs="enabled"
@@ -463,7 +469,7 @@ while [ ! -z "$1" ] ; do
 		;;
 	--lts-kernel|--lts|--lts-4_1-kernel|--lts-4_1)
 		lts_grep="true"
-		kernel="LTS"
+		kernel="LTS41"
 		;;
 	--lts-4_4-kernel|--lts-4_4)
 		kernel="LTS44"
