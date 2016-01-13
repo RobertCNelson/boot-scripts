@@ -1,6 +1,6 @@
 #!/bin/bash -e
 #
-# Copyright (c) 2013-2015 Robert Nelson <robertcnelson@gmail.com>
+# Copyright (c) 2013-2016 Robert Nelson <robertcnelson@gmail.com>
 # Portions copyright (c) 2014 Charles Steinkuehler <charles@steinkuehler.net>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -24,10 +24,11 @@
 #This script assumes, these packages are installed, as network may not be setup
 #dosfstools initramfs-tools rsync u-boot-tools
 
-version_message="1.001: 2015-07-21: Better then never, version #..."
+version_message="1.20160113: upgrade backup u-boot: v2016.01-r5..."
 
-http_spl="MLO-am335x_evm-v2015.07-r1"
-http_uboot="u-boot-am335x_evm-v2015.07-r1.img"
+#https://rcn-ee.com/repos/bootloader/am335x_evm/
+http_spl="MLO-am335x_evm-v2016.01-r5"
+http_uboot="u-boot-am335x_evm-v2016.01-r5.img"
 
 if ! id | grep -q root; then
 	echo "must be run as root"
