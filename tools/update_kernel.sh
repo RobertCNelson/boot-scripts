@@ -182,14 +182,7 @@ latest_version_repo () {
 			cat /tmp/LATEST-${SOC}
 			echo "-----------------------------"
 
-			if [ "x${lts_grep}" = "xtrue" ] ; then
-				latest_kernel=$(cat /tmp/LATEST-${SOC} | grep ${kernel} | awk '{print $3}')
-				if [ "x${latest_kernel}" = "x" ] ; then
-					latest_kernel=$(cat /tmp/LATEST-${SOC} | grep -v LTS44 | grep -v LTS41 | grep LTS | awk '{print $3}')
-				fi
-			else
-				latest_kernel=$(cat /tmp/LATEST-${SOC} | grep ${kernel} | awk '{print $3}')
-			fi
+			latest_kernel=$(cat /tmp/LATEST-${SOC} | grep ${kernel} | awk '{print $3}')
 
 			echo "info: you are running: [${current_kernel}], latest is: [${latest_kernel}] updating..."
 			if [ "x${latest_kernel}" = "x" ] ; then
@@ -239,14 +232,7 @@ latest_version () {
 		wget --no-verbose ${mirror}/${dist}-${arch}/LATEST-${SOC}
 		if [ -f /tmp/LATEST-${SOC} ] ; then
 
-			if [ "x${lts_grep}" = "xtrue" ] ; then
-				latest_kernel=$(cat /tmp/LATEST-${SOC} | grep ${kernel} | awk '{print $3}')
-				if [ "x${latest_kernel}" = "x" ] ; then
-					latest_kernel=$(cat /tmp/LATEST-${SOC} | grep -v LTS44 | grep -v LTS41 | grep LTS | awk '{print $3}')
-				fi
-			else
-				latest_kernel=$(cat /tmp/LATEST-${SOC} | grep ${kernel} | awk '{print $3}')
-			fi
+			latest_kernel=$(cat /tmp/LATEST-${SOC} | grep ${kernel} | awk '{print $3}')
 
 			echo "info: you are running: [${current_kernel}], latest is: [${latest_kernel}] updating..."
 			if [ "x${latest_kernel}" = "x" ] ; then
@@ -366,7 +352,7 @@ third_party () {
 			apt-get install -o Dpkg::Options::="--force-overwrite" -y mt7601u-modules-${latest_kernel} || true
 			run_depmod_initramfs="enabled"
 			;;
-		LTS|LTS41|LTS44|TESTING|EXPERIMENTAL)
+		LTS41|LTS44|TESTING|EXPERIMENTAL)
 			if [ "x${es8}" = "xenabled" ] ; then
 				apt-get install -y ti-sgx-es8-modules-${latest_kernel} || true
 				run_depmod_initramfs="enabled"
@@ -456,7 +442,6 @@ mirror="https://rcn-ee.com/repos/latest"
 unset kernel_version
 unset daily_cron
 unset old_rootfs
-unset lts_grep
 # parse commandline options
 while [ ! -z "$1" ] ; do
 	case $1 in
@@ -468,7 +453,6 @@ while [ ! -z "$1" ] ; do
 		daily_cron="enabled"
 		;;
 	--lts-kernel|--lts|--lts-4_1-kernel|--lts-4_1)
-		lts_grep="true"
 		kernel="LTS41"
 		;;
 	--lts-4_4-kernel|--lts-4_4)
