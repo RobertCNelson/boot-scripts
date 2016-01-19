@@ -124,7 +124,7 @@ else
 fi
 
 #hack till bbgw firmware is decided on..
-if [ -f /sys/devices/platform/ocp/47810000.mmc/mmc_host/mmc2/mmc2:0001/mmc2:0001:2/wl18xx.2.auto ] ; then
+if [ -d /sys/devices/platform/ocp/47810000.mmc/mmc_host/mmc2/mmc2:0001/mmc2:0001:2/ ] ; then
 	board_bbgw="enable"
 fi
 
