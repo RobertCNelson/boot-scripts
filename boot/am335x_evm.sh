@@ -1,6 +1,6 @@
 #!/bin/sh -e
 #
-# Copyright (c) 2013-2015 Robert Nelson <robertcnelson@gmail.com>
+# Copyright (c) 2013-2016 Robert Nelson <robertcnelson@gmail.com>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -26,6 +26,8 @@
 if [ -f /etc/rcn-ee.conf ] ; then
 	. /etc/rcn-ee.conf
 fi
+
+unset board_bbgw
 
 eeprom="/sys/bus/i2c/devices/0-0050/eeprom"
 
@@ -121,6 +123,11 @@ else
 	dev_mac="${mac_prefix}2"
 fi
 
+#hack till bbgw firmware is decided on..
+if [ -f /sys/devices/platform/ocp/47810000.mmc/mmc_host/mmc2/mmc2:0001/mmc2:0001:2/wl18xx.2.auto ] ; then
+	board_bbgw="enable"
+fi
+
 unset root_drive
 root_drive="$(cat /proc/cmdline | sed 's/ /\n/g' | grep root=UUID= | awk -F 'root=' '{print $2}' || true)"
 if [ ! "x${root_drive}" = "x" ] ; then
@@ -155,19 +162,32 @@ sleep 3
 # Auto-configuring the usb0 network interface:
 $(dirname $0)/autoconfigure_usb0.sh
 
+#Stick BBGW, in ap-mode by default at some point...
+if [ "x${board_bbgw}" = "xenable" ] ; then
+	ifconfig wlan0 down
+	ifconfig wlan0 hw ether ${cpsw_0_mac}
+	ifconfig wlan0 up
+fi
 
-eth0_addr=$(ip addr list eth0 |grep "inet " |cut -d' ' -f6|cut -d/ -f1 2>/dev/null || true)
+unset eth0_addr
+if [ ! "x${board_bbgw}" = "xenable" ] ; then
+	eth0_addr=$(ip addr list eth0 |grep "inet " |cut -d' ' -f6|cut -d/ -f1 2>/dev/null || true)
+fi
+unset usb0_addr
 usb0_addr=$(ip addr list usb0 |grep "inet " |cut -d' ' -f6|cut -d/ -f1 2>/dev/null || true)
-#wlan0_addr=$(ip addr list wlan0 |grep "inet " |cut -d' ' -f6|cut -d/ -f1 2>/dev/null || true)
+unset wlan0_addr
+if [ "x${board_bbgw}" = "xenable" ] ; then
+	wlan0_addr=$(ip addr list wlan0 |grep "inet " |cut -d' ' -f6|cut -d/ -f1 2>/dev/null || true)
+fi
 
 sed -i -e '/Address/d' /etc/issue
 
 if [ ! "x${eth0_addr}" = "x" ] ; then
 	echo "The IP Address for eth0 is: ${eth0_addr}" >> /etc/issue
 fi
-#if [ ! "x${wlan0_addr}" = "x" ] ; then
-#	echo "The IP Address for wlan0 is: ${wlan0_addr}" >> /etc/issue
-#fi
+if [ ! "x${wlan0_addr}" = "x" ] ; then
+	echo "The IP Address for wlan0 is: ${wlan0_addr}" >> /etc/issue
+fi
 if [ ! "x${usb0_addr}" = "x" ] ; then
 	echo "The IP Address for usb0 is: ${usb0_addr}" >> /etc/issue
 fi
