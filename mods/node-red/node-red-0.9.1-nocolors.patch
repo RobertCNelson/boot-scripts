@@ -5,7 +5,7 @@ diff -rupN original/red.js new/red.js
  var nopt = require("nopt");
  var path = require("path");
  var RED = require("./red/red.js");
-+require('bonescript/node_modules/systemd');
++require('systemd');
  
  var server;
  var app = express();
