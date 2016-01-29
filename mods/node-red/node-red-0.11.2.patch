@@ -1,0 +1,39 @@
+diff --git a/red.js b/red.js
+index d4bd2d4..303d91d 100755
+--- a/red.js
++++ b/red.js
+@@ -24,6 +24,7 @@ var path = require("path");
+ var fs = require("fs");
+ var RED = require("./red/red.js");
+ var log = require("./red/log");
++require('systemd');
+ 
+ var server;
+ var app = express();
+@@ -229,7 +230,8 @@ RED.start().then(function() {
+             }
+             process.exit(1);
+         });
+-        server.listen(settings.uiPort,settings.uiHost,function() {
++        server.listen(settings.uiPort);
++        server.on('listening', function() {
+             if (settings.httpAdminRoot === false) {
+                 RED.log.info(log._("server.admin-ui-disabled"));
+             }
+diff --git a/settings.js b/settings.js
+index 75874e5..1cd0784 100644
+--- a/settings.js
++++ b/settings.js
+@@ -18,9 +18,11 @@
+ // to make it available:
+ //var fs = require("fs");
+ 
++var port = process.env.LISTEN_PID > 0 ? 'systemd' : 1880;
++
+ module.exports = {
+     // the tcp port that the Node-RED web server is listening on
+-    uiPort: 1880,
++    uiPort: port,
+ 
+     // By default, the Node-RED UI accepts connections on all IPv4 interfaces.
+     // The following property can be used to listen on a specific interface. For
