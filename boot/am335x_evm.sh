@@ -166,7 +166,7 @@ $(dirname $0)/autoconfigure_usb0.sh
 if [ "x${board_bbgw}" = "xenable" ] ; then
 	ifconfig wlan0 down
 	ifconfig wlan0 hw ether ${cpsw_0_mac}
-	ifconfig wlan0 up
+	ifconfig wlan0 up || true
 fi
 
 unset eth0_addr
