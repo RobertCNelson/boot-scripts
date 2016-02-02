@@ -58,6 +58,7 @@ fi
 
 SERIAL_NUMBER="1234BBBK5678"
 ISBLACK=""
+ISGREEN=""
 PRODUCT="am335x_evm"
 manufacturer="Circuitco"
 
@@ -87,12 +88,12 @@ fi
 
 PRODUCT="BeagleBone"
 if [ "x${ISBLACK}" = "xBBBK" ] || [ "x${ISBLACK}" = "xBNLT" ] ; then
-	PRODUCT="BeagleBoneBlack"
-fi
-
-if [ "x${ISGREEN}" = "xBBG" ] ; then
-	manufacturer="Seeed"
-	PRODUCT="BeagleBoneGreen"
+	if [ "x${ISGREEN}" = "xBBG" ] ; then
+		manufacturer="Seeed"
+		PRODUCT="BeagleBoneGreen"
+	else
+		PRODUCT="BeagleBoneBlack"
+	fi
 fi
 
 mac_address="/proc/device-tree/ocp/ethernet@4a100000/slave@4a100200/mac-address"
