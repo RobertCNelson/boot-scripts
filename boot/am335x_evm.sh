@@ -56,7 +56,7 @@ if [ "x${abi}" = "x" ] ; then
 	fi
 fi
 
-SERIAL_NUMBER="0C-1234BBBK5678"
+SERIAL_NUMBER="1234BBBK5678"
 ISBLACK=""
 PRODUCT="am335x_evm"
 manufacturer="Circuitco"
@@ -64,35 +64,35 @@ manufacturer="Circuitco"
 #pre nvmem...
 eeprom="/sys/bus/i2c/devices/0-0050/eeprom"
 if [ -f ${eeprom} ] ; then
-	SERIAL_NUMBER=$(hexdump -e '8/1 "%c"' ${eeprom} -s 14 -n 2)-$(hexdump -e '8/1 "%c"' ${eeprom} -s 16 -n 12)
-	ISBLACK=$(hexdump -e '8/1 "%c"' ${eeprom} -s 8 -n 4)
-
-	PRODUCT="BeagleBone"
-	if [ "x${ISBLACK}" = "xBBBK" ] || [ "x${ISBLACK}" = "xBNLT" ] ; then
-		PRODUCT="BeagleBoneBlack"
-	fi
+	SERIAL_NUMBER=$(hexdump -e '8/1 "%c"' ${eeprom} -n 28 | cut -b 17-28)
+	ISBLACK=$(hexdump -e '8/1 "%c"' ${eeprom} -n 12 | cut -b 9-12)
+	ISGREEN=$(hexdump -e '8/1 "%c"' ${eeprom} -n 19 | cut -b 17-19)
 fi
 
 #[PATCH (pre v8) 0/9] Add simple NVMEM Framework via regmap.
 eeprom="/sys/class/nvmem/at24-0/nvmem"
 if [ -f ${eeprom} ] ; then
-	SERIAL_NUMBER=$(hexdump -e '8/1 "%c"' ${eeprom} -n 16 | cut -b 15-16)-$(hexdump -e '8/1 "%c"' ${eeprom} -n 28 | cut -b 17-28)
+	SERIAL_NUMBER=$(hexdump -e '8/1 "%c"' ${eeprom} -n 28 | cut -b 17-28)
 	ISBLACK=$(hexdump -e '8/1 "%c"' ${eeprom} -n 12 | cut -b 9-12)
-	PRODUCT="BeagleBone"
-	if [ "x${ISBLACK}" = "xBBBK" ] || [ "x${ISBLACK}" = "xBNLT" ] ; then
-		PRODUCT="BeagleBoneBlack"
-	fi
+	ISGREEN=$(hexdump -e '8/1 "%c"' ${eeprom} -n 19 | cut -b 17-19)
 fi
 
 #[PATCH v8 0/9] Add simple NVMEM Framework via regmap.
 eeprom="/sys/bus/nvmem/devices/at24-0/nvmem"
 if [ -f ${eeprom} ] ; then
-	SERIAL_NUMBER=$(hexdump -e '8/1 "%c"' ${eeprom} -n 16 | cut -b 15-16)-$(hexdump -e '8/1 "%c"' ${eeprom} -n 28 | cut -b 17-28)
+	SERIAL_NUMBER=$(hexdump -e '8/1 "%c"' ${eeprom} -n 28 | cut -b 17-28)
 	ISBLACK=$(hexdump -e '8/1 "%c"' ${eeprom} -n 12 | cut -b 9-12)
-	PRODUCT="BeagleBone"
-	if [ "x${ISBLACK}" = "xBBBK" ] || [ "x${ISBLACK}" = "xBNLT" ] ; then
-		PRODUCT="BeagleBoneBlack"
-	fi
+	ISGREEN=$(hexdump -e '8/1 "%c"' ${eeprom} -n 19 | cut -b 17-19)
+fi
+
+PRODUCT="BeagleBone"
+if [ "x${ISBLACK}" = "xBBBK" ] || [ "x${ISBLACK}" = "xBNLT" ] ; then
+	PRODUCT="BeagleBoneBlack"
+fi
+
+if [ "x${ISGREEN}" = "xBBG" ] ; then
+	manufacturer="Seeed"
+	PRODUCT="BeagleBoneGreen"
 fi
 
 mac_address="/proc/device-tree/ocp/ethernet@4a100000/slave@4a100200/mac-address"
