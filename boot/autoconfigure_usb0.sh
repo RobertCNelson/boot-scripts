@@ -130,7 +130,7 @@ deb_configure_dnsmasq ()
 port=0
 interface=usb0
 #one address range
-dhcp-range=${deb_usb_gateway},${deb_usb_gateway}
+dhcp-range=usb0,${deb_usb_address},${deb_usb_gateway},${deb_usb_gateway}
 dhcp-option=3
 except-interface=lo
 except-interface=eth0
