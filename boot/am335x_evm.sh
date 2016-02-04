@@ -176,8 +176,7 @@ if [ "x${board_bbgw}" = "xenable" ] ; then
 	ifconfig wlan0 hw ether ${cpsw_0_mac}
 	ifconfig wlan0 up || true
 	if [ -f /usr/bin/create_ap ] ; then
-		create_ap -n wlan0 BeagleBone BeagleBone &
-		sleep 5
+		systemctl start create_ap
 	fi
 fi
 
