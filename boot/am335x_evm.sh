@@ -167,15 +167,19 @@ fi
 
 sleep 2
 
-# Auto-configuring the usb0 network interface:
-$(dirname $0)/autoconfigure_usb0.sh
-
 #Stick BBGW, in ap-mode by default at some point...
 if [ "x${board_bbgw}" = "xenable" ] ; then
 	ifconfig wlan0 down
 	ifconfig wlan0 hw ether ${cpsw_0_mac}
 	ifconfig wlan0 up || true
+	if [ -f /usr/bin/create_ap ] ; then
+		create_ap -n wlan0 BeagleBone BeagleBone &
+		sleep 5
+	fi
 fi
+
+# Auto-configuring the usb0 network interface:
+$(dirname $0)/autoconfigure_usb0.sh
 
 unset eth0_addr
 if [ ! "x${board_bbgw}" = "xenable" ] ; then
