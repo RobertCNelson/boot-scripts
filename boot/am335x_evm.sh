@@ -129,36 +129,43 @@ if [ -d /sys/devices/platform/ocp/47810000.mmc/mmc_host/mmc2/mmc2:0001/mmc2:0001
 	board_bbgw="enable"
 fi
 
-unset root_drive
-root_drive="$(cat /proc/cmdline | sed 's/ /\n/g' | grep root=UUID= | awk -F 'root=' '{print $2}' || true)"
-if [ ! "x${root_drive}" = "x" ] ; then
-	root_drive="$(/sbin/findfs ${root_drive} || true)"
-else
-	root_drive="$(cat /proc/cmdline | sed 's/ /\n/g' | grep root= | awk -F 'root=' '{print $2}' || true)"
-fi
-
 g_network="iSerialNumber=${SERIAL_NUMBER} iManufacturer=${manufacturer} iProduct=${PRODUCT} host_addr=${cpsw_1_mac} dev_addr=${dev_mac}"
 usb_image_file="/var/local/usb_mass_storage.img"
- 
-#If image file is found, use it for g_multi
+
+#priorty:
+#g_multi
+#g_ether
+#g_serial
+
+#g_multi: Do we have image file?
 if [ -f ${usb_image_file} ] ; then
 	modprobe g_multi file=${usb_image_file} cdrom=0 ro=0 stall=0 removable=1 nofua=1 ${g_network} || true
-#In a single partition setup, dont load g_multi, as we could trash the linux file system...
-elif [ "x${root_drive}" = "x/dev/mmcblk0p1" ] || [ "x${root_drive}" = "x/dev/mmcblk1p1" ] ; then
-	if [ -f /usr/sbin/udhcpd ] || [ -f /usr/sbin/dnsmasq ] ; then
-		#Make sure (# CONFIG_USB_ETH_EEM is not set), otherwise this shows up as "usb0" instead of ethX on host pc..
-		modprobe g_ether ${g_network} || true
-	else
-		#serial:
-		modprobe g_serial || true
-	fi
 else
-	boot_drive="${root_drive%?}1"
-	modprobe g_multi file=${boot_drive} cdrom=0 ro=0 stall=0 removable=1 nofua=1 ${g_network} || true
+	#g_multi: Do we have a non-rootfs "fat" partition?
+	unset root_drive
+	root_drive="$(cat /proc/cmdline | sed 's/ /\n/g' | grep root=UUID= | awk -F 'root=' '{print $2}' || true)"
+	if [ ! "x${root_drive}" = "x" ] ; then
+		root_drive="$(/sbin/findfs ${root_drive} || true)"
+	else
+		root_drive="$(cat /proc/cmdline | sed 's/ /\n/g' | grep root= | awk -F 'root=' '{print $2}' || true)"
+	fi
+
+	if [ "x${root_drive}" = "x/dev/mmcblk0p1" ] || [ "x${root_drive}" = "x/dev/mmcblk1p1" ] ; then
+		#g_ether: Do we have udhcpd/dnsmasq?
+		if [ -f /usr/sbin/udhcpd ] || [ -f /usr/sbin/dnsmasq ] ; then
+			modprobe g_ether ${g_network} || true
+		else
+			#g_serial: As a last resort...
+			modprobe g_serial || true
+		fi
+	else
+		boot_drive="${root_drive%?}1"
+		modprobe g_multi file=${boot_drive} cdrom=0 ro=0 stall=0 removable=1 nofua=1 ${g_network} || true
+	fi
+
 fi
 
-sleep 3
-
+sleep 2
 
 # Auto-configuring the usb0 network interface:
 $(dirname $0)/autoconfigure_usb0.sh
