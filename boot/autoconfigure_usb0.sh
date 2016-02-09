@@ -127,13 +127,16 @@ deb_configure_dnsmasq ()
 # Removing the file will just cause $0 to recreated!
 #
 # disable DNS by setting port to 0
-port=0
+#port=0
 #one address range
 dhcp-range=usb,${deb_usb_address},${deb_usb_gateway}
 dhcp-option=usb,3
-except-interface=lo
-except-interface=eth0
-listen-address=${deb_usb_address}
+# either use listen-address, then include 127.0.0.1
+#listen-address=${deb_usb_address}
+#listen-address=127.0.0.1
+# or bind to the usb0 interface (which implicitly also binds to lo)
+interface=usb0
+no-dhcp-interface=lo
 EOF
 			/sbin/ifconfig usb0 ${deb_usb_address} netmask ${deb_usb_netmask} || true
 		fi
