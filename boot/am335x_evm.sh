@@ -137,9 +137,14 @@ usb_image_file="/var/local/usb_mass_storage.img"
 #g_ether
 #g_serial
 
+unset usb0
+unset ttyGS0
+
 #g_multi: Do we have image file?
 if [ -f ${usb_image_file} ] ; then
 	modprobe g_multi file=${usb_image_file} cdrom=0 ro=0 stall=0 removable=1 nofua=1 ${g_network} || true
+	usb0="enable"
+	ttyGS0="enable"
 else
 	#g_multi: Do we have a non-rootfs "fat" partition?
 	unset root_drive
@@ -154,21 +159,32 @@ else
 		#g_ether: Do we have udhcpd/dnsmasq?
 		if [ -f /usr/sbin/udhcpd ] || [ -f /usr/sbin/dnsmasq ] ; then
 			modprobe g_ether ${g_network} || true
+			usb0="enable"
 		else
 			#g_serial: As a last resort...
 			modprobe g_serial || true
+			ttyGS0="enable"
 		fi
 	else
 		boot_drive="${root_drive%?}1"
 		modprobe g_multi file=${boot_drive} cdrom=0 ro=0 stall=0 removable=1 nofua=1 ${g_network} || true
+		usb0="enable"
+		ttyGS0="enable"
 	fi
 
 fi
 
-sleep 2
+if [ "x${usb0}" = "xenable" ] ; then
+	sleep 2
 
-# Auto-configuring the usb0 network interface:
-$(dirname $0)/autoconfigure_usb0.sh
+	# Auto-configuring the usb0 network interface:
+	$(dirname $0)/autoconfigure_usb0.sh
+fi
+
+if [ "x${ttyGS0}" = "xenable" ] ; then
+	ln -sf /usr/lib/systemd/system/getty@.service /etc/systemd/system/getty.target.wants/serial-getty@ttyGS0.service
+	systemctl start serial-getty@ttyGS0.service
+fi
 
 #Stick BBGW, in ap-mode by default at some point...
 if [ "x${board_bbgw}" = "xenable" ] ; then
@@ -185,8 +201,10 @@ unset eth0_addr
 if [ ! "x${board_bbgw}" = "xenable" ] ; then
 	eth0_addr=$(ip addr list eth0 |grep "inet " |cut -d' ' -f6|cut -d/ -f1 2>/dev/null || true)
 fi
-unset usb0_addr
-usb0_addr=$(ip addr list usb0 |grep "inet " |cut -d' ' -f6|cut -d/ -f1 2>/dev/null || true)
+if [ "x${usb0}" = "xenable" ] ; then
+	unset usb0_addr
+	usb0_addr=$(ip addr list usb0 |grep "inet " |cut -d' ' -f6|cut -d/ -f1 2>/dev/null || true)
+fi
 unset wlan0_addr
 if [ "x${board_bbgw}" = "xenable" ] ; then
 	wlan0_addr=$(ip addr list wlan0 |grep "inet " |cut -d' ' -f6|cut -d/ -f1 2>/dev/null || true)
@@ -200,8 +218,10 @@ fi
 if [ ! "x${wlan0_addr}" = "x" ] ; then
 	echo "The IP Address for wlan0 is: ${wlan0_addr}" >> /etc/issue
 fi
-if [ ! "x${usb0_addr}" = "x" ] ; then
-	echo "The IP Address for usb0 is: ${usb0_addr}" >> /etc/issue
+if [ "x${usb0}" = "xenable" ] ; then
+	if [ ! "x${usb0_addr}" = "x" ] ; then
+		echo "The IP Address for usb0 is: ${usb0_addr}" >> /etc/issue
+	fi
 fi
 
 #legacy support of: 2014-05-14
