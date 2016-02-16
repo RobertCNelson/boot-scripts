@@ -182,8 +182,10 @@ if [ "x${usb0}" = "xenable" ] ; then
 fi
 
 if [ "x${ttyGS0}" = "xenable" ] ; then
-	ln -sf /usr/lib/systemd/system/getty@.service /etc/systemd/system/getty.target.wants/serial-getty@ttyGS0.service
-	systemctl start serial-getty@ttyGS0.service
+	if [ ! -f /etc/systemd/system/serial-getty@ttyGS0.service ] ; then
+		ln -s /lib/systemd/system/serial-getty@.service /etc/systemd/system/serial-getty@ttyGS0.service
+	fi
+	systemctl start serial-getty@ttyGS0.service || true
 fi
 
 #Stick BBGW, in ap-mode by default at some point...
@@ -193,7 +195,7 @@ if [ "x${board_bbgw}" = "xenable" ] ; then
 	ifconfig wlan0 up || true
 	if [ -f /usr/bin/create_ap ] ; then
 		echo "${cpsw_0_mac}" > /etc/wlan0-mac
-		systemctl start create_ap
+		systemctl start create_ap || true
 	fi
 fi
 
