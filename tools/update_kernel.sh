@@ -119,16 +119,16 @@ get_device () {
 	fi
 
 	unset es8
-	unset sgx5430
-	unset sgx335x
+	unset sgxti335x
+	unset sgxjacinto6evm
 	unset kernel_headers
 	case "${machine}" in
 	TI_AM335x_BeagleBone|TI_AM335x_BeagleBone_Black|TI_AM335x_BeagleBone_Green)
 		es8="enabled"
-		sgx335x="enabled"
+		sgxti335x="enabled"
 		;;
 	TI_AM5728_BeagleBoard-X15)
-		sgx5430="enabled"
+		sgxjacinto6evm="enabled"
 		kernel_headers="enabled"
 		;;
 	TI_OMAP5_uEVM_board)
@@ -374,13 +374,13 @@ third_party () {
 		;;
 	ti|ti-rt|ti-omap2plus)
 		case "${kernel}" in
-		STABLE|TESTING)
-			if [ "x${sgx335x}" = "xenabled" ] ; then
-				apt-get install -y ti-sgx-335x-modules-${latest_kernel} || true
+		LTS41)
+			if [ "x${sgxti335x}" = "xenabled" ] ; then
+				apt-get install -y ti-sgx-ti335x-modules-${latest_kernel} || true
 				run_depmod_initramfs="enabled"
 			fi
-			if [ "x${sgx5430}" = "xenabled" ] ; then
-				apt-get install -y ti-sgx-5430-modules-${latest_kernel} || true
+			if [ "x${sgxjacinto6evm}" = "xenabled" ] ; then
+				apt-get install -y ti-sgx-jacinto6evm-modules-${latest_kernel} || true
 				run_depmod_initramfs="enabled"
 			fi
 			;;
