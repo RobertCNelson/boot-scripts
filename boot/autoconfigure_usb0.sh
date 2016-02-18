@@ -127,7 +127,7 @@ deb_configure_dnsmasq ()
 # Removing the file will just cause $0 to recreated!
 #
 # disable DNS by setting port to 0
-#port=0
+port=0
 #one address range
 dhcp-range=usb,${deb_usb_address},${deb_usb_gateway}
 dhcp-option=usb,3
