@@ -1,6 +1,6 @@
 #!/bin/bash -e
 #
-# Copyright (c) 2013-2015 Robert Nelson <robertcnelson@gmail.com>
+# Copyright (c) 2013-2016 Robert Nelson <robertcnelson@gmail.com>
 # Portions copyright (c) 2014 Charles Steinkuehler <charles@steinkuehler.net>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -24,13 +24,7 @@
 #This script assumes, these packages are installed, as network may not be setup
 #dosfstools initramfs-tools rsync u-boot-tools
 
-version_message="1.20151028: try to read /opt/emmc/job.txt as backup"
-
-#WARNING make sure to run this with an initrd...
-#lsmod:
-#Module                  Size  Used by
-#uas                    14300  0 
-#usb_storage            53318  1 uas
+version_message="1.20160222: deal with v4.4.x+ back to old eeprom location..."
 
 if ! id | grep -q root; then
 	echo "must be run as root"
@@ -112,7 +106,6 @@ write_failure () {
 
 print_eeprom () {
 	unset got_eeprom
-
 	#v8 of nvmem...
 	if [ -f /sys/bus/nvmem/devices/at24-0/nvmem ] && [ "x${got_eeprom}" = "x" ] ; then
 		eeprom="/sys/bus/nvmem/devices/at24-0/nvmem"
@@ -127,10 +120,16 @@ print_eeprom () {
 		got_eeprom="true"
 	fi
 
-	#eeprom...
+	#eeprom 3.8.x & 4.4 with eeprom-nvmem patchset...
 	if [ -f /sys/bus/i2c/devices/0-0050/eeprom ] && [ "x${got_eeprom}" = "x" ] ; then
 		eeprom="/sys/bus/i2c/devices/0-0050/eeprom"
-		eeprom_location=$(ls /sys/devices/ocp*/44e0b000.i2c/i2c-0/0-0050/eeprom 2> /dev/null)
+
+		if [ -f /sys/devices/platform/ocp/44e0b000.i2c/i2c-0/0-0050/eeprom ] ; then
+			eeprom_location="/sys/devices/platform/ocp/44e0b000.i2c/i2c-0/0-0050/eeprom"
+		else
+			eeprom_location=$(ls /sys/devices/ocp*/44e0b000.i2c/i2c-0/0-0050/eeprom 2> /dev/null)
+		fi
+
 		got_eeprom="true"
 	fi
 
@@ -376,7 +375,6 @@ set_uuid () {
 
 check_eeprom () {
 	unset got_eeprom
-
 	#v8 of nvmem...
 	if [ -f /sys/bus/nvmem/devices/at24-0/nvmem ] && [ "x${got_eeprom}" = "x" ] ; then
 		eeprom="/sys/bus/nvmem/devices/at24-0/nvmem"
@@ -391,10 +389,16 @@ check_eeprom () {
 		got_eeprom="true"
 	fi
 
-	#eeprom...
+	#eeprom 3.8.x & 4.4 with eeprom-nvmem patchset...
 	if [ -f /sys/bus/i2c/devices/0-0050/eeprom ] && [ "x${got_eeprom}" = "x" ] ; then
 		eeprom="/sys/bus/i2c/devices/0-0050/eeprom"
-		eeprom_location=$(ls /sys/devices/ocp*/44e0b000.i2c/i2c-0/0-0050/eeprom 2> /dev/null)
+
+		if [ -f /sys/devices/platform/ocp/44e0b000.i2c/i2c-0/0-0050/eeprom ] ; then
+			eeprom_location="/sys/devices/platform/ocp/44e0b000.i2c/i2c-0/0-0050/eeprom"
+		else
+			eeprom_location=$(ls /sys/devices/ocp*/44e0b000.i2c/i2c-0/0-0050/eeprom 2> /dev/null)
+		fi
+
 		got_eeprom="true"
 	fi
 
@@ -406,20 +410,24 @@ check_eeprom () {
 				message="-----------------------------" ; broadcast
 			else
 				message="Invalid EEPROM header detected" ; broadcast
-				if [ ! "x${eeprom_location}" = "x" ] ; then
-					message="Writing header to EEPROM" ; broadcast
-					dd if=${wdir}/${conf_eeprom_file} of=${eeprom_location} || write_failure
-					sync
-					sync
-					eeprom_check=$(hexdump -e '8/1 "%c"' ${eeprom} -n 8 | cut -b 6-8)
-					echo "eeprom check: [${eeprom_check}]"
+				if [ -f ${wdir}/${conf_eeprom_file} ] ; then
+					if [ ! "x${eeprom_location}" = "x" ] ; then
+						message="Writing header to EEPROM" ; broadcast
+						dd if=${wdir}/${conf_eeprom_file} of=${eeprom_location} || write_failure
+						sync
+						sync
+						eeprom_check=$(hexdump -e '8/1 "%c"' ${eeprom} -n 8 | cut -b 6-8)
+						echo "eeprom check: [${eeprom_check}]"
 
-					#We have to reboot, as the kernel only loads the eMMC cape
-					# with a valid header
-					reboot -f
+						#We have to reboot, as the kernel only loads the eMMC cape
+						# with a valid header
+						reboot -f
 
-					#We shouldnt hit this...
-					exit
+						#We shouldnt hit this...
+						exit
+					fi
+				else
+					message="error: no [${wdir}/${conf_eeprom_file}]" ; broadcast
 				fi
 			fi
 		fi

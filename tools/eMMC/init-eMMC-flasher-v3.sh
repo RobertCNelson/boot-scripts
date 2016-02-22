@@ -1,6 +1,6 @@
 #!/bin/bash -e
 #
-# Copyright (c) 2013-2015 Robert Nelson <robertcnelson@gmail.com>
+# Copyright (c) 2013-2016 Robert Nelson <robertcnelson@gmail.com>
 # Portions copyright (c) 2014 Charles Steinkuehler <charles@steinkuehler.net>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -24,7 +24,7 @@
 #This script assumes, these packages are installed, as network may not be setup
 #dosfstools initramfs-tools rsync u-boot-tools
 
-version_message="1.20151007: gpt partitions with raw boot..."
+version_message="1.20160222: deal with v4.4.x+ back to old eeprom location..."
 
 if ! id | grep -q root; then
 	echo "must be run as root"
@@ -123,7 +123,6 @@ check_eeprom () {
 	message="Checking for Valid ${device_eeprom} header" ; broadcast
 
 	unset got_eeprom
-
 	#v8 of nvmem...
 	if [ -f /sys/bus/nvmem/devices/at24-0/nvmem ] && [ "x${got_eeprom}" = "x" ] ; then
 		eeprom="/sys/bus/nvmem/devices/at24-0/nvmem"
@@ -138,10 +137,16 @@ check_eeprom () {
 		got_eeprom="true"
 	fi
 
-	#eeprom...
+	#eeprom 3.8.x & 4.4 with eeprom-nvmem patchset...
 	if [ -f /sys/bus/i2c/devices/0-0050/eeprom ] && [ "x${got_eeprom}" = "x" ] ; then
 		eeprom="/sys/bus/i2c/devices/0-0050/eeprom"
-		eeprom_location=$(ls /sys/devices/ocp*/44e0b000.i2c/i2c-0/0-0050/eeprom 2> /dev/null)
+
+		if [ -f /sys/devices/platform/ocp/44e0b000.i2c/i2c-0/0-0050/eeprom ] ; then
+			eeprom_location="/sys/devices/platform/ocp/44e0b000.i2c/i2c-0/0-0050/eeprom"
+		else
+			eeprom_location=$(ls /sys/devices/ocp*/44e0b000.i2c/i2c-0/0-0050/eeprom 2> /dev/null)
+		fi
+
 		got_eeprom="true"
 	fi
 
@@ -169,6 +174,8 @@ check_eeprom () {
 						#We shouldnt hit this...
 						exit
 					fi
+				else
+					message="error: no [/opt/scripts/device/bone/${device_eeprom}.dump]" ; broadcast
 				fi
 			fi
 		fi
