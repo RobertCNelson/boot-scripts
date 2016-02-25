@@ -195,7 +195,7 @@ if [ "x${board_bbgw}" = "xenable" ] ; then
 	ifconfig wlan0 up || true
 	if [ -f /usr/bin/create_ap ] ; then
 		echo "${cpsw_0_mac}" > /etc/wlan0-mac
-		systemctl start create_ap || true
+		systemctl start create_ap &
 	fi
 fi
 
