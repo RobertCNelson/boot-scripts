@@ -372,7 +372,7 @@ third_party () {
 			;;
 		esac
 		;;
-	ti|ti-rt|ti-omap2plus)
+	ti|ti-rt)
 		case "${kernel}" in
 		LTS41)
 			if [ "x${sgxti335x}" = "xenabled" ] ; then
@@ -494,7 +494,7 @@ while [ ! -z "$1" ] ; do
 		SOC="multiv7"
 		kernel="STABLE"
 		;;
-	--omap2plus-channel)
+	--omap2plus-channel|--ti-omap2plus-channel)
 		SOC="omap2plus"
 		kernel="STABLE"
 		;;
@@ -510,9 +510,6 @@ while [ ! -z "$1" ] ; do
 		;;
 	--ti-xenomai-kernel|--ti-xenomai-channel)
 		SOC="ti-xenomai"
-		;;
-	--ti-omap2plus-channel)
-		SOC="ti-omap2plus"
 		;;
 	--pre-fall-2014-rootfs)
 		old_rootfs="enable"
