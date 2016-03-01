@@ -21,8 +21,10 @@ if [ "x${check_sources}" = "x" ] ; then
 	pkg="nodejs-v0.12.x" ; check_dpkg
 	pkg="nodejs-v0.12.x-legacy" ; check_dpkg
 
-	echo "removing conflicting packages"
-	apt-get remove ${deb_pkgs} --purge
+	if [ ! "x${deb_pkgs}" = "x" ] ; then
+		echo "removing conflicting packages"
+		apt-get remove ${deb_pkgs} --purge
+	fi
 
 	echo "adding nodesource repo"
 	echo "deb https://deb.nodesource.com/node_0.12 ${deb_distro} main" >> /etc/apt/sources.list
