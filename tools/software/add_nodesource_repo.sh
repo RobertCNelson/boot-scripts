@@ -34,10 +34,10 @@ if [ "x${check_sources}" = "x" ] ; then
 	echo "#deb-src https://deb.nodesource.com/node_0.12 ${deb_distro} main" >> /etc/apt/sources.list
 
 	apt-get update
+	apt-get install -y nodejs
 
 	unset deb_pkgs
 	pkg="npm" ; check_dpkg_installed
-	pkg="nodejs-dev" ; check_dpkg_installed
 	pkg="nodejs-v0.12.x" ; check_dpkg_installed
 	pkg="nodejs-v0.12.x-legacy" ; check_dpkg_installed
 
@@ -46,5 +46,5 @@ if [ "x${check_sources}" = "x" ] ; then
 		apt-get remove ${deb_pkgs} --purge
 	fi
 
-	apt-get install nodejs
+
 fi
