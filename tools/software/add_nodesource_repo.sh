@@ -8,6 +8,10 @@ fi
 deb_distro=$(lsb_release -cs | sed 's/\//_/g')
 
 check_dpkg () {
+	LC_ALL=C dpkg --list | awk '{print $2}' | grep "^${pkg}$" >/dev/null || deb_pkgs="${deb_pkgs}${pkg} "
+}
+
+check_dpkg_installed () {
 	LC_ALL=C dpkg --list | awk '{print $2}' | grep "^${pkg}$" >/dev/null && deb_pkgs="${deb_pkgs}${pkg} "
 }
 
@@ -17,9 +21,16 @@ if [ "x${check_sources}" = "x" ] ; then
 	apt-get update
 
 	unset deb_pkgs
-	pkg="npm" ; check_dpkg
-	pkg="nodejs-v0.12.x" ; check_dpkg
-	pkg="nodejs-v0.12.x-legacy" ; check_dpkg
+	pkg="apt-transport-https" ; check_dpkg
+	if [ ! "x${deb_pkgs}" = "x" ] ; then
+		apt-get install -y ${deb_pkgs}
+	fi
+
+	unset deb_pkgs
+	pkg="npm" ; check_dpkg_installed
+	pkg="nodejs-dev" ; check_dpkg_installed
+	pkg="nodejs-v0.12.x" ; check_dpkg_installed
+	pkg="nodejs-v0.12.x-legacy" ; check_dpkg_installed
 
 	if [ ! "x${deb_pkgs}" = "x" ] ; then
 		echo "removing conflicting packages"
