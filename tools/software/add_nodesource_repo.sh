@@ -15,16 +15,25 @@ check_dpkg_installed () {
 	LC_ALL=C dpkg --list | awk '{print $2}' | grep "^${pkg}$" >/dev/null && deb_pkgs="${deb_pkgs}${pkg} "
 }
 
+apt-get update
+
+unset deb_pkgs
+pkg="apt-transport-https" ; check_dpkg
+if [ ! "x${deb_pkgs}" = "x" ] ; then
+	apt-get install -y ${deb_pkgs}
+fi
+
 check_sources=$(cat /etc/apt/sources.list | grep deb.nodesource.com || true)
 if [ "x${check_sources}" = "x" ] ; then
 
-	apt-get update
+	wget -qO- https://deb.nodesource.com/gpgkey/nodesource.gpg.key | apt-key add -
 
-	unset deb_pkgs
-	pkg="apt-transport-https" ; check_dpkg
-	if [ ! "x${deb_pkgs}" = "x" ] ; then
-		apt-get install -y ${deb_pkgs}
-	fi
+	echo "adding nodesource repo"
+	echo "" >> /etc/apt/sources.list
+	echo "deb https://deb.nodesource.com/node_0.12 ${deb_distro} main" >> /etc/apt/sources.list
+	echo "#deb-src https://deb.nodesource.com/node_0.12 ${deb_distro} main" >> /etc/apt/sources.list
+
+	apt-get update
 
 	unset deb_pkgs
 	pkg="npm" ; check_dpkg_installed
@@ -37,12 +46,5 @@ if [ "x${check_sources}" = "x" ] ; then
 		apt-get remove ${deb_pkgs} --purge
 	fi
 
-	echo "adding nodesource repo"
-	echo "deb https://deb.nodesource.com/node_0.12 ${deb_distro} main" >> /etc/apt/sources.list
-	echo "#deb-src https://deb.nodesource.com/node_0.12 ${deb_distro} main" >> /etc/apt/sources.list
-
-	wget -qO- https://deb.nodesource.com/gpgkey/nodesource.gpg.key | apt-key add -
-
-	apt-get update
 	apt-get install nodejs
 fi
