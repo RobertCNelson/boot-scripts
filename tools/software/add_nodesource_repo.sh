@@ -26,6 +26,15 @@ fi
 check_sources=$(cat /etc/apt/sources.list | grep deb.nodesource.com || true)
 if [ "x${check_sources}" = "x" ] ; then
 
+	unset deb_pkgs
+	pkg="nodejs-v0.12.x" ; check_dpkg_installed
+	pkg="nodejs-v0.12.x-legacy" ; check_dpkg_installed
+
+	if [ ! "x${deb_pkgs}" = "x" ] ; then
+		echo "removing conflicting packages"
+		apt-get remove ${deb_pkgs} --purge
+	fi
+
 	wget -qO- https://deb.nodesource.com/gpgkey/nodesource.gpg.key | apt-key add -
 
 	echo "adding nodesource repo"
@@ -38,13 +47,9 @@ if [ "x${check_sources}" = "x" ] ; then
 
 	unset deb_pkgs
 	pkg="npm" ; check_dpkg_installed
-	pkg="nodejs-v0.12.x" ; check_dpkg_installed
-	pkg="nodejs-v0.12.x-legacy" ; check_dpkg_installed
 
 	if [ ! "x${deb_pkgs}" = "x" ] ; then
 		echo "removing conflicting packages"
 		apt-get remove ${deb_pkgs} --purge
 	fi
-
-
 fi
