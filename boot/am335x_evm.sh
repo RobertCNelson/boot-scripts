@@ -27,8 +27,6 @@ if [ -f /etc/rcn-ee.conf ] ; then
 	. /etc/rcn-ee.conf
 fi
 
-unset board_bbgw
-
 #legacy support of: 2014-05-14
 if [ "x${abi}" = "x" ] ; then
 	eeprom="/sys/bus/i2c/devices/0-0050/eeprom"
@@ -55,6 +53,20 @@ if [ "x${abi}" = "x" ] ; then
 		fi
 	fi
 fi
+
+board=$(cat /proc/device-tree/model | sed "s/ /_/g")
+case "${board}" in
+TI_AM335x_BeagleBone_Green_Wireless)
+	board_bbgw="enable"
+	;;
+SanCloud_BeagleBone_Enhanced)
+	board_sbbe="enable"
+	;;
+*)
+	unset board_bbgw
+	unset board_sbbe
+	;;
+esac
 
 SERIAL_NUMBER="1234BBBK5678"
 ISBLACK=""
@@ -193,8 +205,14 @@ if [ "x${board_bbgw}" = "xenable" ] ; then
 	ifconfig wlan0 down
 	ifconfig wlan0 hw ether ${cpsw_0_mac}
 	ifconfig wlan0 up || true
-	if [ -f /usr/bin/create_ap ] ; then
+fi
+
+if [ -f /usr/bin/create_ap ] ; then
+	if [ "x${board_bbgw}" = "xenable" ] ; then
 		echo "${cpsw_0_mac}" > /etc/wlan0-mac
+		systemctl start create_ap &
+	fi
+	if [ "x${board_sbbe}" = "xenable" ] ; then
 		systemctl start create_ap &
 	fi
 fi
