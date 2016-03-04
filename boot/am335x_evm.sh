@@ -212,9 +212,10 @@ if [ -f /usr/bin/create_ap ] ; then
 		echo "${cpsw_0_mac}" > /etc/wlan0-mac
 		systemctl start create_ap &
 	fi
-	if [ "x${board_sbbe}" = "xenable" ] ; then
-		systemctl start create_ap &
-	fi
+#not yet, issue with kernel module...
+#	if [ "x${board_sbbe}" = "xenable" ] ; then
+#		systemctl start create_ap &
+#	fi
 fi
 
 unset eth0_addr
