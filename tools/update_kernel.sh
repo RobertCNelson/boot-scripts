@@ -97,7 +97,13 @@ get_device () {
 
 	if [ "x${SOC}" = "x" ] ; then
 		case "${machine}" in
-		TI_AM335x_BeagleBone|TI_AM335x_BeagleBone_Black|TI_AM335x_BeagleBone_Green)
+		TI_AM335x_Beagle*)
+			scan_ti_kernels
+			scan_bone_kernels
+			scan_armv7_kernels
+			es8="enabled"
+			;;
+		SanCloud_BeagleBone_Enhanced)
 			scan_ti_kernels
 			scan_bone_kernels
 			scan_armv7_kernels
@@ -121,11 +127,17 @@ get_device () {
 	unset es8
 	unset sgxti335x
 	unset sgxjacinto6evm
+	unset rtl8723bu
 	unset kernel_headers
 	case "${machine}" in
-	TI_AM335x_BeagleBone|TI_AM335x_BeagleBone_Black|TI_AM335x_BeagleBone_Green)
+	TI_AM335x_BeagleBone*)
 		es8="enabled"
 		sgxti335x="enabled"
+		;;
+	SanCloud_BeagleBone_Enhanced)
+		es8="enabled"
+		sgxti335x="enabled"
+		rtl8723bu="enabled"
 		;;
 	TI_AM5728_BeagleBoard-X15)
 		sgxjacinto6evm="enabled"
@@ -357,13 +369,17 @@ third_party () {
 				apt-get install -y ti-sgx-es8-modules-${latest_kernel} || true
 				run_depmod_initramfs="enabled"
 			fi
+			if [ "x${rtl8723bu}" = "xenabled" ] ; then
+				apt-get install -y rtl8723bu-modules-${latest_kernel} || true
+				run_depmod_initramfs="enabled"
+			fi
 			;;
 		esac
 		;;
 	ti-xenomai)
 		case "${kernel}" in
 		STABLE)
-			#3.14 only...
+			#3.8 only...
 			apt-get install -o Dpkg::Options::="--force-overwrite" -y mt7601u-modules-${latest_kernel} || true
 			if [ "x${es8}" = "xenabled" ] ; then
 				apt-get install -y ti-sgx-es8-modules-${latest_kernel} || true
@@ -375,12 +391,22 @@ third_party () {
 	ti|ti-rt)
 		case "${kernel}" in
 		LTS41)
+			if [ "x${rtl8723bu}" = "xenabled" ] ; then
+				apt-get install -y rtl8723bu-modules-${latest_kernel} || true
+				run_depmod_initramfs="enabled"
+			fi
 			if [ "x${sgxti335x}" = "xenabled" ] ; then
 				apt-get install -y ti-sgx-ti335x-modules-${latest_kernel} || true
 				run_depmod_initramfs="enabled"
 			fi
 			if [ "x${sgxjacinto6evm}" = "xenabled" ] ; then
 				apt-get install -y ti-sgx-jacinto6evm-modules-${latest_kernel} || true
+				run_depmod_initramfs="enabled"
+			fi
+			;;
+		LTS44)
+			if [ "x${rtl8723bu}" = "xenabled" ] ; then
+				apt-get install -y rtl8723bu-modules-${latest_kernel} || true
 				run_depmod_initramfs="enabled"
 			fi
 			;;
