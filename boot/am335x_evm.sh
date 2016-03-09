@@ -200,22 +200,15 @@ fi
 #	systemctl start serial-getty@ttyGS0.service || true
 #fi
 
-#Stick BBGW, in ap-mode by default at some point...
-if [ "x${board_bbgw}" = "xenable" ] ; then
-	ifconfig wlan0 down
-	ifconfig wlan0 hw ether ${cpsw_0_mac}
-	ifconfig wlan0 up || true
-fi
-
+#create_ap is now legacy, use connman...
 if [ -f /usr/bin/create_ap ] ; then
 	if [ "x${board_bbgw}" = "xenable" ] ; then
+		ifconfig wlan0 down
+		ifconfig wlan0 hw ether ${cpsw_0_mac}
+		ifconfig wlan0 up || true
 		echo "${cpsw_0_mac}" > /etc/wlan0-mac
 		systemctl start create_ap &
 	fi
-#not yet, issue with kernel module...
-#	if [ "x${board_sbbe}" = "xenable" ] ; then
-#		systemctl start create_ap &
-#	fi
 fi
 
 unset eth0_addr
