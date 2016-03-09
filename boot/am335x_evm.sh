@@ -185,6 +185,14 @@ else
 	fi
 fi
 
+#Must be early, for udhcpd to get an ip...
+if [ "x${usb0}" = "xenable" ] ; then
+	sleep 2
+
+	# Auto-configuring the usb0 network interface:
+	$(dirname $0)/autoconfigure_usb0.sh
+fi
+
 if [ -f /usr/sbin/rfkill ] ; then
 	rfkill unblock all || true
 fi
@@ -196,13 +204,6 @@ if [ "x${board_bbgw}" = "xenable" ] ; then
 	ifconfig wlan0 hw ether ${cpsw_0_mac}
 	sleep 1
 	ifconfig wlan0 up || true
-fi
-
-if [ "x${usb0}" = "xenable" ] ; then
-	sleep 2
-
-	# Auto-configuring the usb0 network interface:
-	$(dirname $0)/autoconfigure_usb0.sh
 fi
 
 #if [ "x${ttyGS0}" = "xenable" ] ; then
