@@ -183,7 +183,19 @@ else
 		usb0="enable"
 		ttyGS0="enable"
 	fi
+fi
 
+if [ -f /usr/sbin/rfkill ] ; then
+	rfkill unblock all || true
+fi
+
+#Stick BBGW, in ap-mode by default at some point...
+if [ "x${board_bbgw}" = "xenable" ] ; then
+	ifconfig wlan0 down
+	sleep 1
+	ifconfig wlan0 hw ether ${cpsw_0_mac}
+	sleep 1
+	ifconfig wlan0 up || true
 fi
 
 if [ "x${usb0}" = "xenable" ] ; then
@@ -199,13 +211,6 @@ fi
 #	fi
 #	systemctl start serial-getty@ttyGS0.service || true
 #fi
-
-#Stick BBGW, in ap-mode by default at some point...
-if [ "x${board_bbgw}" = "xenable" ] ; then
-	ifconfig wlan0 down
-	ifconfig wlan0 hw ether ${cpsw_0_mac}
-	ifconfig wlan0 up || true
-fi
 
 if [ -f /usr/bin/create_ap ] ; then
 	if [ "x${board_bbgw}" = "xenable" ] ; then
@@ -230,6 +235,8 @@ unset wlan0_addr
 if [ "x${board_bbgw}" = "xenable" ] ; then
 	wlan0_addr=$(ip addr list wlan0 |grep "inet " |cut -d' ' -f6|cut -d/ -f1 2>/dev/null || true)
 fi
+unset tether
+tether_addr=$(ip addr list tether |grep "inet " |cut -d' ' -f6|cut -d/ -f1 2>/dev/null || true)
 
 sed -i -e '/Address/d' /etc/issue
 
@@ -243,6 +250,9 @@ if [ "x${usb0}" = "xenable" ] ; then
 	if [ ! "x${usb0_addr}" = "x" ] ; then
 		echo "The IP Address for usb0 is: ${usb0_addr}" >> /etc/issue
 	fi
+fi
+if [ ! "x${tether_addr}" = "x" ] ; then
+	echo "The IP Address for tether is: ${tether_addr}" >> /etc/issue
 fi
 
 #legacy support of: 2014-05-14
