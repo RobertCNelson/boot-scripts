@@ -116,6 +116,14 @@ else
 	cpsw_0_mac="1c:ba:8c:a2:ed:68"
 fi
 
+if [ -f /var/lib/connman/settings ] ; then
+	wifi_name=$(grep Tethering.Identifier= /var/lib/connman/settings | awk -F '=' '{print $2}' || true)
+	ssid_append=$(echo ${cpsw_0_mac} | cut -b 13-17 | sed 's/://g' || true)
+	if [ ! "x${wifi_name}" = "xBeagleBone-${ssid_append}" ] ; then
+		sed -i -e 's:Tethering.Identifier='$wifi_name':Tethering.Identifier=BeagleBone-'$ssid_append':g' /var/lib/connman/settings
+	fi
+fi
+
 mac_address="/proc/device-tree/ocp/ethernet@4a100000/slave@4a100300/mac-address"
 if [ -f ${mac_address} ] ; then
 	cpsw_1_mac=$(hexdump -v -e '1/1 "%02X" ":"' ${mac_address} | sed 's/.$//')
