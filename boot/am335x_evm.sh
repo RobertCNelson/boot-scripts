@@ -73,6 +73,7 @@ ISBLACK=""
 ISGREEN=""
 PRODUCT="am335x_evm"
 manufacturer="Circuitco"
+wifi_prefix="BeagleBone"
 
 #pre nvmem...
 eeprom="/sys/bus/i2c/devices/0-0050/eeprom"
@@ -119,8 +120,9 @@ fi
 if [ -f /var/lib/connman/settings ] ; then
 	wifi_name=$(grep Tethering.Identifier= /var/lib/connman/settings | awk -F '=' '{print $2}' || true)
 	ssid_append=$(echo ${cpsw_0_mac} | cut -b 13-17 | sed 's/://g' || true)
-	if [ ! "x${wifi_name}" = "xBeagleBone-${ssid_append}" ] ; then
-		sed -i -e 's:Tethering.Identifier='$wifi_name':Tethering.Identifier=BeagleBone-'$ssid_append':g' /var/lib/connman/settings
+	if [ ! "x${wifi_name}" = "x${wifi_prefix}-${ssid_append}" ] ; then
+		sed -i -e 's:Tethering.Identifier='$wifi_name':Tethering.Identifier='$wifi_prefix'-'$ssid_append':g' /var/lib/connman/settings
+		systemctl restart connman.service || true
 	fi
 fi
 
