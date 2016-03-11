@@ -203,12 +203,9 @@ if [ "x${usb0}" = "xenable" ] ; then
 	$(dirname $0)/autoconfigure_usb0.sh
 fi
 
-#if [ "x${ttyGS0}" = "xenable" ] ; then
-#	if [ ! -f /etc/systemd/system/serial-getty@ttyGS0.service ] ; then
-#		ln -s /lib/systemd/system/serial-getty@.service /etc/systemd/system/serial-getty@ttyGS0.service
-#	fi
-#	systemctl start serial-getty@ttyGS0.service || true
-#fi
+if [ "x${ttyGS0}" = "xenable" ] ; then
+	systemctl start serial-getty@ttyGS0.service || true
+fi
 
 #create_ap is now legacy, use connman...
 if [ -f /usr/bin/create_ap ] ; then
