@@ -132,11 +132,11 @@ conf_eeprom_compare=<6-8>
 voodoo@hades:/tmp/flasher/opt/emmc$ sudo wget https://raw.githubusercontent.com/RobertCNelson/boot-scripts/master/device/bone/bbgw-eeprom.dump
 
 voodoo@hades:/tmp/flasher/opt/emmc$ hexdump bbgw-eeprom.dump 
-0000000 55aa ee33 3341 3533 4e42 544c 4242 3147
+0000000 55aa ee33 3341 3533 4e42 544c 5747 4131
 0000010 3030 3030 3030 3030 3030 3030          
 000001c
 voodoo@hades:/tmp/flasher/opt/emmc$ hexdump bbgw-eeprom.dump -c
-0000000   �   U   3   �   A   3   3   5   B   N   L   T   B   B   G   1
+0000000   �   U   3   �   A   3   3   5   B   N   L   T   G   W   1   A
 0000010   0   0   0   0   0   0   0   0   0   0   0   0                
 000001c
 ```
