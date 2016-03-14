@@ -99,6 +99,8 @@ voodoo@hades:/tmp/flasher/opt$ sudo mkdir emmc
 voodoo@hades:/tmp/flasher/opt$ cd emmc/
 ```
 
+Select the image you'd like to flash to the eMMC: "bone-debian-8.3-iot-armhf-2016-03-13-4gb"
+
 ```
 voodoo@hades:/tmp/flasher/opt/emmc$ sudo wget https://rcn-ee.net/rootfs/bb.org/testing/2016-03-13/iot/bone-debian-8.3-iot-armhf-2016-03-13-4gb.img.xz
 voodoo@hades:/tmp/flasher/opt/emmc$ sudo wget https://rcn-ee.net/rootfs/bb.org/testing/2016-03-13/iot/bone-debian-8.3-iot-armhf-2016-03-13-4gb.bmap
