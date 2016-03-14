@@ -42,7 +42,8 @@ sde      8:64   1  14.9G  0 disk
 Depending on what version of sfdisk:
 
 ```
-sudo sfdisk --version
+voodoo@hades:~$ sudo sfdisk --version
+sfdisk from util-linux 2.27.1
 ```
 
 sfdisk >= 2.26.x
