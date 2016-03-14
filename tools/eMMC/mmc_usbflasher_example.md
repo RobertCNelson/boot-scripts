@@ -155,6 +155,7 @@ conf_partition1_fstype=0x83
 conf_root_partition=1
 ```
 
+Rename as 'job.txt'
 ```
 voodoo@hades:/tmp/flasher/opt/emmc$ sudo cp -v bone-debian-8.3-iot-armhf-2016-03-13-4gb.img.xz.job.txt job.txt
 'bone-debian-8.3-iot-armhf-2016-03-13-4gb.img.xz.job.txt' -> 'job.txt'
