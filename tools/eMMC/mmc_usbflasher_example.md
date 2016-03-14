@@ -164,5 +164,10 @@ voodoo@hades:/tmp/flasher/opt/emmc$ sudo cp -v bone-debian-8.3-iot-armhf-2016-03
 ```
 voodoo@hades:/tmp/flasher/opt/emmc$ sync
 voodoo@hades:/tmp/flasher/opt/emmc$ cd ~/
+
+voodoo@hades:~$ df -h /tmp/flasher/
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/sde1        15G  860M   13G   7% /tmp/flasher
+
 voodoo@hades:~$ sudo umount /tmp/flasher 
 ```
