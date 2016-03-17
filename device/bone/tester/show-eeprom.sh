@@ -27,7 +27,9 @@ fi
 
 if [ "x${got_eeprom}" = "xtrue" ] ; then
 	eeprom_header=$(hexdump -e '8/1 "%c"' ${eeprom} -n 16)
-	eeprom_raw=$(hexdump -C ${eeprom} -n 16 | grep 00000000)
+	eeprom_raw_rev=$(hexdump -C ${eeprom} -n 16 | grep 00000000)
+	eeprom_raw_serial=$(hexdump -C ${eeprom} -n 32 | grep 00000010)
 	echo "eeprom: [${eeprom_header}]"
-	echo "eeprom raw: [${eeprom_raw}]"
+	echo "eeprom raw: [${eeprom_raw_rev}]"
+	echo "eeprom raw: [${eeprom_raw_serial}]"
 fi
