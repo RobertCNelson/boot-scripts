@@ -6,8 +6,10 @@ if ! id | grep -q root; then
 fi
 
 dump () {
+	echo "checking: ${pre}${address}/${post}"
 	if [ -f ${pre}${address}/${post} ] ; then
-		cat ${pre}${address}/${post} | hexdump -C
+		cape_header=$(hexdump -e '8/1 "%c"' ${pre}${address}/${post} -n 16)
+		echo "cape: [${cape_header}]"
 	fi
 }
 
