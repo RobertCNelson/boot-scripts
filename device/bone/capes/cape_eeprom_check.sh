@@ -8,7 +8,7 @@ fi
 dump () {
 	echo "checking: ${pre}${address}/${post}"
 	if [ -f ${pre}${address}/${post} ] ; then
-		cape_header=$(hexdump -e '8/1 "%c"' ${pre}${address}/${post} -n 16)
+		cape_header=$(hexdump -C ${pre}${address}/${post} -n 32)
 		echo "cape: [${cape_header}]"
 	fi
 }
