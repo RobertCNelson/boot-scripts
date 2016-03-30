@@ -1,7 +1,12 @@
 #!/bin/bash -e
 
+if ! id | grep -q root; then
+	echo "must be run as root"
+	exit
+fi
+
 dump () {
-	echo "trying: ${pre}${address}/${post}"
+	if [ -f ${pre}${address}/${post} ] ; then
 	cat ${pre}${address}/${post} | hexdump -C
 }
 
@@ -12,14 +17,21 @@ eeprom_dump () {
 	address="0057" ; dump
 }
 
+nvmem_dump () {
+	address="at24-1" ; dump
+	address="at24-2" ; dump
+	address="at24-3" ; dump
+	address="at24-4" ; dump
+}
+
 if [ -f /sys/bus/i2c/devices/1-0054/eeprom ] ; then
 	pre="/sys/bus/i2c/devices/1-"
 	post="eeprom"
 	eeprom_dump
 fi
 
-if [ -f /sys/bus/i2c/devices/2-0054/at24-1/nvmem ] ; then
-	pre="/sys/bus/i2c/devices/2-"
-	post="at24-1/nvmem"
-	eeprom_dump
+if [ -f /sys/bus/nvmem/devices/at24-1/nvmem ] ; then
+	pre="/sys/bus/nvmem/devices/"
+	post="nvmem"
+	nvmem_dump
 fi
