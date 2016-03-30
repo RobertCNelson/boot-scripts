@@ -1,15 +1,25 @@
-#!/bin/sh
+#!/bin/bash -e
 
-echo "trying: /sys/bus/i2c/devices/1-0054/eeprom"
-cat /sys/bus/i2c/devices/1-0054/eeprom | hexdump -C
+dump () {
+	echo "trying: ${pre}${address}/${post}"
+	cat ${pre}${address}/${post} | hexdump -C
+}
 
-echo "trying: /sys/bus/i2c/devices/1-0055/eeprom"
-cat /sys/bus/i2c/devices/1-0055/eeprom | hexdump -C
+eeprom_dump () {
+	address="0054" ; dump
+	address="0055" ; dump
+	address="0056" ; dump
+	address="0057" ; dump
+}
 
-echo "trying: /sys/bus/i2c/devices/1-0056/eeprom"
-cat /sys/bus/i2c/devices/1-0056/eeprom | hexdump -C
+if [ -f /sys/bus/i2c/devices/1-0054/eeprom ] ; then
+	pre="/sys/bus/i2c/devices/1-"
+	post="eeprom"
+	eeprom_dump
+fi
 
-echo "trying: /sys/bus/i2c/devices/1-0057/eeprom"
-cat /sys/bus/i2c/devices/1-0057/eeprom | hexdump -C
-
-echo "cat eeprom.dump > /sys/bus/i2c/devices/1-005X/eeprom"
+if [ -f /sys/bus/i2c/devices/2-0054/at24-1/nvmem ] ; then
+	pre="/sys/bus/i2c/devices/2-"
+	post="at24-1/nvmem"
+	eeprom_dump
+fi
