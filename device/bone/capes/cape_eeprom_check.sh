@@ -7,7 +7,8 @@ fi
 
 dump () {
 	if [ -f ${pre}${address}/${post} ] ; then
-	cat ${pre}${address}/${post} | hexdump -C
+		cat ${pre}${address}/${post} | hexdump -C
+	fi
 }
 
 eeprom_dump () {
