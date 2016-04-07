@@ -33,7 +33,7 @@ dl_bootloader () {
 	echo ""
 	echo "Downloading Device's Bootloader"
 	echo "-----------------------------"
-	conf_bl_http="http://rcn-ee.net/deb/tools/latest"
+	conf_bl_http="http://rcn-ee.com/deb/tools/latest"
 	conf_bl_listfile="bootloader-ng"
 	minimal_boot="1"
 
@@ -42,7 +42,7 @@ dl_bootloader () {
 	wget --no-verbose --directory-prefix="${TEMPDIR}/dl/" ${conf_bl_http}/${conf_bl_listfile}
 
 	if [ ! -f ${TEMPDIR}/dl/${conf_bl_listfile} ] ; then
-		echo "error: can't connect to rcn-ee.net, retry in a few minutes..."
+		echo "error: can't connect to rcn-ee.com, retry in a few minutes..."
 		exit
 	fi
 

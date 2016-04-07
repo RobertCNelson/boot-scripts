@@ -1,2 +1,6 @@
-beaglebone-black-eMMC-flasher.sh & init-eMMC-flasher.sh are not used, but need to be in this dir due to old images have them hardcoded.
+WARNING: Do not use:
 
+beaglebone-black-eMMC-flasher.sh
+init-eMMC-flasher.sh
+
+They are only in this directory for support of the Ancient 2014 release.

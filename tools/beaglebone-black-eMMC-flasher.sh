@@ -1,6 +1,6 @@
 #!/bin/bash -e
 #
-# Copyright (c) 2013-2014 Robert Nelson <robertcnelson@gmail.com>
+# Copyright (c) 2013-2015 Robert Nelson <robertcnelson@gmail.com>
 # Portions copyright (c) 2014 Charles Steinkuehler <charles@steinkuehler.net>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -210,6 +210,7 @@ copy_boot () {
 
 	echo "rsync: /boot/uboot/ -> /tmp/boot/"
 	rsync -aAX /boot/uboot/ /tmp/boot/ --exclude={MLO,u-boot.img,*bak,flash-eMMC.txt,flash-eMMC.log} || write_failure
+	#touch /tmp/boot/flash-eMMC.txt
 	flush_cache
 
 	unset root_uuid

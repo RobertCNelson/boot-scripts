@@ -1,6 +1,6 @@
 #!/bin/bash -e
 #
-# Copyright (c) 2013-2015 Robert Nelson <robertcnelson@gmail.com>
+# Copyright (c) 2013-2016 Robert Nelson <robertcnelson@gmail.com>
 # Portions copyright (c) 2014 Charles Steinkuehler <charles@steinkuehler.net>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -24,31 +24,27 @@
 #This script assumes, these packages are installed, as network may not be setup
 #dosfstools initramfs-tools rsync u-boot-tools
 
+version_message="1.20160222: deal with v4.4.x+ back to old eeprom location..."
+
 if ! id | grep -q root; then
 	echo "must be run as root"
 	exit
 fi
 
-# Check to see if we're starting as init
-unset RUN_AS_INIT
-if grep -q '[ =/]init-eMMC-flasher-v3.sh\>' /proc/cmdline ; then
-	RUN_AS_INIT=1
-
-	unset root_drive
-	root_drive="$(cat /proc/cmdline | sed 's/ /\n/g' | grep root=UUID= | awk -F 'root=' '{print $2}' || true)"
-	if [ ! "x${root_drive}" = "x" ] ; then
-		root_drive="$(/sbin/findfs ${root_drive} || true)"
-	else
-		root_drive="$(cat /proc/cmdline | sed 's/ /\n/g' | grep root= | awk -F 'root=' '{print $2}' || true)"
-	fi
-
-	boot_drive="${root_drive%?}1"
-
-	if [ ! "x${boot_drive}" = "x${root_drive}" ] ; then
-		mount ${boot_drive} /boot/uboot -o ro
-	fi
-	mount -t tmpfs tmpfs /tmp
+unset root_drive
+root_drive="$(cat /proc/cmdline | sed 's/ /\n/g' | grep root=UUID= | awk -F 'root=' '{print $2}' || true)"
+if [ ! "x${root_drive}" = "x" ] ; then
+	root_drive="$(/sbin/findfs ${root_drive} || true)"
+else
+	root_drive="$(cat /proc/cmdline | sed 's/ /\n/g' | grep root= | awk -F 'root=' '{print $2}' || true)"
 fi
+
+boot_drive="${root_drive%?}1"
+
+if [ ! "x${boot_drive}" = "x${root_drive}" ] ; then
+	mount ${boot_drive} /boot/uboot -o ro
+fi
+mount -t tmpfs tmpfs /tmp
 
 if [ "x${boot_drive}" = "x/dev/mmcblk0p1" ] ; then
 	source="/dev/mmcblk0"
@@ -91,16 +87,29 @@ dev2dir () {
 	grep -m 1 '^$1 ' /proc/mounts | while read LINE ; do set -- $LINE ; echo $2 ; done
 }
 
+get_device () {
+	is_bbb="enable"
+	machine=$(cat /proc/device-tree/model | sed "s/ /_/g")
+
+	case "${machine}" in
+	TI_AM5728_BeagleBoard-X15)
+		unset is_bbb
+		;;
+	esac
+}
+
 write_failure () {
 	message="writing to [${destination}] failed..." ; broadcast
 
-	[ -e /proc/$CYLON_PID ]  && kill $CYLON_PID > /dev/null 2>&1
+	if [ "x${is_bbb}" = "xenable" ] ; then
+		[ -e /proc/$CYLON_PID ]  && kill $CYLON_PID > /dev/null 2>&1
 
-	if [ -e /sys/class/leds/beaglebone\:green\:usr0/trigger ] ; then
-		echo heartbeat > /sys/class/leds/beaglebone\:green\:usr0/trigger
-		echo heartbeat > /sys/class/leds/beaglebone\:green\:usr1/trigger
-		echo heartbeat > /sys/class/leds/beaglebone\:green\:usr2/trigger
-		echo heartbeat > /sys/class/leds/beaglebone\:green\:usr3/trigger
+		if [ -e /sys/class/leds/beaglebone\:green\:usr0/trigger ] ; then
+			echo heartbeat > /sys/class/leds/beaglebone\:green\:usr0/trigger
+			echo heartbeat > /sys/class/leds/beaglebone\:green\:usr1/trigger
+			echo heartbeat > /sys/class/leds/beaglebone\:green\:usr2/trigger
+			echo heartbeat > /sys/class/leds/beaglebone\:green\:usr3/trigger
+		fi
 	fi
 	message="-----------------------------" ; broadcast
 	flush_cache
@@ -110,30 +119,64 @@ write_failure () {
 }
 
 check_eeprom () {
+	device_eeprom="bbb-eeprom"
+	message="Checking for Valid ${device_eeprom} header" ; broadcast
 
-	eeprom="/sys/bus/i2c/devices/0-0050/eeprom"
-	message="Checking for Valid BBB EEPROM header" ; broadcast
+	unset got_eeprom
+	#v8 of nvmem...
+	if [ -f /sys/bus/nvmem/devices/at24-0/nvmem ] && [ "x${got_eeprom}" = "x" ] ; then
+		eeprom="/sys/bus/nvmem/devices/at24-0/nvmem"
+		eeprom_location="/sys/devices/platform/ocp/44e0b000.i2c/i2c-0/0-0050/at24-0/nvmem"
+		got_eeprom="true"
+	fi
 
-	#Flash BeagleBone Black's eeprom:
-	eeprom_location=$(ls /sys/devices/ocp*/44e0b000.i2c/i2c-0/0-0050/eeprom 2> /dev/null)
-	eeprom_header=$(hexdump -e '8/1 "%c"' ${eeprom} -s 5 -n 3)
-	if [ "x${eeprom_header}" = "x335" ] ; then
-		message="Valid BBB EEPROM header found" ; broadcast
-		message="-----------------------------" ; broadcast
-	else
-		message="Invalid EEPROM header detected" ; broadcast
-		if [ -f /opt/scripts/device/bone/bbb-eeprom.dump ] ; then
-			if [ ! "x${eeprom_location}" = "x" ] ; then
-				message="Writing header to EEPROM" ; broadcast
-				dd if=/opt/scripts/device/bone/bbb-eeprom.dump of=${eeprom_location}
-				sync
+	#pre-v8 of nvmem...
+	if [ -f /sys/class/nvmem/at24-0/nvmem ] && [ "x${got_eeprom}" = "x" ] ; then
+		eeprom="/sys/class/nvmem/at24-0/nvmem"
+		eeprom_location="/sys/devices/platform/ocp/44e0b000.i2c/i2c-0/0-0050/nvmem/at24-0/nvmem"
+		got_eeprom="true"
+	fi
 
-				#We have to reboot, as the kernel only loads the eMMC cape
-				# with a valid header
-				reboot -f
+	#eeprom 3.8.x & 4.4 with eeprom-nvmem patchset...
+	if [ -f /sys/bus/i2c/devices/0-0050/eeprom ] && [ "x${got_eeprom}" = "x" ] ; then
+		eeprom="/sys/bus/i2c/devices/0-0050/eeprom"
 
-				#We shouldnt hit this...
-				exit
+		if [ -f /sys/devices/platform/ocp/44e0b000.i2c/i2c-0/0-0050/eeprom ] ; then
+			eeprom_location="/sys/devices/platform/ocp/44e0b000.i2c/i2c-0/0-0050/eeprom"
+		else
+			eeprom_location=$(ls /sys/devices/ocp*/44e0b000.i2c/i2c-0/0-0050/eeprom 2> /dev/null)
+		fi
+
+		got_eeprom="true"
+	fi
+
+	if [ "x${is_bbb}" = "xenable" ] ; then
+		if [ "x${got_eeprom}" = "xtrue" ] ; then
+			eeprom_header=$(hexdump -e '8/1 "%c"' ${eeprom} -n 8 | cut -b 6-8)
+			if [ "x${eeprom_header}" = "x335" ] ; then
+				message="Valid ${device_eeprom} header found [${eeprom_header}]" ; broadcast
+				message="-----------------------------" ; broadcast
+			else
+				message="Invalid EEPROM header detected" ; broadcast
+				if [ -f /opt/scripts/device/bone/${device_eeprom}.dump ] ; then
+					if [ ! "x${eeprom_location}" = "x" ] ; then
+						message="Writing header to EEPROM" ; broadcast
+						dd if=/opt/scripts/device/bone/${device_eeprom}.dump of=${eeprom_location}
+						sync
+						sync
+						eeprom_check=$(hexdump -e '8/1 "%c"' ${eeprom} -n 8 | cut -b 6-8)
+						echo "eeprom check: [${eeprom_check}]"
+
+						#We have to reboot, as the kernel only loads the eMMC cape
+						# with a valid header
+						reboot -f
+
+						#We shouldnt hit this...
+						exit
+					fi
+				else
+					message="error: no [/opt/scripts/device/bone/${device_eeprom}.dump]" ; broadcast
+				fi
 			fi
 		fi
 	fi
@@ -153,57 +196,58 @@ check_running_system () {
 		write_failure
 	fi
 
-	##FIXME: quick check for rsync 3.1 (jessie)
-	unset rsync_check
-	unset rsync_progress
-	rsync_check=$(LC_ALL=C rsync --version | grep version | awk '{print $3}' || true)
-	if [ "x${rsync_check}" = "x3.1.1" ] ; then
-		rsync_progress="--info=progress2 --human-readable"
+	if [ "x${is_bbb}" = "xenable" ] ; then
+		if [ ! -e /sys/class/leds/beaglebone\:green\:usr0/trigger ] ; then
+			modprobe leds_gpio || true
+			sleep 1
+		fi
 	fi
 }
 
 cylon_leds () {
-	if [ -e /sys/class/leds/beaglebone\:green\:usr0/trigger ] ; then
-		BASE=/sys/class/leds/beaglebone\:green\:usr
-		echo none > ${BASE}0/trigger
-		echo none > ${BASE}1/trigger
-		echo none > ${BASE}2/trigger
-		echo none > ${BASE}3/trigger
+	if [ "x${is_bbb}" = "xenable" ] ; then
+		if [ -e /sys/class/leds/beaglebone\:green\:usr0/trigger ] ; then
+			BASE=/sys/class/leds/beaglebone\:green\:usr
+			echo none > ${BASE}0/trigger
+			echo none > ${BASE}1/trigger
+			echo none > ${BASE}2/trigger
+			echo none > ${BASE}3/trigger
 
-		STATE=1
-		while : ; do
-			case $STATE in
-			1)	echo 255 > ${BASE}0/brightness
-				echo 0   > ${BASE}1/brightness
-				STATE=2
-				;;
-			2)	echo 255 > ${BASE}1/brightness
-				echo 0   > ${BASE}0/brightness
-				STATE=3
-				;;
-			3)	echo 255 > ${BASE}2/brightness
-				echo 0   > ${BASE}1/brightness
-				STATE=4
-				;;
-			4)	echo 255 > ${BASE}3/brightness
-				echo 0   > ${BASE}2/brightness
-				STATE=5
-				;;
-			5)	echo 255 > ${BASE}2/brightness
-				echo 0   > ${BASE}3/brightness
-				STATE=6
-				;;
-			6)	echo 255 > ${BASE}1/brightness
-				echo 0   > ${BASE}2/brightness
-				STATE=1
-				;;
-			*)	echo 255 > ${BASE}0/brightness
-				echo 0   > ${BASE}1/brightness
-				STATE=2
-				;;
-			esac
-			sleep 0.1
-		done
+			STATE=1
+			while : ; do
+				case $STATE in
+				1)	echo 255 > ${BASE}0/brightness
+					echo 0   > ${BASE}1/brightness
+					STATE=2
+					;;
+				2)	echo 255 > ${BASE}1/brightness
+					echo 0   > ${BASE}0/brightness
+					STATE=3
+					;;
+				3)	echo 255 > ${BASE}2/brightness
+					echo 0   > ${BASE}1/brightness
+					STATE=4
+					;;
+				4)	echo 255 > ${BASE}3/brightness
+					echo 0   > ${BASE}2/brightness
+					STATE=5
+					;;
+				5)	echo 255 > ${BASE}2/brightness
+					echo 0   > ${BASE}3/brightness
+					STATE=6
+					;;
+				6)	echo 255 > ${BASE}1/brightness
+					echo 0   > ${BASE}2/brightness
+					STATE=1
+					;;
+				*)	echo 255 > ${BASE}0/brightness
+					echo 0   > ${BASE}1/brightness
+					STATE=2
+					;;
+				esac
+				sleep 0.1
+			done
+		fi
 	fi
 }
 
@@ -281,6 +325,7 @@ format_single_root () {
 copy_boot () {
 	message="Copying: ${source}p1 -> ${destination}p1" ; broadcast
 	mkdir -p /tmp/boot/ || true
+
 	mount ${destination}p1 /tmp/boot/ -o sync
 
 	if [ -f /boot/uboot/MLO ] ; then
@@ -293,8 +338,7 @@ copy_boot () {
 	fi
 
 	message="rsync: /boot/uboot/ -> /tmp/boot/" ; broadcast
-	echo "rsync: ignore the % values when shown as they are not accurate..."
-	rsync -aAx ${rsync_progress} /boot/uboot/ /tmp/boot/ --exclude={MLO,u-boot.img,uEnv.txt} || write_failure
+	rsync -aAx /boot/uboot/ /tmp/boot/ --exclude={MLO,u-boot.img,uEnv.txt} || write_failure
 	flush_cache
 
 	flush_cache
@@ -306,11 +350,11 @@ copy_boot () {
 copy_rootfs () {
 	message="Copying: ${source}p${media_rootfs} -> ${destination}p${media_rootfs}" ; broadcast
 	mkdir -p /tmp/rootfs/ || true
+
 	mount ${destination}p${media_rootfs} /tmp/rootfs/ -o async,noatime
 
 	message="rsync: / -> /tmp/rootfs/" ; broadcast
-	echo "rsync: ignore the % values when shown as they are not accurate..."
-	rsync -aAx ${rsync_progress} /* /tmp/rootfs/ --exclude={/dev/*,/proc/*,/sys/*,/tmp/*,/run/*,/mnt/*,/media/*,/lost+found,/lib/modules/*,/uEnv.txt} || write_failure
+	rsync -aAx /* /tmp/rootfs/ --exclude={/dev/*,/proc/*,/sys/*,/tmp/*,/run/*,/mnt/*,/media/*,/lost+found,/lib/modules/*,/uEnv.txt} || write_failure
 	flush_cache
 
 	if [ -d /tmp/rootfs/etc/ssh/ ] ; then
@@ -323,8 +367,7 @@ copy_rootfs () {
 
 	message="Copying: Kernel modules" ; broadcast
 	message="rsync: /lib/modules/$(uname -r)/ -> /tmp/rootfs/lib/modules/$(uname -r)/" ; broadcast
-	echo "rsync: ignore the % values when shown as they are not accurate..."
-	rsync -aAx ${rsync_progress} /lib/modules/$(uname -r)/* /tmp/rootfs/lib/modules/$(uname -r)/ || write_failure
+	rsync -aAx /lib/modules/$(uname -r)/* /tmp/rootfs/lib/modules/$(uname -r)/ || write_failure
 	flush_cache
 
 	message="Copying: ${source}p${media_rootfs} -> ${destination}p${media_rootfs} complete" ; broadcast
@@ -360,7 +403,9 @@ copy_rootfs () {
 	flush_cache
 	umount /tmp/rootfs/ || umount -l /tmp/rootfs/ || write_failure
 
-	[ -e /proc/$CYLON_PID ]  && kill $CYLON_PID
+	if [ "x${is_bbb}" = "xenable" ] ; then
+		[ -e /proc/$CYLON_PID ]  && kill $CYLON_PID
+	fi
 
 	message="Syncing: ${destination}" ; broadcast
 	#https://github.com/beagleboard/meta-beagleboard/blob/master/contrib/bone-flash-tool/emmc.sh#L158-L159
@@ -377,11 +422,13 @@ copy_rootfs () {
 		inf_loop
 	else
 		umount /tmp || umount -l /tmp
-		if [ -e /sys/class/leds/beaglebone\:green\:usr0/trigger ] ; then
-			echo default-on > /sys/class/leds/beaglebone\:green\:usr0/trigger
-			echo default-on > /sys/class/leds/beaglebone\:green\:usr1/trigger
-			echo default-on > /sys/class/leds/beaglebone\:green\:usr2/trigger
-			echo default-on > /sys/class/leds/beaglebone\:green\:usr3/trigger
+		if [ "x${is_bbb}" = "xenable" ] ; then
+			if [ -e /sys/class/leds/beaglebone\:green\:usr0/trigger ] ; then
+				echo default-on > /sys/class/leds/beaglebone\:green\:usr0/trigger
+				echo default-on > /sys/class/leds/beaglebone\:green\:usr1/trigger
+				echo default-on > /sys/class/leds/beaglebone\:green\:usr2/trigger
+				echo default-on > /sys/class/leds/beaglebone\:green\:usr3/trigger
+			fi
 		fi
 		mount
 
@@ -420,8 +467,25 @@ partition_drive () {
 		rootfs_label=${rootfs_label:-"rootfs"}
 
 		message="Formatting: ${destination}" ; broadcast
-		LC_ALL=C sfdisk --force --in-order --Linux --unit M "${destination}" <<-__EOF__
-			${conf_boot_startmb},${conf_boot_endmb},${sfdisk_fstype},*
+
+		sfdisk_options="--force --Linux --in-order --unit M"
+		sfdisk_boot_startmb="${conf_boot_startmb}"
+		sfdisk_boot_endmb="${conf_boot_endmb}"
+
+		test_sfdisk=$(LC_ALL=C sfdisk --help | grep -m 1 -e "--in-order" || true)
+		if [ "x${test_sfdisk}" = "x" ] ; then
+			message="sfdisk: [2.26.x or greater]" ; broadcast
+			sfdisk_options="--force"
+			sfdisk_boot_startmb="${sfdisk_boot_startmb}M"
+			sfdisk_boot_endmb="${sfdisk_boot_endmb}M"
+		fi
+
+		message="sfdisk: [sfdisk ${sfdisk_options} ${destination}]" ; broadcast
+		message="sfdisk: [${sfdisk_boot_startmb},${sfdisk_boot_endmb},${sfdisk_fstype},*]" ; broadcast
+		message="sfdisk: [,,,-]" ; broadcast
+
+		LC_ALL=C sfdisk ${sfdisk_options} "${destination}" <<-__EOF__
+			${sfdisk_boot_startmb},${sfdisk_boot_endmb},${sfdisk_fstype},*
 			,,,-
 		__EOF__
 
@@ -436,12 +500,34 @@ partition_drive () {
 		copy_rootfs
 	else
 		conf_boot_startmb=${conf_boot_startmb:-"1"}
-		sfdisk_fstype=${sfdisk_fstype:-"0x83"}
+		sfdisk_fstype=${sfdisk_fstype:-"L"}
+		if [ "x${sfdisk_fstype}" = "x0x83" ] ; then
+			sfdisk_fstype="L"
+		fi
 		boot_label=${boot_label:-"BEAGLEBONE"}
 
 		message="Formatting: ${destination}" ; broadcast
-		LC_ALL=C sfdisk --force --in-order --Linux --unit M "${destination}" <<-__EOF__
-			${conf_boot_startmb},,${sfdisk_fstype},*
+
+		sfdisk_options="--force --Linux --in-order --unit M"
+		sfdisk_boot_startmb="${conf_boot_startmb}"
+
+		test_sfdisk=$(LC_ALL=C sfdisk --help | grep -m 1 -e "--in-order" || true)
+		if [ "x${test_sfdisk}" = "x" ] ; then
+			message="sfdisk: [2.26.x or greater]" ; broadcast
+			if [ "x${bootrom_gpt}" = "xenable" ] ; then
+				sfdisk_options="--force --label gpt"
+			else
+				sfdisk_options="--force"
+			fi
+			sfdisk_boot_startmb="${sfdisk_boot_startmb}M"
+		fi
+
+		message="sfdisk: [$(LC_ALL=C sfdisk --version)]" ; broadcast
+		message="sfdisk: [sfdisk ${sfdisk_options} ${destination}]" ; broadcast
+		message="sfdisk: [${sfdisk_boot_startmb},${sfdisk_boot_endmb},${sfdisk_fstype},*]" ; broadcast
+
+		LC_ALL=C sfdisk ${sfdisk_options} "${destination}" <<-__EOF__
+			${sfdisk_boot_startmb},,${sfdisk_fstype},*
 		__EOF__
 
 		flush_cache
@@ -454,10 +540,18 @@ partition_drive () {
 	fi
 }
 
-message="Starting eMMC Flasher" ; broadcast
+sleep 5
+clear
 message="-----------------------------" ; broadcast
+message="Starting eMMC Flasher from microSD media" ; broadcast
+message="Version: [${version_message}]" ; broadcast
+message="-----------------------------" ; broadcast
+
+get_device
 check_eeprom
 check_running_system
-cylon_leds & CYLON_PID=$!
+if [ "x${is_bbb}" = "xenable" ] ; then
+	cylon_leds & CYLON_PID=$!
+fi
 partition_drive
 #

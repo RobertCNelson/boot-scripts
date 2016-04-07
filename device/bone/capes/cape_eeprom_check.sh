@@ -1,15 +1,40 @@
-#!/bin/sh
+#!/bin/bash -e
 
-echo "trying: /sys/bus/i2c/devices/1-0054/eeprom"
-cat /sys/bus/i2c/devices/1-0054/eeprom | hexdump -C
+if ! id | grep -q root; then
+	echo "must be run as root"
+	exit
+fi
 
-echo "trying: /sys/bus/i2c/devices/1-0055/eeprom"
-cat /sys/bus/i2c/devices/1-0055/eeprom | hexdump -C
+dump () {
+	echo "checking: ${pre}${address}/${post}"
+	if [ -f ${pre}${address}/${post} ] ; then
+		cape_header=$(hexdump -C ${pre}${address}/${post} -n 32)
+		echo "cape: [${cape_header}]"
+	fi
+}
 
-echo "trying: /sys/bus/i2c/devices/1-0056/eeprom"
-cat /sys/bus/i2c/devices/1-0056/eeprom | hexdump -C
+eeprom_dump () {
+	address="0054" ; dump
+	address="0055" ; dump
+	address="0056" ; dump
+	address="0057" ; dump
+}
 
-echo "trying: /sys/bus/i2c/devices/1-0057/eeprom"
-cat /sys/bus/i2c/devices/1-0057/eeprom | hexdump -C
+nvmem_dump () {
+	address="at24-1" ; dump
+	address="at24-2" ; dump
+	address="at24-3" ; dump
+	address="at24-4" ; dump
+}
 
-echo "cat eeprom.dump > /sys/bus/i2c/devices/1-005X/eeprom"
+if [ -f /sys/bus/i2c/devices/1-0054/eeprom ] ; then
+	pre="/sys/bus/i2c/devices/1-"
+	post="eeprom"
+	eeprom_dump
+fi
+
+if [ -f /sys/bus/nvmem/devices/at24-1/nvmem ] ; then
+	pre="/sys/bus/nvmem/devices/"
+	post="nvmem"
+	nvmem_dump
+fi

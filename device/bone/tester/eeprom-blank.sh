@@ -5,24 +5,35 @@ if ! id | grep -q root; then
 	exit
 fi
 
-eeprom="/sys/bus/i2c/devices/0-0050/eeprom"
-eeprom_location=$(ls /sys/devices/ocp.*/44e0b000.i2c/i2c-0/0-0050/eeprom 2> /dev/null)
-eeprom_header=$(hexdump -e '8/1 "%c"' ${eeprom} -s 5 -n 3)
-if [ "x${eeprom_header}" = "x335" ] ; then
-	if [ ! "x${eeprom_location}" = "x" ] ; then
-		echo "Blanking EEPROM"
-		dd if=/dev/zero of=${eeprom_location} bs=1K count=1
-	fi
+unset got_eeprom
+
+#v8 of nvmem...
+if [ -f /sys/bus/nvmem/devices/at24-0/nvmem ] && [ "x${got_eeprom}" = "x" ] ; then
+	eeprom="/sys/bus/nvmem/devices/at24-0/nvmem"
+	eeprom_location="/sys/devices/platform/ocp/44e0b000.i2c/i2c-0/0-0050/at24-0/nvmem"
+	got_eeprom="true"
 fi
 
-eeprom_header=$(hexdump -e '8/1 "%c"' ${eeprom} -s 5 -n 3)
-if [ "x${eeprom_header}" = "x335" ] ; then
-	echo "EEPROM: blanking failed"
-else
-	echo "EEPROM: blanked"
+#pre-v8 of nvmem...
+if [ -f /sys/class/nvmem/at24-0/nvmem ] && [ "x${got_eeprom}" = "x" ] ; then
+	eeprom="/sys/class/nvmem/at24-0/nvmem"
+	eeprom_location="/sys/devices/platform/ocp/44e0b000.i2c/i2c-0/0-0050/nvmem/at24-0/nvmem"
+	got_eeprom="true"
 fi
 
-if [ -b /dev/mmcblk1 ] ; then
-	dd if=/dev/zero of=/dev/mmcblk1 bs=1M count=16 || true
+#eeprom...
+if [ -f /sys/bus/i2c/devices/0-0050/eeprom ] && [ "x${got_eeprom}" = "x" ] ; then
+	eeprom="/sys/bus/i2c/devices/0-0050/eeprom"
+	eeprom_location=$(ls /sys/devices/ocp*/44e0b000.i2c/i2c-0/0-0050/eeprom 2> /dev/null)
+	got_eeprom="true"
 fi
-touch /boot/uboot/flash-eMMC.txt
+
+if [ "x${got_eeprom}" = "xtrue" ] ; then
+	dd if=/dev/zero of=${eeprom_location}
+	sync
+	sync
+	eeprom_header=$(hexdump -e '8/1 "%c"' ${eeprom} -n 16)
+	eeprom_raw=$(hexdump ${eeprom} -n 16 | grep -v 0000008)
+	echo "eeprom: [${eeprom_header}]"
+	echo "eeprom raw: [${eeprom_raw}]"
+fi

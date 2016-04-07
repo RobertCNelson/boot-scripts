@@ -1,0 +1,47 @@
+diff -rupN original/red.js new/red.js
+--- original/red.js	2014-11-10 02:05:33.433249478 +0000
++++ new/red.js	2014-11-10 02:06:38.999655735 +0000
+@@ -21,6 +21,7 @@ var crypto = require("crypto");
+ var nopt = require("nopt");
+ var path = require("path");
+ var RED = require("./red/red.js");
++require('systemd');
+ 
+ var server;
+ var app = express();
+@@ -182,7 +183,8 @@ RED.start().then(function() {
+             }
+             process.exit(1);
+         });
+-        server.listen(settings.uiPort,settings.uiHost,function() {
++        server.listen(settings.uiPort);
++        server.on('listening', function() {
+             if (settings.httpAdminRoot === false) {
+                 util.log('[red] Admin UI disabled');
+             }
+diff -rupN original/settings.js new/settings.js
+--- original/settings.js	2014-11-10 02:08:45.419577625 +0000
++++ new/settings.js	2014-11-10 02:10:02.405905760 +0000
+@@ -13,9 +13,12 @@
+  * See the License for the specific language governing permissions and
+  * limitations under the License.
+  **/
++
++var port = process.env.LISTEN_PID > 0 ? 'systemd' : 1880;
++
+ module.exports = {
+     // the tcp port that the Node-RED web server is listening on
+-    uiPort: 1880,
++    uiPort: port,
+ 
+     // By default, the Node-RED UI accepts connections on all IPv4 interfaces.
+     // The following property can be used to listen on a specific interface. For
+@@ -121,7 +124,7 @@ module.exports = {
+ 
+     functionGlobalContext: {
+         // os:require('os'),
+-        // bonescript:require('bonescript'),
++        bonescript:require('bonescript'),
+         // arduino:require('duino')
+     }
+ 

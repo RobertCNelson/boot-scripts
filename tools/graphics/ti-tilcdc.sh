@@ -24,7 +24,6 @@ check_dpkg () {
 	LC_ALL=C dpkg --list | awk '{print $2}' | grep "^${pkg}$" >/dev/null || deb_pkgs="${deb_pkgs}${pkg} "
 }
 
-deb_distro=$(lsb_release -cs)
 deb_arch=$(LC_ALL=C dpkg --print-architecture)
 
 unset deb_pkgs
@@ -32,7 +31,7 @@ unset deb_pkgs
 #utils:
 pkg="read-edid"
 check_dpkg
-pkg="xserver-xorg-video-modesetting"
+pkg="xserver-xorg-video-fbdev"
 check_dpkg
 pkg="x11-xserver-utils"
 check_dpkg
@@ -62,7 +61,7 @@ cat > /tmp/xorg.conf <<-__EOF__
 
 	Section "Device"
 	        Identifier      "Builtin Default fbdev Device 0"
-	        Driver          "modesetting"
+	        Driver          "fbdev"
 	        Option          "SWCursor"      "true"
 	EndSection
 

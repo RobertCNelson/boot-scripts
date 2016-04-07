@@ -1,6 +1,6 @@
 #!/bin/sh -e
 #
-# Copyright (c) 2014 Robert Nelson <robertcnelson@gmail.com>
+# Copyright (c) 2014-2016 Robert Nelson <robertcnelson@gmail.com>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -33,7 +33,7 @@ dl_bootloader () {
 	echo ""
 	echo "Downloading Device's Bootloader"
 	echo "-----------------------------"
-	conf_bl_http="http://rcn-ee.net/deb/tools/latest"
+	conf_bl_http="https://rcn-ee.com/repos/bootloader/latest"
 	conf_bl_listfile="bootloader-ng"
 	minimal_boot="1"
 
@@ -42,7 +42,7 @@ dl_bootloader () {
 	wget --no-verbose --directory-prefix="${TEMPDIR}/dl/" ${conf_bl_http}/${conf_bl_listfile}
 
 	if [ ! -f ${TEMPDIR}/dl/${conf_bl_listfile} ] ; then
-		echo "error: can't connect to rcn-ee.net, retry in a few minutes..."
+		echo "error: can't connect to rcn-ee.com, retry in a few minutes..."
 		exit
 	fi
 
@@ -86,6 +86,11 @@ is_imx () {
 is_omap () {
 	spl_name="MLO"
 	boot_name="u-boot.img"
+}
+
+is_spl_uboot () {
+	spl_name="SPL"
+	boot_name="BOOT"
 }
 
 fatfs_boot () {
@@ -151,6 +156,7 @@ dd_uboot_boot () {
 		fi
 
 		if [ -f ${TEMPDIR}/dl/${UBOOT} ] ; then
+			echo "dd if=${TEMPDIR}/dl/${UBOOT} of=${target} seek=${dd_uboot_seek} bs=${dd_uboot_bs}"
 			sudo dd if=${TEMPDIR}/dl/${UBOOT} of=${target} seek=${dd_uboot_seek} bs=${dd_uboot_bs}
 			sync
 			flashed=done
@@ -166,38 +172,47 @@ dd_spl_uboot_boot () {
 	echo "u-boot-mmc-spl.bin: [${SPL}]"
 	echo "u-boot.bin: [${UBOOT}]"
 	echo "for: [${conf_board}]"
+
+	echo "-----------------------------"
+
+	if [ "x${dd_spl_uboot_seek}" = "x" ] ; then
+		echo "dd_spl_uboot_seek not found in ${DRIVE}/SOC.sh halting"
+		echo "-----------------------------"
+		exit
+	fi
+
+	if [ "x${dd_spl_uboot_bs}" = "x" ] ; then
+		echo "dd_spl_uboot_bs not found in ${DRIVE}/SOC.sh halting"
+		echo "-----------------------------"
+		exit
+	fi
+
+	if [ "x${dd_uboot_seek}" = "x" ] ; then
+		echo "dd_uboot_seek not found in ${DRIVE}/SOC.sh halting"
+		echo "-----------------------------"
+		exit
+	fi
+
+	if [ "x${dd_uboot_bs}" = "x" ] ; then
+		echo "dd_uboot_bs not found in ${DRIVE}/SOC.sh halting"
+		echo "-----------------------------"
+		exit
+	fi
+
+	if [ -f ${TEMPDIR}/dl/${UBOOT} ] ; then
+		echo "log: dd if=${TEMPDIR}/dl/${SPL} of=${target} seek=${dd_spl_uboot_seek} bs=${dd_spl_uboot_bs}"
+		echo "log: dd if=${TEMPDIR}/dl/${UBOOT} of=${target} seek=${dd_uboot_seek} bs=${dd_uboot_bs}"
+	fi
+
 	echo ""
 	echo -n "Are you 100% sure, on selecting [${conf_board}] (y/n)? "
 	read response
 	if [ "x${response}" = "xy" ] ; then
-		echo "-----------------------------"
-
-		if [ "x${dd_spl_uboot_seek}" = "x" ] ; then
-			echo "dd_spl_uboot_seek not found in ${DRIVE}/SOC.sh halting"
-			echo "-----------------------------"
-			exit
-		fi
-
-		if [ "x${dd_spl_uboot_bs}" = "x" ] ; then
-			echo "dd_spl_uboot_bs not found in ${DRIVE}/SOC.sh halting"
-			echo "-----------------------------"
-			exit
-		fi
-
-		if [ "x${dd_uboot_seek}" = "x" ] ; then
-			echo "dd_uboot_seek not found in ${DRIVE}/SOC.sh halting"
-			echo "-----------------------------"
-			exit
-		fi
-
-		if [ "x${dd_uboot_bs}" = "x" ] ; then
-			echo "dd_uboot_bs not found in ${DRIVE}/SOC.sh halting"
-			echo "-----------------------------"
-			exit
-		fi
 
 		if [ -f ${TEMPDIR}/dl/${UBOOT} ] ; then
+			echo "log: dd if=${TEMPDIR}/dl/${SPL} of=${target} seek=${dd_spl_uboot_seek} bs=${dd_spl_uboot_bs}"
 			sudo dd if=${TEMPDIR}/dl/${SPL} of=${target} seek=${dd_spl_uboot_seek} bs=${dd_spl_uboot_bs}
+			echo "log: dd if=${TEMPDIR}/dl/${UBOOT} of=${target} seek=${dd_uboot_seek} bs=${dd_uboot_bs}"
 			sudo dd if=${TEMPDIR}/dl/${UBOOT} of=${target} seek=${dd_uboot_seek} bs=${dd_uboot_bs}
 			sync
 			flashed=done
@@ -207,14 +222,22 @@ dd_spl_uboot_boot () {
 	fi
 }
 
-got_board () {
-	target="/dev/mmcblk0"
-	case "${conf_board}" in
-	am335x_evm)
-		is_omap
-		;;
-	omap5_uevm)
+get_device () {
+	machine=$(cat /proc/device-tree/model | sed "s/ /_/g")
+
+	case "${machine}" in
+	TI_OMAP5_uEVM_board)
 		target="/dev/mmcblk1"
+		;;
+	*)
+		target="/dev/mmcblk0"
+		;;
+	esac
+}
+
+got_board () {
+	case "${conf_board}" in
+	am335x_boneblack|am335x_evm|beagle_x15|omap5_uevm)
 		is_omap
 		;;
 	esac
@@ -231,6 +254,7 @@ got_board () {
 		dd_uboot_boot
 		;;
 	dd_spl_uboot_boot)
+		is_spl_uboot
 		dl_bootloader
 		dd_spl_uboot_boot
 		;;
@@ -238,6 +262,7 @@ got_board () {
 }
 
 check_soc_sh () {
+	get_device
 	echo "Bootloader Recovery"
 	if [ ! "x$(uname -m)" = "xarmv7l" ] ; then
 		echo "Warning, this is only half implemented to make it work on x86..."
@@ -256,6 +281,9 @@ check_soc_sh () {
 			fi
 
 			conf_board="${board}"
+			if [ "x${bbb_blank}" = "xenable" ] ; then
+				conf_board="am335x_boneblack"
+			fi
 			got_board
 		else
 			echo "Sorry: board undefined in [${DRIVE}/SOC.sh] can not update bootloader safely"
@@ -267,7 +295,7 @@ check_soc_sh () {
 		if [ -f /boot/SOC.sh ] ; then
 			. /boot/SOC.sh
 			mkdir -p /tmp/uboot/
-			mount /dev/mmcblk0p1 /tmp/uboot/
+			mount ${target}p1 /tmp/uboot/
 			DRIVE="/tmp/uboot"
 			if [ "x${board}" != "x" ] ; then
 
@@ -278,6 +306,9 @@ check_soc_sh () {
 				fi
 
 				conf_board="${board}"
+				if [ "x${bbb_blank}" = "xenable" ] ; then
+					conf_board="am335x_boneblack"
+				fi
 				got_board
 			else
 				echo "Sorry: board undefined in [${DRIVE}/SOC.sh] can not update bootloader safely"
@@ -293,7 +324,7 @@ check_soc_sh () {
 		if [ -f /boot/uboot/SOC.sh ] ; then
 			. /boot/uboot/SOC.sh
 			mkdir -p /tmp/uboot/
-			mount /dev/mmcblk0p1 /tmp/uboot/
+			mount ${target}p1 /tmp/uboot/
 			DRIVE="/tmp/uboot"
 			if [ "x${board}" != "x" ] ; then
 
@@ -304,6 +335,9 @@ check_soc_sh () {
 				fi
 
 				conf_board="${board}"
+				if [ "x${bbb_blank}" = "xenable" ] ; then
+					conf_board="am335x_boneblack"
+				fi
 				got_board
 			else
 				echo "Sorry: board undefined in [${DRIVE}/SOC.sh] can not update bootloader safely"
@@ -329,6 +363,9 @@ while [ ! -z "$1" ] ; do
 	case $1 in
 	--use-beta-bootloader)
 		USE_BETA_BOOTLOADER=1
+		;;
+	--bbb-blank)
+		bbb_blank=enable
 		;;
 	esac
 	shift

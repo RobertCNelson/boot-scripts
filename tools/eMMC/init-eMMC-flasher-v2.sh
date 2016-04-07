@@ -1,6 +1,6 @@
 #!/bin/bash -e
 #
-# Copyright (c) 2013-2014 Robert Nelson <robertcnelson@gmail.com>
+# Copyright (c) 2013-2015 Robert Nelson <robertcnelson@gmail.com>
 # Portions copyright (c) 2014 Charles Steinkuehler <charles@steinkuehler.net>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -24,29 +24,25 @@
 #This script assumes, these packages are installed, as network may not be setup
 #dosfstools initramfs-tools rsync u-boot-tools
 
+version_message="1.001: 2015-07-21: Better then never, version #..."
+
 if ! id | grep -q root; then
 	echo "must be run as root"
 	exit
 fi
 
-# Check to see if we're starting as init
-unset RUN_AS_INIT
-if grep -q '[ =/]init-eMMC-flasher-v2.sh\>' /proc/cmdline ; then
-	RUN_AS_INIT=1
-
-	unset root_drive
-	root_drive="$(cat /proc/cmdline | sed 's/ /\n/g' | grep root=UUID= | awk -F 'root=' '{print $2}' || true)"
-	if [ ! "x${root_drive}" = "x" ] ; then
-		root_drive="$(/sbin/findfs ${root_drive} || true)"
-	else
-		root_drive="$(cat /proc/cmdline | sed 's/ /\n/g' | grep root= | awk -F 'root=' '{print $2}' || true)"
-	fi
-
-	boot_drive="${root_drive%?}1"
-
-	mount ${boot_drive} /boot/uboot -o ro
-	mount -t tmpfs tmpfs /tmp
+unset root_drive
+root_drive="$(cat /proc/cmdline | sed 's/ /\n/g' | grep root=UUID= | awk -F 'root=' '{print $2}' || true)"
+if [ ! "x${root_drive}" = "x" ] ; then
+	root_drive="$(/sbin/findfs ${root_drive} || true)"
+else
+	root_drive="$(cat /proc/cmdline | sed 's/ /\n/g' | grep root= | awk -F 'root=' '{print $2}' || true)"
 fi
+
+boot_drive="${root_drive%?}1"
+
+mount ${boot_drive} /boot/uboot -o ro
+mount -t tmpfs tmpfs /tmp
 
 if [ "x${boot_drive}" = "x/dev/mmcblk0p1" ] ; then
 	source="/dev/mmcblk0"
@@ -61,6 +57,12 @@ fi
 flush_cache () {
 	sync
 	blockdev --flushbufs ${destination}
+}
+
+broadcast () {
+	if [ "x${message}" != "x" ] ; then
+		echo "${message}"
+	fi
 }
 
 inf_loop () {
@@ -83,7 +85,7 @@ dev2dir () {
 }
 
 write_failure () {
-	echo "writing to [${destination}] failed..."
+	message="writing to [${destination}] failed..." ; broadcast
 
 	[ -e /proc/$CYLON_PID ]  && kill $CYLON_PID > /dev/null 2>&1
 
@@ -93,7 +95,7 @@ write_failure () {
 		echo heartbeat > /sys/class/leds/beaglebone\:green\:usr2/trigger
 		echo heartbeat > /sys/class/leds/beaglebone\:green\:usr3/trigger
 	fi
-	echo "-----------------------------"
+	message="-----------------------------" ; broadcast
 	flush_cache
 	umount $(dev2dir ${destination}p1) > /dev/null 2>&1 || true
 	umount $(dev2dir ${destination}p2) > /dev/null 2>&1 || true
@@ -177,7 +179,7 @@ cylon_leds () {
 				;;
 			*)	echo 255 > ${BASE}0/brightness
 				echo 0   > ${BASE}1/brightness
-				STinit-eMMC-flasher-v2.shATE=2
+				STATE=2
 				;;
 			esac
 			sleep 0.1
@@ -326,6 +328,13 @@ copy_rootfs () {
 		halt -f
 	fi
 }
+
+sleep 5
+clear
+message="-----------------------------" ; broadcast
+message="Starting eMMC Flasher from microSD media" ; broadcast
+message="Version: [${version_message}]" ; broadcast
+message="-----------------------------" ; broadcast
 
 check_eeprom
 check_running_system

@@ -48,7 +48,10 @@ fi
 single_partition () {
 	echo "${drive}p1" > /resizerootfs
 	conf_boot_startmb=${conf_boot_startmb:-"1"}
-	sfdisk_fstype=${sfdisk_fstype:-"0x83"}
+	sfdisk_fstype=${sfdisk_fstype:-"L"}
+	if [ "x${sfdisk_fstype}" = "x0x83" ] ; then
+		sfdisk_fstype="L"
+	fi
 
 	LC_ALL=C sfdisk --force --no-reread --in-order --Linux --unit M ${drive} <<-__EOF__
 		${conf_boot_startmb},,${sfdisk_fstype},*
