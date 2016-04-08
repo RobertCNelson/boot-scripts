@@ -1,8 +1,6 @@
 
 Start with the generic flashing image "usbflasher", this supports ALL blank boards. This image will flash the eeprom and write a specific end image to the eMMC.
 
-Step 1: Download 'usbflasher', and write it to a microSD:
-
 ```
 voodoo@hades:~$ wget https://rcn-ee.net/rootfs/bb.org/testing/2016-04-03/usbflasher/BBB-blank-debian-8.4-usbflasher-armhf-2016-04-03-4gb.img.xz
 voodoo@hades:~$ wget https://rcn-ee.net/rootfs/bb.org/testing/2016-04-03/usbflasher/BBB-blank-debian-8.4-usbflasher-armhf-2016-04-03-4gb.bmap
@@ -22,10 +20,6 @@ bmaptool: info: synchronizing '/dev/sde'
 bmaptool: info: copying time: 1m 6.4s, copying speed 7.4 MiB/sec
 ```
 
-Step 2: You need to decide, usb or mmc mode for the flasher:
-
-usb mode: The 'usbflasher' will mount a USB drive (fat formated, windows/linux/mac), and read a 'job.txt' file, to write eeprom/emmc
-
 mmc mode: The 'usbflasher' will read 'job.txt' file off mmc, to write eeprom/emmc
 
 ```
@@ -36,8 +30,6 @@ sda      8:0    0 465.8G  0 disk
 sde      8:64   1  14.9G  0 disk 
 └─sde1   8:65   1   3.6G  0 part
 ```
-
-Step 3: usb (secondary fat flash drive) / mmc (microsd with usbflasher)
 
 ```
 voodoo@hades:~$ mkdir /tmp/flasher
