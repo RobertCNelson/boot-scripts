@@ -142,12 +142,23 @@ print_eeprom () {
 
 flash_emmc () {
 	message="eMMC: prepareing ${destination}" ; broadcast
+	flush_cache
+	dd if=/dev/zero of=${destination} bs=1M count=108
+	sync
+	dd if=${destination} of=/dev/null bs=1M count=108
+	sync
+	flush_cache
+
 	LC_ALL=C sfdisk --force --no-reread --in-order --Linux --unit M ${destination} <<-__EOF__
 	1,,L,*
 	__EOF__
 
-	message="mkfs.vfat -n ROOTFS ${destination}p1" ; broadcast
-	LC_ALL=C mkfs.vfat -n ROOTFS ${destination}p1 || write_failure
+	sync
+	flush_cache
+
+	message="mkfs.ext4 -L rootfs ${destination}p1" ; broadcast
+	LC_ALL=C mkfs.ext4 -L rootfs ${destination}p1 || write_failure
+	message="Erasing: ${destination} complete" ; broadcast
 	message="-----------------------------" ; broadcast
 
 	if [ ! "x${conf_bmap}" = "x" ] ; then
