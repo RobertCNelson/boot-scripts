@@ -146,8 +146,8 @@ flash_emmc () {
 	1,,L,*
 	__EOF__
 
-	message="mkfs.vfat -n ROOTFS ${destination}1" ; broadcast
-	LC_ALL=C mkfs.vfat -n ROOTFS ${destination}1 || write_failure
+	message="mkfs.vfat -n ROOTFS ${destination}p1" ; broadcast
+	LC_ALL=C mkfs.vfat -n ROOTFS ${destination}p1 || write_failure
 	message="-----------------------------" ; broadcast
 
 	if [ ! "x${conf_bmap}" = "x" ] ; then
