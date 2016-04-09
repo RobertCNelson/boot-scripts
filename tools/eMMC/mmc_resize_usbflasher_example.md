@@ -18,7 +18,39 @@ sdb      8:16   1  14.9G  0 disk
 └─sdb1   8:17   1  14.9G  0 part 
 ```
 
-2. write usbflasher to media
+2. Zero out media (this fixes e2fsck issues, if you later have to 'expand' the microSD)
+
+This works better in Windows format as fat, but in linux, do the below:
+
+Depending on what version of sfdisk:
+
+```
+voodoo@hades:~$ sudo sfdisk --version
+sfdisk from util-linux 2.27.1
+```
+
+sfdisk >= 2.26.x
+
+```
+sudo sfdisk /dev/sdb <<-__EOF__
+1M,,L,*
+__EOF__
+```
+
+sfdisk <= 2.25.x
+
+```
+sudo sfdisk --in-order --Linux --unit M /dev/sdb <<-__EOF__
+1,,L,*
+__EOF__
+```
+
+Use vfat, to help pre-clean microSD...
+```
+voodoo@hades:~$ sudo mkfs.vfat -n ROOTFS /dev/sdb1
+```
+
+3.write usbflasher to media
 
 ```
 voodoo@hades:~$ sudo bmaptool copy BBB-blank-debian-8.4-usbflasher-armhf-2016-04-03-4gb.img.xz /dev/sdb
@@ -65,7 +97,56 @@ Filesystem      Size  Used Avail Use% Mounted on
 voodoo@hades:~$ sudo umount /tmp/flasher
 ```
 
-3. setup final image:
+4. resize (if needed)
+
+If the flashing *.img is larger then 2.5G you'll need to resize the microSD:
+
+This will not work with e2fsck 1.43.x (yet)
+
+Expanding (optional, for >= 2.5G *.img)
+
+Depending on what version of sfdisk:
+
+```
+voodoo@hades:~$ sudo sfdisk --version
+sfdisk from util-linux 2.27.1
+```
+
+sfdisk >= 2.26.x
+
+```
+sudo sfdisk /dev/sdb <<-__EOF__
+1M,,L,*
+__EOF__
+```
+
+sfdisk <= 2.25.x
+
+```
+sudo sfdisk --in-order --Linux --unit M /dev/sdb <<-__EOF__
+1,,L,*
+__EOF__
+```
+
+Then resize:
+
+```
+voodoo@hestia:~$ sudo e2fsck -yf /dev/sdb1
+e2fsck 1.42.13 (17-May-2015)
+Pass 1: Checking inodes, blocks, and sizes
+Pass 2: Checking directory structure
+Pass 3: Checking directory connectivity
+Pass 4: Checking reference counts
+Pass 5: Checking group summary information
+rootfs: 24503/217728 files (0.0% non-contiguous), 147471/870144 blocks
+
+voodoo@hades:~$ sudo resize2fs /dev/sdb1
+resize2fs 1.42.13 (17-May-2015)
+Resizing the filesystem on /dev/sdb1 to 3889280 (4k) blocks.
+The filesystem on /dev/sdb1 is now 3889280 (4k) blocks long.
+```
+
+5. setup final image:
 
 mmc mode: The 'usbflasher' will read 'job.txt' file off mmc, to write eeprom/emmc
 
@@ -110,7 +191,7 @@ conf_partition1_fstype=0x83
 conf_root_partition=1
 ```
 
-4. eeprom flashing (optional)
+6. eeprom flashing (optional)
 
 For eeprom "flashing" we need 2 more settings..
 
@@ -145,7 +226,7 @@ conf_partition1_fstype=0x83
 conf_root_partition=1
 ```
 
-5. job.txt
+7. job.txt
 
 Rename as 'job.txt'
 ```
