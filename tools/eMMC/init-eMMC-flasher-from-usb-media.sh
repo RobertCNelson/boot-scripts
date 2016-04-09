@@ -141,6 +141,15 @@ print_eeprom () {
 }
 
 flash_emmc () {
+	message="eMMC: prepareing ${destination}" ; broadcast
+	LC_ALL=C sfdisk --force --no-reread --in-order --Linux --unit M ${destination} <<-__EOF__
+	1,,L,*
+	__EOF__
+
+	message="mkfs.vfat -n ROOTFS ${destination}1" ; broadcast
+	LC_ALL=C mkfs.vfat -n ROOTFS ${destination}1 || write_failure
+	message="-----------------------------" ; broadcast
+
 	if [ ! "x${conf_bmap}" = "x" ] ; then
 		if [ -f /usr/bin/bmaptool ] && [ -f ${wdir}/${conf_bmap} ] ; then
 			message="Flashing eMMC with bmaptool" ; broadcast
