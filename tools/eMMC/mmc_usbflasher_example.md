@@ -2,8 +2,8 @@ Start with the generic flashing image "usbflasher", this supports ALL blank boar
 
 Step 1: usbflasher
 ```
-voodoo@hades:~$ wget https://rcn-ee.net/rootfs/bb.org/testing/2016-04-03/usbflasher/BBB-blank-debian-8.4-usbflasher-armhf-2016-04-03-4gb.img.xz
-voodoo@hades:~$ wget https://rcn-ee.net/rootfs/bb.org/testing/2016-04-03/usbflasher/BBB-blank-debian-8.4-usbflasher-armhf-2016-04-03-4gb.bmap
+voodoo@hades:~$ wget https://rcn-ee.net/rootfs/bb.org/testing/2016-04-10/usbflasher/BBB-blank-debian-8.4-usbflasher-armhf-2016-04-10-4gb.img.xz
+voodoo@hades:~$ wget https://rcn-ee.net/rootfs/bb.org/testing/2016-04-10/usbflasher/BBB-blank-debian-8.4-usbflasher-armhf-2016-04-10-4gb.bmap
 voodoo@hades:~$ bmaptool --version
 bmaptool 3.2
 ```
@@ -17,11 +17,11 @@ sdb      8:16   1  14.9G  0 disk
 ```
 Step 2: write usbflasher to media
 ```
-voodoo@hades:~$ sudo bmaptool copy BBB-blank-debian-8.4-usbflasher-armhf-2016-04-03-4gb.img.xz /dev/sdb
-bmaptool: info: discovered bmap file 'BBB-blank-debian-8.4-usbflasher-armhf-2016-04-03-4gb.bmap'
+voodoo@hades:~$ sudo bmaptool copy BBB-blank-debian-8.4-usbflasher-armhf-2016-04-10-4gb.img.xz /dev/sdb
+bmaptool: info: discovered bmap file 'BBB-blank-debian-8.4-usbflasher-armhf-2016-04-10-4gb.bmap'
 bmaptool: info: block map format version 2.0
 bmaptool: info: 870400 blocks of size 4096 (3.3 GiB), mapped 134250 blocks (524.4 MiB or 15.4%)
-bmaptool: info: copying image 'BBB-blank-debian-8.4-usbflasher-armhf-2016-04-03-4gb.img.xz' to block device '/dev/sdb' using bmap file 'BBB-blank-debian-8.4-usbflasher-armhf-2016-04-03-4gb.bmap'
+bmaptool: info: copying image 'BBB-blank-debian-8.4-usbflasher-armhf-2016-04-10-4gb.img.xz' to block device '/dev/sdb' using bmap file 'BBB-blank-debian-8.4-usbflasher-armhf-2016-04-10-4gb.bmap'
 bmaptool: info: 100% copied
 bmaptool: info: synchronizing '/dev/sdb'
 bmaptool: info: copying time: 1m 20.9s, copying speed 6.5 MiB/sec
@@ -74,22 +74,22 @@ voodoo@hades:~$ cd /tmp/flasher/opt/
 voodoo@hades:/tmp/flasher/opt$ sudo mkdir emmc
 voodoo@hades:/tmp/flasher/opt$ cd emmc/
 ```
-Select the image you'd like to flash to the eMMC: "bone-debian-8.4-iot-armhf-2016-04-03-4gb"
+Select the image you'd like to flash to the eMMC: "bone-debian-8.4-iot-armhf-2016-04-10-4gb"
 ```
-voodoo@hades:/tmp/flasher/opt/emmc$ sudo wget https://rcn-ee.net/rootfs/bb.org/testing/2016-04-03/iot/bone-debian-8.4-iot-armhf-2016-04-03-4gb.img.xz
-voodoo@hades:/tmp/flasher/opt/emmc$ sudo wget https://rcn-ee.net/rootfs/bb.org/testing/2016-04-03/iot/bone-debian-8.4-iot-armhf-2016-04-03-4gb.bmap
-voodoo@hades:/tmp/flasher/opt/emmc$ sudo wget https://rcn-ee.net/rootfs/bb.org/testing/2016-04-03/iot/bone-debian-8.4-iot-armhf-2016-04-03-4gb.img.xz.job.txt
+voodoo@hades:/tmp/flasher/opt/emmc$ sudo wget https://rcn-ee.net/rootfs/bb.org/testing/2016-04-10/iot/bone-debian-8.4-iot-armhf-2016-04-10-4gb.img.xz
+voodoo@hades:/tmp/flasher/opt/emmc$ sudo wget https://rcn-ee.net/rootfs/bb.org/testing/2016-04-10/iot/bone-debian-8.4-iot-armhf-2016-04-10-4gb.bmap
+voodoo@hades:/tmp/flasher/opt/emmc$ sudo wget https://rcn-ee.net/rootfs/bb.org/testing/2016-04-10/iot/bone-debian-8.4-iot-armhf-2016-04-10-4gb.img.xz.job.txt
 
 voodoo@hades:/tmp/flasher/opt/emmc$ ls -1
-bone-debian-8.4-iot-armhf-2016-04-03-4gb.bmap
-bone-debian-8.4-iot-armhf-2016-04-03-4gb.img.xz
-bone-debian-8.4-iot-armhf-2016-04-03-4gb.img.xz.job.txt
+bone-debian-8.4-iot-armhf-2016-04-10-4gb.bmap
+bone-debian-8.4-iot-armhf-2016-04-10-4gb.img.xz
+bone-debian-8.4-iot-armhf-2016-04-10-4gb.img.xz.job.txt
 ```
 ```
-voodoo@hades:/tmp/flasher/opt/emmc$ cat bone-debian-8.4-iot-armhf-2016-04-03-4gb.img.xz.job.txt
+voodoo@hades:/tmp/flasher/opt/emmc$ cat bone-debian-8.4-iot-armhf-2016-04-10-4gb.img.xz.job.txt
 abi=aaa
-conf_image=bone-debian-8.4-iot-armhf-2016-04-03-4gb.img.xz
-conf_bmap=bone-debian-8.4-iot-armhf-2016-04-03-4gb.bmap
+conf_image=bone-debian-8.4-iot-armhf-2016-04-10-4gb.img.xz
+conf_bmap=bone-debian-8.4-iot-armhf-2016-04-10-4gb.bmap
 conf_resize=enable
 conf_partition1_startmb=1
 conf_partition1_fstype=0x83
@@ -115,12 +115,12 @@ voodoo@hades:/tmp/flasher/opt/emmc$ hexdump bbgw-eeprom.dump -c
 000001c
 ```
 ```
-voodoo@hades:/tmp/flasher/opt/emmc$ cat bone-debian-8.4-iot-armhf-2016-04-03-4gb.img.xz.job.txt
+voodoo@hades:/tmp/flasher/opt/emmc$ cat bone-debian-8.4-iot-armhf-2016-04-10-4gb.img.xz.job.txt
 abi=aaa
 conf_eeprom_file=bbgw-eeprom.dump
 conf_eeprom_compare=335
-conf_image=bone-debian-8.4-iot-armhf-2016-04-03-4gb.img.xz
-conf_bmap=bone-debian-8.4-iot-armhf-2016-04-03-4gb.bmap
+conf_image=bone-debian-8.4-iot-armhf-2016-04-10-4gb.img.xz
+conf_bmap=bone-debian-8.4-iot-armhf-2016-04-10-4gb.bmap
 conf_resize=enable
 conf_partition1_startmb=1
 conf_partition1_fstype=0x83
@@ -128,8 +128,8 @@ conf_root_partition=1
 ```
 Step 5: job.txt file
 ```
-voodoo@hades:/tmp/flasher/opt/emmc$ sudo cp -v bone-debian-8.4-iot-armhf-2016-04-03-4gb.img.xz.job.txt job.txt
-'bone-debian-8.4-iot-armhf-2016-04-03-4gb.img.xz.job.txt' -> 'job.txt'
+voodoo@hades:/tmp/flasher/opt/emmc$ sudo cp -v bone-debian-8.4-iot-armhf-2016-04-10-4gb.img.xz.job.txt job.txt
+'bone-debian-8.4-iot-armhf-2016-04-10-4gb.img.xz.job.txt' -> 'job.txt'
 ```
 ```
 voodoo@hades:/tmp/flasher/opt/emmc$ sync
