@@ -72,6 +72,7 @@ SanCloud_BeagleBone_Enhanced)
 	has_ethernet="enable"
 	;;
 *)
+	has_wifi="disable"
 	has_ethernet="enable"
 	unset board_bbgw
 	unset board_sbbe
