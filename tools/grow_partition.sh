@@ -1,6 +1,6 @@
 #!/bin/sh -e
 #
-# Copyright (c) 2014 Robert Nelson <robertcnelson@gmail.com>
+# Copyright (c) 2014-2016 Robert Nelson <robertcnelson@gmail.com>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -53,7 +53,15 @@ single_partition () {
 		sfdisk_fstype="L"
 	fi
 
-	LC_ALL=C sfdisk --force --no-reread --in-order --Linux --unit M ${drive} <<-__EOF__
+	sfdisk_options="--force --no-reread --Linux --in-order --unit M"
+	test_sfdisk=$(LC_ALL=C sfdisk --help | grep -m 1 -e "--in-order" || true)
+	if [ "x${test_sfdisk}" = "x" ] ; then
+		echo "sfdisk: 2.26.x or greater"
+		sfdisk_options="--force --no-reread"
+		conf_boot_startmb="${conf_boot_startmb}M"
+	fi
+
+	LC_ALL=C sfdisk ${sfdisk_options} ${drive} <<-__EOF__
 		${conf_boot_startmb},,${sfdisk_fstype},*
 	__EOF__
 }
@@ -64,7 +72,16 @@ dual_partition () {
 	conf_boot_endmb=${conf_boot_endmb:-"96"}
 	sfdisk_fstype=${sfdisk_fstype:-"0xE"}
 
-	LC_ALL=C sfdisk --force --no-reread --in-order --Linux --unit M ${drive} <<-__EOF__
+	sfdisk_options="--force --no-reread --Linux --in-order --unit M"
+	test_sfdisk=$(LC_ALL=C sfdisk --help | grep -m 1 -e "--in-order" || true)
+	if [ "x${test_sfdisk}" = "x" ] ; then
+		echo "sfdisk: 2.26.x or greater"
+		sfdisk_options="--force --no-reread"
+		conf_boot_startmb="${conf_boot_startmb}M"
+		conf_boot_endmb="${conf_boot_endmb}M"
+	fi
+
+	LC_ALL=C sfdisk ${sfdisk_options} ${drive} <<-__EOF__
 		${conf_boot_startmb},${conf_boot_endmb},${sfdisk_fstype},*
 		,,,-
 	__EOF__

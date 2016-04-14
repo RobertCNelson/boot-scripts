@@ -141,6 +141,26 @@ print_eeprom () {
 }
 
 flash_emmc () {
+	message="eMMC: prepareing ${destination}" ; broadcast
+	flush_cache
+	dd if=/dev/zero of=${destination} bs=1M count=108
+	sync
+	dd if=${destination} of=/dev/null bs=1M count=108
+	sync
+	flush_cache
+
+	LC_ALL=C sfdisk --force --no-reread --in-order --Linux --unit M ${destination} <<-__EOF__
+	1,,L,*
+	__EOF__
+
+	sync
+	flush_cache
+
+	message="mkfs.ext2 -L rootfs ${destination}p1" ; broadcast
+	LC_ALL=C mkfs.ext2 -L rootfs ${destination}p1 || write_failure
+	message="Erasing: ${destination} complete" ; broadcast
+	message="-----------------------------" ; broadcast
+
 	if [ ! "x${conf_bmap}" = "x" ] ; then
 		if [ -f /usr/bin/bmaptool ] && [ -f ${wdir}/${conf_bmap} ] ; then
 			message="Flashing eMMC with bmaptool" ; broadcast
