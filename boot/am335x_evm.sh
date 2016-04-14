@@ -56,13 +56,24 @@ fi
 
 board=$(cat /proc/device-tree/model | sed "s/ /_/g")
 case "${board}" in
+TI_AM335x_BeagleBone_Black_Wireless)
+	board_bbbw="enable"
+	has_wifi="enable"
+	has_ethernet="disable"
+	;;
 TI_AM335x_BeagleBone_Green_Wireless)
 	board_bbgw="enable"
+	has_wifi="enable"
+	has_ethernet="disable"
 	;;
 SanCloud_BeagleBone_Enhanced)
 	board_sbbe="enable"
+	has_wifi="enable"
+	has_ethernet="enable"
 	;;
 *)
+	has_wifi="disable"
+	has_ethernet="enable"
 	unset board_bbgw
 	unset board_sbbe
 	;;
@@ -72,7 +83,7 @@ SERIAL_NUMBER="1234BBBK5678"
 ISBLACK=""
 ISGREEN=""
 PRODUCT="am335x_evm"
-manufacturer="Circuitco"
+manufacturer="BeagleBoard.org"
 wifi_prefix="BeagleBone"
 
 #pre nvmem...
@@ -105,7 +116,12 @@ if [ "x${ISBLACK}" = "xBBBK" ] || [ "x${ISBLACK}" = "xBNLT" ] ; then
 		manufacturer="Seeed"
 		PRODUCT="BeagleBoneGreen"
 	else
-		PRODUCT="BeagleBoneBlack"
+		if [ "x$board_sbbe" = "xenable" ] ; then
+			manufacturer="SanCloud"
+			PRODUCT="BeagleBoneEnhanced"
+		else
+			PRODUCT="BeagleBoneBlack"
+		fi
 	fi
 fi
 
@@ -209,7 +225,7 @@ fi
 
 #create_ap is now legacy, use connman...
 if [ -f /usr/bin/create_ap ] ; then
-	if [ "x${board_bbgw}" = "xenable" ] ; then
+	if [ "x${has_wifi}" = "xenable" ] ; then
 		ifconfig wlan0 down
 		ifconfig wlan0 hw ether ${cpsw_0_mac}
 		ifconfig wlan0 up || true
@@ -219,7 +235,7 @@ if [ -f /usr/bin/create_ap ] ; then
 fi
 
 unset eth0_addr
-if [ ! "x${board_bbgw}" = "xenable" ] ; then
+if [ "x${has_ethernet}" = "xenable" ] ; then
 	eth0_addr=$(ip addr list eth0 |grep "inet " |cut -d' ' -f6|cut -d/ -f1 2>/dev/null || true)
 fi
 if [ "x${usb0}" = "xenable" ] ; then
@@ -227,7 +243,7 @@ if [ "x${usb0}" = "xenable" ] ; then
 	usb0_addr=$(ip addr list usb0 |grep "inet " |cut -d' ' -f6|cut -d/ -f1 2>/dev/null || true)
 fi
 unset wlan0_addr
-if [ "x${board_bbgw}" = "xenable" ] ; then
+if [ "x${has_wifi}" = "xenable" ] ; then
 	wlan0_addr=$(ip addr list wlan0 |grep "inet " |cut -d' ' -f6|cut -d/ -f1 2>/dev/null || true)
 fi
 
@@ -336,6 +352,9 @@ if [ ! "x${enable_cape_universal}" = "x" ] ; then
 				case "${machine}" in
 				TI_AM335x_BeagleBone)
 					overlay="univ-all"
+					;;
+				TI_AM335x_BeagleBone_Black_Wireless)
+					overlay="cape-universaln"
 					;;
 				TI_AM335x_BeagleBone_Black)
 					overlay="cape-universaln"
