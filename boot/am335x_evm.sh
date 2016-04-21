@@ -55,6 +55,9 @@ if [ "x${abi}" = "x" ] ; then
 fi
 
 usb_image_file="/var/local/usb_mass_storage.img"
+if [ -f /var/local/bb_usb_mass_storage.img ] ; then
+	usb_image_file="/var/local/bb_usb_mass_storage.img"
+fi
 
 board=$(cat /proc/device-tree/model | sed "s/ /_/g")
 case "${board}" in
@@ -76,6 +79,9 @@ TI_AM335x_BeagleBone_Green_Wireless)
 	board_bbgw="enable"
 	has_wifi="enable"
 	has_ethernet="disable"
+	if [ -f /var/local/bbg_usb_mass_storage.img ] ; then
+		usb_image_file="/var/local/bbg_usb_mass_storage.img"
+	fi
 	;;
 SanCloud_BeagleBone_Enhanced)
 	board_sbbe="enable"
