@@ -54,12 +54,23 @@ if [ "x${abi}" = "x" ] ; then
 	fi
 fi
 
+usb_image_file="/var/local/usb_mass_storage.img"
+
 board=$(cat /proc/device-tree/model | sed "s/ /_/g")
 case "${board}" in
 TI_AM335x_BeagleBone_Black_Wireless)
 	board_bbbw="enable"
 	has_wifi="enable"
 	has_ethernet="disable"
+	;;
+TI_AM335x_BeagleBone_Green)
+	has_wifi="disable"
+	has_ethernet="enable"
+	unset board_bbgw
+	unset board_sbbe
+	if [ -f /var/local/bbg_usb_mass_storage.img ] ; then
+		usb_image_file="/var/local/bbg_usb_mass_storage.img"
+	fi
 	;;
 TI_AM335x_BeagleBone_Green_Wireless)
 	board_bbgw="enable"
@@ -177,7 +188,6 @@ if [ -d /sys/devices/platform/ocp/47810000.mmc/mmc_host/mmc2/mmc2:0001/mmc2:0001
 fi
 
 g_network="iSerialNumber=${SERIAL_NUMBER} iManufacturer=${manufacturer} iProduct=${PRODUCT} host_addr=${cpsw_1_mac} dev_addr=${dev_mac}"
-usb_image_file="/var/local/usb_mass_storage.img"
 
 #priorty:
 #g_multi
