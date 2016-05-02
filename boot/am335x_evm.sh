@@ -393,7 +393,7 @@ if [ ! "x${enable_cape_universal}" = "x" ] ; then
 				dtbo="${overlay}-00A0.dtbo"
 				if [ -f /lib/firmware/${dtbo} ] ; then
 					if [ -f /usr/local/bin/config-pin ] ; then
-						config-pin overlay ${overlay}
+						config-pin overlay ${overlay} || true
 					fi
 				fi
 			fi
