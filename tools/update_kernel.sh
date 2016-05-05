@@ -390,7 +390,15 @@ third_party () {
 		;;
 	ti|ti-rt)
 		case "${kernel}" in
-		LTS41)
+		LTS314)
+			apt-get install -y mt7601u-modules-${latest_kernel} || true
+			run_depmod_initramfs="enabled"
+			if [ "x${rtl8723bu}" = "xenabled" ] ; then
+				apt-get install -y rtl8723bu-modules-${latest_kernel} || true
+				run_depmod_initramfs="enabled"
+			fi
+			;;
+		LTS41|LTS44)
 			if [ "x${rtl8723bu}" = "xenabled" ] ; then
 				apt-get install -y rtl8723bu-modules-${latest_kernel} || true
 				run_depmod_initramfs="enabled"
@@ -401,12 +409,6 @@ third_party () {
 			fi
 			if [ "x${sgxjacinto6evm}" = "xenabled" ] ; then
 				apt-get install -y ti-sgx-jacinto6evm-modules-${latest_kernel} || true
-				run_depmod_initramfs="enabled"
-			fi
-			;;
-		LTS44)
-			if [ "x${rtl8723bu}" = "xenabled" ] ; then
-				apt-get install -y rtl8723bu-modules-${latest_kernel} || true
 				run_depmod_initramfs="enabled"
 			fi
 			;;
@@ -429,7 +431,7 @@ case "${get_dist}" in
 wheezy|jessie|stretch|sid)
 	dist="${get_dist}"
 	;;
-trusty|utopic|vivid|wily|xenial)
+trusty|utopic|vivid|wily|xenial|yakkety)
 	dist="${get_dist}"
 	;;
 *)
@@ -477,6 +479,9 @@ while [ ! -z "$1" ] ; do
 		;;
 	--daily-cron)
 		daily_cron="enabled"
+		;;
+	--lts-3_14-kernel|--lts-3_14)
+		kernel="LTS314"
 		;;
 	--lts-kernel|--lts|--lts-4_1-kernel|--lts-4_1)
 		kernel="LTS41"
