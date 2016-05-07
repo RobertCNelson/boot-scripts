@@ -79,8 +79,8 @@ TI_AM335x_BeagleBone_Green_Wireless)
 	board_bbgw="enable"
 	has_wifi="enable"
 	has_ethernet="disable"
-	if [ -f /var/local/bbg_usb_mass_storage.img ] ; then
-		usb_image_file="/var/local/bbg_usb_mass_storage.img"
+	if [ -f /var/local/bbgw_usb_mass_storage.img ] ; then
+		usb_image_file="/var/local/bbgw_usb_mass_storage.img"
 	fi
 	;;
 SanCloud_BeagleBone_Enhanced)
