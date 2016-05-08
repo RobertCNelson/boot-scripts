@@ -387,6 +387,9 @@ if [ ! "x${enable_cape_universal}" = "x" ] ; then
 				TI_AM335x_BeagleBone_Green)
 					overlay="univ-emmc"
 					;;
+				TI_AM335x_BeagleBone_Green_Wireless)
+					overlay="univ-bbgw"
+					;;
 				esac
 			fi
 			if [ ! "x${overlay}" = "x" ] ; then
