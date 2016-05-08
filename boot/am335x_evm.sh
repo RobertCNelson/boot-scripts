@@ -388,7 +388,11 @@ if [ ! "x${enable_cape_universal}" = "x" ] ; then
 					overlay="univ-emmc"
 					;;
 				TI_AM335x_BeagleBone_Green_Wireless)
-					overlay="univ-bbgw"
+					if [ -f /usr/local/lib/node_modules/node-red-node-beaglebone/.bbgw-dont-load ] ; then
+						unset overlay
+					else
+						overlay="univ-bbgw"
+					fi
 					;;
 				esac
 			fi
