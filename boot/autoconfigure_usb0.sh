@@ -59,8 +59,6 @@ deb_dnsmasq_dir=${deb_etc_dir}/dnsmasq.d
 
 deb_network_interfaces=${deb_etc_dir}/network/interfaces
 
-
-
 deb_configure_udhcpd ()
 {
 	# Function expects udhcpd to be installed, and usb_address,
@@ -174,8 +172,13 @@ deb_usb_netmask=$(sed -nr "${deb_iface_range_regex} p" ${deb_network_interfaces}
 if [ "x${deb_usb_address}" != "x" -a\
      "x${deb_usb_gateway}" != "x" -a\
      "x${deb_usb_netmask}" != "x" ] ; then
+
+	#bbgw, SoftAp0/usb0 taken care of by dnsmasq..
+	if [ -f /etc/dnsmasq.d/SoftAp0 ] ; then
+		/etc/init.d/udhcpd stop || true
+		/sbin/ifconfig usb0 ${deb_usb_address} netmask ${deb_usb_netmask} || true
 	# usb0 is specified!
-	if [ -f ${deb_udhcpd_default} ]; then
+	elif [ -f ${deb_udhcpd_default} ]; then
 		deb_configure_udhcpd
 
 	elif [ -f ${deb_dnsmasq_dir}/README ]; then

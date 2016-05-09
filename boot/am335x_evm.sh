@@ -238,8 +238,6 @@ else
 fi
 
 if [ "x${usb0}" = "xenable" ] ; then
-	sleep 2
-
 	# Auto-configuring the usb0 network interface:
 	$(dirname $0)/autoconfigure_usb0.sh
 fi
