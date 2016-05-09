@@ -173,8 +173,13 @@ if [ "x${deb_usb_address}" != "x" -a\
      "x${deb_usb_gateway}" != "x" -a\
      "x${deb_usb_netmask}" != "x" ] ; then
 
+	unset dnsmasq_got_usb0
 	#bbgw, SoftAp0/usb0 taken care of by dnsmasq..
 	if [ -f /etc/dnsmasq.d/SoftAp0 ] ; then
+		dnsmasq_got_usb0=$(cat /etc/dnsmasq.d/SoftAp0 | grep usb0)
+	fi
+
+	if [ ! "x${dnsmasq_got_usb0}" = "x" ]; then
 		/etc/init.d/udhcpd stop || true
 		/sbin/ifconfig usb0 ${deb_usb_address} netmask ${deb_usb_netmask} || true
 	# usb0 is specified!
