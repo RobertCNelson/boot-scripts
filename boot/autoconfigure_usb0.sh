@@ -176,7 +176,7 @@ if [ "x${deb_usb_address}" != "x" -a\
 	unset dnsmasq_got_usb0
 	#bbgw, SoftAp0/usb0 taken care of by dnsmasq..
 	if [ -f /etc/dnsmasq.d/SoftAp0 ] ; then
-		dnsmasq_got_usb0=$(cat /etc/dnsmasq.d/SoftAp0 | grep usb0)
+		dnsmasq_got_usb0=$(cat /etc/dnsmasq.d/SoftAp0 | grep usb0 || true)
 	fi
 
 	if [ ! "x${dnsmasq_got_usb0}" = "x" ]; then
