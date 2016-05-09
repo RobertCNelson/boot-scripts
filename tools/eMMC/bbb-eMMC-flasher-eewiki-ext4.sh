@@ -323,7 +323,7 @@ copy_boot () {
 	flush_cache
 	umount /tmp/boot/ || umount -l /tmp/boot/ || write_failure
 	flush_cache
-	umount /boot/uboot || umount -l /boot/uboot
+	umount /boot/uboot || umount -l /boot/uboot || true
 }
 
 copy_rootfs () {
@@ -404,7 +404,7 @@ copy_rootfs () {
 		message="debug: enabled" ; broadcast
 		inf_loop
 	else
-		umount /tmp || umount -l /tmp
+		#umount /tmp || umount -l /tmp
 		if [ -e /sys/class/leds/beaglebone\:green\:usr0/trigger ] ; then
 			echo default-on > /sys/class/leds/beaglebone\:green\:usr0/trigger
 			echo default-on > /sys/class/leds/beaglebone\:green\:usr1/trigger
@@ -417,7 +417,7 @@ copy_rootfs () {
 		message="-----------------------------" ; broadcast
 
 		flush_cache
-		halt -f
+		halt
 	fi
 }
 
