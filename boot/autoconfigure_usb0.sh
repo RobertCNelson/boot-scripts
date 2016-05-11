@@ -181,7 +181,8 @@ if [ "x${deb_usb_address}" != "x" -a\
 
 	if [ ! "x${dnsmasq_got_usb0}" = "x" ]; then
 		/etc/init.d/udhcpd stop || true
-		/sbin/ifconfig usb0 ${deb_usb_address} netmask ${deb_usb_netmask} || true
+		#bbgw, pass's out: 192.168.7.3 & 192.168.7.4
+		/sbin/ifconfig usb0 ${deb_usb_address} netmask 255.255.255.0 || true
 	# usb0 is specified!
 	elif [ -f ${deb_udhcpd_default} ]; then
 		deb_configure_udhcpd
