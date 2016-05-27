@@ -24,11 +24,11 @@
 #This script assumes, these packages are installed, as network may not be setup
 #dosfstools initramfs-tools rsync u-boot-tools
 
-version_message="1.20160322: upgrade backup u-boot: v2016.03-r6..."
+version_message="1.20160527: upgrade backup u-boot: v2016.03-r7..."
 
 #https://rcn-ee.com/repos/bootloader/am335x_evm/
-http_spl="MLO-am335x_evm-v2016.03-r6"
-http_uboot="u-boot-am335x_evm-v2016.03-r6.img"
+http_spl="MLO-am335x_evm-v2016.03-r7"
+http_uboot="u-boot-am335x_evm-v2016.03-r7.img"
 
 if ! id | grep -q root; then
 	echo "must be run as root"
