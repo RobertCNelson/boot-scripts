@@ -395,7 +395,6 @@ copy_rootfs () {
 		message="debug: enabled" ; broadcast
 		inf_loop
 	else
-		umount /tmp || umount -l /tmp
 		if [ -e /sys/class/leds/beaglebone\:green\:usr0/trigger ] ; then
 			echo default-on > /sys/class/leds/beaglebone\:green\:usr0/trigger
 			echo default-on > /sys/class/leds/beaglebone\:green\:usr1/trigger
