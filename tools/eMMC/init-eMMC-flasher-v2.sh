@@ -324,7 +324,7 @@ copy_rootfs () {
 		echo "eMMC has been flashed, please remove power and microSD card"
 		echo ""
 		echo "-----------------------------"
-
+		flush_cache
 		halt -f
 	fi
 }

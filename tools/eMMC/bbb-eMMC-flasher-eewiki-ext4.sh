@@ -414,9 +414,7 @@ copy_rootfs () {
 
 		message="eMMC has been flashed: please wait for device to power down." ; broadcast
 		message="-----------------------------" ; broadcast
-
 		flush_cache
-		halt -f
 	fi
 }
 
