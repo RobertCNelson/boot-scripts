@@ -205,7 +205,7 @@ unset ttyGS0
 
 #g_multi: Do we have image file?
 if [ -f ${usb_image_file} ] ; then
-	modprobe g_multi file=${usb_image_file} cdrom=0 ro=0 stall=0 removable=1 nofua=1 ${g_network} || true
+	modprobe g_multi file=${usb_image_file} cdrom=0 ro=1 stall=0 removable=1 nofua=1 ${g_network} || true
 	usb0="enable"
 	ttyGS0="enable"
 else
