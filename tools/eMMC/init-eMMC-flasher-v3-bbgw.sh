@@ -24,7 +24,7 @@
 #This script assumes, these packages are installed, as network may not be setup
 #dosfstools initramfs-tools rsync u-boot-tools
 
-version_message="1.20160222: deal with v4.4.x+ back to old eeprom location..."
+version_message="1.20160606: run bb-wl18xx-wlan0 in single user mode..."
 
 if ! id | grep -q root; then
 	echo "must be run as root"
@@ -119,7 +119,7 @@ write_failure () {
 }
 
 check_eeprom () {
-	device_eeprom="bbb-eeprom"
+	device_eeprom="bbgw-eeprom"
 	message="Checking for Valid ${device_eeprom} header" ; broadcast
 
 	unset got_eeprom
@@ -395,12 +395,38 @@ copy_rootfs () {
 	cat /tmp/rootfs/etc/fstab
 
 	message="/boot/uEnv.txt: disabling eMMC flasher script" ; broadcast
-	script="cmdline=init=/opt/scripts/tools/eMMC/init-eMMC-flasher-v3.sh"
+	script="cmdline=init=/opt/scripts/tools/eMMC/init-eMMC-flasher-v3-bbgw.sh"
 	sed -i -e 's:'$script':#'$script':g' /tmp/rootfs/boot/uEnv.txt
 	cat /tmp/rootfs/boot/uEnv.txt
 	message="-----------------------------" ; broadcast
 
 	flush_cache
+	message="running: chroot /tmp/rootfs/ /usr/bin/bb-wl18xx-wlan0" ; broadcast
+
+	mount --bind /proc /tmp/rootfs/proc
+	mount --bind /sys /tmp/rootfs/sys
+	mount --bind /dev /tmp/rootfs/dev
+	mount --bind /dev/pts /tmp/rootfs/dev/pts
+
+	modprobe wl18xx
+	message="-----------------------------" ; broadcast
+	message="lsmod" ; broadcast
+	message="`lsmod`" ; broadcast
+	message="-----------------------------" ; broadcast
+	chroot /tmp/rootfs/ /usr/bin/bb-wl18xx-wlan0
+	message="-----------------------------" ; broadcast
+
+	flush_cache
+	message="initrd: `ls -lh /tmp/rootfs/boot/initrd.img*`" ; broadcast
+
+	umount -fl /tmp/rootfs/dev/pts
+	umount -fl /tmp/rootfs/dev
+	umount -fl /tmp/rootfs/proc
+	umount -fl /tmp/rootfs/sys
+	sleep 2
+
+	flush_cache
+	message="-----------------------------" ; broadcast
 	umount /tmp/rootfs/ || umount -l /tmp/rootfs/ || write_failure
 
 	if [ "x${is_bbb}" = "xenable" ] ; then

@@ -54,15 +54,43 @@ if [ "x${abi}" = "x" ] ; then
 	fi
 fi
 
+usb_image_file="/var/local/usb_mass_storage.img"
+if [ -f /var/local/bb_usb_mass_storage.img ] ; then
+	usb_image_file="/var/local/bb_usb_mass_storage.img"
+fi
+
 board=$(cat /proc/device-tree/model | sed "s/ /_/g")
 case "${board}" in
+TI_AM335x_BeagleBone_Black_Wireless)
+	board_bbbw="enable"
+	has_wifi="enable"
+	has_ethernet="disable"
+	;;
+TI_AM335x_BeagleBone_Green)
+	has_wifi="disable"
+	has_ethernet="enable"
+	unset board_bbgw
+	unset board_sbbe
+	if [ -f /var/local/bbg_usb_mass_storage.img ] ; then
+		usb_image_file="/var/local/bbg_usb_mass_storage.img"
+	fi
+	;;
 TI_AM335x_BeagleBone_Green_Wireless)
 	board_bbgw="enable"
+	has_wifi="enable"
+	has_ethernet="disable"
+	if [ -f /var/local/bbgw_usb_mass_storage.img ] ; then
+		usb_image_file="/var/local/bbgw_usb_mass_storage.img"
+	fi
 	;;
 SanCloud_BeagleBone_Enhanced)
 	board_sbbe="enable"
+	has_wifi="enable"
+	has_ethernet="enable"
 	;;
 *)
+	has_wifi="disable"
+	has_ethernet="enable"
 	unset board_bbgw
 	unset board_sbbe
 	;;
@@ -72,7 +100,7 @@ SERIAL_NUMBER="1234BBBK5678"
 ISBLACK=""
 ISGREEN=""
 PRODUCT="am335x_evm"
-manufacturer="Circuitco"
+manufacturer="BeagleBoard.org"
 wifi_prefix="BeagleBone"
 
 #pre nvmem...
@@ -81,6 +109,7 @@ if [ -f ${eeprom} ] ; then
 	SERIAL_NUMBER=$(hexdump -e '8/1 "%c"' ${eeprom} -n 28 | cut -b 17-28)
 	ISBLACK=$(hexdump -e '8/1 "%c"' ${eeprom} -n 12 | cut -b 9-12)
 	ISGREEN=$(hexdump -e '8/1 "%c"' ${eeprom} -n 19 | cut -b 17-19)
+	ISBLACKVARIENT=$(hexdump -e '8/1 "%c"' ${eeprom} -n 16 | cut -b 13-16)
 fi
 
 #[PATCH (pre v8) 0/9] Add simple NVMEM Framework via regmap.
@@ -89,6 +118,7 @@ if [ -f ${eeprom} ] ; then
 	SERIAL_NUMBER=$(hexdump -e '8/1 "%c"' ${eeprom} -n 28 | cut -b 17-28)
 	ISBLACK=$(hexdump -e '8/1 "%c"' ${eeprom} -n 12 | cut -b 9-12)
 	ISGREEN=$(hexdump -e '8/1 "%c"' ${eeprom} -n 19 | cut -b 17-19)
+	ISBLACKVARIENT=$(hexdump -e '8/1 "%c"' ${eeprom} -n 16 | cut -b 13-16)
 fi
 
 #[PATCH v8 0/9] Add simple NVMEM Framework via regmap.
@@ -97,6 +127,7 @@ if [ -f ${eeprom} ] ; then
 	SERIAL_NUMBER=$(hexdump -e '8/1 "%c"' ${eeprom} -n 28 | cut -b 17-28)
 	ISBLACK=$(hexdump -e '8/1 "%c"' ${eeprom} -n 12 | cut -b 9-12)
 	ISGREEN=$(hexdump -e '8/1 "%c"' ${eeprom} -n 19 | cut -b 17-19)
+	ISBLACKVARIENT=$(hexdump -e '8/1 "%c"' ${eeprom} -n 16 | cut -b 13-16)
 fi
 
 PRODUCT="BeagleBone"
@@ -105,7 +136,18 @@ if [ "x${ISBLACK}" = "xBBBK" ] || [ "x${ISBLACK}" = "xBNLT" ] ; then
 		manufacturer="Seeed"
 		PRODUCT="BeagleBoneGreen"
 	else
-		PRODUCT="BeagleBoneBlack"
+		#FIXME: should be a case statement, on the next varient..
+		if [ "x${ISBLACKVARIENT}" = "xGW1A" ] ; then
+			manufacturer="Seeed"
+			PRODUCT="BeagleBoneGreenWireless"
+		else
+			if [ "x$board_sbbe" = "xenable" ] ; then
+				manufacturer="SanCloud"
+				PRODUCT="BeagleBoneEnhanced"
+			else
+				PRODUCT="BeagleBoneBlack"
+			fi
+		fi
 	fi
 fi
 
@@ -152,7 +194,6 @@ if [ -d /sys/devices/platform/ocp/47810000.mmc/mmc_host/mmc2/mmc2:0001/mmc2:0001
 fi
 
 g_network="iSerialNumber=${SERIAL_NUMBER} iManufacturer=${manufacturer} iProduct=${PRODUCT} host_addr=${cpsw_1_mac} dev_addr=${dev_mac}"
-usb_image_file="/var/local/usb_mass_storage.img"
 
 #priorty:
 #g_multi
@@ -197,8 +238,6 @@ else
 fi
 
 if [ "x${usb0}" = "xenable" ] ; then
-	sleep 2
-
 	# Auto-configuring the usb0 network interface:
 	$(dirname $0)/autoconfigure_usb0.sh
 fi
@@ -209,7 +248,7 @@ fi
 
 #create_ap is now legacy, use connman...
 if [ -f /usr/bin/create_ap ] ; then
-	if [ "x${board_bbgw}" = "xenable" ] ; then
+	if [ "x${has_wifi}" = "xenable" ] ; then
 		ifconfig wlan0 down
 		ifconfig wlan0 hw ether ${cpsw_0_mac}
 		ifconfig wlan0 up || true
@@ -219,7 +258,7 @@ if [ -f /usr/bin/create_ap ] ; then
 fi
 
 unset eth0_addr
-if [ ! "x${board_bbgw}" = "xenable" ] ; then
+if [ "x${has_ethernet}" = "xenable" ] ; then
 	eth0_addr=$(ip addr list eth0 |grep "inet " |cut -d' ' -f6|cut -d/ -f1 2>/dev/null || true)
 fi
 if [ "x${usb0}" = "xenable" ] ; then
@@ -227,7 +266,7 @@ if [ "x${usb0}" = "xenable" ] ; then
 	usb0_addr=$(ip addr list usb0 |grep "inet " |cut -d' ' -f6|cut -d/ -f1 2>/dev/null || true)
 fi
 unset wlan0_addr
-if [ "x${board_bbgw}" = "xenable" ] ; then
+if [ "x${has_wifi}" = "xenable" ] ; then
 	wlan0_addr=$(ip addr list wlan0 |grep "inet " |cut -d' ' -f6|cut -d/ -f1 2>/dev/null || true)
 fi
 
@@ -337,11 +376,21 @@ if [ ! "x${enable_cape_universal}" = "x" ] ; then
 				TI_AM335x_BeagleBone)
 					overlay="univ-all"
 					;;
+				TI_AM335x_BeagleBone_Black_Wireless)
+					overlay="cape-universaln"
+					;;
 				TI_AM335x_BeagleBone_Black)
 					overlay="cape-universaln"
 					;;
 				TI_AM335x_BeagleBone_Green)
 					overlay="univ-emmc"
+					;;
+				TI_AM335x_BeagleBone_Green_Wireless)
+					if [ -f /usr/local/lib/node_modules/node-red-node-beaglebone/.bbgw-dont-load ] ; then
+						unset overlay
+					else
+						overlay="univ-bbgw"
+					fi
 					;;
 				esac
 			fi
@@ -349,7 +398,7 @@ if [ ! "x${enable_cape_universal}" = "x" ] ; then
 				dtbo="${overlay}-00A0.dtbo"
 				if [ -f /lib/firmware/${dtbo} ] ; then
 					if [ -f /usr/local/bin/config-pin ] ; then
-						config-pin overlay ${overlay}
+						config-pin overlay ${overlay} || true
 					fi
 				fi
 			fi
