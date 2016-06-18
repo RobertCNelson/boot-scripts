@@ -24,7 +24,7 @@
 #This script assumes, these packages are installed, as network may not be setup
 #dosfstools initramfs-tools rsync u-boot-tools
 
-version_message="1.20160222: deal with v4.4.x+ back to old eeprom location..."
+version_message="1.20160618: deal with v4.4.x+ back to old eeprom location..."
 
 if ! id | grep -q root; then
 	echo "must be run as root"
