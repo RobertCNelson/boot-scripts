@@ -326,7 +326,6 @@ flash_emmc () {
     lsmod
     mount -v -o async,noatime,offset=1048576 -t ext4 /opt/emmc/${conf_image} /tmp/source_rootfs
 
-    df -h
 	message="rsync: /tmp/source_rootfs -> /tmp/dest_rootfs/" ; broadcast
 	rsync -aAx /tmp/source_rootfs/* /tmp/dest_rootfs/ --exclude={/dev/*,/proc/*,/sys/*,/tmp/*,/run/*,/mnt/*,/media/*,/lost+found,/lib/modules/*,/uEnv.txt} || write_failure
 
