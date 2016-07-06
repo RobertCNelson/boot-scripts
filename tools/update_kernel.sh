@@ -214,14 +214,17 @@ latest_version_repo () {
 			check_dpkg
 			#is the package even available to apt?
 			check_apt_cache
-			if [ "x${kernel_headers}" = "xenabled" ] ; then
-				pkg="${pkg} linux-headers-${latest_kernel}"
-			fi
 			if [ "x${deb_pkgs}" = "x${apt_cache}" ] ; then
+				if [ "x${kernel_headers}" = "xenabled" ] ; then
+					pkg="${pkg} linux-headers-${latest_kernel}"
+				fi
 				echo "debug: installing: [${pkg}]"
 				apt-get install -y ${pkg}
 				update_uEnv_txt
 			elif [ "x${pkg}" = "x${apt_cache}" ] ; then
+				if [ "x${kernel_headers}" = "xenabled" ] ; then
+					pkg="${pkg} linux-headers-${latest_kernel}"
+				fi
 				echo "debug: reinstalling: [${pkg}]"
 				apt-get install -y ${pkg} --reinstall
 				update_uEnv_txt
