@@ -139,7 +139,7 @@ get_device () {
 		sgxti335x="enabled"
 		rtl8723bu="enabled"
 		;;
-	TI_AM5728_BeagleBoard-X15)
+	TI_AM5728_BeagleBoard*)
 		sgxjacinto6evm="enabled"
 		kernel_headers="enabled"
 		;;
