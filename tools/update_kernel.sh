@@ -109,7 +109,7 @@ get_device () {
 			scan_armv7_kernels
 			es8="enabled"
 			;;
-		TI_AM5728_BeagleBoard-X15)
+		TI_AM5728_BeagleBoard*)
 			scan_ti_kernels
 			scan_armv7_kernels
 			;;
