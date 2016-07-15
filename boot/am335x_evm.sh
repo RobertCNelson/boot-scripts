@@ -176,24 +176,78 @@ else
 	cpsw_1_mac="1c:ba:8c:a2:ed:69"
 fi
 
-#The other option is to xor cpsw_0/cpsw_1, but this should be faster...
+#Determine cpsw_2_mac assumed to be allocated between cpsw_0_mac and cpsw_1_mac
 cpsw_0_last=$(echo ${cpsw_0_mac} | awk -F ':' '{print $6}' | cut -c 2)
 cpsw_1_last=$(echo ${cpsw_1_mac} | awk -F ':' '{print $6}' | cut -c 2)
-mac_prefix=$(echo ${cpsw_0_mac} | cut -c 1-16)
-if [ ! "x${cpsw_0_last}" = "x0" ] && [ ! "x${cpsw_1_last}" = "x0" ]; then
-	dev_mac="${mac_prefix}0"
-elif  [ ! "x${cpsw_0_last}" = "x1" ] && [ ! "x${cpsw_1_last}" = "x1" ]; then
-	dev_mac="${mac_prefix}1"
-else
-	dev_mac="${mac_prefix}2"
-fi
+mac_0_prefix=$(echo ${cpsw_0_mac} | cut -c 1-16)
+mac_1_prefix=$(echo ${cpsw_1_mac} | cut -c 1-16)
+#if cpsw_0_mac is even, add 1
+case "x${cpsw_0_last}" in
+x0)
+	cpsw_2_mac="${mac_0_prefix}1"
+	;;
+x2)
+	cpsw_2_mac="${mac_0_prefix}3"
+	;;
+x4)
+	cpsw_2_mac="${mac_0_prefix}5"
+	;;
+x6)
+	cpsw_2_mac="${mac_0_prefix}7"
+	;;
+x8)
+	cpsw_2_mac="${mac_0_prefix}9"
+	;;
+xA)
+	cpsw_2_mac="${mac_0_prefix}B"
+	;;
+xC)
+	cpsw_2_mac="${mac_0_prefix}D"
+	;;
+xE)
+	cpsw_2_mac="${mac_0_prefix}F"
+	;;
+*)
+	#else, subtract 1 from cpsw_1_mac
+	case "x${cpsw_1_last}" in
+	xF)
+		cpsw_2_mac="${mac_1_prefix}E"
+		;;
+	xD)
+		cpsw_2_mac="${mac_1_prefix}C"
+		;;
+	xB)
+		cpsw_2_mac="${mac_1_prefix}A"
+		;;
+	x9)
+		cpsw_2_mac="${mac_1_prefix}8"
+		;;
+	x7)
+		cpsw_2_mac="${mac_1_prefix}6"
+		;;
+	x5)
+		cpsw_2_mac="${mac_1_prefix}4"
+		;;
+	x3)
+		cpsw_2_mac="${mac_1_prefix}2"
+		;;
+	x1)
+		cpsw_2_mac="${mac_1_prefix}0"
+		;;
+	*)
+		#todo: generate random mac...
+		cpsw_2_mac="1c:ba:8c:a2:ed:6a"
+		;;
+	esac
+	;;
+esac
 
 #hack till bbgw firmware is decided on..
 if [ -d /sys/devices/platform/ocp/47810000.mmc/mmc_host/mmc2/mmc2:0001/mmc2:0001:2/ ] ; then
 	board_bbgw="enable"
 fi
 
-g_network="iSerialNumber=${SERIAL_NUMBER} iManufacturer=${manufacturer} iProduct=${PRODUCT} host_addr=${cpsw_1_mac} dev_addr=${dev_mac}"
+g_network="iSerialNumber=${SERIAL_NUMBER} iManufacturer=${manufacturer} iProduct=${PRODUCT} host_addr=${cpsw_2_mac} dev_addr=${cpsw_1_mac}"
 
 #priorty:
 #g_multi
@@ -205,7 +259,7 @@ unset ttyGS0
 
 #g_multi: Do we have image file?
 if [ -f ${usb_image_file} ] ; then
-	modprobe g_multi file=${usb_image_file} cdrom=0 ro=1 stall=0 removable=1 nofua=1 ${g_network} || true
+	modprobe g_multi file=${usb_image_file} cdrom=0 ro=0 stall=0 removable=1 nofua=1 ${g_network} || true
 	usb0="enable"
 	ttyGS0="enable"
 else
