@@ -109,7 +109,7 @@ get_device () {
 			scan_armv7_kernels
 			es8="enabled"
 			;;
-		TI_AM5728_BeagleBoard-X15)
+		TI_AM5728_BeagleBoard*)
 			scan_ti_kernels
 			scan_armv7_kernels
 			;;
@@ -139,7 +139,7 @@ get_device () {
 		sgxti335x="enabled"
 		rtl8723bu="enabled"
 		;;
-	TI_AM5728_BeagleBoard-X15)
+	TI_AM5728_BeagleBoard*)
 		sgxjacinto6evm="enabled"
 		kernel_headers="enabled"
 		;;
@@ -222,6 +222,9 @@ latest_version_repo () {
 				apt-get install -y ${pkg}
 				update_uEnv_txt
 			elif [ "x${pkg}" = "x${apt_cache}" ] ; then
+				if [ "x${kernel_headers}" = "xenabled" ] ; then
+					pkg="${pkg} linux-headers-${latest_kernel}"
+				fi
 				echo "debug: reinstalling: [${pkg}]"
 				apt-get install -y ${pkg} --reinstall
 				update_uEnv_txt

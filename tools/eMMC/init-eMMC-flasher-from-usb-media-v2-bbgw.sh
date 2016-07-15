@@ -156,8 +156,8 @@ flash_emmc () {
 	sync
 	flush_cache
 
-	message="mkfs.ext2 -L rootfs ${destination}p1" ; broadcast
-	LC_ALL=C mkfs.ext2 -L rootfs ${destination}p1 || write_failure
+	message="mkfs.ext4 -L rootfs ${destination}p1" ; broadcast
+	LC_ALL=C mkfs.ext4 -L rootfs ${destination}p1 || write_failure
 	message="Erasing: ${destination} complete" ; broadcast
 	message="-----------------------------" ; broadcast
 
@@ -171,15 +171,15 @@ flash_emmc () {
 		else
 			message="Flashing eMMC with dd" ; broadcast
 			message="-----------------------------" ; broadcast
-			message="xzcat ${wdir}/${conf_image} | dd of=${destination} bs=1M" ; broadcast
-			xzcat ${wdir}/${conf_image} | dd of=${destination} bs=1M || write_failure
+			message="dd if=${wdir}/${conf_image} of=${destination} bs=1M" ; broadcast
+			dd if=${wdir}/${conf_image} of=${destination} bs=1M || write_failure
 			message="-----------------------------" ; broadcast
 		fi
 	else
 		message="Flashing eMMC with dd" ; broadcast
 		message="-----------------------------" ; broadcast
-		message="xzcat ${wdir}/${conf_image} | dd of=${destination} bs=1M" ; broadcast
-		xzcat ${wdir}/${conf_image} | dd of=${destination} bs=1M || write_failure
+        message="dd if=${wdir}/${conf_image} of=${destination} bs=1M" ; broadcast
+        dd if=${wdir}/${conf_image} of=${destination} bs=1M || write_failure
 		message="-----------------------------" ; broadcast
 	fi
 	flush_cache
@@ -389,7 +389,31 @@ set_uuid () {
 	message="`cat /tmp/rootfs/etc/fstab`" ; broadcast
 	message="-----------------------------" ; broadcast
 	flush_cache
+    
+	message="running: chroot /tmp/rootfs/ /usr/bin/bb-wl18xx-wlan0" ; broadcast
 
+	mount --bind /proc /tmp/rootfs/proc
+	mount --bind /sys /tmp/rootfs/sys
+	mount --bind /dev /tmp/rootfs/dev
+	mount --bind /dev/pts /tmp/rootfs/dev/pts
+
+	modprobe wl18xx
+	message="-----------------------------" ; broadcast
+	message="lsmod" ; broadcast
+	message="`lsmod`" ; broadcast
+	message="-----------------------------" ; broadcast
+	chroot /tmp/rootfs/ /usr/bin/bb-wl18xx-wlan0
+	message="-----------------------------" ; broadcast
+
+	flush_cache
+	message="initrd: `ls -lh /tmp/rootfs/boot/initrd.img*`" ; broadcast
+
+	umount -fl /tmp/rootfs/dev/pts
+	umount -fl /tmp/rootfs/dev
+	umount -fl /tmp/rootfs/proc
+	umount -fl /tmp/rootfs/sys
+	sleep 2
+    flush_cache
 	umount /tmp/rootfs/ || umount -l /tmp/rootfs/ || write_failure
 }
 
