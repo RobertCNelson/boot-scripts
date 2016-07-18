@@ -54,14 +54,18 @@ if [ "x${abi}" = "x" ] ; then
 	fi
 fi
 
-unset use_iso
+#original user:
 usb_image_file="/var/local/usb_mass_storage.img"
-if [ -f /var/local/bb_usb_mass_storage.img ] ; then
-	usb_image_file="/var/local/bb_usb_mass_storage.img"
-fi
+
+unset use_iso
+#*.iso priority over *.img
 if [ -f /var/local/bb_usb_mass_storage.iso ] ; then
 	use_iso="enable"
 	usb_image_file="/var/local/bb_usb_mass_storage.iso"
+else
+	if [ -f /var/local/bb_usb_mass_storage.img ] ; then
+		usb_image_file="/var/local/bb_usb_mass_storage.img"
+	fi
 fi
 
 board=$(cat /proc/device-tree/model | sed "s/ /_/g")
@@ -76,24 +80,26 @@ TI_AM335x_BeagleBone_Green)
 	has_ethernet="enable"
 	unset board_bbgw
 	unset board_sbbe
-	if [ -f /var/local/bbg_usb_mass_storage.img ] ; then
-		usb_image_file="/var/local/bbg_usb_mass_storage.img"
-	fi
 	if [ -f /var/local/bbg_usb_mass_storage.iso ] ; then
 		use_iso="enable"
 		usb_image_file="/var/local/bbg_usb_mass_storage.iso"
+	else
+		if [ -f /var/local/bbg_usb_mass_storage.img ] ; then
+			usb_image_file="/var/local/bbg_usb_mass_storage.img"
+		fi
 	fi
 	;;
 TI_AM335x_BeagleBone_Green_Wireless)
 	board_bbgw="enable"
 	has_wifi="enable"
 	has_ethernet="disable"
-	if [ -f /var/local/bbgw_usb_mass_storage.img ] ; then
-		usb_image_file="/var/local/bbgw_usb_mass_storage.img"
-	fi
 	if [ -f /var/local/bbgw_usb_mass_storage.iso ] ; then
 		use_iso="enable"
 		usb_image_file="/var/local/bbgw_usb_mass_storage.iso"
+	else
+		if [ -f /var/local/bbgw_usb_mass_storage.img ] ; then
+			usb_image_file="/var/local/bbgw_usb_mass_storage.img"
+		fi
 	fi
 	;;
 SanCloud_BeagleBone_Enhanced)
