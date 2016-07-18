@@ -509,7 +509,7 @@ partition_drive () {
 		fi
 		boot_label=${boot_label:-"BEAGLEBONE"}
 		if [ "x${boot_label}" = "xBOOT" ] ; then
-			boot_lable="ROOTFS"
+			boot_label="ROOTFS"
 		fi
 
 		message="Formatting: ${destination}" ; broadcast
