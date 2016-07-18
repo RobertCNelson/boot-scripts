@@ -54,9 +54,14 @@ if [ "x${abi}" = "x" ] ; then
 	fi
 fi
 
+unset use_iso
 usb_image_file="/var/local/usb_mass_storage.img"
 if [ -f /var/local/bb_usb_mass_storage.img ] ; then
 	usb_image_file="/var/local/bb_usb_mass_storage.img"
+fi
+if [ -f /var/local/bb_usb_mass_storage.iso ] ; then
+	use_iso="enable"
+	usb_image_file="/var/local/bb_usb_mass_storage.iso"
 fi
 
 board=$(cat /proc/device-tree/model | sed "s/ /_/g")
@@ -74,6 +79,10 @@ TI_AM335x_BeagleBone_Green)
 	if [ -f /var/local/bbg_usb_mass_storage.img ] ; then
 		usb_image_file="/var/local/bbg_usb_mass_storage.img"
 	fi
+	if [ -f /var/local/bbg_usb_mass_storage.iso ] ; then
+		use_iso="enable"
+		usb_image_file="/var/local/bbg_usb_mass_storage.iso"
+	fi
 	;;
 TI_AM335x_BeagleBone_Green_Wireless)
 	board_bbgw="enable"
@@ -81,6 +90,10 @@ TI_AM335x_BeagleBone_Green_Wireless)
 	has_ethernet="disable"
 	if [ -f /var/local/bbgw_usb_mass_storage.img ] ; then
 		usb_image_file="/var/local/bbgw_usb_mass_storage.img"
+	fi
+	if [ -f /var/local/bbgw_usb_mass_storage.iso ] ; then
+		use_iso="enable"
+		usb_image_file="/var/local/bbgw_usb_mass_storage.iso"
 	fi
 	;;
 SanCloud_BeagleBone_Enhanced)
@@ -259,7 +272,11 @@ unset ttyGS0
 
 #g_multi: Do we have image file?
 if [ -f ${usb_image_file} ] ; then
-	modprobe g_multi file=${usb_image_file} cdrom=0 ro=1 stall=0 removable=1 nofua=1 ${g_network} || true
+	if [ "x${use_iso}" = "xenable" ] ; then
+		modprobe g_multi file=${usb_image_file} cdrom=1 ro=1 stall=0 removable=1 nofua=1 ${g_network} || true
+	else
+		modprobe g_multi file=${usb_image_file} cdrom=0 ro=1 stall=0 removable=1 nofua=1 ${g_network} || true
+	fi
 	usb0="enable"
 	ttyGS0="enable"
 else
