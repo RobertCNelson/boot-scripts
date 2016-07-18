@@ -24,7 +24,7 @@
 #This script assumes, these packages are installed, as network may not be setup
 #dosfstools initramfs-tools rsync u-boot-tools
 
-version_message="1.20160718: PARTUUID (jessie+)..."
+version_message="1.20160718: mkfs.ext4 1.43..."
 
 if ! id | grep -q root; then
 	echo "must be run as root"
@@ -92,7 +92,7 @@ get_device () {
 	machine=$(cat /proc/device-tree/model | sed "s/ /_/g")
 
 	case "${machine}" in
-	TI_AM5728_BeagleBoard-X15*)
+	TI_AM5728_BeagleBoard*)
 		unset is_bbb
 		;;
 	esac
@@ -447,7 +447,7 @@ partition_drive () {
 		. /boot/SOC.sh
 	fi
 
-	#Debian Stretch(& Jessie with backports), mfks.ext4 default to metadata_csum,64bit disable till u-boot works again..
+	#Debian Stretch; mfks.ext4 default to metadata_csum,64bit disable till u-boot works again..
 	unset ext4_options
 	unset test_mke2fs
 	LC_ALL=C mkfs.ext4 -V &> /tmp/mkfs
@@ -506,6 +506,9 @@ partition_drive () {
 			sfdisk_fstype="L"
 		fi
 		boot_label=${boot_label:-"BEAGLEBONE"}
+		if [ "x${boot_label}" = "xBOOT" ] ; then
+			boot_lable="ROOTFS"
+		fi
 
 		message="Formatting: ${destination}" ; broadcast
 
