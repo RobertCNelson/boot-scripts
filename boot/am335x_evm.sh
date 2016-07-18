@@ -57,15 +57,11 @@ fi
 #original user:
 usb_image_file="/var/local/usb_mass_storage.img"
 
-unset use_iso
 #*.iso priority over *.img
 if [ -f /var/local/bb_usb_mass_storage.iso ] ; then
-	use_iso="enable"
 	usb_image_file="/var/local/bb_usb_mass_storage.iso"
-else
-	if [ -f /var/local/bb_usb_mass_storage.img ] ; then
-		usb_image_file="/var/local/bb_usb_mass_storage.img"
-	fi
+elif [ -f /var/local/bb_usb_mass_storage.img ] ; then
+	usb_image_file="/var/local/bb_usb_mass_storage.img"
 fi
 
 board=$(cat /proc/device-tree/model | sed "s/ /_/g")
@@ -81,12 +77,9 @@ TI_AM335x_BeagleBone_Green)
 	unset board_bbgw
 	unset board_sbbe
 	if [ -f /var/local/bbg_usb_mass_storage.iso ] ; then
-		use_iso="enable"
 		usb_image_file="/var/local/bbg_usb_mass_storage.iso"
-	else
-		if [ -f /var/local/bbg_usb_mass_storage.img ] ; then
-			usb_image_file="/var/local/bbg_usb_mass_storage.img"
-		fi
+	elif [ -f /var/local/bbg_usb_mass_storage.img ] ; then
+		usb_image_file="/var/local/bbg_usb_mass_storage.img"
 	fi
 	;;
 TI_AM335x_BeagleBone_Green_Wireless)
@@ -94,12 +87,9 @@ TI_AM335x_BeagleBone_Green_Wireless)
 	has_wifi="enable"
 	has_ethernet="disable"
 	if [ -f /var/local/bbgw_usb_mass_storage.iso ] ; then
-		use_iso="enable"
 		usb_image_file="/var/local/bbgw_usb_mass_storage.iso"
-	else
-		if [ -f /var/local/bbgw_usb_mass_storage.img ] ; then
-			usb_image_file="/var/local/bbgw_usb_mass_storage.img"
-		fi
+	elif [ -f /var/local/bbgw_usb_mass_storage.img ] ; then
+		usb_image_file="/var/local/bbgw_usb_mass_storage.img"
 	fi
 	;;
 SanCloud_BeagleBone_Enhanced)
@@ -278,7 +268,8 @@ unset ttyGS0
 
 #g_multi: Do we have image file?
 if [ -f ${usb_image_file} ] ; then
-	if [ "x${use_iso}" = "xenable" ] ; then
+	test_usb_image_file=$(echo ${usb_image_file} | grep .iso || true)
+	if [ ! "x${test_usb_image_file}" = "x" ] ; then
 		modprobe g_multi file=${usb_image_file} cdrom=1 ro=1 stall=0 removable=1 nofua=1 ${g_network} || true
 	else
 		modprobe g_multi file=${usb_image_file} cdrom=0 ro=1 stall=0 removable=1 nofua=1 ${g_network} || true
