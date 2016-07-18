@@ -358,25 +358,27 @@ copy_rootfs () {
 	message="Final System Tweaks:" ; broadcast
 
 	unset root_uuid
-	root_uuid=$(/sbin/blkid -c /dev/null -s PARTUUID -o value ${destination}p${media_rootfs})
-	if [ ! "x${root_uuid}" = "x" ] ; then
-		sed -i -e 's:uuid=:#uuid=:g' /tmp/rootfs/boot/uEnv.txt
-		message="PARTUUID=${root_uuid}" ; broadcast
-		root_uuid="PARTUUID=${root_uuid}"
-	else
-		unset root_uuid
-		root_uuid=$(/sbin/blkid -c /dev/null -s UUID -o value ${destination}p${media_rootfs})
-		if [ "${root_uuid}" ] ; then
-			sed -i -e 's:uuid=:#uuid=:g' /tmp/rootfs/boot/uEnv.txt
-			echo "uuid=${root_uuid}" >> /tmp/rootfs/boot/uEnv.txt
+	root_uuid="${destination}p${media_rootfs}"
 
-			message="UUID=${root_uuid}" ; broadcast
-			root_uuid="UUID=${root_uuid}"
-		else
-			#really a failure...
-			root_uuid="${source}p${media_rootfs}"
-		fi
-	fi
+#	root_uuid=$(/sbin/blkid -c /dev/null -s PARTUUID -o value ${destination}p${media_rootfs})
+#	if [ ! "x${root_uuid}" = "x" ] ; then
+#		sed -i -e 's:uuid=:#uuid=:g' /tmp/rootfs/boot/uEnv.txt
+#		message="PARTUUID=${root_uuid}" ; broadcast
+#		root_uuid="PARTUUID=${root_uuid}"
+#	else
+#		unset root_uuid
+#		root_uuid=$(/sbin/blkid -c /dev/null -s UUID -o value ${destination}p${media_rootfs})
+#		if [ "${root_uuid}" ] ; then
+#			sed -i -e 's:uuid=:#uuid=:g' /tmp/rootfs/boot/uEnv.txt
+#			echo "uuid=${root_uuid}" >> /tmp/rootfs/boot/uEnv.txt
+
+#			message="UUID=${root_uuid}" ; broadcast
+#			root_uuid="UUID=${root_uuid}"
+#		else
+#			#really a failure...
+#			root_uuid="${source}p${media_rootfs}"
+#		fi
+#	fi
 
 	message="Generating: /etc/fstab" ; broadcast
 	echo "# /etc/fstab: static file system information." > /tmp/rootfs/etc/fstab
