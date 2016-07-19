@@ -10,7 +10,10 @@ unset got_eeprom
 #eeprom...
 if [ -f /sys/bus/i2c/devices/0-0050/eeprom ] && [ "x${got_eeprom}" = "x" ] ; then
 	eeprom="/sys/bus/i2c/devices/0-0050/eeprom"
-	got_eeprom="true"
+	if [ -f /sys/devices/platform/44000000.ocp/48070000.i2c/i2c-0/0-0050/eeprom ] ; then
+		eeprom_location="/sys/devices/platform/44000000.ocp/48070000.i2c/i2c-0/0-0050/eeprom"
+		got_eeprom="true"
+	fi
 fi
 
 if [ "x${got_eeprom}" = "xtrue" ] ; then
