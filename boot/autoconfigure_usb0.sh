@@ -84,6 +84,8 @@ end        ${deb_usb_gateway}
 interface  usb0
 max_leases 1
 option subnet ${deb_usb_netmask}
+option domain local
+option lease 30
 EOF
 
 	# Will start or restart udhcpd
