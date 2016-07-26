@@ -119,64 +119,46 @@ write_failure () {
 }
 
 check_eeprom () {
-	device_eeprom="bbgw-eeprom"
+	device_eeprom="x15/X15_B1-eeprom"
 	message="Checking for Valid ${device_eeprom} header" ; broadcast
 
 	unset got_eeprom
-	#v8 of nvmem...
-	if [ -f /sys/bus/nvmem/devices/at24-0/nvmem ] && [ "x${got_eeprom}" = "x" ] ; then
-		eeprom="/sys/bus/nvmem/devices/at24-0/nvmem"
-		eeprom_location="/sys/devices/platform/ocp/44e0b000.i2c/i2c-0/0-0050/at24-0/nvmem"
-		got_eeprom="true"
-	fi
 
-	#pre-v8 of nvmem...
-	if [ -f /sys/class/nvmem/at24-0/nvmem ] && [ "x${got_eeprom}" = "x" ] ; then
-		eeprom="/sys/class/nvmem/at24-0/nvmem"
-		eeprom_location="/sys/devices/platform/ocp/44e0b000.i2c/i2c-0/0-0050/nvmem/at24-0/nvmem"
-		got_eeprom="true"
-	fi
-
-	#eeprom 3.8.x & 4.4 with eeprom-nvmem patchset...
 	if [ -f /sys/bus/i2c/devices/0-0050/eeprom ] && [ "x${got_eeprom}" = "x" ] ; then
 		eeprom="/sys/bus/i2c/devices/0-0050/eeprom"
 
-		if [ -f /sys/devices/platform/ocp/44e0b000.i2c/i2c-0/0-0050/eeprom ] ; then
-			eeprom_location="/sys/devices/platform/ocp/44e0b000.i2c/i2c-0/0-0050/eeprom"
-		else
-			eeprom_location=$(ls /sys/devices/ocp*/44e0b000.i2c/i2c-0/0-0050/eeprom 2> /dev/null)
+		if [ -f /sys/devices/platform/44000000.ocp/48070000.i2c/i2c-0/0-0050/eeprom ] ; then
+			eeprom_location="/sys/devices/platform/44000000.ocp/48070000.i2c/i2c-0/0-0050/eeprom"
 		fi
 
 		got_eeprom="true"
 	fi
 
-	if [ "x${is_bbb}" = "xenable" ] ; then
-		if [ "x${got_eeprom}" = "xtrue" ] ; then
-			eeprom_header=$(hexdump -e '8/1 "%c"' ${eeprom} -n 8 | cut -b 6-8)
-			if [ "x${eeprom_header}" = "x335" ] ; then
-				message="Valid ${device_eeprom} header found [${eeprom_header}]" ; broadcast
-				message="-----------------------------" ; broadcast
-			else
-				message="Invalid EEPROM header detected" ; broadcast
-				if [ -f /opt/scripts/device/bone/${device_eeprom}.dump ] ; then
-					if [ ! "x${eeprom_location}" = "x" ] ; then
-						message="Writing header to EEPROM" ; broadcast
-						dd if=/opt/scripts/device/bone/${device_eeprom}.dump of=${eeprom_location}
-						sync
-						sync
-						eeprom_check=$(hexdump -e '8/1 "%c"' ${eeprom} -n 8 | cut -b 6-8)
-						echo "eeprom check: [${eeprom_check}]"
+	if [ "x${got_eeprom}" = "xtrue" ] ; then
+		eeprom_header=$(hexdump -e '8/1 "%c"' ${eeprom} -n 11 | cut -b 5-11)
+		if [ "x${eeprom_header}" = "xBBRDX15" ] ; then
+			message="Valid ${device_eeprom} header found [${eeprom_header}]" ; broadcast
+			message="-----------------------------" ; broadcast
+		else
+			message="Invalid EEPROM header detected" ; broadcast
+			if [ -f /opt/scripts/device/${device_eeprom}.dump ] ; then
+				if [ ! "x${eeprom_location}" = "x" ] ; then
+					message="Writing header to EEPROM" ; broadcast
+					dd if=/opt/scripts/device/${device_eeprom}.dump of=${eeprom_location}
+					sync
+					sync
+					eeprom_check=$(hexdump -e '8/1 "%c"' ${eeprom} -n 11 | cut -b 5-11)
+					echo "eeprom check: [${eeprom_check}]"
 
-						#We have to reboot, as the kernel only loads the eMMC cape
-						# with a valid header
-						reboot -f
+					#We have to reboot, as the kernel only loads the eMMC cape
+					# with a valid header
+					reboot -f
 
-						#We shouldnt hit this...
-						exit
-					fi
-				else
-					message="error: no [/opt/scripts/device/bone/${device_eeprom}.dump]" ; broadcast
+					#We shouldnt hit this...
+					exit
 				fi
+			else
+				message="error: no [/opt/scripts/device/${device_eeprom}.dump]" ; broadcast
 			fi
 		fi
 	fi
@@ -376,17 +358,27 @@ copy_rootfs () {
 	message="Final System Tweaks:" ; broadcast
 
 	unset root_uuid
-	root_uuid=$(/sbin/blkid -c /dev/null -s UUID -o value ${destination}p${media_rootfs})
-	if [ "${root_uuid}" ] ; then
-		sed -i -e 's:uuid=:#uuid=:g' /tmp/rootfs/boot/uEnv.txt
-		echo "uuid=${root_uuid}" >> /tmp/rootfs/boot/uEnv.txt
+	root_uuid="${destination}p${media_rootfs}"
 
-		message="UUID=${root_uuid}" ; broadcast
-		root_uuid="UUID=${root_uuid}"
-	else
-		#really a failure...
-		root_uuid="${source}p${media_rootfs}"
-	fi
+#	root_uuid=$(/sbin/blkid -c /dev/null -s PARTUUID -o value ${destination}p${media_rootfs})
+#	if [ ! "x${root_uuid}" = "x" ] ; then
+#		sed -i -e 's:uuid=:#uuid=:g' /tmp/rootfs/boot/uEnv.txt
+#		message="PARTUUID=${root_uuid}" ; broadcast
+#		root_uuid="PARTUUID=${root_uuid}"
+#	else
+#		unset root_uuid
+#		root_uuid=$(/sbin/blkid -c /dev/null -s UUID -o value ${destination}p${media_rootfs})
+#		if [ "${root_uuid}" ] ; then
+#			sed -i -e 's:uuid=:#uuid=:g' /tmp/rootfs/boot/uEnv.txt
+#			echo "uuid=${root_uuid}" >> /tmp/rootfs/boot/uEnv.txt
+
+#			message="UUID=${root_uuid}" ; broadcast
+#			root_uuid="UUID=${root_uuid}"
+#		else
+#			#really a failure...
+#			root_uuid="${source}p${media_rootfs}"
+#		fi
+#	fi
 
 	message="Generating: /etc/fstab" ; broadcast
 	echo "# /etc/fstab: static file system information." > /tmp/rootfs/etc/fstab
@@ -396,38 +388,12 @@ copy_rootfs () {
 	cat /tmp/rootfs/etc/fstab
 
 	message="/boot/uEnv.txt: disabling eMMC flasher script" ; broadcast
-	script="cmdline=init=/opt/scripts/tools/eMMC/init-eMMC-flasher-v3-bbgw.sh"
+	script="cmdline=init=/opt/scripts/tools/eMMC/init-eMMC-flasher-v3-x15_b1.sh"
 	sed -i -e 's:'$script':#'$script':g' /tmp/rootfs/boot/uEnv.txt
 	cat /tmp/rootfs/boot/uEnv.txt
 	message="-----------------------------" ; broadcast
 
 	flush_cache
-	message="running: chroot /tmp/rootfs/ /usr/bin/bb-wl18xx-wlan0" ; broadcast
-
-	mount --bind /proc /tmp/rootfs/proc
-	mount --bind /sys /tmp/rootfs/sys
-	mount --bind /dev /tmp/rootfs/dev
-	mount --bind /dev/pts /tmp/rootfs/dev/pts
-
-	modprobe wl18xx
-	message="-----------------------------" ; broadcast
-	message="lsmod" ; broadcast
-	message="`lsmod`" ; broadcast
-	message="-----------------------------" ; broadcast
-	chroot /tmp/rootfs/ /usr/bin/bb-wl18xx-wlan0
-	message="-----------------------------" ; broadcast
-
-	flush_cache
-	message="initrd: `ls -lh /tmp/rootfs/boot/initrd.img*`" ; broadcast
-
-	umount -fl /tmp/rootfs/dev/pts
-	umount -fl /tmp/rootfs/dev
-	umount -fl /tmp/rootfs/proc
-	umount -fl /tmp/rootfs/sys
-	sleep 2
-
-	flush_cache
-	message="-----------------------------" ; broadcast
 	umount /tmp/rootfs/ || umount -l /tmp/rootfs/ || write_failure
 
 	if [ "x${is_bbb}" = "xenable" ] ; then

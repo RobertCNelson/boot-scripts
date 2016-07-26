@@ -84,6 +84,8 @@ end        ${deb_usb_gateway}
 interface  usb0
 max_leases 1
 option subnet ${deb_usb_netmask}
+option domain local
+option lease 30
 EOF
 
 	# Will start or restart udhcpd
@@ -91,8 +93,11 @@ EOF
 	/usr/sbin/udhcpd -S ${deb_udhcpd_conf}
 
 	#FIXME check for g_ether/usb0 module loaded, as it sometimes takes a little bit...
+	#sometimes when we see this hang, the leases file was left hanging around
 	sleep 1
-	/etc/init.d/udhcpd restart
+	/etc/init.d/udhcpd stop
+	rm -f /var/lib/misc/udhcpd.leases
+	/etc/init.d/udhcpd start
 }
 
 
