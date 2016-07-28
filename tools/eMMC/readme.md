@@ -18,7 +18,7 @@
 
 - beaglebone-black-make-microSD-flasher-from-eMMC.sh
 
-  - Clones eMMC to microSD and set's it up to flash the eMMC.
+  - Clones eMMC to microSD and sets it up to flash the eMMC.
   
     ```
     sudo ./beaglebone-black-make-microSD-flasher-from-eMMC.sh
