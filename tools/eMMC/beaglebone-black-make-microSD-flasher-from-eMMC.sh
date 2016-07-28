@@ -24,7 +24,7 @@
 #This script assumes, these packages are installed, as network may not be setup
 #dosfstools initramfs-tools rsync u-boot-tools
 
-version_message="1.20160718: mkfs.ext4 1.43..."
+version_message="1.20160728: fix missing bootloader..."
 
 #https://rcn-ee.com/repos/bootloader/am335x_evm/
 http_spl="MLO-am335x_evm-v2016.03-r7"
@@ -448,7 +448,7 @@ partition_drive () {
 		echo "dd_spl_uboot_seek=1" >> /boot/SOC.sh
 		echo "dd_spl_uboot_conf=" >> /boot/SOC.sh
 		echo "dd_spl_uboot_bs=128k" >> /boot/SOC.sh
-		echo "dd_spl_uboot_name=${dd_spl_uboot_name}" >> /boot/SOC.sh
+		echo "dd_spl_uboot_backup=${dd_spl_uboot_backup}" >> /boot/SOC.sh
 	fi
 
 	if [ ! -f /opt/backup/uboot/MLO ] ; then
@@ -470,7 +470,7 @@ partition_drive () {
 		echo "dd_uboot_seek=1" >> /boot/SOC.sh
 		echo "dd_uboot_conf=" >> /boot/SOC.sh
 		echo "dd_uboot_bs=384k" >> /boot/SOC.sh
-		echo "boot_name=u-boot.img" >> /boot/SOC.sh
+		echo "dd_uboot_backup=${dd_uboot_backup}" >> /boot/SOC.sh
 
 		echo "dd_uboot_name=${dd_uboot_name}" >> /boot/SOC.sh
 	fi
