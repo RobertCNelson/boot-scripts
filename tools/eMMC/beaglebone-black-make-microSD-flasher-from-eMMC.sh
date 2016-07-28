@@ -436,12 +436,12 @@ partition_drive () {
 	fi
 
 	if [ "x${dd_spl_uboot_backup}" = "x" ] ; then
-		spl_uboot_name=MLO
+		spl_uboot_name="MLO"
 		dd_spl_uboot_count="1"
 		dd_spl_uboot_seek="1"
 		dd_spl_uboot_conf=""
 		dd_spl_uboot_bs="128k"
-		dd_spl_uboot_backup=/opt/backup/uboot/MLO
+		dd_spl_uboot_backup="/opt/backup/uboot/MLO"
 
 		echo "spl_uboot_name=${spl_uboot_name}" >> /boot/SOC.sh
 		echo "dd_spl_uboot_count=1" >> /boot/SOC.sh
@@ -458,12 +458,12 @@ partition_drive () {
 	fi
 
 	if [ "x${dd_uboot_backup}" = "x" ] ; then
-		uboot_name=u-boot.img
+		uboot_name="u-boot.img"
 		dd_uboot_count="2"
 		dd_uboot_seek="1"
 		dd_uboot_conf=""
 		dd_uboot_bs="384k"
-		dd_uboot_backup=/opt/backup/uboot/u-boot.img
+		dd_uboot_backup="/opt/backup/uboot/u-boot.img"
 
 		echo "uboot_name=${uboot_name}" >> /boot/SOC.sh
 		echo "dd_uboot_count=2" >> /boot/SOC.sh
