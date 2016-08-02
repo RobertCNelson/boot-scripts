@@ -251,6 +251,10 @@ xE)
 	;;
 esac
 
+echo "cpsw_0_mac: [${cpsw_0_mac}]"
+echo "cpsw_1_mac: [${cpsw_1_mac}]"
+echo "cpsw_2_mac: [${cpsw_2_mac}]"
+
 #hack till bbgw firmware is decided on..
 if [ -d /sys/devices/platform/ocp/47810000.mmc/mmc_host/mmc2/mmc2:0001/mmc2:0001:2/ ] ; then
 	board_bbgw="enable"
