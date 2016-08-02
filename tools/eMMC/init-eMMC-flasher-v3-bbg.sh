@@ -25,6 +25,8 @@
 #dosfstools initramfs-tools rsync u-boot-tools
 
 version_message="1.20160718: mkfs.ext4 1.43..."
+device_eeprom="bbg-eeprom"
+emmcscript="cmdline=init=/opt/scripts/tools/eMMC/init-eMMC-flasher-v3-bbg.sh"
 
 if ! id | grep -q root; then
 	echo "must be run as root"
@@ -119,7 +121,6 @@ write_failure () {
 }
 
 check_eeprom () {
-	device_eeprom="bbg-eeprom"
 	message="Checking for Valid ${device_eeprom} header" ; broadcast
 
 	unset got_eeprom
@@ -396,8 +397,7 @@ copy_rootfs () {
 	cat /tmp/rootfs/etc/fstab
 
 	message="/boot/uEnv.txt: disabling eMMC flasher script" ; broadcast
-	script="cmdline=init=/opt/scripts/tools/eMMC/init-eMMC-flasher-v3-bbg.sh"
-	sed -i -e 's:'$script':#'$script':g' /tmp/rootfs/boot/uEnv.txt
+	sed -i -e 's:'$emmcscript':#'$emmcscript':g' /tmp/rootfs/boot/uEnv.txt
 	cat /tmp/rootfs/boot/uEnv.txt
 	message="-----------------------------" ; broadcast
 

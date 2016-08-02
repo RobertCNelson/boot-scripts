@@ -402,6 +402,32 @@ copy_rootfs () {
 	message="-----------------------------" ; broadcast
 
 	flush_cache
+	message="running: chroot /tmp/rootfs/ /usr/bin/bb-wl18xx-wlan0" ; broadcast
+
+	mount --bind /proc /tmp/rootfs/proc
+	mount --bind /sys /tmp/rootfs/sys
+	mount --bind /dev /tmp/rootfs/dev
+	mount --bind /dev/pts /tmp/rootfs/dev/pts
+
+	modprobe wl18xx
+	message="-----------------------------" ; broadcast
+	message="lsmod" ; broadcast
+	message="`lsmod`" ; broadcast
+	message="-----------------------------" ; broadcast
+	chroot /tmp/rootfs/ /usr/bin/bb-wl18xx-wlan0
+	message="-----------------------------" ; broadcast
+
+	flush_cache
+	message="initrd: `ls -lh /tmp/rootfs/boot/initrd.img*`" ; broadcast
+
+	umount -fl /tmp/rootfs/dev/pts
+	umount -fl /tmp/rootfs/dev
+	umount -fl /tmp/rootfs/proc
+	umount -fl /tmp/rootfs/sys
+	sleep 2
+
+	flush_cache
+	message="-----------------------------" ; broadcast
 	umount /tmp/rootfs/ || umount -l /tmp/rootfs/ || write_failure
 
 	if [ "x${is_bbb}" = "xenable" ] ; then
