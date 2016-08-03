@@ -193,6 +193,14 @@ latest_version_repo () {
 			echo "Kernel Options:"
 			cat /tmp/LATEST-${SOC}
 			echo "-----------------------------"
+			echo "Override, default Kernel version option:"
+			echo "-----------------------------"
+			echo "LTS314: --lts-3_14"
+			echo "LTS41: --lts-4_1"
+			echo "LTS44: --lts-4_4"
+			echo "STABLE: --stable"
+			echo "TESTING: --testing"
+			echo "-----------------------------"
 
 			latest_kernel=$(cat /tmp/LATEST-${SOC} | grep ${kernel} | awk '{print $3}')
 
