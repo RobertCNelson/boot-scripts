@@ -198,6 +198,7 @@ latest_version_repo () {
 			echo "LTS314: --lts-3_14"
 			echo "LTS41: --lts-4_1"
 			echo "LTS44: --lts-4_4"
+			echo "LTS49: --lts-4_9"
 			echo "STABLE: --stable"
 			echo "TESTING: --testing"
 			echo "-----------------------------"
@@ -375,7 +376,7 @@ third_party () {
 			apt-get install -o Dpkg::Options::="--force-overwrite" -y mt7601u-modules-${latest_kernel} || true
 			run_depmod_initramfs="enabled"
 			;;
-		LTS41|LTS44|TESTING|EXPERIMENTAL)
+		LTS41|LTS44|LTS49|TESTING|EXPERIMENTAL)
 			if [ "x${es8}" = "xenabled" ] ; then
 				apt-get install -y ti-sgx-es8-modules-${latest_kernel} || true
 				run_depmod_initramfs="enabled"
@@ -409,7 +410,7 @@ third_party () {
 				run_depmod_initramfs="enabled"
 			fi
 			;;
-		LTS41|LTS44)
+		LTS41|LTS44|LTS49)
 			if [ "x${rtl8723bu}" = "xenabled" ] ; then
 				apt-get install -y rtl8723bu-modules-${latest_kernel} || true
 				run_depmod_initramfs="enabled"
@@ -499,6 +500,9 @@ while [ ! -z "$1" ] ; do
 		;;
 	--lts-4_4-kernel|--lts-4_4)
 		kernel="LTS44"
+		;;
+	--lts-4_9-kernel|--lts-4_9)
+		kernel="LTS49"
 		;;
 	--stable-kernel|--stable)
 		kernel="STABLE"
