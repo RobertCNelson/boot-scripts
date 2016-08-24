@@ -24,7 +24,7 @@
 #This script assumes, these packages are installed, as network may not be setup
 #dosfstools initramfs-tools rsync u-boot-tools
 
-version_message="1.20160718: mkfs.ext4 1.43..."
+version_message="1.20160824: dual fixes..."
 device_eeprom="bbb-eeprom"
 emmcscript="cmdline=init=/opt/scripts/tools/eMMC/init-eMMC-flasher-v3.sh"
 
@@ -345,7 +345,7 @@ copy_boot () {
 	flush_cache
 	umount /tmp/boot/ || umount -l /tmp/boot/ || write_failure
 	flush_cache
-	umount /boot/uboot || umount -l /boot/uboot
+	umount /boot/uboot || umount -l /boot/uboot || true
 }
 
 copy_rootfs () {
