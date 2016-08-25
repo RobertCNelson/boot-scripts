@@ -175,6 +175,9 @@ if [ -f /var/lib/connman/settings ] ; then
 		sed -i -e 's:Tethering.Identifier='$wifi_name':Tethering.Identifier='$wifi_prefix'-'$ssid_append':g' /var/lib/connman/settings
 		systemctl restart connman.service || true
 	fi
+	if [ -f /etc/systemd/system/network-online.target.wants/connman-wait-online.service ] ; then
+		systemctl disable connman-wait-online.service || true
+	fi
 fi
 
 mac_address="/proc/device-tree/ocp/ethernet@4a100000/slave@4a100300/mac-address"
