@@ -87,7 +87,6 @@ option subnet ${deb_usb_netmask}
 option domain local
 option lease 30
 EOF
-
 	# Will start or restart udhcpd
 	/sbin/ifconfig usb0 ${deb_usb_address} netmask ${deb_usb_netmask} || true
 	/usr/sbin/udhcpd -S ${deb_udhcpd_conf}
@@ -159,7 +158,9 @@ EOF
 unset deb_iface_range_regex \
       deb_usb_address \
       deb_usb_gateway \
-      deb_usb_netmask
+      deb_usb_netmask \
+      deb_post_up \
+      deb_dns_nameservers
 
 deb_iface_range_regex="/^[[:space:]]*iface[[:space:]]+usb0/,/iface/"
 
@@ -172,6 +173,11 @@ deb_usb_gateway=$(sed -nr "${deb_iface_range_regex} p" ${deb_network_interfaces}
 deb_usb_netmask=$(sed -nr "${deb_iface_range_regex} p" ${deb_network_interfaces} |\
 		  sed -nr "s/^[[:space:]]*netmask[[:space:]]+([0-9.]+)/\1/p")
 
+deb_post_up=$(sed -nr "${deb_iface_range_regex} p" ${deb_network_interfaces} |\
+              sed -nr "s/^[[:space:]]*post-up[[:space:]]+(.*)/\1/p")
+
+deb_dns_nameservers=$(sed -nr "${deb_iface_range_regex} p" ${deb_network_interfaces} |\
+                      sed -nr "s/^[[:space:]]*dns-nameservers[[:space:]]+(.*)/\1/p")
 
 # Check if usb0 was specified in /etc/network/interfaces
 if [ "x${deb_usb_address}" != "x" -a\
@@ -196,6 +202,9 @@ if [ "x${deb_usb_address}" != "x" -a\
 		deb_configure_dnsmasq
 
 	fi
+	${deb_post_up}
+
+	[ "x$deb_dns_nameservers" != "x" ] && echo nameserver $deb_dns_nameservers >> /etc/resolv.conf
 fi
 
 #
