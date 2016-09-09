@@ -24,7 +24,7 @@
 #This script assumes, these packages are installed, as network may not be setup
 #dosfstools initramfs-tools rsync u-boot-tools
 
-version_message="1.20160728: fix missing bootloader..."
+version_message="1.20160909: u-boot 1MB -> 4MB hole..."
 
 #https://rcn-ee.com/repos/bootloader/am335x_evm/
 http_spl="MLO-am335x_evm-v2016.03-r7"
@@ -484,7 +484,7 @@ partition_drive () {
 	dd_bootloader
 
 	if [ "x${boot_fstype}" = "xfat" ] ; then
-		conf_boot_startmb=${conf_boot_startmb:-"1"}
+		conf_boot_startmb=${conf_boot_startmb:-"4"}
 		conf_boot_endmb=${conf_boot_endmb:-"96"}
 		sfdisk_fstype=${sfdisk_fstype:-"0xE"}
 		boot_label=${boot_label:-"BEAGLEBONE"}
@@ -523,7 +523,7 @@ partition_drive () {
 		media_rootfs="2"
 		copy_rootfs
 	else
-		conf_boot_startmb=${conf_boot_startmb:-"1"}
+		conf_boot_startmb=${conf_boot_startmb:-"4"}
 		sfdisk_fstype=${sfdisk_fstype:-"L"}
 		if [ "x${sfdisk_fstype}" = "x0x83" ] ; then
 			sfdisk_fstype="L"

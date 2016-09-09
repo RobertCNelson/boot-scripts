@@ -47,7 +47,7 @@ fi
 
 single_partition () {
 	echo "${drive}p1" > /resizerootfs
-	conf_boot_startmb=${conf_boot_startmb:-"1"}
+	conf_boot_startmb=${conf_boot_startmb:-"4"}
 	sfdisk_fstype=${sfdisk_fstype:-"L"}
 	if [ "x${sfdisk_fstype}" = "x0x83" ] ; then
 		sfdisk_fstype="L"
@@ -68,7 +68,7 @@ single_partition () {
 
 dual_partition () {
 	echo "${drive}p2" > /resizerootfs
-	conf_boot_startmb=${conf_boot_startmb:-"1"}
+	conf_boot_startmb=${conf_boot_startmb:-"4"}
 	conf_boot_endmb=${conf_boot_endmb:-"96"}
 	sfdisk_fstype=${sfdisk_fstype:-"0xE"}
 

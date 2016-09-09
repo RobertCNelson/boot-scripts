@@ -24,7 +24,7 @@
 #This script assumes, these packages are installed, as network may not be setup
 #dosfstools initramfs-tools rsync u-boot-tools
 
-version_message="1.20160618: deal with v4.4.x+ back to old eeprom location..."
+version_message="1.20160909: u-boot 1MB -> 4MB hole..."
 
 if ! id | grep -q root; then
 	echo "must be run as root"
@@ -216,7 +216,7 @@ partition_drive () {
 	dd_bootloader
 
 	if [ "x${boot_fstype}" = "xfat" ] ; then
-		conf_boot_startmb=${conf_boot_startmb:-"1"}
+		conf_boot_startmb=${conf_boot_startmb:-"4"}
 		conf_boot_endmb=${conf_boot_endmb:-"96"}
 		sfdisk_fstype=${sfdisk_fstype:-"0xE"}
 		boot_label=${boot_label:-"BEAGLEBONE"}
@@ -254,7 +254,7 @@ partition_drive () {
 		copy_boot
 		media_rootfs="2"
 	else
-		conf_boot_startmb=${conf_boot_startmb:-"1"}
+		conf_boot_startmb=${conf_boot_startmb:-"4"}
 		sfdisk_fstype=${sfdisk_fstype:-"L"}
 		if [ "x${sfdisk_fstype}" = "x0x83" ] ; then
 			sfdisk_fstype="L"

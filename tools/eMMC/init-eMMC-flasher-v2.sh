@@ -24,7 +24,7 @@
 #This script assumes, these packages are installed, as network may not be setup
 #dosfstools initramfs-tools rsync u-boot-tools
 
-version_message="1.001: 2015-07-21: Better then never, version #..."
+version_message="1.20160909: u-boot 1MB -> 4MB hole..."
 
 if ! id | grep -q root; then
 	echo "must be run as root"
@@ -209,7 +209,7 @@ partition_drive () {
 	if [ -f /boot/SOC.sh ] ; then
 		. /boot/SOC.sh
 	fi
-	conf_boot_startmb=${conf_boot_startmb:-"1"}
+	conf_boot_startmb=${conf_boot_startmb:-"4"}
 	conf_boot_endmb=${conf_boot_endmb:-"96"}
 	sfdisk_fstype=${sfdisk_fstype:-"0xE"}
 

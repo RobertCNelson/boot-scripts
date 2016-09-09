@@ -131,7 +131,7 @@ partition_drive () {
 	message="Erasing: ${destination} complete" ; broadcast
 	message="-----------------------------" ; broadcast
 
-	conf_boot_startmb=${conf_boot_startmb:-"1"}
+	conf_boot_startmb=${conf_boot_startmb:-"4"}
 	sfdisk_fstype=${sfdisk_fstype:-"0x83"}
 	boot_label=${boot_label:-"rootfs"}
 
