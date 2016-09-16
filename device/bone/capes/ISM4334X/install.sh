@@ -13,7 +13,3 @@ if [ ! -f /boot/initrd.img-$(uname -r) ] ; then
 else
         update-initramfs -u -k $(uname -r)
 fi
-
-if [ -f /boot/initrd.img-$(uname -r) ] ; then
-        cp -v /boot/initrd.img-$(uname -r) /boot/uboot/initrd.img
-fi
