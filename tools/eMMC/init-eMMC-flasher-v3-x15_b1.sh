@@ -24,7 +24,7 @@
 #This script assumes, these packages are installed, as network may not be setup
 #dosfstools initramfs-tools rsync u-boot-tools
 
-version_message="1.20160909: u-boot 1MB -> 4MB hole..."
+version_message="1.20160919: dont brick am57xx boards..."
 
 if ! id | grep -q root; then
 	echo "must be run as root"
@@ -136,7 +136,15 @@ check_eeprom () {
 
 	if [ "x${got_eeprom}" = "xtrue" ] ; then
 		eeprom_header=$(hexdump -e '8/1 "%c"' ${eeprom} -n 11 | cut -b 5-11)
+
+		#https://github.com/u-boot/u-boot/blob/master/board/ti/am57xx/board.c#L37
 		if [ "x${eeprom_header}" = "xBBRDX15" ] ; then
+			message="Valid ${device_eeprom} header found [${eeprom_header}]" ; broadcast
+			message="-----------------------------" ; broadcast
+		elif [ "x${eeprom_header}" = "xAM572PM" ] ; then
+			message="Valid ${device_eeprom} header found [${eeprom_header}]" ; broadcast
+			message="-----------------------------" ; broadcast
+		elif [ "x${eeprom_header}" = "xAM572ID" ] ; then
 			message="Valid ${device_eeprom} header found [${eeprom_header}]" ; broadcast
 			message="-----------------------------" ; broadcast
 		else
