@@ -175,8 +175,10 @@ if [ -f /var/lib/connman/settings ] ; then
 	if [ "x${wifi_name}" = "x${wifi_prefix}" ] ; then
 		ssid_append=$(echo ${cpsw_0_mac} | cut -b 13-17 | sed 's/://g' || true)
 		if [ ! "x${wifi_name}" = "x${wifi_prefix}-${ssid_append}" ] ; then
-			sed -i -e 's:Tethering.Identifier='$wifi_name':Tethering.Identifier='$wifi_prefix'-'$ssid_append':g' /var/lib/connman/settings
-			systemctl restart connman.service || true
+			if [ ! "x${wifi_name}" = "x${wifi_prefix}-${ssid_append}" ] ; then
+				sed -i -e 's:Tethering.Identifier='$wifi_name':Tethering.Identifier='$wifi_prefix'-'$ssid_append':g' /var/lib/connman/settings
+				systemctl restart connman.service || true
+			fi
 		fi
 	fi
 
