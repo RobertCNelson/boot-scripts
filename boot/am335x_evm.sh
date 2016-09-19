@@ -170,11 +170,16 @@ fi
 
 if [ -f /var/lib/connman/settings ] ; then
 	wifi_name=$(grep Tethering.Identifier= /var/lib/connman/settings | awk -F '=' '{print $2}' || true)
-	ssid_append=$(echo ${cpsw_0_mac} | cut -b 13-17 | sed 's/://g' || true)
-	if [ ! "x${wifi_name}" = "x${wifi_prefix}-${ssid_append}" ] ; then
-		sed -i -e 's:Tethering.Identifier='$wifi_name':Tethering.Identifier='$wifi_prefix'-'$ssid_append':g' /var/lib/connman/settings
-		systemctl restart connman.service || true
+
+	#Dont blindly, change Tethering.Identifier as user may have changed it, just match ${wifi_prefix}
+	if [ "x${wifi_name}" = "x${wifi_prefix}" ] ; then
+		ssid_append=$(echo ${cpsw_0_mac} | cut -b 13-17 | sed 's/://g' || true)
+		if [ ! "x${wifi_name}" = "x${wifi_prefix}-${ssid_append}" ] ; then
+			sed -i -e 's:Tethering.Identifier='$wifi_name':Tethering.Identifier='$wifi_prefix'-'$ssid_append':g' /var/lib/connman/settings
+			systemctl restart connman.service || true
+		fi
 	fi
+
 	if [ -f /etc/systemd/system/network-online.target.wants/connman-wait-online.service ] ; then
 		systemctl disable connman-wait-online.service || true
 	fi
