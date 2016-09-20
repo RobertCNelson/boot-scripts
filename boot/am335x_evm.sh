@@ -67,7 +67,10 @@ fi
 board=$(cat /proc/device-tree/model | sed "s/ /_/g")
 case "${board}" in
 TI_AM335x_BeagleBone_Black_Wireless)
-	board_bbbw="enable"
+	has_wifi="enable"
+	has_ethernet="disable"
+	;;
+TI_AM335x_BeagleBone_Blue)
 	has_wifi="enable"
 	has_ethernet="disable"
 	;;
@@ -460,6 +463,9 @@ if [ ! "x${enable_cape_universal}" = "x" ] ; then
 					;;
 				TI_AM335x_BeagleBone_Black_Wireless)
 					overlay="cape-universaln"
+					;;
+				TI_AM335x_BeagleBone_Blue)
+					unset overlay
 					;;
 				TI_AM335x_BeagleBone_Black)
 					overlay="cape-universaln"
