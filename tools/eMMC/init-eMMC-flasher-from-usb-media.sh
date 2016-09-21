@@ -156,8 +156,8 @@ flash_emmc () {
 	sync
 	flush_cache
 
-	message="mkfs.ext2 -L rootfs ${destination}p1" ; broadcast
-	LC_ALL=C mkfs.ext2 -L rootfs ${destination}p1 || write_failure
+	message="mkfs.ext2 -c -L rootfs ${destination}p1" ; broadcast
+	LC_ALL=C mkfs.ext2 -c -L rootfs ${destination}p1 || write_failure
 	message="Erasing: ${destination} complete" ; broadcast
 	message="-----------------------------" ; broadcast
 

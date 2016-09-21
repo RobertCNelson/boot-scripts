@@ -430,9 +430,9 @@ partition_drive () {
 	LC_ALL=C mkfs.ext4 -V &> /tmp/mkfs
 	test_mkfs=$(cat /tmp/mkfs | grep mke2fs | grep 1.43 || true)
 	if [ "x${test_mkfs}" = "x" ] ; then
-		unset ext4_options
+		ext4_options="-c"
 	else
-		ext4_options="-O ^metadata_csum,^64bit"
+		ext4_options="-c -O ^metadata_csum,^64bit"
 	fi
 
 	if [ "x${dd_spl_uboot_backup}" = "x" ] ; then

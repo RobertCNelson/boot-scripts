@@ -193,7 +193,7 @@ format_boot () {
 }
 
 format_root () {
-	mkfs.ext4 ${destination}p2 -L rootfs
+	mkfs.ext4 -c ${destination}p2 -L rootfs
 	flush_cache
 }
 
