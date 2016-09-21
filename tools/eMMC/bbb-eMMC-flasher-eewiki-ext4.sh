@@ -433,7 +433,7 @@ partition_drive () {
 	if [ "x${test_mkfs}" = "x" ] ; then
 		unset ext4_options
 	else
-		ext4_options="-O ^metadata_csum,^64bit"
+		ext4_options="-c -O ^metadata_csum,^64bit"
 	fi
 
 	if [ "x${dd_spl_uboot_backup}" = "x" ] ; then
