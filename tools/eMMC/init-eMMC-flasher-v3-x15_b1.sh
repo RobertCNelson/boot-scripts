@@ -24,7 +24,7 @@
 #This script assumes, these packages are installed, as network may not be setup
 #dosfstools initramfs-tools rsync u-boot-tools
 
-version_message="1.20160919: dont brick am57xx boards..."
+version_message="1.20160921: eeprom, just check for U3..."
 
 if ! id | grep -q root; then
 	echo "must be run as root"
@@ -135,16 +135,8 @@ check_eeprom () {
 	fi
 
 	if [ "x${got_eeprom}" = "xtrue" ] ; then
-		eeprom_header=$(hexdump -e '8/1 "%c"' ${eeprom} -n 11 | cut -b 5-11)
-
-		#https://github.com/u-boot/u-boot/blob/master/board/ti/am57xx/board.c#L37
-		if [ "x${eeprom_header}" = "xBBRDX15" ] ; then
-			message="Valid ${device_eeprom} header found [${eeprom_header}]" ; broadcast
-			message="-----------------------------" ; broadcast
-		elif [ "x${eeprom_header}" = "xAM572PM" ] ; then
-			message="Valid ${device_eeprom} header found [${eeprom_header}]" ; broadcast
-			message="-----------------------------" ; broadcast
-		elif [ "x${eeprom_header}" = "xAM572ID" ] ; then
+		eeprom_header=$(hexdump -e '8/1 "%c"' ${eeprom} -n 3 | cut -b 2-3)
+		if [ "x${eeprom_header}" = "xU3" ] ; then
 			message="Valid ${device_eeprom} header found [${eeprom_header}]" ; broadcast
 			message="-----------------------------" ; broadcast
 		else
@@ -155,7 +147,7 @@ check_eeprom () {
 					dd if=/opt/scripts/device/${device_eeprom}.dump of=${eeprom_location}
 					sync
 					sync
-					eeprom_check=$(hexdump -e '8/1 "%c"' ${eeprom} -n 11 | cut -b 5-11)
+					eeprom_check=$(hexdump -e '8/1 "%c"' ${eeprom} -n 3 | cut -b 2-3)
 					echo "eeprom check: [${eeprom_check}]"
 
 					#We have to reboot, as the kernel only loads the eMMC cape
