@@ -484,7 +484,7 @@ partition_drive () {
 
 	dd_bootloader
 
-	boot_fstype="ext4"
+	boot_fstype=${boot_fstype:-ext4}
 
 	if [ "x${boot_fstype}" = "xfat" ] ; then
 		conf_boot_startmb=${conf_boot_startmb:-"4"}
@@ -571,6 +571,16 @@ clear
 message="-----------------------------" ; broadcast
 message="Version: [${version_message}]" ; broadcast
 message="-----------------------------" ; broadcast
+
+if [[ "$1" == --boot_fstype* ]] ; then
+    boot_fstype=${2:-$1}
+    boot_fstype=${boot_fstype#*=}
+    case $boot_fstype in
+        fat | ext4) ;;
+        *) echo "boot_fstype must be fat or ext4"; exit 2 ;;
+    esac
+    message="Using $boot_fstype for boot filesystem" ; broadcast
+fi
 
 check_eeprom
 check_running_system
