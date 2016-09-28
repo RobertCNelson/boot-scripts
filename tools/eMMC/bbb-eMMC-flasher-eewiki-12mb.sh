@@ -280,17 +280,17 @@ format_boot () {
 }
 
 format_root () {
-	message="mkfs.ext4 ${destination}p2 -L ${rootfs_label}" ; broadcast
+	message="mkfs.ext4 -c ${destination}p2 -L ${rootfs_label}" ; broadcast
 	echo "-----------------------------"
-	mkfs.ext4 ${destination}p2 -L ${rootfs_label}
+	mkfs.ext4 -c ${destination}p2 -L ${rootfs_label}
 	echo "-----------------------------"
 	flush_cache
 }
 
 format_single_root () {
-	message="mkfs.ext4 ${destination}p1 -L ${boot_label}" ; broadcast
+	message="mkfs.ext4 -c ${destination}p1 -L ${boot_label}" ; broadcast
 	echo "-----------------------------"
-	mkfs.ext4 ${destination}p1 -L ${boot_label}
+	mkfs.ext4 -c ${destination}p1 -L ${boot_label}
 	echo "-----------------------------"
 	flush_cache
 }

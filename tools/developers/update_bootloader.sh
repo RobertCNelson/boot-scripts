@@ -157,7 +157,7 @@ dd_uboot_boot () {
 
 		if [ -f ${TEMPDIR}/dl/${UBOOT} ] ; then
 			echo "dd if=${TEMPDIR}/dl/${UBOOT} of=${target} seek=${dd_uboot_seek} bs=${dd_uboot_bs}"
-			sudo dd if=${TEMPDIR}/dl/${UBOOT} of=${target} seek=${dd_uboot_seek} bs=${dd_uboot_bs}
+			dd if=${TEMPDIR}/dl/${UBOOT} of=${target} seek=${dd_uboot_seek} bs=${dd_uboot_bs}
 			sync
 			flashed=done
 		fi
@@ -211,9 +211,9 @@ dd_spl_uboot_boot () {
 
 		if [ -f ${TEMPDIR}/dl/${UBOOT} ] ; then
 			echo "log: dd if=${TEMPDIR}/dl/${SPL} of=${target} seek=${dd_spl_uboot_seek} bs=${dd_spl_uboot_bs}"
-			sudo dd if=${TEMPDIR}/dl/${SPL} of=${target} seek=${dd_spl_uboot_seek} bs=${dd_spl_uboot_bs}
+			dd if=${TEMPDIR}/dl/${SPL} of=${target} seek=${dd_spl_uboot_seek} bs=${dd_spl_uboot_bs}
 			echo "log: dd if=${TEMPDIR}/dl/${UBOOT} of=${target} seek=${dd_uboot_seek} bs=${dd_uboot_bs}"
-			sudo dd if=${TEMPDIR}/dl/${UBOOT} of=${target} seek=${dd_uboot_seek} bs=${dd_uboot_bs}
+			dd if=${TEMPDIR}/dl/${UBOOT} of=${target} seek=${dd_uboot_seek} bs=${dd_uboot_bs}
 			sync
 			flashed=done
 		fi
@@ -352,7 +352,7 @@ check_soc_sh () {
 	if [ $(uname -m) != "armv7l" ] ; then
 		sync
 		sync
-		sudo umount ${DRIVE}/ || true
+		umount ${DRIVE}/ || true
 	fi
 	echo "Bootloader Recovery Complete"
 }
