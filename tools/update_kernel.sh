@@ -76,6 +76,25 @@ scan_ti_kernels () {
 	fi
 }
 
+test_bone_rt_kernel_version () {
+	if [ "x${kernel}" = "x" ] ; then
+		major=$(uname -r | awk '{print $1}' | cut -d. -f1)
+		minor=$(uname -r | awk '{print $1}' | cut -d. -f2)
+
+		case "${major}.${minor}" in
+		4.1)
+			kernel="LTS41"
+			;;
+		4.4)
+			kernel="LTS44"
+			;;
+		4.9)
+			kernel="LTS49"
+			;;
+		esac
+	fi
+}
+
 test_bone_kernel_version () {
 	if [ "x${kernel}" = "x" ] ; then
 		major=$(uname -r | awk '{print $1}' | cut -d. -f1)
@@ -84,6 +103,15 @@ test_bone_kernel_version () {
 		case "${major}.${minor}" in
 		3.8)
 			kernel="STABLE"
+			;;
+		4.1)
+			kernel="LTS41"
+			;;
+		4.4)
+			kernel="LTS44"
+			;;
+		4.9)
+			kernel="LTS49"
 			;;
 		esac
 	fi
@@ -95,7 +123,7 @@ scan_bone_kernels () {
 		testvalue=$(echo ${current_kernel} | grep bone-rt || true)
 		if [ ! "x${testvalue}" = "x" ] ; then
 			SOC="bone-rt"
-			test_bone_kernel_version
+			test_bone_rt_kernel_version
 		fi
 	fi
 	if [ "x${SOC}" = "x" ] ; then
@@ -108,12 +136,32 @@ scan_bone_kernels () {
 	fi
 }
 
+test_armv7_kernel_version () {
+	if [ "x${kernel}" = "x" ] ; then
+		major=$(uname -r | awk '{print $1}' | cut -d. -f1)
+		minor=$(uname -r | awk '{print $1}' | cut -d. -f2)
+
+		case "${major}.${minor}" in
+		4.1)
+			kernel="LTS41"
+			;;
+		4.4)
+			kernel="LTS44"
+			;;
+		4.9)
+			kernel="LTS49"
+			;;
+		esac
+	fi
+}
+
 scan_armv7_kernels () {
 	if [ "x${SOC}" = "x" ] ; then
 		unset testvalue
 		testvalue=$(echo ${current_kernel} | grep lpae || true)
 		if [ ! "x${testvalue}" = "x" ] ; then
 			SOC="armv7-lpae"
+			test_armv7_kernel_version
 		fi
 	fi
 	if [ "x${SOC}" = "x" ] ; then
@@ -121,6 +169,7 @@ scan_armv7_kernels () {
 		testvalue=$(echo ${current_kernel} | grep armv7-rt || true)
 		if [ ! "x${testvalue}" = "x" ] ; then
 			SOC="armv7-rt"
+			test_armv7_kernel_version
 		fi
 	fi
 	if [ "x${SOC}" = "x" ] ; then
@@ -128,6 +177,7 @@ scan_armv7_kernels () {
 		testvalue=$(echo ${current_kernel} | grep armv7 || true)
 		if [ ! "x${testvalue}" = "x" ] ; then
 			SOC="armv7"
+			test_armv7_kernel_version
 		fi
 	fi
 }
