@@ -193,7 +193,7 @@ latest_version_repo () {
 			echo "Kernel Options:"
 			cat /tmp/LATEST-${SOC}
 			echo "-----------------------------"
-			echo "Override, default Kernel version option:"
+			echo "Kernel version options:"
 			echo "-----------------------------"
 			echo "LTS314: --lts-3_14"
 			echo "LTS41: --lts-4_1"
@@ -205,10 +205,12 @@ latest_version_repo () {
 
 			latest_kernel=$(cat /tmp/LATEST-${SOC} | grep ${kernel} | awk '{print $3}')
 
-			echo "info: you are running: [${current_kernel}], latest is: [${latest_kernel}] updating..."
 			if [ "x${latest_kernel}" = "x" ] ; then
+				echo "Please pass one of the above kernel options to update_kernel.sh"
+				echo "-----------------------------"
 				exit
 			fi
+			echo "info: you are running: [${current_kernel}], latest is: [${latest_kernel}] updating..."
 
 			if [ "x${current_kernel}" = "x${latest_kernel}" ] ; then
 				if [ "x${daily_cron}" = "xenabled" ] ; then
