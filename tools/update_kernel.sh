@@ -25,12 +25,35 @@ if ! id | grep -q root; then
 	exit
 fi
 
+test_ti_kernel_version () {
+	if [ "x${kernel}" = "x" ] ; then
+		major=$(uname -r | awk '{print $1}' | cut -d. -f1)
+		minor=$(uname -r | awk '{print $1}' | cut -d. -f2)
+
+		case "${major}.${minor}" in
+		3.14)
+			kernel="LTS314"
+			;;
+		4.1)
+			kernel="LTS41"
+			;;
+		4.4)
+			kernel="LTS44"
+			;;
+		4.9)
+			kernel="LTS49"
+			;;
+		esac
+	fi
+}
+
 scan_ti_kernels () {
 	if [ "x${SOC}" = "x" ] ; then
 		unset testvalue
 		testvalue=$(echo ${current_kernel} | grep ti-xenomai || true)
 		if [ ! "x${testvalue}" = "x" ] ; then
 			SOC="ti-xenomai"
+			test_ti_kernel_version
 		fi
 	fi
 
@@ -39,6 +62,7 @@ scan_ti_kernels () {
 		testvalue=$(echo ${current_kernel} | grep ti-rt || true)
 		if [ ! "x${testvalue}" = "x" ] ; then
 			SOC="ti-rt"
+			test_ti_kernel_version
 		fi
 	fi
 
@@ -47,6 +71,7 @@ scan_ti_kernels () {
 		testvalue=$(echo ${current_kernel} | grep ti || true)
 		if [ ! "x${testvalue}" = "x" ] ; then
 			SOC="ti"
+			test_ti_kernel_version
 		fi
 	fi
 }
