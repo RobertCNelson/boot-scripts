@@ -76,12 +76,26 @@ scan_ti_kernels () {
 	fi
 }
 
+test_bone_kernel_version () {
+	if [ "x${kernel}" = "x" ] ; then
+		major=$(uname -r | awk '{print $1}' | cut -d. -f1)
+		minor=$(uname -r | awk '{print $1}' | cut -d. -f2)
+
+		case "${major}.${minor}" in
+		3.8)
+			kernel="STABLE"
+			;;
+		esac
+	fi
+}
+
 scan_bone_kernels () {
 	if [ "x${SOC}" = "x" ] ; then
 		unset testvalue
 		testvalue=$(echo ${current_kernel} | grep bone-rt || true)
 		if [ ! "x${testvalue}" = "x" ] ; then
 			SOC="bone-rt"
+			test_bone_kernel_version
 		fi
 	fi
 	if [ "x${SOC}" = "x" ] ; then
@@ -89,6 +103,7 @@ scan_bone_kernels () {
 		testvalue=$(echo ${current_kernel} | grep bone || true)
 		if [ ! "x${testvalue}" = "x" ] ; then
 			SOC="omap-psp"
+			test_bone_kernel_version
 		fi
 	fi
 }
@@ -504,7 +519,7 @@ if [ "x${dist}" = "xn_a" ] ; then
 	fi
 fi
 
-kernel="STABLE"
+unset kernel
 mirror="https://rcn-ee.com/repos/latest"
 unset kernel_version
 unset daily_cron
