@@ -113,6 +113,10 @@ test_bone_kernel_version () {
 		4.9)
 			kernel="LTS49"
 			;;
+		*)
+			#aka STABLE, as 3.8.13 will always be considered STABLE
+			kernel="TESTING"
+			;;
 		esac
 	fi
 }
@@ -150,6 +154,9 @@ test_armv7_kernel_version () {
 			;;
 		4.9)
 			kernel="LTS49"
+			;;
+		*)
+			kernel="STABLE"
 			;;
 		esac
 	fi
