@@ -300,6 +300,12 @@ latest_version_repo () {
 			echo "TESTING: --testing"
 			echo "-----------------------------"
 
+			if [ "x${kernel}" = "x" ] ; then
+				echo "Please pass one of the above kernel options to update_kernel.sh"
+				echo "-----------------------------"
+				exit
+			fi
+
 			latest_kernel=$(cat /tmp/LATEST-${SOC} | grep ${kernel} | awk '{print $3}')
 
 			if [ "x${latest_kernel}" = "x" ] ; then
