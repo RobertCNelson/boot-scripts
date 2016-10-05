@@ -24,8 +24,8 @@
 #This script assumes, these packages are installed, as network may not be setup
 #dosfstools initramfs-tools rsync u-boot-tools
 
-version_message="1.20160909: u-boot 1MB -> 4MB hole..."
-
+version_message="1.20161005: sfdisk: actually calculate the start of 2nd/3rd partitions..."
+#
 #https://rcn-ee.com/repos/bootloader/am335x_evm/
 http_spl="MLO-am335x_evm-v2016.03-r7"
 http_uboot="u-boot-am335x_evm-v2016.03-r7.img"
@@ -79,16 +79,29 @@ broadcast () {
 	fi
 }
 
+get_device () {
+	is_bbb="enable"
+	machine=$(cat /proc/device-tree/model | sed "s/ /_/g")
+
+	case "${machine}" in
+	TI_AM5728_BeagleBoard*)
+		unset is_bbb
+		;;
+	esac
+}
+
 write_failure () {
 	message="writing to [${destination}] failed..." ; broadcast
 
-	[ -e /proc/$CYLON_PID ]  && kill $CYLON_PID > /dev/null 2>&1
+	if [ "x${is_bbb}" = "xenable" ] ; then
+		[ -e /proc/$CYLON_PID ]  && kill $CYLON_PID > /dev/null 2>&1
 
-	if [ -e /sys/class/leds/beaglebone\:green\:usr0/trigger ] ; then
-		echo heartbeat > /sys/class/leds/beaglebone\:green\:usr0/trigger
-		echo heartbeat > /sys/class/leds/beaglebone\:green\:usr1/trigger
-		echo heartbeat > /sys/class/leds/beaglebone\:green\:usr2/trigger
-		echo heartbeat > /sys/class/leds/beaglebone\:green\:usr3/trigger
+		if [ -e /sys/class/leds/beaglebone\:green\:usr0/trigger ] ; then
+			echo heartbeat > /sys/class/leds/beaglebone\:green\:usr0/trigger
+			echo heartbeat > /sys/class/leds/beaglebone\:green\:usr1/trigger
+			echo heartbeat > /sys/class/leds/beaglebone\:green\:usr2/trigger
+			echo heartbeat > /sys/class/leds/beaglebone\:green\:usr3/trigger
+		fi
 	fi
 	message="-----------------------------" ; broadcast
 	flush_cache
@@ -122,62 +135,58 @@ check_running_system () {
 	fi
 	flush_cache
 
-	##FIXME: quick check for rsync 3.1 (jessie)
-	unset rsync_check
-	unset rsync_progress
-	rsync_check=$(LC_ALL=C rsync --version | grep version | awk '{print $3}' || true)
-	if [ "x${rsync_check}" = "x3.1.1" ] ; then
-		rsync_progress="--info=progress2 --human-readable"
-	fi
-
-	if [ ! -e /sys/class/leds/beaglebone\:green\:usr0/trigger ] ; then
-		modprobe leds_gpio || true
-		sleep 1
+	if [ "x${is_bbb}" = "xenable" ] ; then
+		if [ ! -e /sys/class/leds/beaglebone\:green\:usr0/trigger ] ; then
+			modprobe leds_gpio || true
+			sleep 1
+		fi
 	fi
 }
 
 cylon_leds () {
-	if [ -e /sys/class/leds/beaglebone\:green\:usr0/trigger ] ; then
-		BASE=/sys/class/leds/beaglebone\:green\:usr
-		echo none > ${BASE}0/trigger
-		echo none > ${BASE}1/trigger
-		echo none > ${BASE}2/trigger
-		echo none > ${BASE}3/trigger
+	if [ "x${is_bbb}" = "xenable" ] ; then
+		if [ -e /sys/class/leds/beaglebone\:green\:usr0/trigger ] ; then
+			BASE=/sys/class/leds/beaglebone\:green\:usr
+			echo none > ${BASE}0/trigger
+			echo none > ${BASE}1/trigger
+			echo none > ${BASE}2/trigger
+			echo none > ${BASE}3/trigger
 
-		STATE=1
-		while : ; do
-			case $STATE in
-			1)	echo 255 > ${BASE}0/brightness
-				echo 0   > ${BASE}1/brightness
-				STATE=2
-				;;
-			2)	echo 255 > ${BASE}1/brightness
-				echo 0   > ${BASE}0/brightness
-				STATE=3
-				;;
-			3)	echo 255 > ${BASE}2/brightness
-				echo 0   > ${BASE}1/brightness
-				STATE=4
-				;;
-			4)	echo 255 > ${BASE}3/brightness
-				echo 0   > ${BASE}2/brightness
-				STATE=5
-				;;
-			5)	echo 255 > ${BASE}2/brightness
-				echo 0   > ${BASE}3/brightness
-				STATE=6
-				;;
-			6)	echo 255 > ${BASE}1/brightness
-				echo 0   > ${BASE}2/brightness
-				STATE=1
-				;;
-			*)	echo 255 > ${BASE}0/brightness
-				echo 0   > ${BASE}1/brightness
-				STATE=2
-				;;
-			esac
-			sleep 0.1
-		done
+			STATE=1
+			while : ; do
+				case $STATE in
+				1)	echo 255 > ${BASE}0/brightness
+					echo 0   > ${BASE}1/brightness
+					STATE=2
+					;;
+				2)	echo 255 > ${BASE}1/brightness
+					echo 0   > ${BASE}0/brightness
+					STATE=3
+					;;
+				3)	echo 255 > ${BASE}2/brightness
+					echo 0   > ${BASE}1/brightness
+					STATE=4
+					;;
+				4)	echo 255 > ${BASE}3/brightness
+					echo 0   > ${BASE}2/brightness
+					STATE=5
+					;;
+				5)	echo 255 > ${BASE}2/brightness
+					echo 0   > ${BASE}3/brightness
+					STATE=6
+					;;
+				6)	echo 255 > ${BASE}1/brightness
+					echo 0   > ${BASE}2/brightness
+					STATE=1
+					;;
+				*)	echo 255 > ${BASE}0/brightness
+					echo 0   > ${BASE}1/brightness
+					STATE=2
+					;;
+				esac
+				sleep 0.1
+			done
+		fi
 	fi
 }
 
@@ -294,16 +303,13 @@ copy_boot () {
 	fi
 
 	message="rsync: /boot/uboot/ -> /tmp/boot/" ; broadcast
-	if [ ! "x${rsync_progress}" = "x" ] ; then
-		echo "rsync: note the % column is useless..."
-	fi
-	rsync -aAx ${rsync_progress} /boot/uboot/ /tmp/boot/ --exclude={MLO,u-boot.img,uEnv.txt} || write_failure
+	rsync -aAx /boot/uboot/ /tmp/boot/ --exclude={MLO,u-boot.img,uEnv.txt} || write_failure
 	flush_cache
 
 	flush_cache
 	umount /tmp/boot/ || umount -l /tmp/boot/ || write_failure
 	flush_cache
-	umount /boot/uboot || umount -l /boot/uboot
+	umount /boot/uboot || umount -l /boot/uboot || true
 }
 
 copy_rootfs () {
@@ -324,26 +330,21 @@ copy_rootfs () {
 	fi
 
 	message="rsync: / -> /tmp/rootfs/" ; broadcast
-	if [ ! "x${rsync_progress}" = "x" ] ; then
-		echo "rsync: note the % column is useless..."
-	fi
-	rsync -aAx ${rsync_progress} /* /tmp/rootfs/ --exclude={/dev/*,/proc/*,/sys/*,/tmp/*,/run/*,/mnt/*,/media/*,/lost+found,/lib/modules/*,/uEnv.txt} || write_failure
+	rsync -aAx /* /tmp/rootfs/ --exclude={/dev/*,/proc/*,/sys/*,/tmp/*,/run/*,/mnt/*,/media/*,/lost+found,/lib/modules/*,/uEnv.txt} || write_failure
 	flush_cache
 
 	mkdir -p /tmp/rootfs/lib/modules/$(uname -r)/ || true
 
 	message="Copying: Kernel modules" ; broadcast
 	message="rsync: /lib/modules/$(uname -r)/ -> /tmp/rootfs/lib/modules/$(uname -r)/" ; broadcast
-	if [ ! "x${rsync_progress}" = "x" ] ; then
-		echo "rsync: note the % column is useless..."
-	fi
-	rsync -aAx ${rsync_progress} /lib/modules/$(uname -r)/* /tmp/rootfs/lib/modules/$(uname -r)/ || write_failure
+	rsync -aAx /lib/modules/$(uname -r)/* /tmp/rootfs/lib/modules/$(uname -r)/ || write_failure
 	flush_cache
 
 	message="Copying: ${source}p${media_rootfs} -> ${destination}p${media_rootfs} complete" ; broadcast
 	message="-----------------------------" ; broadcast
 
 	message="Final System Tweaks:" ; broadcast
+
 	unset root_uuid
 	root_uuid=$(/sbin/blkid -c /dev/null -s UUID -o value ${destination}p${media_rootfs})
 	if [ "${root_uuid}" ] ; then
@@ -379,7 +380,9 @@ copy_rootfs () {
 	flush_cache
 	umount /tmp/rootfs/ || umount -l /tmp/rootfs/ || write_failure
 
-	[ -e /proc/$CYLON_PID ]  && kill $CYLON_PID
+	if [ "x${is_bbb}" = "xenable" ] ; then
+		[ -e /proc/$CYLON_PID ]  && kill $CYLON_PID
+	fi
 
 	message="Syncing: ${destination}" ; broadcast
 	#https://github.com/beagleboard/meta-beagleboard/blob/master/contrib/bone-flash-tool/emmc.sh#L158-L159
@@ -395,16 +398,19 @@ copy_rootfs () {
 		message="debug: enabled" ; broadcast
 		inf_loop
 	else
-		if [ -e /sys/class/leds/beaglebone\:green\:usr0/trigger ] ; then
-			echo default-on > /sys/class/leds/beaglebone\:green\:usr0/trigger
-			echo default-on > /sys/class/leds/beaglebone\:green\:usr1/trigger
-			echo default-on > /sys/class/leds/beaglebone\:green\:usr2/trigger
-			echo default-on > /sys/class/leds/beaglebone\:green\:usr3/trigger
+		if [ "x${is_bbb}" = "xenable" ] ; then
+			if [ -e /sys/class/leds/beaglebone\:green\:usr0/trigger ] ; then
+				echo default-on > /sys/class/leds/beaglebone\:green\:usr0/trigger
+				echo default-on > /sys/class/leds/beaglebone\:green\:usr1/trigger
+				echo default-on > /sys/class/leds/beaglebone\:green\:usr2/trigger
+				echo default-on > /sys/class/leds/beaglebone\:green\:usr3/trigger
+			fi
 		fi
 		mount
 
 		message="eMMC has been flashed: please wait for device to power down." ; broadcast
 		message="-----------------------------" ; broadcast
+
 		flush_cache
 	fi
 }
@@ -494,23 +500,25 @@ partition_drive () {
 
 		sfdisk_options="--force --Linux --in-order --unit M"
 		sfdisk_boot_startmb="${conf_boot_startmb}"
-		sfdisk_boot_endmb="${conf_boot_endmb}"
+		sfdisk_boot_size_mb="${conf_boot_endmb}"
+		sfdisk_rootfs_startmb=$(($sfdisk_boot_startmb + $sfdisk_boot_size_mb))
 
 		test_sfdisk=$(LC_ALL=C sfdisk --help | grep -m 1 -e "--in-order" || true)
 		if [ "x${test_sfdisk}" = "x" ] ; then
 			message="sfdisk: [2.26.x or greater]" ; broadcast
 			sfdisk_options="--force"
 			sfdisk_boot_startmb="${sfdisk_boot_startmb}M"
-			sfdisk_boot_endmb="${sfdisk_boot_endmb}M"
+			sfdisk_boot_size_mb="${sfdisk_boot_size_mb}M"
+			sfdisk_rootfs_startmb="${sfdisk_rootfs_startmb}M"
 		fi
 
 		message="sfdisk: [sfdisk ${sfdisk_options} ${destination}]" ; broadcast
-		message="sfdisk: [${sfdisk_boot_startmb},${sfdisk_boot_endmb},${sfdisk_fstype},*]" ; broadcast
-		message="sfdisk: [,,,-]" ; broadcast
+		message="sfdisk: [${sfdisk_boot_startmb},${sfdisk_boot_size_mb},${sfdisk_fstype},*]" ; broadcast
+		message="sfdisk: [${sfdisk_rootfs_startmb},,,-]" ; broadcast
 
 		LC_ALL=C sfdisk ${sfdisk_options} "${destination}" <<-__EOF__
-			${sfdisk_boot_startmb},${sfdisk_boot_endmb},${sfdisk_fstype},*
-			,,,-
+			${sfdisk_boot_startmb},${sfdisk_boot_size_mb},${sfdisk_fstype},*
+			${sfdisk_rootfs_startmb},,,-
 		__EOF__
 
 		flush_cache
@@ -551,7 +559,7 @@ partition_drive () {
 
 		message="sfdisk: [$(LC_ALL=C sfdisk --version)]" ; broadcast
 		message="sfdisk: [sfdisk ${sfdisk_options} ${destination}]" ; broadcast
-		message="sfdisk: [${sfdisk_boot_startmb},${sfdisk_boot_endmb},${sfdisk_fstype},*]" ; broadcast
+		message="sfdisk: [${sfdisk_boot_startmb},,${sfdisk_fstype},*]" ; broadcast
 
 		LC_ALL=C sfdisk ${sfdisk_options} "${destination}" <<-__EOF__
 			${sfdisk_boot_startmb},,${sfdisk_fstype},*
@@ -572,7 +580,10 @@ message="-----------------------------" ; broadcast
 message="Version: [${version_message}]" ; broadcast
 message="-----------------------------" ; broadcast
 
+get_device
 check_running_system
-cylon_leds & CYLON_PID=$!
+if [ "x${is_bbb}" = "xenable" ] ; then
+	cylon_leds & CYLON_PID=$!
+fi
 partition_drive
 #

@@ -24,7 +24,8 @@
 #This script assumes, these packages are installed, as network may not be setup
 #dosfstools initramfs-tools rsync u-boot-tools
 
-version_message="1.20160909: u-boot 1MB -> 4MB hole..."
+version_message="1.20161005: sfdisk: actually calculate the start of 2nd/3rd partitions..."
+#
 device_eeprom="bbg-eeprom"
 emmcscript="cmdline=init=/opt/scripts/tools/eMMC/init-eMMC-flasher-v3-bbg.sh"
 
@@ -345,7 +346,7 @@ copy_boot () {
 	flush_cache
 	umount /tmp/boot/ || umount -l /tmp/boot/ || write_failure
 	flush_cache
-	umount /boot/uboot || umount -l /boot/uboot
+	umount /boot/uboot || umount -l /boot/uboot || true
 }
 
 copy_rootfs () {
@@ -481,23 +482,25 @@ partition_drive () {
 
 		sfdisk_options="--force --Linux --in-order --unit M"
 		sfdisk_boot_startmb="${conf_boot_startmb}"
-		sfdisk_boot_endmb="${conf_boot_endmb}"
+		sfdisk_boot_size_mb="${conf_boot_endmb}"
+		sfdisk_rootfs_startmb=$(($sfdisk_boot_startmb + $sfdisk_boot_size_mb))
 
 		test_sfdisk=$(LC_ALL=C sfdisk --help | grep -m 1 -e "--in-order" || true)
 		if [ "x${test_sfdisk}" = "x" ] ; then
 			message="sfdisk: [2.26.x or greater]" ; broadcast
 			sfdisk_options="--force"
 			sfdisk_boot_startmb="${sfdisk_boot_startmb}M"
-			sfdisk_boot_endmb="${sfdisk_boot_endmb}M"
+			sfdisk_boot_size_mb="${sfdisk_boot_size_mb}M"
+			sfdisk_rootfs_startmb="${sfdisk_rootfs_startmb}M"
 		fi
 
 		message="sfdisk: [sfdisk ${sfdisk_options} ${destination}]" ; broadcast
-		message="sfdisk: [${sfdisk_boot_startmb},${sfdisk_boot_endmb},${sfdisk_fstype},*]" ; broadcast
-		message="sfdisk: [,,,-]" ; broadcast
+		message="sfdisk: [${sfdisk_boot_startmb},${sfdisk_boot_size_mb},${sfdisk_fstype},*]" ; broadcast
+		message="sfdisk: [${sfdisk_rootfs_startmb},,,-]" ; broadcast
 
 		LC_ALL=C sfdisk ${sfdisk_options} "${destination}" <<-__EOF__
-			${sfdisk_boot_startmb},${sfdisk_boot_endmb},${sfdisk_fstype},*
-			,,,-
+			${sfdisk_boot_startmb},${sfdisk_boot_size_mb},${sfdisk_fstype},*
+			${sfdisk_rootfs_startmb},,,-
 		__EOF__
 
 		flush_cache
@@ -538,7 +541,7 @@ partition_drive () {
 
 		message="sfdisk: [$(LC_ALL=C sfdisk --version)]" ; broadcast
 		message="sfdisk: [sfdisk ${sfdisk_options} ${destination}]" ; broadcast
-		message="sfdisk: [${sfdisk_boot_startmb},${sfdisk_boot_endmb},${sfdisk_fstype},*]" ; broadcast
+		message="sfdisk: [${sfdisk_boot_startmb},,${sfdisk_fstype},*]" ; broadcast
 
 		LC_ALL=C sfdisk ${sfdisk_options} "${destination}" <<-__EOF__
 			${sfdisk_boot_startmb},,${sfdisk_fstype},*

@@ -1,6 +1,6 @@
 #!/bin/bash -e
 #
-# Copyright (c) 2013-2015 Robert Nelson <robertcnelson@gmail.com>
+# Copyright (c) 2013-2016 Robert Nelson <robertcnelson@gmail.com>
 # Portions copyright (c) 2014 Charles Steinkuehler <charles@steinkuehler.net>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -24,7 +24,7 @@
 #This script assumes, these packages are installed, as network may not be setup
 #dosfstools initramfs-tools rsync u-boot-tools
 
-version_message="1.20160909: u-boot 1MB -> 4MB hole..."
+version_message="1.20161005: sfdisk: actually calculate the start of 2nd/3rd partitions..."
 
 if ! id | grep -q root; then
 	echo "must be run as root"
@@ -212,12 +212,13 @@ partition_drive () {
 	conf_boot_startmb=${conf_boot_startmb:-"4"}
 	conf_boot_endmb=${conf_boot_endmb:-"96"}
 	sfdisk_fstype=${sfdisk_fstype:-"0xE"}
+	sfdisk_rootfs_startmb=$(($conf_boot_startmb + $conf_boot_endmb))
 
 	echo "Formatting: ${destination}"
 	#96Mb fat formatted boot partition
 	LC_ALL=C sfdisk --force --in-order --Linux --unit M "${destination}" <<-__EOF__
 		${conf_boot_startmb},${conf_boot_endmb},${sfdisk_fstype},*
-		,,,-
+		${sfdisk_rootfs_startmb},,,-
 	__EOF__
 
 	flush_cache

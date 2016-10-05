@@ -80,7 +80,7 @@ get_device () {
 	machine=$(cat /proc/device-tree/model | sed "s/ /_/g")
 
 	case "${machine}" in
-	TI_AM5728_BeagleBoard-X15)
+	TI_AM5728_BeagleBoard*)
 		unset is_bbb
 		;;
 	esac
