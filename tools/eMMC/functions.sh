@@ -472,9 +472,9 @@ partition_drive () {
     message="sfdisk: [${sfdisk_rootfs_startmb},,,-]" ; broadcast
 
     LC_ALL=C sfdisk ${sfdisk_options} "${destination}" <<-__EOF__
-    ${sfdisk_boot_startmb},${sfdisk_boot_size_mb},${sfdisk_fstype},*
-    ${sfdisk_rootfs_startmb},,,-
-    __EOF__
+${sfdisk_boot_startmb},${sfdisk_boot_size_mb},${sfdisk_fstype},*
+${sfdisk_rootfs_startmb},,,-
+__EOF__
 
     flush_cache
     format_boot
@@ -517,8 +517,8 @@ partition_drive () {
     message="sfdisk: [${sfdisk_boot_startmb},,${sfdisk_fstype},*]" ; broadcast
 
     LC_ALL=C sfdisk ${sfdisk_options} "${destination}" <<-__EOF__
-    ${sfdisk_boot_startmb},,${sfdisk_fstype},*
-    __EOF__
+${sfdisk_boot_startmb},,${sfdisk_fstype},*
+__EOF__
 
     flush_cache
     format_single_root
