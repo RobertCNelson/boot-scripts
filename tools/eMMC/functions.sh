@@ -37,14 +37,6 @@ broadcast () {
   fi
 }
 
-startup_message(){
-  clear
-  message="----------------------------------------" ; broadcast
-  message="Starting eMMC Flasher from microSD media" ; broadcast
-  message="Version: [${version_message}]" ; broadcast
-  message="----------------------------------------" ; broadcast
-}
-
 inf_loop () {
   while read MAGIC ; do
     case $MAGIC in
@@ -530,6 +522,14 @@ __EOF__
   fi
 }
 
+startup_message(){
+  clear
+  message="----------------------------------------" ; broadcast
+  message="Starting eMMC Flasher from microSD media" ; broadcast
+  message="Version: [${version_message}]" ; broadcast
+  message="----------------------------------------" ; broadcast
+}
+
 activate_cylon_leds() {
   if [ "x${is_bbb}" = "xenable" ] ; then
     cylon_leds & CYLON_PID=$!
@@ -537,3 +537,5 @@ activate_cylon_leds() {
     echo "Not activating Cylon LEDs as we are not a BBB compatible"
   fi
 }
+
+

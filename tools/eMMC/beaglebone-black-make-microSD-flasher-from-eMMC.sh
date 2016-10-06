@@ -24,24 +24,16 @@
 #This script assumes, these packages are installed, as network may not be setup
 #dosfstools initramfs-tools rsync u-boot-tools
 
-version_message="1.20161005: sfdisk: actually calculate the start of 2nd/3rd partitions..."
+source $(dirname "$0")/functions.sh
+
 #
 #https://rcn-ee.com/repos/bootloader/am335x_evm/
 http_spl="MLO-am335x_evm-v2016.03-r7"
 http_uboot="u-boot-am335x_evm-v2016.03-r7.img"
 
-if ! id | grep -q root; then
-	echo "must be run as root"
-	exit
-fi
+check_if_run_as_root
 
-unset root_drive
-root_drive="$(cat /proc/cmdline | sed 's/ /\n/g' | grep root=UUID= | awk -F 'root=' '{print $2}' || true)"
-if [ ! "x${root_drive}" = "x" ] ; then
-	root_drive="$(/sbin/findfs ${root_drive} || true)"
-else
-	root_drive="$(cat /proc/cmdline | sed 's/ /\n/g' | grep root= | awk -F 'root=' '{print $2}' || true)"
-fi
+find_root_drive
 
 boot_drive="${root_drive%?}1"
 
@@ -67,47 +59,11 @@ i=0 ; while test $i -le ${NUM_MOUNTS} ; do
 	i=$(($i+1))
 done
 
-flush_cache () {
-	sync
-	blockdev --flushbufs ${destination}
-}
-
 broadcast () {
 	if [ "x${message}" != "x" ] ; then
 		echo "${message}"
 		#echo "${message}" > /dev/tty0 || true
 	fi
-}
-
-get_device () {
-	is_bbb="enable"
-	machine=$(cat /proc/device-tree/model | sed "s/ /_/g")
-
-	case "${machine}" in
-	TI_AM5728_BeagleBoard*)
-		unset is_bbb
-		;;
-	esac
-}
-
-write_failure () {
-	message="writing to [${destination}] failed..." ; broadcast
-
-	if [ "x${is_bbb}" = "xenable" ] ; then
-		[ -e /proc/$CYLON_PID ]  && kill $CYLON_PID > /dev/null 2>&1
-
-		if [ -e /sys/class/leds/beaglebone\:green\:usr0/trigger ] ; then
-			echo heartbeat > /sys/class/leds/beaglebone\:green\:usr0/trigger
-			echo heartbeat > /sys/class/leds/beaglebone\:green\:usr1/trigger
-			echo heartbeat > /sys/class/leds/beaglebone\:green\:usr2/trigger
-			echo heartbeat > /sys/class/leds/beaglebone\:green\:usr3/trigger
-		fi
-	fi
-	message="-----------------------------" ; broadcast
-	flush_cache
-	umount ${destination}p1 > /dev/null 2>&1 || true
-	umount ${destination}p2 > /dev/null 2>&1 || true
-	inf_loop
 }
 
 check_running_system () {
@@ -141,124 +97,6 @@ check_running_system () {
 			sleep 1
 		fi
 	fi
-}
-
-cylon_leds () {
-	if [ "x${is_bbb}" = "xenable" ] ; then
-		if [ -e /sys/class/leds/beaglebone\:green\:usr0/trigger ] ; then
-			BASE=/sys/class/leds/beaglebone\:green\:usr
-			echo none > ${BASE}0/trigger
-			echo none > ${BASE}1/trigger
-			echo none > ${BASE}2/trigger
-			echo none > ${BASE}3/trigger
-
-			STATE=1
-			while : ; do
-				case $STATE in
-				1)	echo 255 > ${BASE}0/brightness
-					echo 0   > ${BASE}1/brightness
-					STATE=2
-					;;
-				2)	echo 255 > ${BASE}1/brightness
-					echo 0   > ${BASE}0/brightness
-					STATE=3
-					;;
-				3)	echo 255 > ${BASE}2/brightness
-					echo 0   > ${BASE}1/brightness
-					STATE=4
-					;;
-				4)	echo 255 > ${BASE}3/brightness
-					echo 0   > ${BASE}2/brightness
-					STATE=5
-					;;
-				5)	echo 255 > ${BASE}2/brightness
-					echo 0   > ${BASE}3/brightness
-					STATE=6
-					;;
-				6)	echo 255 > ${BASE}1/brightness
-					echo 0   > ${BASE}2/brightness
-					STATE=1
-					;;
-				*)	echo 255 > ${BASE}0/brightness
-					echo 0   > ${BASE}1/brightness
-					STATE=2
-					;;
-				esac
-				sleep 0.1
-			done
-		fi
-	fi
-}
-
-dd_bootloader () {
-	message="Writing bootloader to [${destination}]" ; broadcast
-
-	unset dd_spl_uboot
-	if [ ! "x${dd_spl_uboot_count}" = "x" ] ; then
-		dd_spl_uboot="${dd_spl_uboot}count=${dd_spl_uboot_count} "
-	fi
-
-	if [ ! "x${dd_spl_uboot_seek}" = "x" ] ; then
-		dd_spl_uboot="${dd_spl_uboot}seek=${dd_spl_uboot_seek} "
-	fi
-
-	if [ ! "x${dd_spl_uboot_conf}" = "x" ] ; then
-		dd_spl_uboot="${dd_spl_uboot}conv=${dd_spl_uboot_conf} "
-	fi
-
-	if [ ! "x${dd_spl_uboot_bs}" = "x" ] ; then
-		dd_spl_uboot="${dd_spl_uboot}bs=${dd_spl_uboot_bs}"
-	fi
-
-	unset dd_uboot
-	if [ ! "x${dd_uboot_count}" = "x" ] ; then
-		dd_uboot="${dd_uboot}count=${dd_uboot_count} "
-	fi
-
-	if [ ! "x${dd_uboot_seek}" = "x" ] ; then
-		dd_uboot="${dd_uboot}seek=${dd_uboot_seek} "
-	fi
-
-	if [ ! "x${dd_uboot_conf}" = "x" ] ; then
-		dd_uboot="${dd_uboot}conv=${dd_uboot_conf} "
-	fi
-
-	if [ ! "x${dd_uboot_bs}" = "x" ] ; then
-		dd_uboot="${dd_uboot}bs=${dd_uboot_bs}"
-	fi
-
-	message="dd if=${dd_spl_uboot_backup} of=${destination} ${dd_spl_uboot}" ; broadcast
-	echo "-----------------------------"
-	dd if=${dd_spl_uboot_backup} of=${destination} ${dd_spl_uboot}
-	echo "-----------------------------"
-	message="dd if=${dd_uboot_backup} of=${destination} ${dd_uboot}" ; broadcast
-	echo "-----------------------------"
-	dd if=${dd_uboot_backup} of=${destination} ${dd_uboot}
-	message="-----------------------------" ; broadcast
-}
-
-format_boot () {
-	message="mkfs.vfat -F 16 ${destination}p1 -n ${boot_label}" ; broadcast
-	echo "-----------------------------"
-	LC_ALL=C mkfs.vfat -F 16 ${destination}p1 -n ${boot_label}
-	echo "-----------------------------"
-	flush_cache
-}
-
-format_root () {
-	message="mkfs.ext4 ${ext4_options} ${destination}p2 -L ${rootfs_label}" ; broadcast
-	echo "-----------------------------"
-	LC_ALL=C mkfs.ext4 ${ext4_options} ${destination}p2 -L ${rootfs_label}
-	echo "-----------------------------"
-	flush_cache
-}
-
-format_single_root () {
-	message="mkfs.ext4 ${ext4_options} ${destination}p1 -L ${boot_label}" ; broadcast
-	echo "-----------------------------"
-	LC_ALL=C mkfs.ext4 ${ext4_options} ${destination}p1 -L ${boot_label}
-	echo "-----------------------------"
-	flush_cache
 }
 
 copy_boot () {
@@ -582,8 +420,6 @@ message="-----------------------------" ; broadcast
 
 get_device
 check_running_system
-if [ "x${is_bbb}" = "xenable" ] ; then
-	cylon_leds & CYLON_PID=$!
-fi
+activate_cylon_leds
 partition_drive
 #
