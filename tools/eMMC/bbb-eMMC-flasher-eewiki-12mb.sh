@@ -24,136 +24,23 @@
 #This script assumes, these packages are installed, as network may not be setup
 #dosfstools initramfs-tools rsync u-boot-tools
 
-version_message="1.20161005: sfdisk: actually calculate the start of 2nd/3rd partitions..."
+source $(dirname "$0")/functions.sh
 #
+device_eeprom="bbb-eeprom"
+
 #https://rcn-ee.com/repos/bootloader/am335x_evm/
 http_spl="MLO-am335x_evm-v2016.03-r7"
 http_uboot="u-boot-am335x_evm-v2016.03-r7.img"
 
-if ! id | grep -q root; then
-	echo "must be run as root"
-	exit
-fi
+check_if_run_as_root
 
 source="/dev/mmcblk0"
 destination="/dev/mmcblk1"
-
-flush_cache () {
-	sync
-	blockdev --flushbufs ${destination}
-}
 
 broadcast () {
 	if [ "x${message}" != "x" ] ; then
 		echo "${message}"
 		#echo "${message}" > /dev/tty0 || true
-	fi
-}
-
-inf_loop () {
-	while read MAGIC ; do
-		case $MAGIC in
-		beagleboard.org)
-			echo "Your foo is strong!"
-			bash -i
-			;;
-		*)	echo "Your foo is weak."
-			;;
-		esac
-	done
-}
-
-get_device () {
-	is_bbb="enable"
-	machine=$(cat /proc/device-tree/model | sed "s/ /_/g")
-
-	case "${machine}" in
-	TI_AM5728_BeagleBoard*)
-		unset is_bbb
-		;;
-	esac
-}
-
-write_failure () {
-	message="writing to [${destination}] failed..." ; broadcast
-
-	if [ "x${is_bbb}" = "xenable" ] ; then
-		[ -e /proc/$CYLON_PID ]  && kill $CYLON_PID > /dev/null 2>&1
-
-		if [ -e /sys/class/leds/beaglebone\:green\:usr0/trigger ] ; then
-			echo heartbeat > /sys/class/leds/beaglebone\:green\:usr0/trigger
-			echo heartbeat > /sys/class/leds/beaglebone\:green\:usr1/trigger
-			echo heartbeat > /sys/class/leds/beaglebone\:green\:usr2/trigger
-			echo heartbeat > /sys/class/leds/beaglebone\:green\:usr3/trigger
-		fi
-	fi
-	message="-----------------------------" ; broadcast
-	flush_cache
-	umount ${destination}p1 > /dev/null 2>&1 || true
-	umount ${destination}p2 > /dev/null 2>&1 || true
-	inf_loop
-}
-
-check_eeprom () {
-	message="Checking for Valid BBB EEPROM header" ; broadcast
-
-	unset got_eeprom
-	#v8 of nvmem...
-	if [ -f /sys/bus/nvmem/devices/at24-0/nvmem ] && [ "x${got_eeprom}" = "x" ] ; then
-		eeprom="/sys/bus/nvmem/devices/at24-0/nvmem"
-		eeprom_location="/sys/devices/platform/ocp/44e0b000.i2c/i2c-0/0-0050/at24-0/nvmem"
-		got_eeprom="true"
-	fi
-
-	#pre-v8 of nvmem...
-	if [ -f /sys/class/nvmem/at24-0/nvmem ] && [ "x${got_eeprom}" = "x" ] ; then
-		eeprom="/sys/class/nvmem/at24-0/nvmem"
-		eeprom_location="/sys/devices/platform/ocp/44e0b000.i2c/i2c-0/0-0050/nvmem/at24-0/nvmem"
-		got_eeprom="true"
-	fi
-
-	#eeprom 3.8.x & 4.4 with eeprom-nvmem patchset...
-	if [ -f /sys/bus/i2c/devices/0-0050/eeprom ] && [ "x${got_eeprom}" = "x" ] ; then
-		eeprom="/sys/bus/i2c/devices/0-0050/eeprom"
-
-		if [ -f /sys/devices/platform/ocp/44e0b000.i2c/i2c-0/0-0050/eeprom ] ; then
-			eeprom_location="/sys/devices/platform/ocp/44e0b000.i2c/i2c-0/0-0050/eeprom"
-		else
-			eeprom_location=$(ls /sys/devices/ocp*/44e0b000.i2c/i2c-0/0-0050/eeprom 2> /dev/null)
-		fi
-
-		got_eeprom="true"
-	fi
-
-	if [ "x${is_bbb}" = "xenable" ] ; then
-		if [ "x${got_eeprom}" = "xtrue" ] ; then
-			eeprom_header=$(hexdump -e '8/1 "%c"' ${eeprom} -n 8 | cut -b 6-8)
-			if [ "x${eeprom_header}" = "x335" ] ; then
-				message="Valid BBB EEPROM header found [${eeprom_header}]" ; broadcast
-				message="-----------------------------" ; broadcast
-			else
-				message="Invalid EEPROM header detected" ; broadcast
-				if [ -f /opt/scripts/device/bone/bbb-eeprom.dump ] ; then
-					if [ ! "x${eeprom_location}" = "x" ] ; then
-						message="Writing header to EEPROM" ; broadcast
-						dd if=/opt/scripts/device/bone/bbb-eeprom.dump of=${eeprom_location}
-						sync
-						sync
-						eeprom_check=$(hexdump -e '8/1 "%c"' ${eeprom} -n 8 | cut -b 6-8)
-						echo "eeprom check: [${eeprom_check}]"
-
-						#We have to reboot, as the kernel only loads the eMMC cape
-						# with a valid header
-						reboot -f
-
-						#We shouldnt hit this...
-						exit
-					fi
-				else
-					message="error: no [/opt/scripts/device/bone/bbb-eeprom.dump]" ; broadcast
-				fi
-			fi
-		fi
 	fi
 }
 
@@ -188,149 +75,6 @@ check_running_system () {
 			sleep 1
 		fi
 	fi
-}
-
-cylon_leds () {
-	if [ "x${is_bbb}" = "xenable" ] ; then
-		if [ -e /sys/class/leds/beaglebone\:green\:usr0/trigger ] ; then
-			BASE=/sys/class/leds/beaglebone\:green\:usr
-			echo none > ${BASE}0/trigger
-			echo none > ${BASE}1/trigger
-			echo none > ${BASE}2/trigger
-			echo none > ${BASE}3/trigger
-
-			STATE=1
-			while : ; do
-				case $STATE in
-				1)	echo 255 > ${BASE}0/brightness
-					echo 0   > ${BASE}1/brightness
-					STATE=2
-					;;
-				2)	echo 255 > ${BASE}1/brightness
-					echo 0   > ${BASE}0/brightness
-					STATE=3
-					;;
-				3)	echo 255 > ${BASE}2/brightness
-					echo 0   > ${BASE}1/brightness
-					STATE=4
-					;;
-				4)	echo 255 > ${BASE}3/brightness
-					echo 0   > ${BASE}2/brightness
-					STATE=5
-					;;
-				5)	echo 255 > ${BASE}2/brightness
-					echo 0   > ${BASE}3/brightness
-					STATE=6
-					;;
-				6)	echo 255 > ${BASE}1/brightness
-					echo 0   > ${BASE}2/brightness
-					STATE=1
-					;;
-				*)	echo 255 > ${BASE}0/brightness
-					echo 0   > ${BASE}1/brightness
-					STATE=2
-					;;
-				esac
-				sleep 0.1
-			done
-		fi
-	fi
-}
-
-dd_bootloader () {
-	message="Writing bootloader to [${destination}]" ; broadcast
-
-	unset dd_spl_uboot
-	if [ ! "x${dd_spl_uboot_count}" = "x" ] ; then
-		dd_spl_uboot="${dd_spl_uboot}count=${dd_spl_uboot_count} "
-	fi
-
-	if [ ! "x${dd_spl_uboot_seek}" = "x" ] ; then
-		dd_spl_uboot="${dd_spl_uboot}seek=${dd_spl_uboot_seek} "
-	fi
-
-	if [ ! "x${dd_spl_uboot_conf}" = "x" ] ; then
-		dd_spl_uboot="${dd_spl_uboot}conv=${dd_spl_uboot_conf} "
-	fi
-
-	if [ ! "x${dd_spl_uboot_bs}" = "x" ] ; then
-		dd_spl_uboot="${dd_spl_uboot}bs=${dd_spl_uboot_bs}"
-	fi
-
-	unset dd_uboot
-	if [ ! "x${dd_uboot_count}" = "x" ] ; then
-		dd_uboot="${dd_uboot}count=${dd_uboot_count} "
-	fi
-
-	if [ ! "x${dd_uboot_seek}" = "x" ] ; then
-		dd_uboot="${dd_uboot}seek=${dd_uboot_seek} "
-	fi
-
-	if [ ! "x${dd_uboot_conf}" = "x" ] ; then
-		dd_uboot="${dd_uboot}conv=${dd_uboot_conf} "
-	fi
-
-	if [ ! "x${dd_uboot_bs}" = "x" ] ; then
-		dd_uboot="${dd_uboot}bs=${dd_uboot_bs}"
-	fi
-
-	message="dd if=${dd_spl_uboot_backup} of=${destination} ${dd_spl_uboot}" ; broadcast
-	echo "-----------------------------"
-	dd if=${dd_spl_uboot_backup} of=${destination} ${dd_spl_uboot}
-	echo "-----------------------------"
-	message="dd if=${dd_uboot_backup} of=${destination} ${dd_uboot}" ; broadcast
-	echo "-----------------------------"
-	dd if=${dd_uboot_backup} of=${destination} ${dd_uboot}
-	message="-----------------------------" ; broadcast
-}
-
-format_boot () {
-	message="mkfs.vfat -F 16 ${destination}p1 -n ${boot_label}" ; broadcast
-	echo "-----------------------------"
-	LC_ALL=C mkfs.vfat -F 16 ${destination}p1 -n ${boot_label}
-	echo "-----------------------------"
-	flush_cache
-}
-
-format_root () {
-	message="mkfs.ext4 ${ext4_options} ${destination}p2 -L ${rootfs_label}" ; broadcast
-	echo "-----------------------------"
-	LC_ALL=C mkfs.ext4 ${ext4_options} ${destination}p2 -L ${rootfs_label}
-	echo "-----------------------------"
-	flush_cache
-}
-
-format_single_root () {
-	message="mkfs.ext4 ${ext4_options} ${destination}p1 -L ${boot_label}" ; broadcast
-	echo "-----------------------------"
-	LC_ALL=C mkfs.ext4 ${ext4_options} ${destination}p1 -L ${boot_label}
-	echo "-----------------------------"
-	flush_cache
-}
-
-copy_boot () {
-	message="Copying: ${source}p1 -> ${destination}p1" ; broadcast
-	mkdir -p /tmp/boot/ || true
-
-	mount ${destination}p1 /tmp/boot/ -o sync
-
-	if [ -f /boot/uboot/MLO ] ; then
-		#Make sure the BootLoader gets copied first:
-		cp -v /boot/uboot/MLO /tmp/boot/MLO || write_failure
-		flush_cache
-
-		cp -v /boot/uboot/u-boot.img /tmp/boot/u-boot.img || write_failure
-		flush_cache
-	fi
-
-	message="rsync: /boot/uboot/ -> /tmp/boot/" ; broadcast
-	rsync -aAx /boot/uboot/ /tmp/boot/ --exclude={MLO,u-boot.img,uEnv.txt} || write_failure
-	flush_cache
-
-	flush_cache
-	umount /tmp/boot/ || umount -l /tmp/boot/ || write_failure
-	flush_cache
-	umount /boot/uboot || umount -l /boot/uboot || true
 }
 
 copy_rootfs () {
@@ -531,8 +275,8 @@ partition_drive () {
 		message="sfdisk: [${sfdisk_boot_startmb},,${sfdisk_fstype},*]" ; broadcast
 
 		LC_ALL=C sfdisk ${sfdisk_options} "${destination}" <<-__EOF__
-			${sfdisk_boot_startmb},,${sfdisk_fstype},*
-		__EOF__
+${sfdisk_boot_startmb},,${sfdisk_fstype},*
+__EOF__
 
 		flush_cache
 		format_single_root
@@ -552,8 +296,6 @@ message="-----------------------------" ; broadcast
 get_device
 check_eeprom
 check_running_system
-if [ "x${is_bbb}" = "xenable" ] ; then
-	cylon_leds & CYLON_PID=$!
-fi
+activate_cylon_leds
 partition_drive
 #

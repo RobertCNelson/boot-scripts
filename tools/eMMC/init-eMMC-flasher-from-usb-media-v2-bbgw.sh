@@ -21,70 +21,21 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+source $(dirname "$0")/functions.sh
+
 #This script assumes, these packages are installed, as network may not be setup
 #dosfstools initramfs-tools rsync u-boot-tools
 
 version_message="1.20160618: deal with v4.4.x+ back to old eeprom location..."
 
-if ! id | grep -q root; then
-	echo "must be run as root"
-	exit
-fi
+check_if_run_as_root
 
-unset root_drive
-root_drive="$(cat /proc/cmdline | sed 's/ /\n/g' | grep root=UUID= | awk -F 'root=' '{print $2}' || true)"
-if [ ! "x${root_drive}" = "x" ] ; then
-	root_drive="$(/sbin/findfs ${root_drive} || true)"
-else
-	root_drive="$(cat /proc/cmdline | sed 's/ /\n/g' | grep root= | awk -F 'root=' '{print $2}' || true)"
-fi
+find_root_drive
 
 mount -t tmpfs tmpfs /tmp
 
 destination="/dev/mmcblk1"
 usb_drive="/dev/sda"
-
-flush_cache () {
-	sync
-	blockdev --flushbufs ${destination}
-}
-
-broadcast () {
-	if [ "x${message}" != "x" ] ; then
-		echo "${message}"
-		echo "${message}" > /dev/tty0 || true
-	fi
-}
-
-inf_loop () {
-	while read MAGIC ; do
-		case $MAGIC in
-		beagleboard.org)
-			echo "Your foo is strong!"
-			bash -i
-			;;
-		*)	echo "Your foo is weak."
-			;;
-		esac
-	done
-}
-
-# umount does not like device names without a valid /etc/mtab
-# find the mount point from /proc/mounts
-dev2dir () {
-	grep -m 1 '^$1 ' /proc/mounts | while read LINE ; do set -- $LINE ; echo $2 ; done
-}
-
-get_device () {
-	is_bbb="enable"
-	machine=$(cat /proc/device-tree/model | sed "s/ /_/g")
-
-	case "${machine}" in
-	TI_AM5728_BeagleBoard*)
-		unset is_bbb
-		;;
-	esac
-}
 
 write_failure () {
 	message="writing to [${destination}] failed..." ; broadcast
@@ -477,54 +428,6 @@ check_eeprom () {
 		fi
 	fi
 }
-
-cylon_leds () {
-	if [ "x${is_bbb}" = "xenable" ] ; then
-		if [ -e /sys/class/leds/beaglebone\:green\:usr0/trigger ] ; then
-			BASE=/sys/class/leds/beaglebone\:green\:usr
-			echo none > ${BASE}0/trigger
-			echo none > ${BASE}1/trigger
-			echo none > ${BASE}2/trigger
-			echo none > ${BASE}3/trigger
-
-			STATE=1
-			while : ; do
-				case $STATE in
-				1)	echo 255 > ${BASE}0/brightness
-					echo 0   > ${BASE}1/brightness
-					STATE=2
-					;;
-				2)	echo 255 > ${BASE}1/brightness
-					echo 0   > ${BASE}0/brightness
-					STATE=3
-					;;
-				3)	echo 255 > ${BASE}2/brightness
-					echo 0   > ${BASE}1/brightness
-					STATE=4
-					;;
-				4)	echo 255 > ${BASE}3/brightness
-					echo 0   > ${BASE}2/brightness
-					STATE=5
-					;;
-				5)	echo 255 > ${BASE}2/brightness
-					echo 0   > ${BASE}3/brightness
-					STATE=6
-					;;
-				6)	echo 255 > ${BASE}1/brightness
-					echo 0   > ${BASE}2/brightness
-					STATE=1
-					;;
-				*)	echo 255 > ${BASE}0/brightness
-					echo 0   > ${BASE}1/brightness
-					STATE=2
-					;;
-				esac
-				sleep 0.1
-			done
-		fi
-	fi
-}
-
 
 process_job_file () {
 	job_file=found
