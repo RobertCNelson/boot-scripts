@@ -37,6 +37,14 @@ broadcast () {
   fi
 }
 
+echo_broadcast() {
+  local _message="$1"
+  if [ "x${_message}" != "x" ] ; then
+    echo "${_message}"
+    echo "${_message}" > /dev/tty0 || true
+  fi
+}
+
 inf_loop () {
   while read MAGIC ; do
     case $MAGIC in
@@ -49,6 +57,7 @@ inf_loop () {
     esac
   done
 }
+
 # umount does not like device names without a valid /etc/mtab
 # find the mount point from /proc/mounts
 dev2dir () {
@@ -66,9 +75,7 @@ get_device () {
   esac
 }
 
-write_failure () {
-  message="writing to [${destination}] failed..." ; broadcast
-
+reset_leds() {
   if [ "x${is_bbb}" = "xenable" ] ; then
     [ -e /proc/$CYLON_PID ]  && kill $CYLON_PID > /dev/null 2>&1
 
@@ -78,17 +85,25 @@ write_failure () {
       echo heartbeat > /sys/class/leds/beaglebone\:green\:usr2/trigger
       echo heartbeat > /sys/class/leds/beaglebone\:green\:usr3/trigger
     fi
+  else
+    echo_broadcast "We don't know how to reset the leds as we are not a BBB compatible device"
   fi
-  message="-----------------------------" ; broadcast
+
+}
+
+write_failure () {
+  echo_broadcast "writing to [${destination}] failed..."
+
+  reset_leds
+
+  echo_broadcast "-----------------------------"
   flush_cache
   umount $(dev2dir ${destination}p1) > /dev/null 2>&1 || true
   umount $(dev2dir ${destination}p2) > /dev/null 2>&1 || true
   inf_loop
 }
 
-check_eeprom () {
-  message="Checking for Valid ${device_eeprom} header" ; broadcast
-
+_do_we_have_eeprom() {
   unset got_eeprom
   #v8 of nvmem...
   if [ -f /sys/bus/nvmem/devices/at24-0/nvmem ] && [ "x${got_eeprom}" = "x" ] ; then
@@ -116,18 +131,24 @@ check_eeprom () {
 
     got_eeprom="true"
   fi
+}
+
+check_eeprom () {
+  echo_broadcast "Checking for Valid ${device_eeprom} header"
+
+  _do_we_have_eeprom
 
   if [ "x${is_bbb}" = "xenable" ] ; then
     if [ "x${got_eeprom}" = "xtrue" ] ; then
       eeprom_header=$(hexdump -e '8/1 "%c"' ${eeprom} -n 8 | cut -b 6-8)
       if [ "x${eeprom_header}" = "x335" ] ; then
-        message="Valid ${device_eeprom} header found [${eeprom_header}]" ; broadcast
-        message="-----------------------------" ; broadcast
+        echo_broadcast "Valid ${device_eeprom} header found [${eeprom_header}]"
+        echo_broadcast "-----------------------------"
       else
-        message="Invalid EEPROM header detected" ; broadcast
+        echo_broadcast "Invalid EEPROM header detected"
         if [ -f /opt/scripts/device/bone/${device_eeprom}.dump ] ; then
           if [ ! "x${eeprom_location}" = "x" ] ; then
-            message="Writing header to EEPROM" ; broadcast
+            echo_broadcast "Writing header to EEPROM"
             dd if=/opt/scripts/device/bone/${device_eeprom}.dump of=${eeprom_location}
             sync
             sync
@@ -142,7 +163,7 @@ check_eeprom () {
             exit
           fi
         else
-          message="error: no [/opt/scripts/device/bone/${device_eeprom}.dump]" ; broadcast
+          echo_broadcast "error: no [/opt/scripts/device/bone/${device_eeprom}.dump]"
         fi
       fi
     fi
@@ -150,16 +171,16 @@ check_eeprom () {
 }
 
 check_running_system () {
-  message="copying: [${source}] -> [${destination}]" ; broadcast
-  message="lsblk:" ; broadcast
-  message="`lsblk || true`" ; broadcast
-  message="-----------------------------" ; broadcast
-  message="df -h | grep rootfs:" ; broadcast
-  message="`df -h | grep rootfs || true`" ; broadcast
-  message="-----------------------------" ; broadcast
+  echo_broadcast "copying: [${source}] -> [${destination}]"
+  echo_broadcast "lsblk:"
+  echo_broadcast "`lsblk || true`"
+  echo_broadcast "-----------------------------"
+  echo_broadcast "df -h | grep rootfs:"
+  echo_broadcast "`df -h | grep rootfs || true`"
+  echo_broadcast "-----------------------------"
 
   if [ ! -b "${destination}" ] ; then
-    message="Error: [${destination}] does not exist" ; broadcast
+    echo_broadcast "Error: [${destination}] does not exist"
     write_failure
   fi
 
@@ -218,9 +239,8 @@ cylon_leds () {
   fi
 }
 
-dd_bootloader () {
-  message="Writing bootloader to [${destination}]" ; broadcast
-
+_build_uboot_spl_dd_options() {
+  echo_broadcast "Figuring out options for SPL U-Boot copy ..."
   unset dd_spl_uboot
   if [ ! "x${dd_spl_uboot_count}" = "x" ] ; then
     dd_spl_uboot="${dd_spl_uboot}count=${dd_spl_uboot_count} "
@@ -237,7 +257,11 @@ dd_bootloader () {
   if [ ! "x${dd_spl_uboot_bs}" = "x" ] ; then
     dd_spl_uboot="${dd_spl_uboot}bs=${dd_spl_uboot_bs}"
   fi
+  echo_broadcast "Will use : $dd_spl_uboot"
+}
 
+_build_uboot_dd_options() {
+  echo_broadcast "Figuring out options for U-Boot copy ..."
   unset dd_uboot
   if [ ! "x${dd_uboot_count}" = "x" ] ; then
     dd_uboot="${dd_uboot}count=${dd_uboot_count} "
@@ -254,140 +278,166 @@ dd_bootloader () {
   if [ ! "x${dd_uboot_bs}" = "x" ] ; then
     dd_uboot="${dd_uboot}bs=${dd_uboot_bs}"
   fi
+  echo_broadcast "Will use : $dd_uboot"
+}
 
-  message="dd if=${dd_spl_uboot_backup} of=${destination} ${dd_spl_uboot}" ; broadcast
-  echo "-----------------------------"
+dd_bootloader () {
+  echo_broadcast "Writing bootloader to [${destination}]"
+
+  _build_uboot_spl_dd_options
+  _build_uboot_dd_options
+
+  echo_broadcast "-------------------------------------------------------------------"
+  echo_broadcast "Copying SPL U-Boot with dd if=${dd_spl_uboot_backup} of=${destination} ${dd_spl_uboot}"
   dd if=${dd_spl_uboot_backup} of=${destination} ${dd_spl_uboot}
-  echo "-----------------------------"
-  message="dd if=${dd_uboot_backup} of=${destination} ${dd_uboot}" ; broadcast
-  echo "-----------------------------"
+  echo_broadcast "-------------------------------------------------------------------"
+  echo_broadcast "-------------------------------------------------------------------"
+  echo_broadcast "Copying U-Boot with dd if=${dd_uboot_backup} of=${destination} ${dd_uboot}"
   dd if=${dd_uboot_backup} of=${destination} ${dd_uboot}
-  message="-----------------------------" ; broadcast
+  echo_broadcast "-------------------------------------------------------------------"
 }
 
 format_boot () {
-  message="mkfs.vfat -F 16 ${destination}p1 -n ${boot_label}" ; broadcast
-  echo "-----------------------------"
+  echo_broadcast "-------------------------------------------------------------------"
+  echo_broadcast "Formating boot partition with mkfs.vfat -F 16 ${destination}p1 -n ${boot_label}"
   LC_ALL=C mkfs.vfat -F 16 ${destination}p1 -n ${boot_label}
-  echo "-----------------------------"
+  echo_broadcast "-------------------------------------------------------------------"
   flush_cache
 }
 
 format_root () {
-  message="mkfs.ext4 ${ext4_options} ${destination}p2 -L ${rootfs_label}" ; broadcast
-  echo "-----------------------------"
+  echo_broadcast "-------------------------------------------------------------------"
+  echo_broadcast "Formating rootfs with mkfs.ext4 ${ext4_options} ${destination}p2 -L ${rootfs_label}"
   LC_ALL=C mkfs.ext4 ${ext4_options} ${destination}p2 -L ${rootfs_label}
-  echo "-----------------------------"
+  echo_broadcast "-------------------------------------------------------------------"
   flush_cache
 }
 
 format_single_root () {
-  message="mkfs.ext4 ${ext4_options} ${destination}p1 -L ${boot_label}" ; broadcast
-  echo "-----------------------------"
+  echo_broadcast "-------------------------------------------------------------------"
+  echo_broadcast "Formating rootfs with mkfs.ext4 ${ext4_options} ${destination}p1 -L ${boot_label}"
   LC_ALL=C mkfs.ext4 ${ext4_options} ${destination}p1 -L ${boot_label}
-  echo "-----------------------------"
+  echo_broadcast "-------------------------------------------------------------------"
   flush_cache
 }
 
 copy_boot () {
-  message="Copying: ${source}p1 -> ${destination}p1" ; broadcast
-  mkdir -p /tmp/boot/ || true
+  #FIXME: Something is fishy about this function
+  local tmp_boot_dir="/tmp/boot"
+  echo_broadcast "-------------------------------------------------------------------"
+  echo_broadcast "Copying: ${source}p1 -> ${destination}p1"
+  echo_broadcast "==> Creating temporary boot directory (${tmp_boot_dir})"
+  mkdir -p ${tmp_boot_dir} || true
+  echo_broadcast "==> Mounting ${destination}p1 to ${tmp_boot_dir}"
+  mount ${destination}p1 ${tmp_boot_dir} -o sync
 
-  mount ${destination}p1 /tmp/boot/ -o sync
-
-  if [ -f /boot/uboot/MLO ] ; then
+  if [ -f /boot/uboot/MLO ] && [ -f /boot/uboot/u-boot.img ] ; then
+    echo_broadcast "==> Found MLO and u-boot.img in current /boot/uboot/, copying"
     #Make sure the BootLoader gets copied first:
-    cp -v /boot/uboot/MLO /tmp/boot/MLO || write_failure
+    cp -v /boot/uboot/MLO ${tmp_boot_dir}/MLO || write_failure
     flush_cache
 
-    cp -v /boot/uboot/u-boot.img /tmp/boot/u-boot.img || write_failure
+    cp -v /boot/uboot/u-boot.img ${tmp_boot_dir}/u-boot.img || write_failure
     flush_cache
+  else
+    echo_broadcast "!==> We could not find an MLO and u-boot.img to copy"
   fi
 
-  message="rsync: /boot/uboot/ -> /tmp/boot/" ; broadcast
-  rsync -aAx /boot/uboot/ /tmp/boot/ --exclude={MLO,u-boot.img,uEnv.txt} || write_failure
+  echo_broadcast "==> rsync: /boot/uboot/ -> ${tmp_boot_dir}"
+  #FIXME: Why is it rsyncing /boot/uboot ? This is wrong
+  #rsync -aAx /boot/uboot/ /tmp/boot/ --exclude={MLO,u-boot.img,uEnv.txt} || write_failure
+  rsync -avAx /boot/* ${tmp_boot_dir} --exclude={MLO,u-boot.img,uEnv.txt} || write_failure
   flush_cache
 
+  echo_broadcast "==> Unmounting ${tmp_boot_dir}"
+  umount ${tmp_boot_dir} || umount -l ${tmp_boot_dir} || write_failure
   flush_cache
-  umount /tmp/boot/ || umount -l /tmp/boot/ || write_failure
-  flush_cache
+  #FIXME: When was this mounted ? Why is it going to be unmounted ?
   umount /boot/uboot || umount -l /boot/uboot || true
+  echo_broadcast "-------------------------------------------------------------------"
 }
 
 copy_rootfs () {
-  message="Copying: ${source}p${media_rootfs} -> ${destination}p${media_rootfs}" ; broadcast
-  mkdir -p /tmp/rootfs/ || true
+  local tmp_rootfs_dir="/tmp/rootfs"
+  echo_broadcast "-------------------------------------------------------------------"
+  echo_broadcast "Copying: ${source}p${media_rootfs} -> ${destination}p${media_rootfs}"
+  echo_broadcast "==> Creating temporary rootfs directory (${tmp_rootfs_dir})"
+  mkdir -p ${tmp_rootfs_dir} || true
+  echo_broadcast "==> Mounting ${destination}p${media_rootfs} to ${tmp_rootfs_dir}"
+  mount ${destination}p${media_rootfs} ${tmp_rootfs_dir} -o async,noatime
 
-  mount ${destination}p${media_rootfs} /tmp/rootfs/ -o async,noatime
-
-  message="rsync: / -> /tmp/rootfs/" ; broadcast
-  rsync -aAx /* /tmp/rootfs/ --exclude={/dev/*,/proc/*,/sys/*,/tmp/*,/run/*,/mnt/*,/media/*,/lost+found,/lib/modules/*,/uEnv.txt} || write_failure
+  echo_broadcast "==> rsync: / -> ${tmp_rootfs_dir}"
+  rsync -avAx /* ${tmp_rootfs_dir} --exclude={/dev/*,/proc/*,/sys/*,/tmp/*,/run/*,/mnt/*,/media/*,/lost+found,/lib/modules/*,/uEnv.txt} || write_failure
   flush_cache
 
-  if [ -d /tmp/rootfs/etc/ssh/ ] ; then
+  if [ -d ${tmp_rootfs_dir}/etc/ssh/ ] ; then
+    echo_broadcast "==> Applying SSH Key Regeneration trick"
     #ssh keys will now get regenerated on the next bootup
-    touch /tmp/rootfs/etc/ssh/ssh.regenerate
+    touch ${tmp_rootfs_dir}/etc/ssh/ssh.regenerate
     flush_cache
   fi
 
-  mkdir -p /tmp/rootfs/lib/modules/$(uname -r)/ || true
 
-  message="Copying: Kernel modules" ; broadcast
-  message="rsync: /lib/modules/$(uname -r)/ -> /tmp/rootfs/lib/modules/$(uname -r)/" ; broadcast
-  rsync -aAx /lib/modules/$(uname -r)/* /tmp/rootfs/lib/modules/$(uname -r)/ || write_failure
+  echo_broadcast "==> Copying: Kernel modules"
+  echo_broadcast "===> Creating directory for modules"
+  mkdir -p ${tmp_rootfs_dir}/lib/modules/$(uname -r)/ || true
+  echo_broadcast "===> rsync: /lib/modules/$(uname -r)/ -> ${tmp_rootfs_dir}/lib/modules/$(uname -r)/"
+  rsync -aAx /lib/modules/$(uname -r)/* ${tmp_rootfs_dir}/lib/modules/$(uname -r)/ || write_failure
   flush_cache
 
-  message="Copying: ${source}p${media_rootfs} -> ${destination}p${media_rootfs} complete" ; broadcast
-  message="-----------------------------" ; broadcast
+  echo_broadcast "Copying: ${source}p${media_rootfs} -> ${destination}p${media_rootfs} complete"
 
-  message="Final System Tweaks:" ; broadcast
-
+  echo_broadcast "Final System Tweaks:"
+  echo_broadcast "==> Put root uuid in uEnv.txt"
   unset root_uuid
   root_uuid=$(/sbin/blkid -c /dev/null -s UUID -o value ${destination}p${media_rootfs})
   if [ "${root_uuid}" ] ; then
-    sed -i -e 's:uuid=:#uuid=:g' /tmp/rootfs/boot/uEnv.txt
-    echo "uuid=${root_uuid}" >> /tmp/rootfs/boot/uEnv.txt
+    sed -i -e 's:uuid=:#uuid=:g' ${tmp_rootfs_dir}/boot/uEnv.txt
+    echo "uuid=${root_uuid}" >> ${tmp_rootfs_dir}/boot/uEnv.txt
 
-    message="UUID=${root_uuid}" ; broadcast
+    echo_broadcast "===> UUID=${root_uuid}"
     root_uuid="UUID=${root_uuid}"
   else
-    #really a failure...
+    #FIXME: really a failure...
     root_uuid="${source}p${media_rootfs}"
   fi
 
-  message="Generating: /etc/fstab" ; broadcast
-  echo "# /etc/fstab: static file system information." > /tmp/rootfs/etc/fstab
-  echo "#" >> /tmp/rootfs/etc/fstab
-  echo "${root_uuid}  /  ext4  noatime,errors=remount-ro  0  1" >> /tmp/rootfs/etc/fstab
-  echo "debugfs  /sys/kernel/debug  debugfs  defaults  0  0" >> /tmp/rootfs/etc/fstab
-  cat /tmp/rootfs/etc/fstab
+  echo_broadcast "==> Generating: /etc/fstab"
+  echo "# /etc/fstab: static file system information." > ${tmp_rootfs_dir}/etc/fstab
+  echo "#" >> ${tmp_rootfs_dir}/etc/fstab
+  echo "${root_uuid}  /  ext4  noatime,errors=remount-ro  0  1" >> ${tmp_rootfs_dir}/etc/fstab
+  echo "debugfs  /sys/kernel/debug  debugfs  defaults  0  0" >> ${tmp_rootfs_dir}/etc/fstab
+  cat ${tmp_rootfs_dir}/etc/fstab
 
-  message="/boot/uEnv.txt: disabling eMMC flasher script" ; broadcast
-  sed -i -e 's:'$emmcscript':#'$emmcscript':g' /tmp/rootfs/boot/uEnv.txt
-  cat /tmp/rootfs/boot/uEnv.txt
-  message="-----------------------------" ; broadcast
-
+  #FIXME: What about when you boot from a fat partition /boot ?
+  echo_broadcast "==> /boot/uEnv.txt: disabling eMMC flasher script"
+  sed -i -e 's:'$emmcscript':#'$emmcscript':g' ${tmp_rootfs_dir}/boot/uEnv.txt
+  cat ${tmp_rootfs_dir}/boot/uEnv.txt
   flush_cache
-  umount /tmp/rootfs/ || umount -l /tmp/rootfs/ || write_failure
+
+  echo_broadcast "==> Unmounting ${tmp_rootfs_dir}"
+  umount ${tmp_rootfs_dir} || umount -l ${tmp_rootfs_dir} || write_failure
 
   if [ "x${is_bbb}" = "xenable" ] ; then
+    echo_broadcast "==> Stop Cylon LEDs"
     [ -e /proc/$CYLON_PID ]  && kill $CYLON_PID
   fi
 
-  message="Syncing: ${destination}" ; broadcast
+  echo_broadcast "==> Syncing: ${destination}"
   #https://github.com/beagleboard/meta-beagleboard/blob/master/contrib/bone-flash-tool/emmc.sh#L158-L159
   # force writeback of eMMC buffers
   sync
   dd if=${destination} of=/dev/null count=100000
-  message="Syncing: ${destination} complete" ; broadcast
-  message="-----------------------------" ; broadcast
+  echo_broadcast "Syncing: ${destination} complete"
+  echo_broadcast "-------------------------------------------------------------------"
 
   if [ -f /boot/debug.txt ] ; then
-    message="This script has now completed its task" ; broadcast
-    message="-----------------------------" ; broadcast
-    message="debug: enabled" ; broadcast
+    echo_broadcast "This script has now completed its task"
+    echo_broadcast "-----------------------------"
+    echo_broadcast "debug: enabled"
     inf_loop
   else
+    #FIXME: Why are we unmounting the host /tmp ?
     umount /tmp || umount -l /tmp
     if [ "x${is_bbb}" = "xenable" ] ; then
       if [ -e /sys/class/leds/beaglebone\:green\:usr0/trigger ] ; then
@@ -399,30 +449,42 @@ copy_rootfs () {
     fi
     mount
 
-    message="eMMC has been flashed: please wait for device to power down." ; broadcast
-    message="-----------------------------" ; broadcast
+    echo_broadcast "eMMC has been flashed: please wait for device to power down."
+    echo_broadcast "-----------------------------"
 
     flush_cache
-    #To properly shudown, /opt/scripts/boot/am335x_evm.sh is going to call halt:
-    exec /sbin/init
+    #Why is /sbin/init used ? This not halting the system at all.
+    #exec /sbin/init
+    exec /sbin/shutdown now
   fi
 }
 
-partition_drive () {
-  message="Erasing: ${destination}" ; broadcast
+erasing_drive() {
+  local drive="${1:?UNKNOWN}"
+  echo_broadcast "-----------------------------"
+  echo_broadcast "Erasing: ${drive}"
   flush_cache
-  dd if=/dev/zero of=${destination} bs=1M count=108
+  dd if=/dev/zero of=${drive} bs=1M count=108
   sync
-  dd if=${destination} of=/dev/null bs=1M count=108
+  dd if=${drive} of=/dev/null bs=1M count=108
   sync
   flush_cache
-  message="Erasing: ${destination} complete" ; broadcast
-  message="-----------------------------" ; broadcast
+  echo_broadcast "Erasing: ${drive} complete"
+  echo_broadcast "-----------------------------"
 
-  if [ -f /boot/SOC.sh ] ; then
-    . /boot/SOC.sh
+}
+
+loading_soc_defaults() {
+  local soc_file="/boot/SOC.sh"
+  if [ -f ${soc_file} ] ; then
+    echo_broadcast "Loading ${soc_file}"
+    . ${soc_file}
+  else
+    echo_broadcast "Could not find ${soc_file}, no defaults are loaded"
   fi
+}
 
+_get_ext4_options(){
   #Debian Stretch; mfks.ext4 default to metadata_csum,64bit disable till u-boot works again..
   unset ext4_options
   unset test_mke2fs
@@ -434,6 +496,14 @@ partition_drive () {
     ext4_options="-c -O ^metadata_csum,^64bit"
   fi
 
+}
+
+partition_drive () {
+  erasing_drive ${destination}
+  loading_soc_defaults
+
+  _get_ext4_options
+
   dd_bootloader
 
   if [ "x${boot_fstype}" = "xfat" ] ; then
@@ -443,7 +513,7 @@ partition_drive () {
     boot_label=${boot_label:-"BEAGLEBONE"}
     rootfs_label=${rootfs_label:-"rootfs"}
 
-    message="Formatting: ${destination}" ; broadcast
+    echo_broadcast "Formatting: ${destination}"
 
     sfdisk_options="--force --Linux --in-order --unit M"
     sfdisk_boot_startmb="${conf_boot_startmb}"
@@ -452,16 +522,16 @@ partition_drive () {
 
     test_sfdisk=$(LC_ALL=C sfdisk --help | grep -m 1 -e "--in-order" || true)
     if [ "x${test_sfdisk}" = "x" ] ; then
-      message="sfdisk: [2.26.x or greater]" ; broadcast
+      echo_broadcast "sfdisk: [2.26.x or greater]"
       sfdisk_options="--force"
       sfdisk_boot_startmb="${sfdisk_boot_startmb}M"
       sfdisk_boot_size_mb="${sfdisk_boot_size_mb}M"
       sfdisk_rootfs_startmb="${sfdisk_rootfs_startmb}M"
     fi
 
-    message="sfdisk: [sfdisk ${sfdisk_options} ${destination}]" ; broadcast
-    message="sfdisk: [${sfdisk_boot_startmb},${sfdisk_boot_size_mb},${sfdisk_fstype},*]" ; broadcast
-    message="sfdisk: [${sfdisk_rootfs_startmb},,,-]" ; broadcast
+    echo_broadcast "sfdisk: [sfdisk ${sfdisk_options} ${destination}]"
+    echo_broadcast "sfdisk: [${sfdisk_boot_startmb},${sfdisk_boot_size_mb},${sfdisk_fstype},*]"
+    echo_broadcast "sfdisk: [${sfdisk_rootfs_startmb},,,-]"
 
     LC_ALL=C sfdisk ${sfdisk_options} "${destination}" <<-__EOF__
 ${sfdisk_boot_startmb},${sfdisk_boot_size_mb},${sfdisk_fstype},*
@@ -471,8 +541,8 @@ __EOF__
     flush_cache
     format_boot
     format_root
-    message="Formatting: ${destination} complete" ; broadcast
-    message="-----------------------------" ; broadcast
+    echo_broadcast "Formatting: ${destination} complete"
+    echo_broadcast "-----------------------------"
 
     copy_boot
     media_rootfs="2"
@@ -488,14 +558,14 @@ __EOF__
       boot_label="rootfs"
     fi
 
-    message="Formatting: ${destination}" ; broadcast
+    echo_broadcast "Formatting: ${destination}"
 
     sfdisk_options="--force --Linux --in-order --unit M"
     sfdisk_boot_startmb="${conf_boot_startmb}"
 
     test_sfdisk=$(LC_ALL=C sfdisk --help | grep -m 1 -e "--in-order" || true)
     if [ "x${test_sfdisk}" = "x" ] ; then
-      message="sfdisk: [2.26.x or greater]" ; broadcast
+      echo_broadcast "sfdisk: [2.26.x or greater]"
       if [ "x${bootrom_gpt}" = "xenable" ] ; then
         sfdisk_options="--force --label gpt"
       else
@@ -504,9 +574,9 @@ __EOF__
       sfdisk_boot_startmb="${sfdisk_boot_startmb}M"
     fi
 
-    message="sfdisk: [$(LC_ALL=C sfdisk --version)]" ; broadcast
-    message="sfdisk: [sfdisk ${sfdisk_options} ${destination}]" ; broadcast
-    message="sfdisk: [${sfdisk_boot_startmb},,${sfdisk_fstype},*]" ; broadcast
+    echo_broadcast "sfdisk: [$(LC_ALL=C sfdisk --version)]"
+    echo_broadcast "sfdisk: [sfdisk ${sfdisk_options} ${destination}]"
+    echo_broadcast "sfdisk: [${sfdisk_boot_startmb},,${sfdisk_fstype},*]"
 
     LC_ALL=C sfdisk ${sfdisk_options} "${destination}" <<-__EOF__
 ${sfdisk_boot_startmb},,${sfdisk_fstype},*
@@ -514,8 +584,8 @@ __EOF__
 
     flush_cache
     format_single_root
-    message="Formatting: ${destination} complete" ; broadcast
-    message="-----------------------------" ; broadcast
+    echo_broadcast "Formatting: ${destination} complete"
+    echo_broadcast "-----------------------------"
 
     media_rootfs="1"
     copy_rootfs
@@ -524,17 +594,17 @@ __EOF__
 
 startup_message(){
   clear
-  message="----------------------------------------" ; broadcast
-  message="Starting eMMC Flasher from microSD media" ; broadcast
-  message="Version: [${version_message}]" ; broadcast
-  message="----------------------------------------" ; broadcast
+  echo_broadcast "----------------------------------------"
+  echo_broadcast "Starting eMMC Flasher from microSD media"
+  echo_broadcast "Version: [${version_message}]"
+  echo_broadcast "----------------------------------------"
 }
 
 activate_cylon_leds() {
   if [ "x${is_bbb}" = "xenable" ] ; then
     cylon_leds & CYLON_PID=$!
   else
-    echo "Not activating Cylon LEDs as we are not a BBB compatible"
+    echo "Not activating Cylon LEDs as we are not a BBB compatible device"
   fi
 }
 
