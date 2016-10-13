@@ -8,6 +8,44 @@
 version_message="1.20161005: sfdisk: actually calculate the start of 2nd/3rd partitions..."
 emmcscript="cmdline=init=/opt/scripts/tools/eMMC/$(basename $0)"
 
+set -o errtrace
+
+trap _exit_trap EXIT
+trap _err_trap ERR
+_showed_traceback=f
+
+_exit_trap() {
+  local _ec="$?"
+  if [[ $_ec != 0 && "${_showed_traceback}" != t ]]; then
+    _traceback 1
+  fi
+}
+
+_err_trap() {
+  local _ec="$?"
+  local _cmd="${BASH_COMMAND:-unknown}"
+  _traceback 1
+  _showed_traceback=t
+  echo "The command ${_cmd} exited with exit code ${_ec}." 1>&2
+}
+
+_traceback() {
+  # Hide the _traceback() call.
+  local -i start=$(( ${1:-0} + 1 ))
+  local -i end=${#BASH_SOURCE[@]}
+  local -i i=0
+  local -i j=0
+
+  echo "Traceback (last called is first):" 1>&2
+  for ((i=${start}; i < ${end}; i++)); do
+    j=$(( $i - 1 ))
+    local function="${FUNCNAME[$i]}"
+    local file="${BASH_SOURCE[$i]}"
+    local line="${BASH_LINENO[$j]}"
+    echo "     ${function}() in ${file}:${line}" 1>&2
+  done
+}
+
 check_if_run_as_root(){
   if ! id | grep -q root; then
     echo "must be run as root"
@@ -45,6 +83,13 @@ echo_broadcast() {
   fi
 }
 
+_generate_line() {
+  local line_length=${1:-80}
+  local line_char=${2:-\-}
+  local line=$(printf "%${line_length}s\n" | tr ' ' \\$line_char)
+  echo_broadcast "${line}"
+}
+
 inf_loop () {
   while read MAGIC ; do
     case $MAGIC in
@@ -76,14 +121,20 @@ get_device () {
 }
 
 reset_leds() {
+  local leds_pattern=${1:-heartbeat}
+  local leds_base=/sys/class/leds/beaglebone\:green\:usr
   if [ "x${is_bbb}" = "xenable" ] ; then
-    [ -e /proc/$CYLON_PID ]  && kill $CYLON_PID > /dev/null 2>&1
+    if [ -e /proc/$CYLON_PID ]; then
+      echo_broadcast "Stopping Cylon LEDs ..."
+      kill $CYLON_PID > /dev/null 2>&1
+    fi
 
-    if [ -e /sys/class/leds/beaglebone\:green\:usr0/trigger ] ; then
-      echo heartbeat > /sys/class/leds/beaglebone\:green\:usr0/trigger
-      echo heartbeat > /sys/class/leds/beaglebone\:green\:usr1/trigger
-      echo heartbeat > /sys/class/leds/beaglebone\:green\:usr2/trigger
-      echo heartbeat > /sys/class/leds/beaglebone\:green\:usr3/trigger
+    if [ -e ${leds_base}0/trigger ] ; then
+      echo_broadcast "Setting LEDs to ${leds_pattern}"
+      echo $leds_pattern > ${leds_base}0/trigger
+      echo $leds_pattern > ${leds_base}1/trigger
+      echo $leds_pattern > ${leds_base}2/trigger
+      echo $leds_pattern > ${leds_base}3/trigger
     fi
   else
     echo_broadcast "We don't know how to reset the leds as we are not a BBB compatible device"
@@ -94,9 +145,9 @@ reset_leds() {
 write_failure () {
   echo_broadcast "writing to [${destination}] failed..."
 
-  reset_leds
+  reset_leds 'heartbeat'
 
-  echo_broadcast "-----------------------------"
+  _generate_line 40
   flush_cache
   umount $(dev2dir ${destination}p1) > /dev/null 2>&1 || true
   umount $(dev2dir ${destination}p2) > /dev/null 2>&1 || true
@@ -143,7 +194,7 @@ check_eeprom () {
       eeprom_header=$(hexdump -e '8/1 "%c"' ${eeprom} -n 8 | cut -b 6-8)
       if [ "x${eeprom_header}" = "x335" ] ; then
         echo_broadcast "Valid ${device_eeprom} header found [${eeprom_header}]"
-        echo_broadcast "-----------------------------"
+        _generate_line 40
       else
         echo_broadcast "Invalid EEPROM header detected"
         if [ -f /opt/scripts/device/bone/${device_eeprom}.dump ] ; then
@@ -174,10 +225,10 @@ check_running_system () {
   echo_broadcast "copying: [${source}] -> [${destination}]"
   echo_broadcast "lsblk:"
   echo_broadcast "`lsblk || true`"
-  echo_broadcast "-----------------------------"
+  _generate_line 40
   echo_broadcast "df -h | grep rootfs:"
   echo_broadcast "`df -h | grep rootfs || true`"
-  echo_broadcast "-----------------------------"
+  _generate_line 40
 
   if [ ! -b "${destination}" ] ; then
     echo_broadcast "Error: [${destination}] does not exist"
@@ -287,44 +338,51 @@ dd_bootloader () {
   _build_uboot_spl_dd_options
   _build_uboot_dd_options
 
-  echo_broadcast "-------------------------------------------------------------------"
+  _generate_line 80
   echo_broadcast "Copying SPL U-Boot with dd if=${dd_spl_uboot_backup} of=${destination} ${dd_spl_uboot}"
   dd if=${dd_spl_uboot_backup} of=${destination} ${dd_spl_uboot}
-  echo_broadcast "-------------------------------------------------------------------"
-  echo_broadcast "-------------------------------------------------------------------"
+  _generate_line 80
+  _generate_line 80
   echo_broadcast "Copying U-Boot with dd if=${dd_uboot_backup} of=${destination} ${dd_uboot}"
   dd if=${dd_uboot_backup} of=${destination} ${dd_uboot}
-  echo_broadcast "-------------------------------------------------------------------"
+  _generate_line 80
 }
 
 format_boot () {
-  echo_broadcast "-------------------------------------------------------------------"
+  echo_broadcast ""
+  _generate_line 80
   echo_broadcast "Formating boot partition with mkfs.vfat -F 16 ${destination}p1 -n ${boot_label}"
-  LC_ALL=C mkfs.vfat -F 16 ${destination}p1 -n ${boot_label}
-  echo_broadcast "-------------------------------------------------------------------"
+  LC_ALL=C mkfs.vfat -c -F 16 ${destination}p1 -n ${boot_label}
+  _generate_line 80
+  echo_broadcast ""
   flush_cache
 }
 
 format_root () {
-  echo_broadcast "-------------------------------------------------------------------"
+  echo_broadcast ""
+  _generate_line 80
   echo_broadcast "Formating rootfs with mkfs.ext4 ${ext4_options} ${destination}p2 -L ${rootfs_label}"
   LC_ALL=C mkfs.ext4 ${ext4_options} ${destination}p2 -L ${rootfs_label}
-  echo_broadcast "-------------------------------------------------------------------"
+  _generate_line 80
+  echo_broadcast ""
   flush_cache
 }
 
 format_single_root () {
-  echo_broadcast "-------------------------------------------------------------------"
+  echo_broadcast ""
+  _generate_line 80
   echo_broadcast "Formating rootfs with mkfs.ext4 ${ext4_options} ${destination}p1 -L ${boot_label}"
   LC_ALL=C mkfs.ext4 ${ext4_options} ${destination}p1 -L ${boot_label}
-  echo_broadcast "-------------------------------------------------------------------"
+  _generate_line 80
+  echo_broadcast ""
   flush_cache
 }
 
 copy_boot () {
   #FIXME: Something is fishy about this function
   local tmp_boot_dir="/tmp/boot"
-  echo_broadcast "-------------------------------------------------------------------"
+  echo_broadcast ""
+  _generate_line 80
   echo_broadcast "Copying: ${source}p1 -> ${destination}p1"
   echo_broadcast "==> Creating temporary boot directory (${tmp_boot_dir})"
   mkdir -p ${tmp_boot_dir} || true
@@ -346,7 +404,7 @@ copy_boot () {
   echo_broadcast "==> rsync: /boot/uboot/ -> ${tmp_boot_dir}"
   #FIXME: Why is it rsyncing /boot/uboot ? This is wrong
   #rsync -aAx /boot/uboot/ /tmp/boot/ --exclude={MLO,u-boot.img,uEnv.txt} || write_failure
-  rsync -avAx /boot/* ${tmp_boot_dir} --exclude={MLO,u-boot.img,uEnv.txt} || write_failure
+  rsync -aAxz --human-readable --info=name0,progress2 /boot/* ${tmp_boot_dir} --exclude={MLO,u-boot.img,uEnv.txt} || write_failure
   flush_cache
 
   echo_broadcast "==> Unmounting ${tmp_boot_dir}"
@@ -354,12 +412,13 @@ copy_boot () {
   flush_cache
   #FIXME: When was this mounted ? Why is it going to be unmounted ?
   umount /boot/uboot || umount -l /boot/uboot || true
-  echo_broadcast "-------------------------------------------------------------------"
+  _generate_line 80
 }
 
 copy_rootfs () {
   local tmp_rootfs_dir="/tmp/rootfs"
-  echo_broadcast "-------------------------------------------------------------------"
+  echo_broadcast ""
+  _generate_line 80
   echo_broadcast "Copying: ${source}p${media_rootfs} -> ${destination}p${media_rootfs}"
   echo_broadcast "==> Creating temporary rootfs directory (${tmp_rootfs_dir})"
   mkdir -p ${tmp_rootfs_dir} || true
@@ -367,7 +426,7 @@ copy_rootfs () {
   mount ${destination}p${media_rootfs} ${tmp_rootfs_dir} -o async,noatime
 
   echo_broadcast "==> rsync: / -> ${tmp_rootfs_dir}"
-  rsync -avAx /* ${tmp_rootfs_dir} --exclude={/dev/*,/proc/*,/sys/*,/tmp/*,/run/*,/mnt/*,/media/*,/lost+found,/lib/modules/*,/uEnv.txt} || write_failure
+  rsync -aAxz --human-readable --info=name0,progress2 /* ${tmp_rootfs_dir} --exclude={/dev/*,/proc/*,/sys/*,/tmp/*,/run/*,/mnt/*,/media/*,/lost+found,/lib/modules/*,/uEnv.txt} || write_failure
   flush_cache
 
   if [ -d ${tmp_rootfs_dir}/etc/ssh/ ] ; then
@@ -382,7 +441,7 @@ copy_rootfs () {
   echo_broadcast "===> Creating directory for modules"
   mkdir -p ${tmp_rootfs_dir}/lib/modules/$(uname -r)/ || true
   echo_broadcast "===> rsync: /lib/modules/$(uname -r)/ -> ${tmp_rootfs_dir}/lib/modules/$(uname -r)/"
-  rsync -aAx /lib/modules/$(uname -r)/* ${tmp_rootfs_dir}/lib/modules/$(uname -r)/ || write_failure
+  rsync -aAxz --human-readable --info=name0,progress2 /lib/modules/$(uname -r)/* ${tmp_rootfs_dir}/lib/modules/$(uname -r)/ || write_failure
   flush_cache
 
   echo_broadcast "Copying: ${source}p${media_rootfs} -> ${destination}p${media_rootfs} complete"
@@ -418,6 +477,7 @@ copy_rootfs () {
   echo_broadcast "==> Unmounting ${tmp_rootfs_dir}"
   umount ${tmp_rootfs_dir} || umount -l ${tmp_rootfs_dir} || write_failure
 
+  reset_leds 'none'
   if [ "x${is_bbb}" = "xenable" ] ; then
     echo_broadcast "==> Stop Cylon LEDs"
     [ -e /proc/$CYLON_PID ]  && kill $CYLON_PID
@@ -429,28 +489,23 @@ copy_rootfs () {
   sync
   dd if=${destination} of=/dev/null count=100000
   echo_broadcast "Syncing: ${destination} complete"
-  echo_broadcast "-------------------------------------------------------------------"
+  _generate_line 80
 
   if [ -f /boot/debug.txt ] ; then
     echo_broadcast "This script has now completed its task"
-    echo_broadcast "-----------------------------"
+    _generate_line 40
     echo_broadcast "debug: enabled"
     inf_loop
   else
     #FIXME: Why are we unmounting the host /tmp ?
     umount /tmp || umount -l /tmp
-    if [ "x${is_bbb}" = "xenable" ] ; then
-      if [ -e /sys/class/leds/beaglebone\:green\:usr0/trigger ] ; then
-        echo default-on > /sys/class/leds/beaglebone\:green\:usr0/trigger
-        echo default-on > /sys/class/leds/beaglebone\:green\:usr1/trigger
-        echo default-on > /sys/class/leds/beaglebone\:green\:usr2/trigger
-        echo default-on > /sys/class/leds/beaglebone\:green\:usr3/trigger
-      fi
-    fi
+    reset_leds 'default-on'
+    echo_broadcast 'Displaying mount points'
+    _generate_line 80
     mount
-
+    _generate_line 80 '='
     echo_broadcast "eMMC has been flashed: please wait for device to power down."
-    echo_broadcast "-----------------------------"
+    _generate_line 80 '='
 
     flush_cache
     #Why is /sbin/init used ? This not halting the system at all.
@@ -461,7 +516,7 @@ copy_rootfs () {
 
 erasing_drive() {
   local drive="${1:?UNKNOWN}"
-  echo_broadcast "-----------------------------"
+  _generate_line 40
   echo_broadcast "Erasing: ${drive}"
   flush_cache
   dd if=/dev/zero of=${drive} bs=1M count=108
@@ -470,7 +525,7 @@ erasing_drive() {
   sync
   flush_cache
   echo_broadcast "Erasing: ${drive} complete"
-  echo_broadcast "-----------------------------"
+  _generate_line 40
 
 }
 
@@ -542,7 +597,7 @@ __EOF__
     format_boot
     format_root
     echo_broadcast "Formatting: ${destination} complete"
-    echo_broadcast "-----------------------------"
+    _generate_line 40
 
     copy_boot
     media_rootfs="2"
@@ -585,7 +640,7 @@ __EOF__
     flush_cache
     format_single_root
     echo_broadcast "Formatting: ${destination} complete"
-    echo_broadcast "-----------------------------"
+    _generate_line 40
 
     media_rootfs="1"
     copy_rootfs
@@ -594,10 +649,11 @@ __EOF__
 
 startup_message(){
   clear
-  echo_broadcast "----------------------------------------"
+  _generate_line 80 '='
   echo_broadcast "Starting eMMC Flasher from microSD media"
   echo_broadcast "Version: [${version_message}]"
-  echo_broadcast "----------------------------------------"
+  _generate_line 80 '='
+  echo_broadcast ""
 }
 
 activate_cylon_leds() {
