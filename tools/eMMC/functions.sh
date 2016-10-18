@@ -19,6 +19,7 @@ _exit_trap() {
   if [[ $_ec != 0 && "${_showed_traceback}" != t ]]; then
     _traceback 1
   fi
+  reset_leds 'default-on' || true
 }
 
 _err_trap() {
@@ -44,6 +45,62 @@ _traceback() {
     local line="${BASH_LINENO[$j]}"
     echo "     ${function}() in ${file}:${line}" 1>&2
   done
+}
+
+__dry_run__(){
+  _generate_line 80 '!'
+  echo_broadcast "! WARNING: ACTIVATED DRY RUN MODE"
+  echo_broadcast "! WARNING: THE DRY RUN MODE IS NOT REALLY SAFE"
+  echo_broadcast "! WARNING: IT IS GOING TO FAIL WITH IO TO FILES"
+  echo_broadcast "! WARNING: USE AT YOUR OWN RISK"
+  _generate_line 80 '!'
+  empty_line
+
+  #This is useful when debugging scripts with potentially destructive commands
+  dd() {
+    echo "!!! Would run 'dd' with '$@'"
+  }
+  export -f dd
+  reboot() {
+    echo "!!! Would run 'reboot' with '$@'"
+  }
+  export -f reboot
+  modprobe() {
+    echo "!!! Would run 'modprobe' with '$@'"
+  }
+  export -f modprobe
+  mkfs.vfat() {
+    echo "!!! Would run 'mkfs.vfat' with '$@'"
+  }
+  export -f mkfs.vfat
+  mkfs.ext4() {
+    echo "!!! Would run 'mkfs.ext4' with '$@'"
+  }
+  export -f mkfs.ext4
+  sfdisk() {
+    echo "!!! Would run 'sfdisk' with '$@'"
+  }
+  export -f sfdisk
+  mkdir() {
+    echo "!!! Would run 'mkdir' with '$@'"
+  }
+  export -f mkdir
+  rsync() {
+    echo "!!! Would run 'rsync' with '$@'"
+  }
+  export -f rsync
+  mount() {
+    echo "!!! Would run 'mount' with '$@'"
+  }
+  export -f mount
+  umount() {
+    echo "!!! Would run 'umount' with '$@'"
+  }
+  export -f umount
+  cp() {
+    echo "!!! Would run 'cp' with '$@'"
+  }
+  export -f cp
 }
 
 check_if_run_as_root(){
@@ -417,7 +474,7 @@ copy_boot() {
   #FIXME: Something is fishy about this function
   local tmp_boot_dir="/tmp/boot"
   empty_line
-  _generate_line 80
+  _generate_line 80 '='
   echo_broadcast "Copying boot: ${source}p1 -> ${boot_partition}"
   echo_broadcast "==> Creating temporary boot directory (${tmp_boot_dir})"
   mkdir -p ${tmp_boot_dir} || true
@@ -448,7 +505,7 @@ copy_boot() {
   flush_cache
   #FIXME: When was this mounted ? Why is it going to be unmounted ?
   umount /boot/uboot || umount -l /boot/uboot || true
-  _generate_line 80
+  _generate_line 80 '='
 }
 
 _get_device_uuid() {
@@ -536,7 +593,7 @@ _generate_fstab() {
 copy_rootfs() {
   local tmp_rootfs_dir="/tmp/rootfs"
   empty_line
-  _generate_line 80
+  _generate_line 80 '='
   echo_broadcast "Copying: Current rootfs to ${rootfs_partition}"
   echo_broadcast "==> Creating temporary rootfs directory (${tmp_rootfs_dir})"
   mkdir -p ${tmp_rootfs_dir} || true
@@ -555,7 +612,7 @@ copy_rootfs() {
   flush_cache
 
   echo_broadcast "Copying: Current rootfs to ${rootfs_partition} complete"
-  _generate_line 40
+  _generate_line 80 '='
   empty_line
   echo_broadcast "Final System Tweaks:"
   if [ -d ${tmp_rootfs_dir}/etc/ssh/ ] ; then
