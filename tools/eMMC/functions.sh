@@ -91,6 +91,11 @@ echo_debug() {
   fi
 }
 
+empty_line() {
+  echo ""
+  echo "" > /dev/tty0 || true
+}
+
 _generate_line() {
   local line_length=${1:-80}
   local line_char=${2:-\-}
@@ -192,6 +197,8 @@ _do_we_have_eeprom() {
 }
 
 check_eeprom() {
+  empty_line
+  _generate_line 40
   echo_broadcast "Checking for Valid ${device_eeprom} header"
 
   _do_we_have_eeprom
@@ -212,7 +219,7 @@ check_eeprom() {
             sync
             eeprom_check=$(hexdump -e '8/1 "%c"' ${eeprom} -n 8 | cut -b 6-8)
             echo "eeprom check: [${eeprom_check}]"
-
+            _generate_line 40
             #We have to reboot, as the kernel only loads the eMMC cape
             # with a valid header
             reboot -f
@@ -228,8 +235,19 @@ check_eeprom() {
   fi
 }
 
+countdown() {
+  local from_time=${1:-10}
+  while [ $from_time -gt 0 ] ; do
+    echo -n "${from_time}."
+    sleep 1
+    : $((from_time--))
+  done
+}
+
 check_running_system() {
-  echo_broadcast "copying: [${source}] -> [${destination}]"
+  empty_line
+  echo_broadcast "Checking running system"
+  echo_broadcast "Copying: [${source}] -> [${destination}]"
   echo_broadcast "lsblk:"
   echo_broadcast "`lsblk || true`"
   _generate_line 40
@@ -248,6 +266,9 @@ check_running_system() {
       sleep 1
     fi
   fi
+  echo_broadcast "Giving you time to check..."
+  countdown 10
+  empty_line
 }
 
 cylon_leds() {
@@ -262,31 +283,38 @@ cylon_leds() {
       STATE=1
       while : ; do
         case $STATE in
-          1)	echo 255 > ${BASE}0/brightness
+          1)
+            echo 255 > ${BASE}0/brightness
             echo 0   > ${BASE}1/brightness
             STATE=2
             ;;
-          2)	echo 255 > ${BASE}1/brightness
+          2)
+            echo 255 > ${BASE}1/brightness
             echo 0   > ${BASE}0/brightness
             STATE=3
             ;;
-          3)	echo 255 > ${BASE}2/brightness
+          3)
+            echo 255 > ${BASE}2/brightness
             echo 0   > ${BASE}1/brightness
             STATE=4
             ;;
-          4)	echo 255 > ${BASE}3/brightness
+          4)
+            echo 255 > ${BASE}3/brightness
             echo 0   > ${BASE}2/brightness
             STATE=5
             ;;
-          5)	echo 255 > ${BASE}2/brightness
+          5)
+            echo 255 > ${BASE}2/brightness
             echo 0   > ${BASE}3/brightness
             STATE=6
             ;;
-          6)	echo 255 > ${BASE}1/brightness
+          6)
+            echo 255 > ${BASE}1/brightness
             echo 0   > ${BASE}2/brightness
             STATE=1
             ;;
-          *)	echo 255 > ${BASE}0/brightness
+          *)
+            echo 255 > ${BASE}0/brightness
             echo 0   > ${BASE}1/brightness
             STATE=2
             ;;
@@ -340,7 +368,7 @@ _build_uboot_dd_options() {
 }
 
 dd_bootloader() {
-  echo_broadcast ""
+  empty_line
   _generate_line 80 '='
   echo_broadcast "Writing bootloader to [${destination}]"
 
@@ -353,33 +381,30 @@ dd_bootloader() {
   _generate_line 80
   echo_broadcast "Copying U-Boot with dd if=${dd_uboot_backup} of=${destination} ${dd_uboot}"
   dd if=${dd_uboot_backup} of=${destination} ${dd_uboot}
-  echo_broadcast ""
-  echo_broadcast "Writing BootLoader completed"
+  empty_line
+  echo_broadcast "Writing bootloader completed"
   _generate_line 80 '='
-  echo_broadcast ""
+  empty_line
 }
 
 format_boot() {
-  echo_broadcast ""
+  empty_line
   _generate_line 80 '='
   echo_broadcast "Formatting boot partition with mkfs.vfat -F 16 ${boot_partition} -n ${boot_label}"
   LC_ALL=C mkfs.vfat -c -F 16 ${boot_partition} -n ${boot_label}
-  echo_broadcast ""
   echo_broadcast "Formatting boot: ${boot_partition} complete"
   _generate_line 80 '='
-  echo_broadcast ""
   flush_cache
 }
 
 format_root() {
-  echo_broadcast ""
+  empty_line
   _generate_line 80 '='
   echo_broadcast "Formatting rootfs with mkfs.ext4 ${ext4_options} ${rootfs_partition} -L ${rootfs_label}"
+  empty_line
   LC_ALL=C mkfs.ext4 ${ext4_options} ${rootfs_partition} -L ${rootfs_label}
-  echo_broadcast ""
   echo_broadcast "Formatting rootfs: ${rootfs_partition} complete"
   _generate_line 80 '='
-  echo_broadcast ""
   flush_cache
 }
 
@@ -391,9 +416,9 @@ format_single_root() {
 copy_boot() {
   #FIXME: Something is fishy about this function
   local tmp_boot_dir="/tmp/boot"
-  echo_broadcast ""
+  empty_line
   _generate_line 80
-  echo_broadcast "Copying: ${source}p1 -> ${boot_partition}"
+  echo_broadcast "Copying boot: ${source}p1 -> ${boot_partition}"
   echo_broadcast "==> Creating temporary boot directory (${tmp_boot_dir})"
   mkdir -p ${tmp_boot_dir} || true
   echo_broadcast "==> Mounting ${boot_partition} to ${tmp_boot_dir}"
@@ -414,9 +439,10 @@ copy_boot() {
   echo_broadcast "==> rsync: /boot/uboot/ -> ${tmp_boot_dir}"
   #FIXME: Why is it rsyncing /boot/uboot ? This is wrong
   #rsync -aAx /boot/uboot/ /tmp/boot/ --exclude={MLO,u-boot.img,uEnv.txt} || write_failure
-  rsync -aAxz --human-readable --info=name0,progress2 /boot/* ${tmp_boot_dir} --exclude={MLO,u-boot.img,uEnv.txt} || write_failure
+  rsync -aAx --human-readable --info=name0,progress2 /boot/* ${tmp_boot_dir} --exclude={MLO,u-boot.img,uEnv.txt} || write_failure
   flush_cache
 
+  empty_line
   echo_broadcast "==> Unmounting ${tmp_boot_dir}"
   umount ${tmp_boot_dir} || umount -l ${tmp_boot_dir} || write_failure
   flush_cache
@@ -439,15 +465,17 @@ _get_device_uuid() {
 
 generate_uEnv() {
   local uEnv_file=${1:-${tmp_rootfs_dir}/boot/uEnv.txt}
+  empty_line
   if [ -f $uEnv_file ]; then
-    echo_broadcast "Found pre-existing uEnv file at ${uEnv_file}. Using it."
-    _generate_line 80
+    echo_broadcast "==> Found pre-existing uEnv file at ${uEnv_file}. Using it."
+    _generate_line 80 '*'
     cat $uEnv_file
-    _generate_line 80
+    _generate_line 80 '*'
+    empty_line
   else
-    echo_broadcast "Could not find pre-existing uEnv file at ${uEnv_file}"
-    echo_broadcast "Generating it from template ..."
-    _generate_line 40
+    echo_broadcast "==> Could not find pre-existing uEnv file at ${uEnv_file}"
+    echo_broadcast "===> Generating it from template ..."
+    _generate_line 40 '*'
     cat > ${uEnv_file} <<__EOF__
 #Docs: http://elinux.org/Beagleboard:U-boot_partitioning_layout_2.0
 
@@ -455,46 +483,16 @@ uname_r=$(uname -r)
 #uuid=
 #dtb=
 
-##BeagleBone Black/Green dtb's for v4.1.x (BeagleBone White just works..)
-
-##BeagleBone Black: HDMI (Audio/Video) disabled:
-#dtb=am335x-boneblack-emmc-overlay.dtb
-
-##BeagleBone Black: eMMC disabled:
-#dtb=am335x-boneblack-hdmi-overlay.dtb
-
-##BeagleBone Black: HDMI Audio/eMMC disabled:
-#dtb=am335x-boneblack-nhdmi-overlay.dtb
-
-##BeagleBone Black: HDMI (Audio/Video)/eMMC disabled:
-#dtb=am335x-boneblack-overlay.dtb
-
-##BeagleBone Black: wl1835
-#dtb=am335x-boneblack-wl1835mod.dtb
-
-##BeagleBone Green: eMMC disabled
-#dtb=am335x-bonegreen-overlay.dtb
-
 cmdline=coherent_pool=1M quiet cape_universal=enable
-
-#In the event of edid real failures, uncomment this next line:
-#cmdline=coherent_pool=1M quiet cape_universal=enable video=HDMI-A-1:1024x768@60e
-
-##Example v3.8.x
-#cape_disable=capemgr.disable_partno=
-#cape_enable=capemgr.enable_partno=
-
-##Example v4.1.x
-#cape_disable=bone_capemgr.disable_partno=
-#cape_enable=bone_capemgr.enable_partno=
 
 ##enable Generic eMMC Flasher:
 ##make sure, these tools are installed: dosfstools rsync
 #cmdline=init=/opt/scripts/tools/eMMC/init-eMMC-flasher-v3.sh
 
 __EOF__
-  flush_cache
-  _generate_line 40
+    flush_cache
+    _generate_line 40 '*'
+    empty_line
   fi
   root_uuid=$(_get_device_uuid ${rootfs_partition})
   if [ ! -z "${root_uuid}" ] ; then
@@ -502,7 +500,6 @@ __EOF__
     sed -i -e 's:^uuid=:#uuid=:g' ${tmp_rootfs_dir}/boot/uEnv.txt
     echo "uuid=${root_uuid}" >> ${tmp_rootfs_dir}/boot/uEnv.txt
   fi
-
 }
 
 _get_fstab_id_for_device() {
@@ -518,7 +515,8 @@ _get_fstab_id_for_device() {
 }
 
 _generate_fstab() {
-  echo_broadcast "Generating: /etc/fstab"
+  empty_line
+  echo_broadcast "==> Generating: /etc/fstab"
   echo "# /etc/fstab: static file system information." > ${tmp_rootfs_dir}/etc/fstab
   echo "#" >> ${tmp_rootfs_dir}/etc/fstab
   if [ "${boot_partition}x" != "${rootfs_partition}x" ] ; then
@@ -528,15 +526,16 @@ _generate_fstab() {
   root_fs_id=$(_get_fstab_id_for_device ${rootfs_partition})
   echo "${root_fs_id}  /  ext4  noatime,errors=remount-ro  0  1" >> ${tmp_rootfs_dir}/etc/fstab
   echo "debugfs  /sys/kernel/debug  debugfs  defaults  0  0" >> ${tmp_rootfs_dir}/etc/fstab
-  echo_broadcast "/etc/fstab generated"
-  _generate_line 40
+  echo_broadcast "===> /etc/fstab generated"
+  _generate_line 40 '*'
   cat ${tmp_rootfs_dir}/etc/fstab
-  _generate_line 40
+  _generate_line 40 '*'
+  empty_line
 }
 
 copy_rootfs() {
   local tmp_rootfs_dir="/tmp/rootfs"
-  echo_broadcast ""
+  empty_line
   _generate_line 80
   echo_broadcast "Copying: Current rootfs to ${rootfs_partition}"
   echo_broadcast "==> Creating temporary rootfs directory (${tmp_rootfs_dir})"
@@ -545,18 +544,19 @@ copy_rootfs() {
   mount ${rootfs_partition} ${tmp_rootfs_dir} -o async,noatime
 
   echo_broadcast "==> rsync: / -> ${tmp_rootfs_dir}"
-  rsync -aAxz --human-readable --info=name0,progress2 /* ${tmp_rootfs_dir} --exclude={/dev/*,/proc/*,/sys/*,/tmp/*,/run/*,/mnt/*,/media/*,/lost+found,/lib/modules/*,/uEnv.txt} || write_failure
+  rsync -aAx --human-readable --info=name0,progress2 /* ${tmp_rootfs_dir} --exclude={/dev/*,/proc/*,/sys/*,/tmp/*,/run/*,/mnt/*,/media/*,/lost+found,/lib/modules/*,/uEnv.txt} || write_failure
   flush_cache
 
   echo_broadcast "==> Copying: Kernel modules"
   echo_broadcast "===> Creating directory for modules"
   mkdir -p ${tmp_rootfs_dir}/lib/modules/$(uname -r)/ || true
   echo_broadcast "===> rsync: /lib/modules/$(uname -r)/ -> ${tmp_rootfs_dir}/lib/modules/$(uname -r)/"
-  rsync -aAxz --human-readable --info=name0,progress2 /lib/modules/$(uname -r)/* ${tmp_rootfs_dir}/lib/modules/$(uname -r)/ || write_failure
+  rsync -aAx --human-readable --info=name0,progress2 /lib/modules/$(uname -r)/* ${tmp_rootfs_dir}/lib/modules/$(uname -r)/ || write_failure
   flush_cache
 
   echo_broadcast "Copying: Current rootfs to ${rootfs_partition} complete"
-
+  _generate_line 40
+  empty_line
   echo_broadcast "Final System Tweaks:"
   if [ -d ${tmp_rootfs_dir}/etc/ssh/ ] ; then
     echo_broadcast "==> Applying SSH Key Regeneration trick"
@@ -572,7 +572,9 @@ copy_rootfs() {
   #FIXME: What about when you boot from a fat partition /boot ?
   echo_broadcast "==> /boot/uEnv.txt: disabling eMMC flasher script"
   sed -i -e 's:'$emmcscript':#'$emmcscript':g' ${tmp_rootfs_dir}/boot/uEnv.txt
+  _generate_line 40 '*'
   cat ${tmp_rootfs_dir}/boot/uEnv.txt
+  _generate_line 40 '*'
   flush_cache
 
   echo_broadcast "==> Unmounting ${tmp_rootfs_dir}"
@@ -600,6 +602,8 @@ copy_rootfs() {
     echo_broadcast 'Displaying mount points'
     _generate_line 80
     mount
+    _generate_line 80
+    empty_line
     _generate_line 80 '='
     echo_broadcast "eMMC has been flashed: please wait for device to power down."
     _generate_line 80 '='
@@ -613,6 +617,7 @@ copy_rootfs() {
 
 erasing_drive() {
   local drive="${1:?UNKNOWN}"
+  empty_line
   _generate_line 40
   echo_broadcast "Erasing: ${drive}"
   flush_cache
@@ -627,6 +632,7 @@ erasing_drive() {
 
 loading_soc_defaults() {
   local soc_file="/boot/SOC.sh"
+  empty_line
   if [ -f ${soc_file} ] ; then
     echo_broadcast "Loading ${soc_file}"
     _generate_line 60 '*'
@@ -637,6 +643,7 @@ loading_soc_defaults() {
   else
     echo_broadcast "Could not find ${soc_file}, no defaults are loaded"
   fi
+  _generate_line 40
 }
 
 _get_ext4_options(){
@@ -655,14 +662,14 @@ _get_ext4_options(){
 partition_drive() {
   _generate_line 80 '!'
   echo_broadcast "WARNING: DEPRECATED PUBLIC INTERFACE"
-  echo_broadcast "WARNING: YOU SHOULD USE prepare_drive() instead"
+  echo_broadcast "WARNING: YOU SHOULD USE prepare_drive() INSTEAD"
   echo_broadcast "WARNING: Calling it for you..."
   _generate_line 80 '!'
   prepare_drive
 }
 
 partition_device() {
-  echo_broadcast ""
+  empty_line
   _generate_line 80 '='
   echo_broadcast "Partitionning ${destination}"
 
@@ -702,7 +709,7 @@ __EOF__
     echo_broadcast "Generated Partitions:"
     LC_ALL=C sfdisk -l ${destination}
     _generate_line 80 '='
-    echo_broadcast ""
+    empty_line
     boot_partition="${destination}p1"
     rootfs_partition="${destination}p2"
   else
@@ -744,7 +751,7 @@ __EOF__
     echo_broadcast "Generated Partitions:"
     LC_ALL=C sfdisk -l ${destination}
     _generate_line 80 '='
-    echo_broadcast ""
+    empty_line
     boot_partition="${destination}p1"
     rootfs_partition="${boot_partition}"
   fi
@@ -784,7 +791,7 @@ startup_message(){
   echo_broadcast "Starting eMMC Flasher from microSD media"
   echo_broadcast "Version: [${version_message}]"
   _generate_line 80 '='
-  echo_broadcast ""
+  empty_line
 }
 
 activate_cylon_leds() {
