@@ -63,12 +63,12 @@ find_root_drive(){
   fi
 }
 
-flush_cache () {
+flush_cache() {
   sync
   blockdev --flushbufs ${destination}
 }
 
-broadcast () {
+broadcast() {
   if [ "x${message}" != "x" ] ; then
     echo "${message}"
     echo "${message}" > /dev/tty0 || true
@@ -83,6 +83,14 @@ echo_broadcast() {
   fi
 }
 
+echo_debug() {
+  local _message="$1"
+  if [ "x${_message}" != "x" ] ; then
+    echo "${_message}" >&2
+    echo "${_message}" >&2 > /dev/tty0 || true
+  fi
+}
+
 _generate_line() {
   local line_length=${1:-80}
   local line_char=${2:-\-}
@@ -90,7 +98,7 @@ _generate_line() {
   echo_broadcast "${line}"
 }
 
-inf_loop () {
+inf_loop() {
   while read MAGIC ; do
     case $MAGIC in
       beagleboard.org)
@@ -105,11 +113,11 @@ inf_loop () {
 
 # umount does not like device names without a valid /etc/mtab
 # find the mount point from /proc/mounts
-dev2dir () {
+dev2dir() {
   grep -m 1 '^$1 ' /proc/mounts | while read LINE ; do set -- $LINE ; echo $2 ; done
 }
 
-get_device () {
+get_device() {
   is_bbb="enable"
   machine=$(cat /proc/device-tree/model | sed "s/ /_/g")
 
@@ -139,10 +147,9 @@ reset_leds() {
   else
     echo_broadcast "We don't know how to reset the leds as we are not a BBB compatible device"
   fi
-
 }
 
-write_failure () {
+write_failure() {
   echo_broadcast "writing to [${destination}] failed..."
 
   reset_leds 'heartbeat'
@@ -184,7 +191,7 @@ _do_we_have_eeprom() {
   fi
 }
 
-check_eeprom () {
+check_eeprom() {
   echo_broadcast "Checking for Valid ${device_eeprom} header"
 
   _do_we_have_eeprom
@@ -221,7 +228,7 @@ check_eeprom () {
   fi
 }
 
-check_running_system () {
+check_running_system() {
   echo_broadcast "copying: [${source}] -> [${destination}]"
   echo_broadcast "lsblk:"
   echo_broadcast "`lsblk || true`"
@@ -243,7 +250,7 @@ check_running_system () {
   fi
 }
 
-cylon_leds () {
+cylon_leds() {
   if [ "x${is_bbb}" = "xenable" ] ; then
     if [ -e /sys/class/leds/beaglebone\:green\:usr0/trigger ] ; then
       BASE=/sys/class/leds/beaglebone\:green\:usr
@@ -332,7 +339,9 @@ _build_uboot_dd_options() {
   echo_broadcast "Will use : $dd_uboot"
 }
 
-dd_bootloader () {
+dd_bootloader() {
+  echo_broadcast ""
+  _generate_line 80 '='
   echo_broadcast "Writing bootloader to [${destination}]"
 
   _build_uboot_spl_dd_options
@@ -342,52 +351,53 @@ dd_bootloader () {
   echo_broadcast "Copying SPL U-Boot with dd if=${dd_spl_uboot_backup} of=${destination} ${dd_spl_uboot}"
   dd if=${dd_spl_uboot_backup} of=${destination} ${dd_spl_uboot}
   _generate_line 80
-  _generate_line 80
   echo_broadcast "Copying U-Boot with dd if=${dd_uboot_backup} of=${destination} ${dd_uboot}"
   dd if=${dd_uboot_backup} of=${destination} ${dd_uboot}
-  _generate_line 80
+  echo_broadcast ""
+  echo_broadcast "Writing BootLoader completed"
+  _generate_line 80 '='
+  echo_broadcast ""
 }
 
-format_boot () {
+format_boot() {
   echo_broadcast ""
-  _generate_line 80
-  echo_broadcast "Formating boot partition with mkfs.vfat -F 16 ${destination}p1 -n ${boot_label}"
-  LC_ALL=C mkfs.vfat -c -F 16 ${destination}p1 -n ${boot_label}
-  _generate_line 80
+  _generate_line 80 '='
+  echo_broadcast "Formatting boot partition with mkfs.vfat -F 16 ${boot_partition} -n ${boot_label}"
+  LC_ALL=C mkfs.vfat -c -F 16 ${boot_partition} -n ${boot_label}
+  echo_broadcast ""
+  echo_broadcast "Formatting boot: ${boot_partition} complete"
+  _generate_line 80 '='
   echo_broadcast ""
   flush_cache
 }
 
-format_root () {
+format_root() {
   echo_broadcast ""
-  _generate_line 80
-  echo_broadcast "Formating rootfs with mkfs.ext4 ${ext4_options} ${destination}p2 -L ${rootfs_label}"
-  LC_ALL=C mkfs.ext4 ${ext4_options} ${destination}p2 -L ${rootfs_label}
-  _generate_line 80
+  _generate_line 80 '='
+  echo_broadcast "Formatting rootfs with mkfs.ext4 ${ext4_options} ${rootfs_partition} -L ${rootfs_label}"
+  LC_ALL=C mkfs.ext4 ${ext4_options} ${rootfs_partition} -L ${rootfs_label}
   echo_broadcast ""
-  flush_cache
-}
-
-format_single_root () {
-  echo_broadcast ""
-  _generate_line 80
-  echo_broadcast "Formating rootfs with mkfs.ext4 ${ext4_options} ${destination}p1 -L ${boot_label}"
-  LC_ALL=C mkfs.ext4 ${ext4_options} ${destination}p1 -L ${boot_label}
-  _generate_line 80
+  echo_broadcast "Formatting rootfs: ${rootfs_partition} complete"
+  _generate_line 80 '='
   echo_broadcast ""
   flush_cache
 }
 
-copy_boot () {
+format_single_root() {
+  rootfs_label=${boot_label}
+  format_root
+}
+
+copy_boot() {
   #FIXME: Something is fishy about this function
   local tmp_boot_dir="/tmp/boot"
   echo_broadcast ""
   _generate_line 80
-  echo_broadcast "Copying: ${source}p1 -> ${destination}p1"
+  echo_broadcast "Copying: ${source}p1 -> ${boot_partition}"
   echo_broadcast "==> Creating temporary boot directory (${tmp_boot_dir})"
   mkdir -p ${tmp_boot_dir} || true
-  echo_broadcast "==> Mounting ${destination}p1 to ${tmp_boot_dir}"
-  mount ${destination}p1 ${tmp_boot_dir} -o sync
+  echo_broadcast "==> Mounting ${boot_partition} to ${tmp_boot_dir}"
+  mount ${boot_partition} ${tmp_boot_dir} -o sync
 
   if [ -f /boot/uboot/MLO ] && [ -f /boot/uboot/u-boot.img ] ; then
     echo_broadcast "==> Found MLO and u-boot.img in current /boot/uboot/, copying"
@@ -415,27 +425,128 @@ copy_boot () {
   _generate_line 80
 }
 
-copy_rootfs () {
+_get_device_uuid() {
+  local device=${1}
+  unset device_uuid
+  device_uuid=$(/sbin/blkid /dev/null -s UUID -o value ${device})
+  if [ ! -z "${device_uuid}" ] ; then
+    echo_debug "Device UUID should be: ${device_uuid}"
+    echo $device_uuid
+  else
+    echo_debug "Could not get a proper UUID for $device. Try with another ID"
+  fi
+}
+
+generate_uEnv() {
+  local uEnv_file=${1:-${tmp_rootfs_dir}/boot/uEnv.txt}
+  if [ -f $uEnv_file ]; then
+    echo_broadcast "Found pre-existing uEnv file at ${uEnv_file}. Using it."
+    _generate_line 80
+    cat $uEnv_file
+    _generate_line 80
+  else
+    echo_broadcast "Could not find pre-existing uEnv file at ${uEnv_file}"
+    echo_broadcast "Generating it from template ..."
+    _generate_line 40
+    cat > ${uEnv_file} <<__EOF__
+#Docs: http://elinux.org/Beagleboard:U-boot_partitioning_layout_2.0
+
+uname_r=$(uname -r)
+#uuid=
+#dtb=
+
+##BeagleBone Black/Green dtb's for v4.1.x (BeagleBone White just works..)
+
+##BeagleBone Black: HDMI (Audio/Video) disabled:
+#dtb=am335x-boneblack-emmc-overlay.dtb
+
+##BeagleBone Black: eMMC disabled:
+#dtb=am335x-boneblack-hdmi-overlay.dtb
+
+##BeagleBone Black: HDMI Audio/eMMC disabled:
+#dtb=am335x-boneblack-nhdmi-overlay.dtb
+
+##BeagleBone Black: HDMI (Audio/Video)/eMMC disabled:
+#dtb=am335x-boneblack-overlay.dtb
+
+##BeagleBone Black: wl1835
+#dtb=am335x-boneblack-wl1835mod.dtb
+
+##BeagleBone Green: eMMC disabled
+#dtb=am335x-bonegreen-overlay.dtb
+
+cmdline=coherent_pool=1M quiet cape_universal=enable
+
+#In the event of edid real failures, uncomment this next line:
+#cmdline=coherent_pool=1M quiet cape_universal=enable video=HDMI-A-1:1024x768@60e
+
+##Example v3.8.x
+#cape_disable=capemgr.disable_partno=
+#cape_enable=capemgr.enable_partno=
+
+##Example v4.1.x
+#cape_disable=bone_capemgr.disable_partno=
+#cape_enable=bone_capemgr.enable_partno=
+
+##enable Generic eMMC Flasher:
+##make sure, these tools are installed: dosfstools rsync
+#cmdline=init=/opt/scripts/tools/eMMC/init-eMMC-flasher-v3.sh
+
+__EOF__
+  flush_cache
+  _generate_line 40
+  fi
+  root_uuid=$(_get_device_uuid ${rootfs_partition})
+  if [ ! -z "${root_uuid}" ] ; then
+    echo_broadcast "==> Put root uuid in uEnv.txt"
+    sed -i -e 's:^uuid=:#uuid=:g' ${tmp_rootfs_dir}/boot/uEnv.txt
+    echo "uuid=${root_uuid}" >> ${tmp_rootfs_dir}/boot/uEnv.txt
+  fi
+
+}
+
+_get_fstab_id_for_device() {
+  local device=${1}
+  local device_id=$(_get_device_uuid ${device})
+  if [ -n ${device_id} ]; then
+    echo "UUID=${device_id}"
+  else
+    echo_debug "Could not find a UUID for ${device}, default to device name"
+    # Since the mmc device get reverse depending on how it was booted we need to use source
+    echo "${source}p${device:(-1)}"
+  fi
+}
+
+_generate_fstab() {
+  echo_broadcast "Generating: /etc/fstab"
+  echo "# /etc/fstab: static file system information." > ${tmp_rootfs_dir}/etc/fstab
+  echo "#" >> ${tmp_rootfs_dir}/etc/fstab
+  if [ "${boot_partition}x" != "${rootfs_partition}x" ] ; then
+    boot_fs_id=$(_get_fstab_id_for_device ${boot_partition})
+    echo "${boot_fs_id} /boot vfat noauto,noatime,nouser,fmask=0022,dmask=0022 0 0" >> ${tmp_rootfs_dir}/etc/fstab
+  fi
+  root_fs_id=$(_get_fstab_id_for_device ${rootfs_partition})
+  echo "${root_fs_id}  /  ext4  noatime,errors=remount-ro  0  1" >> ${tmp_rootfs_dir}/etc/fstab
+  echo "debugfs  /sys/kernel/debug  debugfs  defaults  0  0" >> ${tmp_rootfs_dir}/etc/fstab
+  echo_broadcast "/etc/fstab generated"
+  _generate_line 40
+  cat ${tmp_rootfs_dir}/etc/fstab
+  _generate_line 40
+}
+
+copy_rootfs() {
   local tmp_rootfs_dir="/tmp/rootfs"
   echo_broadcast ""
   _generate_line 80
-  echo_broadcast "Copying: ${source}p${media_rootfs} -> ${destination}p${media_rootfs}"
+  echo_broadcast "Copying: Current rootfs to ${rootfs_partition}"
   echo_broadcast "==> Creating temporary rootfs directory (${tmp_rootfs_dir})"
   mkdir -p ${tmp_rootfs_dir} || true
-  echo_broadcast "==> Mounting ${destination}p${media_rootfs} to ${tmp_rootfs_dir}"
-  mount ${destination}p${media_rootfs} ${tmp_rootfs_dir} -o async,noatime
+  echo_broadcast "==> Mounting ${rootfs_partition} to ${tmp_rootfs_dir}"
+  mount ${rootfs_partition} ${tmp_rootfs_dir} -o async,noatime
 
   echo_broadcast "==> rsync: / -> ${tmp_rootfs_dir}"
   rsync -aAxz --human-readable --info=name0,progress2 /* ${tmp_rootfs_dir} --exclude={/dev/*,/proc/*,/sys/*,/tmp/*,/run/*,/mnt/*,/media/*,/lost+found,/lib/modules/*,/uEnv.txt} || write_failure
   flush_cache
-
-  if [ -d ${tmp_rootfs_dir}/etc/ssh/ ] ; then
-    echo_broadcast "==> Applying SSH Key Regeneration trick"
-    #ssh keys will now get regenerated on the next bootup
-    touch ${tmp_rootfs_dir}/etc/ssh/ssh.regenerate
-    flush_cache
-  fi
-
 
   echo_broadcast "==> Copying: Kernel modules"
   echo_broadcast "===> Creating directory for modules"
@@ -444,29 +555,19 @@ copy_rootfs () {
   rsync -aAxz --human-readable --info=name0,progress2 /lib/modules/$(uname -r)/* ${tmp_rootfs_dir}/lib/modules/$(uname -r)/ || write_failure
   flush_cache
 
-  echo_broadcast "Copying: ${source}p${media_rootfs} -> ${destination}p${media_rootfs} complete"
+  echo_broadcast "Copying: Current rootfs to ${rootfs_partition} complete"
 
   echo_broadcast "Final System Tweaks:"
-  echo_broadcast "==> Put root uuid in uEnv.txt"
-  unset root_uuid
-  root_uuid=$(/sbin/blkid -c /dev/null -s UUID -o value ${destination}p${media_rootfs})
-  if [ "${root_uuid}" ] ; then
-    sed -i -e 's:uuid=:#uuid=:g' ${tmp_rootfs_dir}/boot/uEnv.txt
-    echo "uuid=${root_uuid}" >> ${tmp_rootfs_dir}/boot/uEnv.txt
-
-    echo_broadcast "===> UUID=${root_uuid}"
-    root_uuid="UUID=${root_uuid}"
-  else
-    #FIXME: really a failure...
-    root_uuid="${source}p${media_rootfs}"
+  if [ -d ${tmp_rootfs_dir}/etc/ssh/ ] ; then
+    echo_broadcast "==> Applying SSH Key Regeneration trick"
+    #ssh keys will now get regenerated on the next bootup
+    touch ${tmp_rootfs_dir}/etc/ssh/ssh.regenerate
+    flush_cache
   fi
 
-  echo_broadcast "==> Generating: /etc/fstab"
-  echo "# /etc/fstab: static file system information." > ${tmp_rootfs_dir}/etc/fstab
-  echo "#" >> ${tmp_rootfs_dir}/etc/fstab
-  echo "${root_uuid}  /  ext4  noatime,errors=remount-ro  0  1" >> ${tmp_rootfs_dir}/etc/fstab
-  echo "debugfs  /sys/kernel/debug  debugfs  defaults  0  0" >> ${tmp_rootfs_dir}/etc/fstab
-  cat ${tmp_rootfs_dir}/etc/fstab
+  generate_uEnv ${tmp_rootfs_dir}/boot/uEnv.txt
+
+  _generate_fstab
 
   #FIXME: What about when you boot from a fat partition /boot ?
   echo_broadcast "==> /boot/uEnv.txt: disabling eMMC flasher script"
@@ -478,10 +579,6 @@ copy_rootfs () {
   umount ${tmp_rootfs_dir} || umount -l ${tmp_rootfs_dir} || write_failure
 
   reset_leds 'none'
-  if [ "x${is_bbb}" = "xenable" ] ; then
-    echo_broadcast "==> Stop Cylon LEDs"
-    [ -e /proc/$CYLON_PID ]  && kill $CYLON_PID
-  fi
 
   echo_broadcast "==> Syncing: ${destination}"
   #https://github.com/beagleboard/meta-beagleboard/blob/master/contrib/bone-flash-tool/emmc.sh#L158-L159
@@ -526,14 +623,17 @@ erasing_drive() {
   flush_cache
   echo_broadcast "Erasing: ${drive} complete"
   _generate_line 40
-
 }
 
 loading_soc_defaults() {
   local soc_file="/boot/SOC.sh"
   if [ -f ${soc_file} ] ; then
     echo_broadcast "Loading ${soc_file}"
+    _generate_line 60 '*'
+    cat ${soc_file}
+    _generate_line 60 '*'
     . ${soc_file}
+    echo_broadcast "Loaded"
   else
     echo_broadcast "Could not find ${soc_file}, no defaults are loaded"
   fi
@@ -542,7 +642,7 @@ loading_soc_defaults() {
 _get_ext4_options(){
   #Debian Stretch; mfks.ext4 default to metadata_csum,64bit disable till u-boot works again..
   unset ext4_options
-  unset test_mke2fs
+  unset test_mkfs
   LC_ALL=C mkfs.ext4 -V &> /tmp/mkfs
   test_mkfs=$(cat /tmp/mkfs | grep mke2fs | grep 1.43 || true)
   if [ "x${test_mkfs}" = "x" ] ; then
@@ -550,16 +650,21 @@ _get_ext4_options(){
   else
     ext4_options="-c -O ^metadata_csum,^64bit"
   fi
-
 }
 
-partition_drive () {
-  erasing_drive ${destination}
-  loading_soc_defaults
+partition_drive() {
+  _generate_line 80 '!'
+  echo_broadcast "WARNING: DEPRECATED PUBLIC INTERFACE"
+  echo_broadcast "WARNING: YOU SHOULD USE prepare_drive() instead"
+  echo_broadcast "WARNING: Calling it for you..."
+  _generate_line 80 '!'
+  prepare_drive
+}
 
-  _get_ext4_options
-
-  dd_bootloader
+partition_device() {
+  echo_broadcast ""
+  _generate_line 80 '='
+  echo_broadcast "Partitionning ${destination}"
 
   if [ "x${boot_fstype}" = "xfat" ] ; then
     conf_boot_startmb=${conf_boot_startmb:-"4"}
@@ -567,8 +672,6 @@ partition_drive () {
     sfdisk_fstype=${sfdisk_fstype:-"0xE"}
     boot_label=${boot_label:-"BEAGLEBONE"}
     rootfs_label=${rootfs_label:-"rootfs"}
-
-    echo_broadcast "Formatting: ${destination}"
 
     sfdisk_options="--force --Linux --in-order --unit M"
     sfdisk_boot_startmb="${conf_boot_startmb}"
@@ -594,14 +697,14 @@ ${sfdisk_rootfs_startmb},,,-
 __EOF__
 
     flush_cache
-    format_boot
-    format_root
-    echo_broadcast "Formatting: ${destination} complete"
+    echo_broadcast "Partitionning Completed"
     _generate_line 40
-
-    copy_boot
-    media_rootfs="2"
-    copy_rootfs
+    echo_broadcast "Generated Partitions:"
+    LC_ALL=C sfdisk -l ${destination}
+    _generate_line 80 '='
+    echo_broadcast ""
+    boot_partition="${destination}p1"
+    rootfs_partition="${destination}p2"
   else
     conf_boot_startmb=${conf_boot_startmb:-"4"}
     sfdisk_fstype=${sfdisk_fstype:-"L"}
@@ -612,8 +715,6 @@ __EOF__
     if [ "x${boot_label}" = "xBOOT" ] ; then
       boot_label="rootfs"
     fi
-
-    echo_broadcast "Formatting: ${destination}"
 
     sfdisk_options="--force --Linux --in-order --unit M"
     sfdisk_boot_startmb="${conf_boot_startmb}"
@@ -638,9 +739,39 @@ ${sfdisk_boot_startmb},,${sfdisk_fstype},*
 __EOF__
 
     flush_cache
-    format_single_root
-    echo_broadcast "Formatting: ${destination} complete"
+    echo_broadcast "Partitionning Completed"
     _generate_line 40
+    echo_broadcast "Generated Partitions:"
+    LC_ALL=C sfdisk -l ${destination}
+    _generate_line 80 '='
+    echo_broadcast ""
+    boot_partition="${destination}p1"
+    rootfs_partition="${boot_partition}"
+  fi
+  #TODO: Rework this for supporting a more complex partition layout
+}
+
+prepare_drive() {
+  erasing_drive ${destination}
+  loading_soc_defaults
+
+  _get_ext4_options
+
+  dd_bootloader
+
+  boot_partition=
+  rootfs_partition=
+  partition_device
+
+  if [ "${boot_partition}x" != "${rootfs_partition}x" ] ; then
+    format_boot
+    format_root
+
+    copy_boot
+    media_rootfs="2"
+    copy_rootfs
+  else
+    format_single_root
 
     media_rootfs="1"
     copy_rootfs
@@ -663,5 +794,4 @@ activate_cylon_leds() {
     echo "Not activating Cylon LEDs as we are not a BBB compatible device"
   fi
 }
-
 
