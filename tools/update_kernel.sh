@@ -89,7 +89,8 @@ test_bone_rt_kernel_version () {
 			kernel="LTS44"
 			;;
 		4.9)
-			kernel="LTS49"
+			kernel="EXPERIMENTAL"
+#			kernel="LTS49"
 			;;
 		esac
 	fi
@@ -111,7 +112,8 @@ test_bone_kernel_version () {
 			kernel="LTS44"
 			;;
 		4.9)
-			kernel="LTS49"
+			kernel="EXPERIMENTAL"
+#			kernel="LTS49"
 			;;
 		*)
 			#aka STABLE, as 3.8.13 will always be considered STABLE
@@ -153,7 +155,8 @@ test_armv7_kernel_version () {
 			kernel="LTS44"
 			;;
 		4.9)
-			kernel="LTS49"
+			kernel="EXPERIMENTAL"
+#			kernel="LTS49"
 			;;
 		*)
 			kernel="STABLE"
