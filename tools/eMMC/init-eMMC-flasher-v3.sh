@@ -30,30 +30,12 @@ device_eeprom="bbb-eeprom"
 
 check_if_run_as_root
 
-find_root_drive
-
-boot_drive="${root_drive%?}1"
-
-if [ ! "x${boot_drive}" = "x${root_drive}" ] ; then
-	mount ${boot_drive} /boot/uboot -o ro
-fi
-mount -t tmpfs tmpfs /tmp
-
-if [ "x${boot_drive}" = "x/dev/mmcblk0p1" ] ; then
-	source="/dev/mmcblk0"
-	destination="/dev/mmcblk1"
-fi
-
-if [ "x${boot_drive}" = "x/dev/mmcblk1p1" ] ; then
-	source="/dev/mmcblk1"
-	destination="/dev/mmcblk0"
-fi
-
-sleep 5
 startup_message
-get_device
+prepare_environment
+
+countdown 5
 check_eeprom
 check_running_system
 activate_cylon_leds
-partition_drive
-#
+prepare_drive
+
