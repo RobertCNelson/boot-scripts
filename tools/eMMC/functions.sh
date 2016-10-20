@@ -119,8 +119,8 @@ prepare_environment() {
   boot_drive="${root_drive%?}1"
   if [ ! "x${boot_drive}" = "x${root_drive}" ] ; then
     echo_broadcast "====> The Boot and Root drives are identified to be different."
-    echo_broadcast "====> Mounting ${boot_drive} Read Only over /boot"
-    mount ${boot_drive} /boot -o ro
+    echo_broadcast "====> Mounting ${boot_drive} Read Only over /boot/uboot"
+    mount ${boot_drive} /boot/uboot -o ro
   fi
   echo_broadcast "==> Figuring out Source and Destination devices"
   if [ "x${boot_drive}" = "x/dev/mmcblk0p1" ] ; then
@@ -574,6 +574,7 @@ _copy_boot() {
   generate_line 80 '='
   echo_broadcast "Copying boot: ${source}p1 -> ${boot_partition}"
 
+  #rcn-ee: Currently the MLO/u-boot.img are dd'ed to MBR, this is just for old rootfs:
   if [ -f /boot/uboot/MLO ] && [ -f /boot/uboot/u-boot.img ] ; then
     echo_broadcast "==> Found MLO and u-boot.img in current /boot/uboot/, copying"
     #Make sure the BootLoader gets copied first:
@@ -582,16 +583,11 @@ _copy_boot() {
 
     cp -v /boot/uboot/u-boot.img ${tmp_boot_dir}/u-boot.img || write_failure
     flush_cache
-  else
-    echo_broadcast "!==> We could not find an MLO and u-boot.img to copy"
   fi
 
   echo_broadcast "==> rsync: /boot/uboot/ -> ${tmp_boot_dir}"
-  #FIXME: Why is it rsyncing /boot/uboot ? This is wrong
-  #rsync -aAx /boot/uboot/ /tmp/boot/ --exclude={MLO,u-boot.img,uEnv.txt} || write_failure
-
   get_rsync_options
-  rsync -aAx $rsync_options /boot/* ${tmp_boot_dir} --exclude={MLO,u-boot.img,uEnv.txt} || write_failure
+  rsync -aAx $rsync_options /boot/uboot/* ${tmp_boot_dir} --exclude={MLO,u-boot.img,uEnv.txt} || write_failure
   flush_cache
   empty_line
   generate_line 80 '='
