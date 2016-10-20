@@ -5,7 +5,7 @@
 # Source it like this:
 # source $(dirname "$0")/functions.sh
 
-version_message="1.20161005: sfdisk: actually calculate the start of 2nd/3rd partitions..."
+version_message="1.20161019: Major refactor of library"
 emmcscript="cmdline=init=/opt/scripts/tools/eMMC/$(basename $0)"
 
 set -o errtrace
@@ -190,9 +190,16 @@ end_script() {
     generate_line 80 '='
 
     flush_cache
-    #Why is /sbin/init used ? This not halting the system at all.
-    #exec /sbin/init
-    exec /sbin/shutdown now
+    unset are_we_flasher
+    are_we_flasher=$(grep init-eMMC-flasher /proc/cmdline || true)
+    if [ ! "x${are_we_flasher}" = "x" ] ; then
+      echo_broadcast "We are init"
+      #When run as init
+      exec /sbin/init
+      exit #We should not hit that
+    fi
+    echo_broadcast "Calling shutdown"
+    systemctl poweroff || halt
   fi
 }
 
@@ -582,7 +589,9 @@ _copy_boot() {
   echo_broadcast "==> rsync: /boot/uboot/ -> ${tmp_boot_dir}"
   #FIXME: Why is it rsyncing /boot/uboot ? This is wrong
   #rsync -aAx /boot/uboot/ /tmp/boot/ --exclude={MLO,u-boot.img,uEnv.txt} || write_failure
-  rsync -aAx --human-readable --info=name0,progress2 /boot/* ${tmp_boot_dir} --exclude={MLO,u-boot.img,uEnv.txt} || write_failure
+
+  get_rsync_options
+  rsync -aAx $rsync_options /boot/* ${tmp_boot_dir} --exclude={MLO,u-boot.img,uEnv.txt} || write_failure
   flush_cache
   empty_line
   generate_line 80 '='
@@ -677,7 +686,8 @@ _copy_rootfs() {
   generate_line 40
   echo_broadcast "==> rsync: / -> ${tmp_rootfs_dir}"
   generate_line 40
-  rsync -aAx --human-readable --info=name0,progress2 /* ${tmp_rootfs_dir} --exclude={/dev/*,/proc/*,/sys/*,/tmp/*,/run/*,/mnt/*,/media/*,/lost+found,/lib/modules/*,/uEnv.txt} || write_failure
+  get_rsync_options
+  rsync -aAx $rsync_options /* ${tmp_rootfs_dir} --exclude={/dev/*,/proc/*,/sys/*,/tmp/*,/run/*,/mnt/*,/media/*,/lost+found,/lib/modules/*,/uEnv.txt} || write_failure
   flush_cache
   generate_line 40
   echo_broadcast "==> Copying: Kernel modules"
@@ -685,7 +695,7 @@ _copy_rootfs() {
   mkdir -p ${tmp_rootfs_dir}/lib/modules/$(uname -r)/ || true
   echo_broadcast "===> rsync: /lib/modules/$(uname -r)/ -> ${tmp_rootfs_dir}/lib/modules/$(uname -r)/"
   generate_line 40
-  rsync -aAx --human-readable --info=name0,progress2 /lib/modules/$(uname -r)/* ${tmp_rootfs_dir}/lib/modules/$(uname -r)/ || write_failure
+  rsync -aAx $rsync_options /lib/modules/$(uname -r)/* ${tmp_rootfs_dir}/lib/modules/$(uname -r)/ || write_failure
   flush_cache
   generate_line 40
 
@@ -761,6 +771,18 @@ get_ext4_options(){
     ext4_options="-c"
   else
     ext4_options="-c -O ^metadata_csum,^64bit"
+  fi
+}
+
+get_rsync_options(){
+  unset rsync_options
+  unset test_rsync
+  rsync --version &> /tmp/rsync_ver
+  test_rsync=$(cat /tmp/rsync_ver | grep version | grep 3.0 || true)
+  if [ "x${test_rsync}" = "x" ] ; then
+    rsync_options="--human-readable --info=name0,progress2"
+  else
+    rsync_options=""
   fi
 }
 
