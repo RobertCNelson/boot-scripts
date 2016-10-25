@@ -35,6 +35,11 @@ check_if_run_as_root(){
   fi
 }
 
+flush_cache() {
+  sync
+  blockdev --flushbufs ${destination}
+}
+
 source="/dev/mmcblk0"
 destination="/dev/mmcblk1"
 
