@@ -24,10 +24,6 @@
 #This script assumes, these packages are installed, as network may not be setup
 #dosfstools initramfs-tools rsync u-boot-tools
 
-source $(dirname "$0")/functions.sh
-#
-device_eeprom="bbb-eeprom"
-
 #https://rcn-ee.com/repos/bootloader/am335x_evm/
 http_spl="MLO-am335x_evm-v2016.03-r7"
 http_uboot="u-boot-am335x_evm-v2016.03-r7.img"
@@ -68,13 +64,6 @@ check_running_system () {
 		update-initramfs -c -k $(uname -r)
 	fi
 	flush_cache
-
-	if [ "x${is_bbb}" = "xenable" ] ; then
-		if [ ! -e /sys/class/leds/beaglebone\:green\:usr0/trigger ] ; then
-			modprobe leds_gpio || true
-			sleep 1
-		fi
-	fi
 }
 
 copy_rootfs () {
@@ -134,10 +123,6 @@ copy_rootfs () {
 	flush_cache
 	umount /tmp/rootfs/ || umount -l /tmp/rootfs/ || write_failure
 
-	if [ "x${is_bbb}" = "xenable" ] ; then
-		[ -e /proc/$CYLON_PID ]  && kill $CYLON_PID
-	fi
-
 	message="Syncing: ${destination}" ; broadcast
 	#https://github.com/beagleboard/meta-beagleboard/blob/master/contrib/bone-flash-tool/emmc.sh#L158-L159
 	# force writeback of eMMC buffers
@@ -152,14 +137,6 @@ copy_rootfs () {
 		message="debug: enabled" ; broadcast
 		inf_loop
 	else
-		if [ "x${is_bbb}" = "xenable" ] ; then
-			if [ -e /sys/class/leds/beaglebone\:green\:usr0/trigger ] ; then
-				echo default-on > /sys/class/leds/beaglebone\:green\:usr0/trigger
-				echo default-on > /sys/class/leds/beaglebone\:green\:usr1/trigger
-				echo default-on > /sys/class/leds/beaglebone\:green\:usr2/trigger
-				echo default-on > /sys/class/leds/beaglebone\:green\:usr3/trigger
-			fi
-		fi
 		mount
 
 		message="eMMC has been flashed: please wait for device to power down." ; broadcast
@@ -275,8 +252,8 @@ partition_drive () {
 		message="sfdisk: [${sfdisk_boot_startmb},,${sfdisk_fstype},*]" ; broadcast
 
 		LC_ALL=C sfdisk ${sfdisk_options} "${destination}" <<-__EOF__
-${sfdisk_boot_startmb},,${sfdisk_fstype},*
-__EOF__
+			${sfdisk_boot_startmb},,${sfdisk_fstype},*
+		__EOF__
 
 		flush_cache
 		format_single_root
@@ -290,12 +267,9 @@ __EOF__
 
 clear
 message="-----------------------------" ; broadcast
-message="Version: [${version_message}]" ; broadcast
+message="Version: [1.20161025: undo refactor of eewiki]" ; broadcast
 message="-----------------------------" ; broadcast
 
-get_device
-check_eeprom
 check_running_system
-activate_cylon_leds
 partition_drive
 #
