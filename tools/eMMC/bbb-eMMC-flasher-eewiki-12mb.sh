@@ -28,7 +28,12 @@
 http_spl="MLO-am335x_evm-v2016.03-r7"
 http_uboot="u-boot-am335x_evm-v2016.03-r7.img"
 
-check_if_run_as_root
+check_if_run_as_root(){
+  if ! id | grep -q root; then
+    echo "must be run as root"
+    exit
+  fi
+}
 
 source="/dev/mmcblk0"
 destination="/dev/mmcblk1"
