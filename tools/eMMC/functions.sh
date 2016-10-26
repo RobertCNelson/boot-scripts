@@ -353,12 +353,16 @@ do_we_have_eeprom() {
   fi
 }
 
-check_eeprom() {
+do_we_have_am335x_eeprom() {
+  do_we_have_eeprom
+}
+
+check_am335x_eeprom() {
   empty_line
   generate_line 40 '='
   echo_broadcast "Checking for Valid ${device_eeprom} header"
 
-  do_we_have_eeprom
+  do_we_have_am335x_eeprom
 
   if [ "x${is_bbb}" = "xenable" ] ; then
     if [ "x${got_eeprom}" = "xtrue" ] ; then
@@ -386,6 +390,63 @@ check_eeprom() {
           fi
         else
           echo_broadcast "!==> error: no [/opt/scripts/device/bone/${device_eeprom}.dump]"
+          generate_line 40 '='
+        fi
+      fi
+    fi
+  fi
+}
+
+check_eeprom() {
+  check_am335x_eeprom
+}
+
+do_we_have_am57xx_eeprom() {
+  unset got_eeprom
+  if [ -f /sys/bus/i2c/devices/0-0050/eeprom ] && [ "x${got_eeprom}" = "x" ] ; then
+    eeprom="/sys/bus/i2c/devices/0-0050/eeprom"
+
+    if [ -f /sys/devices/platform/44000000.ocp/48070000.i2c/i2c-0/0-0050/eeprom ] ; then
+      eeprom_location="/sys/devices/platform/44000000.ocp/48070000.i2c/i2c-0/0-0050/eeprom"
+    fi
+
+    got_eeprom="true"
+  fi
+}
+
+check_am57xx_eeprom() {
+  empty_line
+  generate_line 40 '='
+  echo_broadcast "Checking for Valid ${device_eeprom} header"
+
+  do_we_have_am57xx_eeprom
+
+  if [ "x${is_bbb}" = "xenable" ] ; then
+    if [ "x${got_eeprom}" = "xtrue" ] ; then
+      eeprom_header=$(hexdump -e '8/1 "%c"' ${eeprom} -n 3 | cut -b 2-3)
+      if [ "x${eeprom_header}" = "xU3" ] ; then
+        echo_broadcast "==> Valid ${device_eeprom} header found [${eeprom_header}]"
+        generate_line 40 '='
+      else
+        echo_broadcast "==> Invalid EEPROM header detected"
+        if [ -f /opt/scripts/device/${device_eeprom}.dump ] ; then
+          if [ ! "x${eeprom_location}" = "x" ] ; then
+            echo_broadcast "===> Writing header to EEPROM"
+            dd if=/opt/scripts/device/${device_eeprom}.dump of=${eeprom_location}
+            sync
+            sync
+            eeprom_check=$(hexdump -e '8/1 "%c"' ${eeprom} -n 3 | cut -b 2-3)
+            echo_broadcast "===> eeprom check: [${eeprom_check}]"
+            generate_line 40 '='
+            #We have to reboot, as the kernel only loads the eMMC cape
+            # with a valid header
+            reboot -f
+
+            #We shouldnt hit this...
+            exit
+          fi
+        else
+          echo_broadcast "!==> error: no [/opt/scripts/device/${device_eeprom}.dump]"
           generate_line 40 '='
         fi
       fi

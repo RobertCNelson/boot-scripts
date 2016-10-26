@@ -34,7 +34,7 @@ startup_message
 prepare_environment
 
 countdown 5
-check_eeprom
+check_am57xx_eeprom
 check_running_system
 activate_cylon_leds
 prepare_drive
