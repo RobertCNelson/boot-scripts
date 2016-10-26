@@ -209,7 +209,7 @@ get_device () {
 			scan_armv7_kernels
 			es8="enabled"
 			;;
-		TI_AM5728_BeagleBoard*)
+		TI_AM5728*)
 			scan_ti_kernels
 			scan_armv7_kernels
 			;;
@@ -229,6 +229,8 @@ get_device () {
 	unset sgxjacinto6evm
 	unset rtl8723bu
 	unset ticmem
+	unset tidebugss
+	unset titemperature
 	unset kernel_headers
 	case "${machine}" in
 	TI_AM335x_BeagleBone*)
@@ -240,10 +242,11 @@ get_device () {
 		sgxti335x="enabled"
 		rtl8723bu="enabled"
 		;;
-	TI_AM5728_BeagleBoard*)
+	TI_AM5728*)
 		sgxjacinto6evm="enabled"
 		ticmem="enabled"
-		kernel_headers="enabled"
+		tidebugss="enabled"
+		titemperature="enabled"
 		;;
 	TI_OMAP5_uEVM_board)
 		kernel_headers="enabled"
@@ -527,6 +530,14 @@ third_party () {
 			fi
 			if [ "x${ticmem}" = "xenabled" ] ; then
 				apt-get install -y ti-cmem-modules-${latest_kernel} || true
+				run_depmod_initramfs="enabled"
+			fi
+			if [ "x${tidebugss}" = "xenabled" ] ; then
+				apt-get install -y ti-debugss-${latest_kernel} || true
+				run_depmod_initramfs="enabled"
+			fi
+			if [ "x${titemperature}" = "xenabled" ] ; then
+				apt-get install -y ti-temperature-${latest_kernel} || true
 				run_depmod_initramfs="enabled"
 			fi
 			if [ "x${sgxti335x}" = "xenabled" ] ; then
