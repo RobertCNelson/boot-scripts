@@ -421,34 +421,32 @@ check_am57xx_eeprom() {
 
   do_we_have_am57xx_eeprom
 
-  if [ "x${is_bbb}" = "xenable" ] ; then
-    if [ "x${got_eeprom}" = "xtrue" ] ; then
-      eeprom_header=$(hexdump -e '8/1 "%c"' ${eeprom} -n 3 | cut -b 2-3)
-      if [ "x${eeprom_header}" = "xU3" ] ; then
-        echo_broadcast "==> Valid ${device_eeprom} header found [${eeprom_header}]"
-        generate_line 40 '='
-      else
-        echo_broadcast "==> Invalid EEPROM header detected"
-        if [ -f /opt/scripts/device/${device_eeprom}.dump ] ; then
-          if [ ! "x${eeprom_location}" = "x" ] ; then
-            echo_broadcast "===> Writing header to EEPROM"
-            dd if=/opt/scripts/device/${device_eeprom}.dump of=${eeprom_location}
-            sync
-            sync
-            eeprom_check=$(hexdump -e '8/1 "%c"' ${eeprom} -n 3 | cut -b 2-3)
-            echo_broadcast "===> eeprom check: [${eeprom_check}]"
-            generate_line 40 '='
-            #We have to reboot, as the kernel only loads the eMMC cape
-            # with a valid header
-            reboot -f
-
-            #We shouldnt hit this...
-            exit
-          fi
-        else
-          echo_broadcast "!==> error: no [/opt/scripts/device/${device_eeprom}.dump]"
+  if [ "x${got_eeprom}" = "xtrue" ] ; then
+    eeprom_header=$(hexdump -e '8/1 "%c"' ${eeprom} -n 3 | cut -b 2-3)
+    if [ "x${eeprom_header}" = "xU3" ] ; then
+      echo_broadcast "==> Valid ${device_eeprom} header found [${eeprom_header}]"
+      generate_line 40 '='
+    else
+      echo_broadcast "==> Invalid EEPROM header detected"
+      if [ -f /opt/scripts/device/${device_eeprom}.dump ] ; then
+        if [ ! "x${eeprom_location}" = "x" ] ; then
+          echo_broadcast "===> Writing header to EEPROM"
+          dd if=/opt/scripts/device/${device_eeprom}.dump of=${eeprom_location}
+          sync
+          sync
+          eeprom_check=$(hexdump -e '8/1 "%c"' ${eeprom} -n 3 | cut -b 2-3)
+          echo_broadcast "===> eeprom check: [${eeprom_check}]"
           generate_line 40 '='
+          #We have to reboot, as the kernel only loads the eMMC cape
+          # with a valid header
+          reboot -f
+
+          #We shouldnt hit this...
+          exit
         fi
+      else
+        echo_broadcast "!==> error: no [/opt/scripts/device/${device_eeprom}.dump]"
+        generate_line 40 '='
       fi
     fi
   fi
