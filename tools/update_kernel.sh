@@ -228,6 +228,7 @@ get_device () {
 	unset sgxti335x
 	unset sgxjacinto6evm
 	unset rtl8723bu
+	unset ticmem
 	unset kernel_headers
 	case "${machine}" in
 	TI_AM335x_BeagleBone*)
@@ -241,6 +242,7 @@ get_device () {
 		;;
 	TI_AM5728_BeagleBoard*)
 		sgxjacinto6evm="enabled"
+		ticmem="enabled"
 		kernel_headers="enabled"
 		;;
 	TI_OMAP5_uEVM_board)
@@ -521,6 +523,10 @@ third_party () {
 		LTS41|LTS44|LTS49)
 			if [ "x${rtl8723bu}" = "xenabled" ] ; then
 				apt-get install -y rtl8723bu-modules-${latest_kernel} || true
+				run_depmod_initramfs="enabled"
+			fi
+			if [ "x${ticmem}" = "xenabled" ] ; then
+				apt-get install -y ti-cmem-modules-${latest_kernel} || true
 				run_depmod_initramfs="enabled"
 			fi
 			if [ "x${sgxti335x}" = "xenabled" ] ; then
