@@ -331,6 +331,7 @@ latest_version_repo () {
 			fi
 			apt-get update
 
+			unset flag_reinstall
 			pkg="linux-image-${latest_kernel}"
 			#is the package installed?
 			check_dpkg
@@ -348,6 +349,7 @@ latest_version_repo () {
 					pkg="${pkg} linux-headers-${latest_kernel}"
 				fi
 				echo "debug: reinstalling: [${pkg}]"
+				flag_reinstall=true
 				apt-get install -y ${pkg} --reinstall
 				update_uEnv_txt
 			else
@@ -452,6 +454,7 @@ specific_version_repo () {
 	latest_kernel=$(echo ${kernel_version})
 	apt-get update
 
+	unset flag_reinstall
 	pkg="linux-image-${latest_kernel}"
 	#is the package installed?
 	check_dpkg
@@ -464,6 +467,7 @@ specific_version_repo () {
 		apt-get install -y ${pkg}
 		update_uEnv_txt
 	elif [ "x${pkg}" = "x${apt_cache}" ] ; then
+		flag_reinstall=true
 		apt-get install -y ${pkg} --reinstall
 		update_uEnv_txt
 	else
@@ -481,21 +485,26 @@ third_party_final () {
 third_party () {
 	unset run_depmod_initramfs
 
+	apt_options="install -y"
+	if [ "x${flag_reinstall}" = xtrue ] ; then
+		apt_options="install -y --reinstall"
+	fi
+
 	case "${SOC}" in
 	omap-psp)
 		case "${kernel}" in
 		STABLE)
 			#3.8 only...
-			apt-get install -o Dpkg::Options::="--force-overwrite" -y mt7601u-modules-${latest_kernel} || true
+			apt-get ${apt_options} -o Dpkg::Options::="--force-overwrite" mt7601u-modules-${latest_kernel} || true
 			run_depmod_initramfs="enabled"
 			;;
 		LTS41|LTS44|LTS49|TESTING|EXPERIMENTAL)
 			if [ "x${es8}" = "xenabled" ] ; then
-				apt-get install -y ti-sgx-es8-modules-${latest_kernel} || true
+				apt-get ${apt_options} ti-sgx-es8-modules-${latest_kernel} || true
 				run_depmod_initramfs="enabled"
 			fi
 			if [ "x${rtl8723bu}" = "xenabled" ] ; then
-				apt-get install -y rtl8723bu-modules-${latest_kernel} || true
+				apt-get ${apt_options} rtl8723bu-modules-${latest_kernel} || true
 				run_depmod_initramfs="enabled"
 			fi
 			;;
@@ -505,9 +514,9 @@ third_party () {
 		case "${kernel}" in
 		STABLE)
 			#3.8 only...
-			apt-get install -o Dpkg::Options::="--force-overwrite" -y mt7601u-modules-${latest_kernel} || true
+			apt-get ${apt_options} -o Dpkg::Options::="--force-overwrite" mt7601u-modules-${latest_kernel} || true
 			if [ "x${es8}" = "xenabled" ] ; then
-				apt-get install -y ti-sgx-es8-modules-${latest_kernel} || true
+				apt-get ${apt_options} ti-sgx-es8-modules-${latest_kernel} || true
 			fi
 			run_depmod_initramfs="enabled"
 			;;
@@ -516,10 +525,10 @@ third_party () {
 	ti|ti-rt)
 		case "${kernel}" in
 		LTS314)
-			apt-get install -y mt7601u-modules-${latest_kernel} || true
+			apt-get ${apt_options} mt7601u-modules-${latest_kernel} || true
 			run_depmod_initramfs="enabled"
 			if [ "x${rtl8723bu}" = "xenabled" ] ; then
-				apt-get install -y rtl8723bu-modules-${latest_kernel} || true
+				apt-get ${apt_options} rtl8723bu-modules-${latest_kernel} || true
 				run_depmod_initramfs="enabled"
 			fi
 			;;
@@ -529,23 +538,23 @@ third_party () {
 				run_depmod_initramfs="enabled"
 			fi
 			if [ "x${ticmem}" = "xenabled" ] ; then
-				apt-get install -y ti-cmem-modules-${latest_kernel} || true
+				apt-get ${apt_options} ti-cmem-modules-${latest_kernel} || true
 				run_depmod_initramfs="enabled"
 			fi
 			if [ "x${tidebugss}" = "xenabled" ] ; then
-				apt-get install -y ti-debugss-${latest_kernel} || true
+				apt-get ${apt_options} ti-debugss-modules-${latest_kernel} || true
 				run_depmod_initramfs="enabled"
 			fi
 			if [ "x${titemperature}" = "xenabled" ] ; then
-				apt-get install -y ti-temperature-${latest_kernel} || true
+				apt-get ${apt_options} ti-temperature-modules-${latest_kernel} || true
 				run_depmod_initramfs="enabled"
 			fi
 			if [ "x${sgxti335x}" = "xenabled" ] ; then
-				apt-get install -y ti-sgx-ti335x-modules-${latest_kernel} || true
+				apt-get ${apt_options} ti-sgx-ti335x-modules-${latest_kernel} || true
 				run_depmod_initramfs="enabled"
 			fi
 			if [ "x${sgxjacinto6evm}" = "xenabled" ] ; then
-				apt-get install -y ti-sgx-jacinto6evm-modules-${latest_kernel} || true
+				apt-get ${apt_options} ti-sgx-jacinto6evm-modules-${latest_kernel} || true
 				run_depmod_initramfs="enabled"
 			fi
 			;;
