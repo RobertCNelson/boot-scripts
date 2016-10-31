@@ -101,14 +101,14 @@ flash_emmc () {
 	flush_cache
 
 	LC_ALL=C sfdisk --force --no-reread --in-order --Linux --unit M ${destination} <<-__EOF__
-	1,,L,*
+	4,,L,*
 	__EOF__
 
 	sync
 	flush_cache
 
-	message="mkfs.ext4 -c -L rootfs ${destination}p1" ; broadcast
-	LC_ALL=C mkfs.ext4 -c -L rootfs ${destination}p1 || write_failure
+	message="mkfs.ext4 -L rootfs ${destination}p1" ; broadcast
+	LC_ALL=C mkfs.ext4 -L rootfs ${destination}p1 || write_failure
 	message="Erasing: ${destination} complete" ; broadcast
 	message="-----------------------------" ; broadcast
 
