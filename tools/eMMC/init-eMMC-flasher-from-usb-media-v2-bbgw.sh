@@ -340,7 +340,7 @@ set_uuid () {
 	message="`cat /tmp/rootfs/etc/fstab`" ; broadcast
 	message="-----------------------------" ; broadcast
 	flush_cache
-    
+	
 	message="running: chroot /tmp/rootfs/ /usr/bin/bb-wl18xx-wlan0" ; broadcast
 
 	mount --bind /proc /tmp/rootfs/proc
@@ -364,7 +364,7 @@ set_uuid () {
 	umount -fl /tmp/rootfs/proc
 	umount -fl /tmp/rootfs/sys
 	sleep 2
-    flush_cache
+	flush_cache
 	umount /tmp/rootfs/ || umount -l /tmp/rootfs/ || write_failure
 }
 
