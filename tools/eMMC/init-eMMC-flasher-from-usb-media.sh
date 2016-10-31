@@ -122,15 +122,25 @@ flash_emmc () {
 		else
 			message="Flashing eMMC with dd" ; broadcast
 			message="-----------------------------" ; broadcast
-			message="xzcat ${wdir}/${conf_image} | dd of=${destination} bs=1M" ; broadcast
-			xzcat ${wdir}/${conf_image} | dd of=${destination} bs=1M || write_failure
+			if [ "x${image_is_uncompressed}" = "xenable" ] ; then
+				message="dd if=${wdir}/${conf_image} of=${destination} bs=1M" ; broadcast
+				dd if=${wdir}/${conf_image} of=${destination} bs=1M || write_failure
+			else
+				message="xzcat ${wdir}/${conf_image} | dd of=${destination} bs=1M" ; broadcast
+				xzcat ${wdir}/${conf_image} | dd of=${destination} bs=1M || write_failure
+			fi
 			message="-----------------------------" ; broadcast
 		fi
 	else
 		message="Flashing eMMC with dd" ; broadcast
 		message="-----------------------------" ; broadcast
-		message="xzcat ${wdir}/${conf_image} | dd of=${destination} bs=1M" ; broadcast
-		xzcat ${wdir}/${conf_image} | dd of=${destination} bs=1M || write_failure
+			if [ "x${image_is_uncompressed}" = "xenable" ] ; then
+				message="dd if=${wdir}/${conf_image} of=${destination} bs=1M" ; broadcast
+				dd if=${wdir}/${conf_image} of=${destination} bs=1M || write_failure
+			else
+				message="xzcat ${wdir}/${conf_image} | dd of=${destination} bs=1M" ; broadcast
+				xzcat ${wdir}/${conf_image} | dd of=${destination} bs=1M || write_failure
+			fi
 		message="-----------------------------" ; broadcast
 	fi
 	flush_cache
@@ -429,6 +439,16 @@ process_job_file () {
 		fi
 
 		conf_image=$(cat ${wfile} | grep -v '#' | grep conf_image | awk -F '=' '{print $2}' || true)
+		#check if it was pre-un-compressed:
+		unset image_is_uncompressed
+		if [ ! -f ${wdir}/${conf_image} ] ; then
+			test_image=$(echo ${conf_image} | awk -F '.xz' '{ print $1 }')
+			if [ -f ${wdir}/${test_image} ] ; then
+				conf_image=${test_image}
+				image_is_uncompressed="enable"
+			fi
+		fi
+
 		if [ ! "x${conf_image}" = "x" ] ; then
 			if [ -f ${wdir}/${conf_image} ] ; then
 				conf_bmap=$(cat ${wfile} | grep -v '#' | grep conf_bmap | awk -F '=' '{print $2}' || true)
