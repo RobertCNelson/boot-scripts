@@ -26,7 +26,7 @@ source $(dirname "$0")/functions.sh
 #This script assumes, these packages are installed, as network may not be setup
 #dosfstools initramfs-tools rsync u-boot-tools
 
-version_message="1.20160618: deal with v4.4.x+ back to old eeprom location..."
+version_message="1.20161013: oemflasher improvements..."
 
 check_if_run_as_root
 
