@@ -185,18 +185,21 @@ auto_fsck () {
 }
 
 quad_partition () {
+	conf_partition2_startmb=$(($conf_partition1_startmb + $conf_partition1_endmb))
+	conf_partition3_startmb=$(($conf_partition2_startmb + $conf_partition2_endmb))
+	conf_partition4_startmb=$(($conf_partition3_startmb + $conf_partition3_endmb))
 	message="LC_ALL=C sfdisk --force --no-reread --in-order --Linux --unit M ${destination}" ; broadcast
 	message="${conf_partition1_startmb},${conf_partition1_endmb},${conf_partition1_fstype},*" ; broadcast
-	message=",${conf_partition2_endmb},${conf_partition2_fstype},-" ; broadcast
-	message=",${conf_partition3_endmb},${conf_partition3_fstype},-" ; broadcast
-	message=",,${conf_partition4_fstype},-" ; broadcast
+	message="${conf_partition2_startmb},${conf_partition2_endmb},${conf_partition2_fstype},-" ; broadcast
+	message="${conf_partition3_startmb},${conf_partition3_endmb},${conf_partition3_fstype},-" ; broadcast
+	message="${conf_partition4_startmb},,${conf_partition4_fstype},-" ; broadcast
 	message="-----------------------------" ; broadcast
 
 	LC_ALL=C sfdisk --force --no-reread --in-order --Linux --unit M ${destination} <<-__EOF__
 		${conf_partition1_startmb},${conf_partition1_endmb},${conf_partition1_fstype},*
-		,${conf_partition2_endmb},${conf_partition2_fstype},-
-		,${conf_partition3_endmb},${conf_partition3_fstype},-
-		,,${conf_partition4_fstype},-
+		${conf_partition2_startmb},${conf_partition2_endmb},${conf_partition2_fstype},-
+		${conf_partition3_startmb},${conf_partition3_endmb},${conf_partition3_fstype},-
+		${conf_partition4_startmb},,${conf_partition4_fstype},-
 	__EOF__
 
 	auto_fsck
@@ -206,16 +209,18 @@ quad_partition () {
 }
 
 tri_partition () {
+	conf_partition2_startmb=$(($conf_partition1_startmb + $conf_partition1_endmb))
+	conf_partition3_startmb=$(($conf_partition2_startmb + $conf_partition2_endmb))
 	message="LC_ALL=C sfdisk --force --no-reread --in-order --Linux --unit M ${destination}" ; broadcast
 	message="${conf_partition1_startmb},${conf_partition1_endmb},${conf_partition1_fstype},*" ; broadcast
-	message=",${conf_partition2_endmb},${conf_partition2_fstype},-" ; broadcast
-	message=",,${conf_partition3_fstype},-" ; broadcast
+	message="${conf_partition2_startmb},${conf_partition2_endmb},${conf_partition2_fstype},-" ; broadcast
+	message="${conf_partition3_startmb},,${conf_partition3_fstype},-" ; broadcast
 	message="-----------------------------" ; broadcast
 
 	LC_ALL=C sfdisk --force --no-reread --in-order --Linux --unit M ${destination} <<-__EOF__
 		${conf_partition1_startmb},${conf_partition1_endmb},${conf_partition1_fstype},*
-		,${conf_partition2_endmb},${conf_partition2_fstype},-
-		,,${conf_partition3_fstype},-
+		${conf_partition2_startmb},${conf_partition2_endmb},${conf_partition2_fstype},-
+		${conf_partition3_startmb},,${conf_partition3_fstype},-
 	__EOF__
 
 	auto_fsck
@@ -225,14 +230,15 @@ tri_partition () {
 }
 
 dual_partition () {
+	conf_partition2_startmb=$(($conf_partition1_startmb + $conf_partition1_endmb))
 	message="LC_ALL=C sfdisk --force --no-reread --in-order --Linux --unit M ${destination}" ; broadcast
 	message="${conf_partition1_startmb},${conf_partition1_endmb},${conf_partition1_fstype},*" ; broadcast
-	message=",,${conf_partition2_fstype},-" ; broadcast
+	message="${conf_partition2_startmb},,${conf_partition2_fstype},-" ; broadcast
 	message="-----------------------------" ; broadcast
 
 	LC_ALL=C sfdisk --force --no-reread --in-order --Linux --unit M ${destination} <<-__EOF__
 		${conf_partition1_startmb},${conf_partition1_endmb},${conf_partition1_fstype},*
-		,,${conf_partition2_fstype},-
+		${conf_partition2_startmb},,${conf_partition2_fstype},-
 	__EOF__
 
 	auto_fsck
