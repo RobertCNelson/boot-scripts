@@ -197,6 +197,12 @@ get_device () {
 
 	if [ "x${SOC}" = "x" ] ; then
 		case "${machine}" in
+		Arrow_BeagleBone_Black_Industrial)
+			scan_ti_kernels
+			scan_bone_kernels
+			scan_armv7_kernels
+			es8="enabled"
+			;;
 		TI_AM335x_Beagle*)
 			scan_ti_kernels
 			scan_bone_kernels
@@ -233,6 +239,10 @@ get_device () {
 	unset titemperature
 	unset kernel_headers
 	case "${machine}" in
+	Arrow_BeagleBone_Black_Industrial)
+		es8="enabled"
+		sgxti335x="enabled"
+		;;
 	TI_AM335x_BeagleBone*)
 		es8="enabled"
 		sgxti335x="enabled"
