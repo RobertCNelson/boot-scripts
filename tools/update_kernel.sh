@@ -542,7 +542,7 @@ third_party () {
 				run_depmod_initramfs="enabled"
 			fi
 			;;
-		LTS41|LTS44|LTS49)
+		LTS41|LTS44)
 			if [ "x${rtl8723bu}" = "xenabled" ] ; then
 				apt-get install -y rtl8723bu-modules-${latest_kernel} || true
 				run_depmod_initramfs="enabled"
@@ -567,6 +567,28 @@ third_party () {
 				apt-get ${apt_options} ti-sgx-jacinto6evm-modules-${latest_kernel} || true
 				run_depmod_initramfs="enabled"
 			fi
+			;;
+		LTS49)
+#			if [ "x${ticmem}" = "xenabled" ] ; then
+#				apt-get ${apt_options} ti-cmem-modules-${latest_kernel} || true
+#				run_depmod_initramfs="enabled"
+#			fi
+			if [ "x${tidebugss}" = "xenabled" ] ; then
+				apt-get ${apt_options} ti-debugss-modules-${latest_kernel} || true
+				run_depmod_initramfs="enabled"
+			fi
+			if [ "x${titemperature}" = "xenabled" ] ; then
+				apt-get ${apt_options} ti-temperature-modules-${latest_kernel} || true
+				run_depmod_initramfs="enabled"
+			fi
+#			if [ "x${sgxti335x}" = "xenabled" ] ; then
+#				apt-get ${apt_options} ti-sgx-ti335x-modules-${latest_kernel} || true
+#				run_depmod_initramfs="enabled"
+#			fi
+#			if [ "x${sgxjacinto6evm}" = "xenabled" ] ; then
+#				apt-get ${apt_options} ti-sgx-jacinto6evm-modules-${latest_kernel} || true
+#				run_depmod_initramfs="enabled"
+#			fi
 			;;
 		esac
 		;;
