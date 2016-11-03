@@ -369,6 +369,17 @@ if [ "x${usb0}" = "xenable" ] ; then
 	fi
 fi
 
+#Fighting Race conditions with lcd overlays...
+
+unset test_service
+if [ -f /lib/systemd/system/lightdm.service ] ; then
+	test_service=$(systemctl is-failed lightdm.service || true)
+
+	if [ "x${test_service}" = "xinactive" ] ; then
+		systemctl restart lightdm || true
+	fi
+fi
+
 #legacy support of: 2014-05-14
 if [ "x${abi}" = "x" ] ; then
 	#taken care by the init flasher
