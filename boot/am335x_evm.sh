@@ -372,7 +372,8 @@ fi
 #Fighting Race conditions with lcd overlays...
 
 unset test_service
-if [ -f /lib/systemd/system/lightdm.service ] ; then
+test_service=$(systemctl is-enabled lightdm.service || true)
+if [ "x${test_service}" = "xenabled" ] ; then
 	test_service=$(systemctl is-failed lightdm.service || true)
 
 	if [ "x${test_service}" = "xinactive" ] ; then
