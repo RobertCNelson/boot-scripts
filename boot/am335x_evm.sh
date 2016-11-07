@@ -77,6 +77,17 @@ TI_AM335x_BeagleBone)
 		fi
 	fi
 	;;
+TI_AM335x_BeagleBone_Black)
+	has_wifi="disable"
+	has_ethernet="enable"
+	#recovers 82MB of space
+	if [ -d /var/cache/doc-beaglebonegreen-getting-started ] ; then
+		rm -rf /var/cache/doc-beaglebonegreen-getting-started || true
+		if -d /var/cache/doc-seeed-bbgw-getting-started ] ; then
+			rm -rf /var/cache/doc-seeed-bbgw-getting-started || true
+		fi
+	fi
+	;;
 TI_AM335x_BeagleBone_Black_Wireless)
 	has_wifi="enable"
 	has_ethernet="disable"
