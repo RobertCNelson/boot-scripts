@@ -69,14 +69,35 @@ case "${board}" in
 TI_AM335x_BeagleBone)
 	has_wifi="disable"
 	has_ethernet="enable"
+	#recovers 82MB of space
+	if [ -d /var/cache/doc-beaglebonegreen-getting-started ] ; then
+		rm -rf /var/cache/doc-beaglebonegreen-getting-started || true
+		if -d /var/cache/doc-seeed-bbgw-getting-started ] ; then
+			rm -rf /var/cache/doc-seeed-bbgw-getting-started || true
+		fi
+	fi
 	;;
 TI_AM335x_BeagleBone_Black_Wireless)
 	has_wifi="enable"
 	has_ethernet="disable"
+	#recovers 82MB of space
+	if [ -d /var/cache/doc-beaglebonegreen-getting-started ] ; then
+		rm -rf /var/cache/doc-beaglebonegreen-getting-started || true
+		if -d /var/cache/doc-seeed-bbgw-getting-started ] ; then
+			rm -rf /var/cache/doc-seeed-bbgw-getting-started || true
+		fi
+	fi
 	;;
 TI_AM335x_BeagleBone_Blue)
 	has_wifi="enable"
 	has_ethernet="disable"
+	#recovers 82MB of space
+	if [ -d /var/cache/doc-beaglebonegreen-getting-started ] ; then
+		rm -rf /var/cache/doc-beaglebonegreen-getting-started || true
+		if -d /var/cache/doc-seeed-bbgw-getting-started ] ; then
+			rm -rf /var/cache/doc-seeed-bbgw-getting-started || true
+		fi
+	fi
 	;;
 TI_AM335x_BeagleBone_Green)
 	has_wifi="disable"
@@ -103,6 +124,13 @@ SanCloud_BeagleBone_Enhanced)
 	board_sbbe="enable"
 	has_wifi="enable"
 	has_ethernet="enable"
+	#recovers 82MB of space
+	if [ -d /var/cache/doc-beaglebonegreen-getting-started ] ; then
+		rm -rf /var/cache/doc-beaglebonegreen-getting-started || true
+		if -d /var/cache/doc-seeed-bbgw-getting-started ] ; then
+			rm -rf /var/cache/doc-seeed-bbgw-getting-started || true
+		fi
+	fi
 	;;
 *)
 	has_wifi="disable"
