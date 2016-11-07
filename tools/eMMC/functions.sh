@@ -839,6 +839,13 @@ get_rsync_options(){
   else
     rsync_options=""
   fi
+
+  #Speed up production flashing, drop rsync progress...
+  unset are_we_flasher
+  are_we_flasher=$(grep init-eMMC-flasher /proc/cmdline || true)
+  if [ ! "x${are_we_flasher}" = "x" ] ; then
+    rsync_options=""
+  fi
 }
 
 partition_drive() {
