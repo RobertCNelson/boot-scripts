@@ -66,6 +66,10 @@ fi
 
 board=$(cat /proc/device-tree/model | sed "s/ /_/g")
 case "${board}" in
+TI_AM335x_BeagleBone)
+	has_wifi="disable"
+	has_ethernet="enable"
+	;;
 TI_AM335x_BeagleBone_Black_Wireless)
 	has_wifi="enable"
 	has_ethernet="disable"
