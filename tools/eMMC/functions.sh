@@ -1229,14 +1229,14 @@ prepare_drive_reverse() {
     tmp_rootfs_dir="/tmp/rootfs"
     _prepare_future_rootfs
     media_rootfs="2"
-    _copy_rootfs
+    _copy_rootfs_reverse
     _teardown_future_rootfs
   else
     rootfs_label=${boot_label}
     tmp_rootfs_dir="/tmp/rootfs"
     _prepare_future_rootfs
     media_rootfs="1"
-    _copy_rootfs
+    _copy_rootfs_reverse
     _teardown_future_rootfs
   fi
   teardown_environment_reverse
