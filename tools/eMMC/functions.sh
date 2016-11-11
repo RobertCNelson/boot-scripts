@@ -927,17 +927,7 @@ _copy_rootfs_reverse() {
 #    flush_cache
 #  fi
 
-  if [ ! -f /opt/scripts/tools/eMMC/init-eMMC-flasher-v3.sh ] ; then
-    mkdir -p /opt/scripts/tools/eMMC/
-    wget --directory-prefix="/opt/scripts/tools/eMMC/" https://raw.githubusercontent.com/RobertCNelson/boot-scripts/master/tools/eMMC/init-eMMC-flasher-v3.sh
-    sudo chmod +x /opt/scripts/tools/eMMC/init-eMMC-flasher-v3.sh
-  fi
-
-  if [ ! -f /opt/scripts/tools/eMMC/functions.sh ] ; then
-    mkdir -p /opt/scripts/tools/eMMC/
-    wget --directory-prefix="/opt/scripts/tools/eMMC/" https://raw.githubusercontent.com/RobertCNelson/boot-scripts/master/tools/eMMC/functions.sh
-    sudo chmod +x /opt/scripts/tools/eMMC/functions.sh
-  fi
+#  _generate_uEnv ${tmp_rootfs_dir}/boot/uEnv.txt
 
   _generate_fstab
 
