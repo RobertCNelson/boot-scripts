@@ -147,17 +147,88 @@ prepare_environment() {
   generate_line 80 '='
 }
 
+prepare_environment_reverse() {
+  generate_line 80 '='
+  echo_broadcast "Prepare environment for flashing"
+  start_time=$(date +%s)
+  echo_broadcast "Starting at $(date --date="@$start_time")"
+  generate_line 40
+#  echo_broadcast "==> Preparing /tmp"
+#  mount -t tmpfs tmpfs /tmp
+  echo_broadcast "==> Determining root drive"
+  find_root_drive
+  echo_broadcast "====> Root drive identified at ${root_drive}"
+  echo_broadcast "==> Determining boot drive"
+  boot_drive="${root_drive%?}1"
+#  if [ ! "x${boot_drive}" = "x${root_drive}" ] ; then
+#    echo_broadcast "====> The Boot and Root drives are identified to be different."
+#    echo_broadcast "====> Mounting ${boot_drive} Read Only over /boot/uboot"
+#    mount ${boot_drive} /boot/uboot -o ro
+#  fi
+  echo_broadcast "==> Figuring out Source and Destination devices"
+  if [ "x${boot_drive}" = "x/dev/mmcblk0p1" ] ; then
+    source="/dev/mmcblk0"
+    destination="/dev/mmcblk1"
+  elif [ "x${boot_drive}" = "x/dev/mmcblk1p1" ] ; then
+    source="/dev/mmcblk1"
+    destination="/dev/mmcblk0"
+  else
+    echo_broadcast "!!! Could not reliably determine Source and Destination"
+    echo_broadcast "!!! We need to stop here"
+    teardown_environment_reverse
+    write_failure
+    exit 2
+  fi
+  echo_broadcast "====> Source identified: [${source}]"
+  echo_broadcast "====> Destination identified: [${destination}]"
+
+  echo_broadcast "====> Unmounting auto-mounted partitions"
+
+NUM_MOUNTS=$(mount | grep -v none | grep "${destination}" | wc -l)
+
+i=0 ; while test $i -le ${NUM_MOUNTS} ; do
+	DRIVE=$(mount | grep -v none | grep "${destination}" | tail -1 | awk '{print $1}')
+	umount ${DRIVE} >/dev/null 2>&1 || true
+	i=$(($i+1))
+done
+
+  echo_broadcast "==> Figuring out machine"
+  get_device
+  echo_broadcast "====> Machine is ${machine}"
+  if [ "x${is_bbb}" = "xenable" ] ; then
+    echo_broadcast "====> Machine is compatible with BeagleBone Black"
+  fi
+  generate_line 80 '='
+}
+
 teardown_environment() {
   generate_line 80 '='
   echo_broadcast "Tearing Down script environment"
   echo_broadcast "==> Unmounting /tmp"
   flush_cache
-  umount /tmp
+  umount /tmp || true
   if [ ! "x${boot_drive}" = "x${root_drive}" ] ; then
     echo_broadcast "==> Unmounting /boot"
     flush_cache
-    umount /boot
+    umount /boot || true
   fi
+  reset_leds 'none'
+
+  echo_broadcast "==> Force writeback of eMMC buffers by Syncing: ${destination}"
+  sync
+  generate_line 40
+  dd if=${destination} of=/dev/null count=100000
+  generate_line 40
+  echo_broadcast "===> Syncing: ${destination} complete"
+  end_time=$(date +%s)
+  echo_broadcast "==> This script took $((${end_time}-${start_time})) seconds to run"
+  generate_line 80 '='
+}
+
+teardown_environment_reverse() {
+  generate_line 80 '='
+  echo_broadcast "Tearing Down script environment"
+  flush_cache
   reset_leds 'none'
 
   echo_broadcast "==> Force writeback of eMMC buffers by Syncing: ${destination}"
@@ -491,6 +562,49 @@ check_running_system() {
   generate_line 80 '='
 }
 
+check_running_system_initrd() {
+  empty_line
+  generate_line 80 '='
+  echo_broadcast "Checking running system"
+  echo_broadcast "==> Copying: [${source}] -> [${destination}]"
+  echo_broadcast "==> lsblk:"
+  generate_line 40
+  echo_broadcast "`lsblk || true`"
+  generate_line 40
+  echo_broadcast "==> df -h | grep rootfs:"
+  echo_broadcast "`df -h | grep rootfs || true`"
+  generate_line 40
+
+  if [ ! -b "${destination}" ] ; then
+    echo_broadcast "!==> Error: [${destination}] does not exist"
+    write_failure
+  fi
+
+  if [ ! -f /boot/config-$(uname -r) ] ; then
+    echo_broadcast "==> generating: /boot/config-$(uname -r)"
+    zcat /proc/config.gz > /boot/config-$(uname -r)
+  fi
+
+  if [ -f /boot/initrd.img-$(uname -r) ] ; then
+    echo_broadcast "==> updating: /boot/initrd.img-$(uname -r)"
+    update-initramfs -u -k $(uname -r)
+  else
+    echo_broadcast "==> creating: /boot/initrd.img-$(uname -r)"
+    update-initramfs -c -k $(uname -r)
+  fi
+  flush_cache
+
+  if [ "x${is_bbb}" = "xenable" ] ; then
+    if [ ! -e /sys/class/leds/beaglebone\:green\:usr0/trigger ] ; then
+      modprobe leds_gpio || true
+      sleep 1
+    fi
+  fi
+  echo_broadcast "==> Giving you time to check..."
+  countdown 10
+  generate_line 80 '='
+}
+
 cylon_leds() {
   if [ "x${is_bbb}" = "xenable" ] ; then
     if [ -e /sys/class/leds/beaglebone\:green\:usr0/trigger ] ; then
@@ -780,6 +894,62 @@ _copy_rootfs() {
   flush_cache
 }
 
+_copy_rootfs_reverse() {
+  empty_line
+  generate_line 80 '='
+  echo_broadcast "Copying: Current rootfs to ${rootfs_partition}"
+  generate_line 40
+  echo_broadcast "==> rsync: / -> ${tmp_rootfs_dir}"
+  generate_line 40
+  get_rsync_options
+  rsync -aAx $rsync_options /* ${tmp_rootfs_dir} --exclude={/dev/*,/proc/*,/sys/*,/tmp/*,/run/*,/mnt/*,/media/*,/lost+found,/lib/modules/*,/uEnv.txt} || write_failure
+  flush_cache
+  generate_line 40
+  echo_broadcast "==> Copying: Kernel modules"
+  echo_broadcast "===> Creating directory for modules"
+  mkdir -p ${tmp_rootfs_dir}/lib/modules/$(uname -r)/ || true
+  echo_broadcast "===> rsync: /lib/modules/$(uname -r)/ -> ${tmp_rootfs_dir}/lib/modules/$(uname -r)/"
+  generate_line 40
+  rsync -aAx $rsync_options /lib/modules/$(uname -r)/* ${tmp_rootfs_dir}/lib/modules/$(uname -r)/ || write_failure
+  flush_cache
+  generate_line 40
+
+  echo_broadcast "Copying: Current rootfs to ${rootfs_partition} complete"
+  generate_line 80 '='
+  empty_line
+  generate_line 80 '='
+  echo_broadcast "Final System Tweaks:"
+  generate_line 40
+#  if [ -d ${tmp_rootfs_dir}/etc/ssh/ ] ; then
+#    echo_broadcast "==> Applying SSH Key Regeneration trick"
+#    #ssh keys will now get regenerated on the next bootup
+#    touch ${tmp_rootfs_dir}/etc/ssh/ssh.regenerate
+#    flush_cache
+#  fi
+
+  if [ ! -f /opt/scripts/tools/eMMC/init-eMMC-flasher-v3.sh ] ; then
+    mkdir -p /opt/scripts/tools/eMMC/
+    wget --directory-prefix="/opt/scripts/tools/eMMC/" https://raw.githubusercontent.com/RobertCNelson/boot-scripts/master/tools/eMMC/init-eMMC-flasher-v3.sh
+    sudo chmod +x /opt/scripts/tools/eMMC/init-eMMC-flasher-v3.sh
+  fi
+
+  if [ ! -f /opt/scripts/tools/eMMC/functions.sh ] ; then
+    mkdir -p /opt/scripts/tools/eMMC/
+    wget --directory-prefix="/opt/scripts/tools/eMMC/" https://raw.githubusercontent.com/RobertCNelson/boot-scripts/master/tools/eMMC/functions.sh
+    sudo chmod +x /opt/scripts/tools/eMMC/functions.sh
+  fi
+
+  _generate_fstab
+
+  echo_broadcast "==> /boot/uEnv.txt: enabling eMMC flasher script"
+  script="cmdline=init=/opt/scripts/tools/eMMC/init-eMMC-flasher-v3.sh"
+  echo "${script}" >> ${tmp_rootfs_dir}/boot/uEnv.txt
+  generate_line 40 '*'
+  cat ${tmp_rootfs_dir}/boot/uEnv.txt
+  generate_line 40 '*'
+  flush_cache
+}
+
 erasing_drive() {
   local drive="${1:?UNKNOWN}"
   empty_line
@@ -1042,6 +1212,44 @@ prepare_drive() {
     _teardown_future_rootfs
   fi
   teardown_environment
+  end_script
+}
+
+prepare_drive_reverse() {
+  empty_line
+  generate_line 80 '='
+  echo_broadcast "Preparing drives"
+  erasing_drive ${destination}
+  loading_soc_defaults
+
+  get_ext4_options
+
+  _dd_bootloader
+
+  boot_partition=
+  rootfs_partition=
+  partition_device
+
+  if [ "${boot_partition}x" != "${rootfs_partition}x" ] ; then
+    tmp_boot_dir="/tmp/boot"
+    _prepare_future_boot
+    _copy_boot
+    _teardown_future_boot
+
+    tmp_rootfs_dir="/tmp/rootfs"
+    _prepare_future_rootfs
+    media_rootfs="2"
+    _copy_rootfs
+    _teardown_future_rootfs
+  else
+    rootfs_label=${boot_label}
+    tmp_rootfs_dir="/tmp/rootfs"
+    _prepare_future_rootfs
+    media_rootfs="1"
+    _copy_rootfs
+    _teardown_future_rootfs
+  fi
+  teardown_environment_reverse
   end_script
 }
 
