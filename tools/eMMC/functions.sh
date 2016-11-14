@@ -362,7 +362,10 @@ get_device() {
 }
 
 reset_leds() {
-  local leds_pattern=${1:-heartbeat}
+  local leds_pattern0=${1:-heartbeat}
+  local leds_pattern1=${1:-mmc0}
+  local leds_pattern2=${1:-none}
+  local leds_pattern3=${1:-mmc1}
   local leds_base=/sys/class/leds/beaglebone\:green\:usr
   if [ "x${is_bbb}" = "xenable" ] ; then
     if [ -e /proc/$CYLON_PID ]; then
@@ -372,10 +375,10 @@ reset_leds() {
 
     if [ -e ${leds_base}0/trigger ] ; then
       echo_broadcast "==> Setting LEDs to ${leds_pattern}"
-      echo $leds_pattern > ${leds_base}0/trigger
-      echo $leds_pattern > ${leds_base}1/trigger
-      echo $leds_pattern > ${leds_base}2/trigger
-      echo $leds_pattern > ${leds_base}3/trigger
+      echo $leds_pattern0 > ${leds_base}0/trigger
+      echo $leds_pattern1 > ${leds_base}1/trigger
+      echo $leds_pattern2 > ${leds_base}2/trigger
+      echo $leds_pattern3 > ${leds_base}3/trigger
     fi
   else
     echo_broadcast "!==> We don't know how to reset the leds as we are not a BBB compatible device"
