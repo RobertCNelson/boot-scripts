@@ -339,7 +339,7 @@ latest_version_repo () {
 					exit
 				fi
 			fi
-			apt-get update
+			apt-get update || true
 
 			unset flag_reinstall
 			pkg="linux-image-${latest_kernel}"
@@ -462,7 +462,7 @@ latest_version () {
 
 specific_version_repo () {
 	latest_kernel=$(echo ${kernel_version})
-	apt-get update
+	apt-get update || true
 
 	unset flag_reinstall
 	pkg="linux-image-${latest_kernel}"
