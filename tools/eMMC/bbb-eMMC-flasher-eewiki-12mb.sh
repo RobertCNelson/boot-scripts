@@ -24,8 +24,8 @@
 #This script assumes, these packages are installed, as network may not be setup
 #dosfstools initramfs-tools rsync u-boot-tools
 
-version_message="1.20160909: u-boot 1MB -> 4MB hole..."
-
+version_message="1.20161025: revert to: d9ac2858e78ef16cd86b5b3610f861ad880b3c00..."
+#
 #https://rcn-ee.com/repos/bootloader/am335x_evm/
 http_spl="MLO-am335x_evm-v2016.03-r7"
 http_uboot="u-boot-am335x_evm-v2016.03-r7.img"
@@ -50,94 +50,13 @@ broadcast () {
 	fi
 }
 
-inf_loop () {
-	while read MAGIC ; do
-		case $MAGIC in
-		beagleboard.org)
-			echo "Your foo is strong!"
-			bash -i
-			;;
-		*)	echo "Your foo is weak."
-			;;
-		esac
-	done
-}
-
 write_failure () {
 	message="writing to [${destination}] failed..." ; broadcast
 
-	[ -e /proc/$CYLON_PID ]  && kill $CYLON_PID > /dev/null 2>&1
-
-	if [ -e /sys/class/leds/beaglebone\:green\:usr0/trigger ] ; then
-		echo heartbeat > /sys/class/leds/beaglebone\:green\:usr0/trigger
-		echo heartbeat > /sys/class/leds/beaglebone\:green\:usr1/trigger
-		echo heartbeat > /sys/class/leds/beaglebone\:green\:usr2/trigger
-		echo heartbeat > /sys/class/leds/beaglebone\:green\:usr3/trigger
-	fi
 	message="-----------------------------" ; broadcast
 	flush_cache
 	umount ${destination}p1 > /dev/null 2>&1 || true
 	umount ${destination}p2 > /dev/null 2>&1 || true
-	inf_loop
-}
-
-check_eeprom () {
-	message="Checking for Valid BBB EEPROM header" ; broadcast
-
-	unset got_eeprom
-	#v8 of nvmem...
-	if [ -f /sys/bus/nvmem/devices/at24-0/nvmem ] && [ "x${got_eeprom}" = "x" ] ; then
-		eeprom="/sys/bus/nvmem/devices/at24-0/nvmem"
-		eeprom_location="/sys/devices/platform/ocp/44e0b000.i2c/i2c-0/0-0050/at24-0/nvmem"
-		got_eeprom="true"
-	fi
-
-	#pre-v8 of nvmem...
-	if [ -f /sys/class/nvmem/at24-0/nvmem ] && [ "x${got_eeprom}" = "x" ] ; then
-		eeprom="/sys/class/nvmem/at24-0/nvmem"
-		eeprom_location="/sys/devices/platform/ocp/44e0b000.i2c/i2c-0/0-0050/nvmem/at24-0/nvmem"
-		got_eeprom="true"
-	fi
-
-	#eeprom 3.8.x & 4.4 with eeprom-nvmem patchset...
-	if [ -f /sys/bus/i2c/devices/0-0050/eeprom ] && [ "x${got_eeprom}" = "x" ] ; then
-		eeprom="/sys/bus/i2c/devices/0-0050/eeprom"
-
-		if [ -f /sys/devices/platform/ocp/44e0b000.i2c/i2c-0/0-0050/eeprom ] ; then
-			eeprom_location="/sys/devices/platform/ocp/44e0b000.i2c/i2c-0/0-0050/eeprom"
-		else
-			eeprom_location=$(ls /sys/devices/ocp*/44e0b000.i2c/i2c-0/0-0050/eeprom 2> /dev/null)
-		fi
-
-		got_eeprom="true"
-	fi
-
-	if [ "x${got_eeprom}" = "xtrue" ] ; then
-		eeprom_header=$(hexdump -e '8/1 "%c"' ${eeprom} -n 8 | cut -b 6-8)
-		if [ "x${eeprom_header}" = "x335" ] ; then
-			message="Valid BBB EEPROM header found [${eeprom_header}]" ; broadcast
-			message="-----------------------------" ; broadcast
-		else
-			message="Invalid EEPROM header detected" ; broadcast
-			if [ -f /opt/scripts/device/bone/bbb-eeprom.dump ] ; then
-				if [ ! "x${eeprom_location}" = "x" ] ; then
-					message="Writing header to EEPROM" ; broadcast
-					dd if=/opt/scripts/device/bone/bbb-eeprom.dump of=${eeprom_location}
-					sync
-					sync
-					eeprom_check=$(hexdump -e '8/1 "%c"' ${eeprom} -n 8 | cut -b 6-8)
-					echo "eeprom check: [${eeprom_check}]"
-
-					#We have to reboot, as the kernel only loads the eMMC cape
-					# with a valid header
-					reboot -f
-
-					#We shouldnt hit this...
-					exit
-				fi
-			fi
-		fi
-	fi
 }
 
 check_running_system () {
@@ -164,64 +83,6 @@ check_running_system () {
 		update-initramfs -c -k $(uname -r)
 	fi
 	flush_cache
-
-	##FIXME: quick check for rsync 3.1 (jessie)
-	unset rsync_check
-	unset rsync_progress
-	rsync_check=$(LC_ALL=C rsync --version | grep version | awk '{print $3}' || true)
-	if [ "x${rsync_check}" = "x3.1.1" ] ; then
-		rsync_progress="--info=progress2 --human-readable"
-	fi
-
-	if [ ! -e /sys/class/leds/beaglebone\:green\:usr0/trigger ] ; then
-		modprobe leds_gpio || true
-		sleep 1
-	fi
-}
-
-cylon_leds () {
-	if [ -e /sys/class/leds/beaglebone\:green\:usr0/trigger ] ; then
-		BASE=/sys/class/leds/beaglebone\:green\:usr
-		echo none > ${BASE}0/trigger
-		echo none > ${BASE}1/trigger
-		echo none > ${BASE}2/trigger
-		echo none > ${BASE}3/trigger
-
-		STATE=1
-		while : ; do
-			case $STATE in
-			1)	echo 255 > ${BASE}0/brightness
-				echo 0   > ${BASE}1/brightness
-				STATE=2
-				;;
-			2)	echo 255 > ${BASE}1/brightness
-				echo 0   > ${BASE}0/brightness
-				STATE=3
-				;;
-			3)	echo 255 > ${BASE}2/brightness
-				echo 0   > ${BASE}1/brightness
-				STATE=4
-				;;
-			4)	echo 255 > ${BASE}3/brightness
-				echo 0   > ${BASE}2/brightness
-				STATE=5
-				;;
-			5)	echo 255 > ${BASE}2/brightness
-				echo 0   > ${BASE}3/brightness
-				STATE=6
-				;;
-			6)	echo 255 > ${BASE}1/brightness
-				echo 0   > ${BASE}2/brightness
-				STATE=1
-				;;
-			*)	echo 255 > ${BASE}0/brightness
-				echo 0   > ${BASE}1/brightness
-				STATE=2
-				;;
-			esac
-			sleep 0.1
-		done
-	fi
 }
 
 dd_bootloader () {
@@ -274,23 +135,23 @@ dd_bootloader () {
 format_boot () {
 	message="mkfs.vfat -F 16 ${destination}p1 -n ${boot_label}" ; broadcast
 	echo "-----------------------------"
-	mkfs.vfat -F 16 ${destination}p1 -n ${boot_label}
+	LC_ALL=C mkfs.vfat -F 16 ${destination}p1 -n ${boot_label}
 	echo "-----------------------------"
 	flush_cache
 }
 
 format_root () {
-	message="mkfs.ext4 -c ${destination}p2 -L ${rootfs_label}" ; broadcast
+	message="mkfs.ext4 ${ext4_options} ${destination}p2 -L ${rootfs_label}" ; broadcast
 	echo "-----------------------------"
-	mkfs.ext4 -c ${destination}p2 -L ${rootfs_label}
+	LC_ALL=C mkfs.ext4 ${ext4_options} ${destination}p2 -L ${rootfs_label}
 	echo "-----------------------------"
 	flush_cache
 }
 
 format_single_root () {
-	message="mkfs.ext4 -c ${destination}p1 -L ${boot_label}" ; broadcast
+	message="mkfs.ext4 ${ext4_options} ${destination}p1 -L ${boot_label}" ; broadcast
 	echo "-----------------------------"
-	mkfs.ext4 -c ${destination}p1 -L ${boot_label}
+	LC_ALL=C mkfs.ext4 ${ext4_options} ${destination}p1 -L ${boot_label}
 	echo "-----------------------------"
 	flush_cache
 }
@@ -311,16 +172,13 @@ copy_boot () {
 	fi
 
 	message="rsync: /boot/uboot/ -> /tmp/boot/" ; broadcast
-	if [ ! "x${rsync_progress}" = "x" ] ; then
-		echo "rsync: note the % column is useless..."
-	fi
-	rsync -aAx ${rsync_progress} /boot/uboot/ /tmp/boot/ --exclude={MLO,u-boot.img,uEnv.txt} || write_failure
+	rsync -aAx /boot/uboot/ /tmp/boot/ --exclude={MLO,u-boot.img,uEnv.txt} || write_failure
 	flush_cache
 
 	flush_cache
 	umount /tmp/boot/ || umount -l /tmp/boot/ || write_failure
 	flush_cache
-	umount /boot/uboot || umount -l /boot/uboot
+	umount /boot/uboot || umount -l /boot/uboot || true
 }
 
 copy_rootfs () {
@@ -330,10 +188,7 @@ copy_rootfs () {
 	mount ${destination}p${media_rootfs} /tmp/rootfs/ -o async,noatime
 
 	message="rsync: / -> /tmp/rootfs/" ; broadcast
-	if [ ! "x${rsync_progress}" = "x" ] ; then
-		echo "rsync: note the % column is useless..."
-	fi
-	rsync -aAx ${rsync_progress} /* /tmp/rootfs/ --exclude={/dev/*,/proc/*,/sys/*,/tmp/*,/run/*,/mnt/*,/media/*,/lost+found,/lib/modules/*,/uEnv.txt} || write_failure
+	rsync -aAx /* /tmp/rootfs/ --exclude={/dev/*,/proc/*,/sys/*,/tmp/*,/run/*,/mnt/*,/media/*,/lost+found,/lib/modules/*,/uEnv.txt} || write_failure
 	flush_cache
 
 	if [ -d /tmp/rootfs/etc/ssh/ ] ; then
@@ -346,16 +201,14 @@ copy_rootfs () {
 
 	message="Copying: Kernel modules" ; broadcast
 	message="rsync: /lib/modules/$(uname -r)/ -> /tmp/rootfs/lib/modules/$(uname -r)/" ; broadcast
-	if [ ! "x${rsync_progress}" = "x" ] ; then
-		echo "rsync: note the % column is useless..."
-	fi
-	rsync -aAx ${rsync_progress} /lib/modules/$(uname -r)/* /tmp/rootfs/lib/modules/$(uname -r)/ || write_failure
+	rsync -aAx /lib/modules/$(uname -r)/* /tmp/rootfs/lib/modules/$(uname -r)/ || write_failure
 	flush_cache
 
 	message="Copying: ${source}p${media_rootfs} -> ${destination}p${media_rootfs} complete" ; broadcast
 	message="-----------------------------" ; broadcast
 
 	message="Final System Tweaks:" ; broadcast
+
 	unset root_uuid
 	root_uuid=$(/sbin/blkid -c /dev/null -s UUID -o value ${destination}p${media_rootfs})
 	if [ "${root_uuid}" ] ; then
@@ -385,8 +238,6 @@ copy_rootfs () {
 	flush_cache
 	umount /tmp/rootfs/ || umount -l /tmp/rootfs/ || write_failure
 
-	[ -e /proc/$CYLON_PID ]  && kill $CYLON_PID
-
 	message="Syncing: ${destination}" ; broadcast
 	#https://github.com/beagleboard/meta-beagleboard/blob/master/contrib/bone-flash-tool/emmc.sh#L158-L159
 	# force writeback of eMMC buffers
@@ -401,16 +252,11 @@ copy_rootfs () {
 		message="debug: enabled" ; broadcast
 		inf_loop
 	else
-		if [ -e /sys/class/leds/beaglebone\:green\:usr0/trigger ] ; then
-			echo default-on > /sys/class/leds/beaglebone\:green\:usr0/trigger
-			echo default-on > /sys/class/leds/beaglebone\:green\:usr1/trigger
-			echo default-on > /sys/class/leds/beaglebone\:green\:usr2/trigger
-			echo default-on > /sys/class/leds/beaglebone\:green\:usr3/trigger
-		fi
 		mount
 
 		message="eMMC has been flashed: please wait for device to power down." ; broadcast
 		message="-----------------------------" ; broadcast
+
 		flush_cache
 	fi
 }
@@ -428,6 +274,17 @@ partition_drive () {
 
 	if [ -f /boot/SOC.sh ] ; then
 		. /boot/SOC.sh
+	fi
+
+	#Debian Stretch; mfks.ext4 default to metadata_csum,64bit disable till u-boot works again..
+	unset ext4_options
+	unset test_mke2fs
+	LC_ALL=C mkfs.ext4 -V &> /tmp/mkfs
+	test_mkfs=$(cat /tmp/mkfs | grep mke2fs | grep 1.43 || true)
+	if [ "x${test_mkfs}" = "x" ] ; then
+		ext4_options="-c"
+	else
+		ext4_options="-c -O ^metadata_csum,^64bit"
 	fi
 
 	#dd_bootloader
@@ -448,23 +305,25 @@ partition_drive () {
 
 		sfdisk_options="--force --Linux --in-order --unit M"
 		sfdisk_boot_startmb="${conf_boot_startmb}"
-		sfdisk_boot_endmb="${conf_boot_endmb}"
+		sfdisk_boot_size_mb="${conf_boot_endmb}"
+		sfdisk_rootfs_startmb=$(($sfdisk_boot_startmb + $sfdisk_boot_size_mb))
 
 		test_sfdisk=$(LC_ALL=C sfdisk --help | grep -m 1 -e "--in-order" || true)
 		if [ "x${test_sfdisk}" = "x" ] ; then
 			message="sfdisk: [2.26.x or greater]" ; broadcast
 			sfdisk_options="--force"
 			sfdisk_boot_startmb="${sfdisk_boot_startmb}M"
-			sfdisk_boot_endmb="${sfdisk_boot_endmb}M"
+			sfdisk_boot_size_mb="${sfdisk_boot_size_mb}M"
+			sfdisk_rootfs_startmb="${sfdisk_rootfs_startmb}M"
 		fi
 
 		message="sfdisk: [sfdisk ${sfdisk_options} ${destination}]" ; broadcast
-		message="sfdisk: [${sfdisk_boot_startmb},${sfdisk_boot_endmb},${sfdisk_fstype},*]" ; broadcast
-		message="sfdisk: [,,,-]" ; broadcast
+		message="sfdisk: [${sfdisk_boot_startmb},${sfdisk_boot_size_mb},${sfdisk_fstype},*]" ; broadcast
+		message="sfdisk: [${sfdisk_rootfs_startmb},,,-]" ; broadcast
 
 		LC_ALL=C sfdisk ${sfdisk_options} "${destination}" <<-__EOF__
-			${sfdisk_boot_startmb},${sfdisk_boot_endmb},${sfdisk_fstype},*
-			,,,-
+			${sfdisk_boot_startmb},${sfdisk_boot_size_mb},${sfdisk_fstype},*
+			${sfdisk_rootfs_startmb},,,-
 		__EOF__
 
 		flush_cache
@@ -483,6 +342,9 @@ partition_drive () {
 			sfdisk_fstype="L"
 		fi
 		boot_label=${boot_label:-"BEAGLEBONE"}
+		if [ "x${boot_label}" = "xBOOT" ] ; then
+			boot_label="rootfs"
+		fi
 
 		message="Formatting: ${destination}" ; broadcast
 
@@ -492,13 +354,17 @@ partition_drive () {
 		test_sfdisk=$(LC_ALL=C sfdisk --help | grep -m 1 -e "--in-order" || true)
 		if [ "x${test_sfdisk}" = "x" ] ; then
 			message="sfdisk: [2.26.x or greater]" ; broadcast
-			sfdisk_options="--force"
+			if [ "x${bootrom_gpt}" = "xenable" ] ; then
+				sfdisk_options="--force --label gpt"
+			else
+				sfdisk_options="--force"
+			fi
 			sfdisk_boot_startmb="${sfdisk_boot_startmb}M"
 		fi
 
 		message="sfdisk: [$(LC_ALL=C sfdisk --version)]" ; broadcast
 		message="sfdisk: [sfdisk ${sfdisk_options} ${destination}]" ; broadcast
-		message="sfdisk: [${sfdisk_boot_startmb},${sfdisk_boot_endmb},${sfdisk_fstype},*]" ; broadcast
+		message="sfdisk: [${sfdisk_boot_startmb},,${sfdisk_fstype},*]" ; broadcast
 
 		LC_ALL=C sfdisk ${sfdisk_options} "${destination}" <<-__EOF__
 			${sfdisk_boot_startmb},,${sfdisk_fstype},*
@@ -519,8 +385,6 @@ message="-----------------------------" ; broadcast
 message="Version: [${version_message}]" ; broadcast
 message="-----------------------------" ; broadcast
 
-check_eeprom
 check_running_system
-cylon_leds & CYLON_PID=$!
 partition_drive
 #

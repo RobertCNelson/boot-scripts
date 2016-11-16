@@ -54,6 +54,16 @@ if [ "x${abi}" = "x" ] ; then
 	fi
 fi
 
+cleanup_extra_docs () {
+	#recovers 82MB of space
+	if [ -d /var/cache/doc-beaglebonegreen-getting-started ] ; then
+		rm -rf /var/cache/doc-beaglebonegreen-getting-started || true
+	fi
+	if [ -d /var/cache/doc-seeed-bbgw-getting-started ] ; then
+		rm -rf /var/cache/doc-seeed-bbgw-getting-started || true
+	fi
+}
+
 #original user:
 usb_image_file="/var/local/usb_mass_storage.img"
 
@@ -66,13 +76,26 @@ fi
 
 board=$(cat /proc/device-tree/model | sed "s/ /_/g")
 case "${board}" in
+TI_AM335x_BeagleBone)
+	has_wifi="disable"
+	has_ethernet="enable"
+	cleanup_extra_docs
+	;;
+TI_AM335x_BeagleBone_Black)
+	has_wifi="disable"
+	has_ethernet="enable"
+	cleanup_extra_docs
+	;;
 TI_AM335x_BeagleBone_Black_Wireless)
 	has_wifi="enable"
 	has_ethernet="disable"
+	#recovers 82MB of space
+	cleanup_extra_docs
 	;;
 TI_AM335x_BeagleBone_Blue)
 	has_wifi="enable"
 	has_ethernet="disable"
+	cleanup_extra_docs
 	;;
 TI_AM335x_BeagleBone_Green)
 	has_wifi="disable"
@@ -99,6 +122,7 @@ SanCloud_BeagleBone_Enhanced)
 	board_sbbe="enable"
 	has_wifi="enable"
 	has_ethernet="enable"
+	cleanup_extra_docs
 	;;
 *)
 	has_wifi="disable"
@@ -366,6 +390,18 @@ fi
 if [ "x${usb0}" = "xenable" ] ; then
 	if [ ! "x${usb0_addr}" = "x" ] ; then
 		echo "The IP Address for usb0 is: ${usb0_addr}" >> /etc/issue
+	fi
+fi
+
+#Fighting Race conditions with lcd overlays...
+
+unset test_service
+test_service=$(systemctl is-enabled lightdm.service || true)
+if [ "x${test_service}" = "xenabled" ] ; then
+	test_service=$(systemctl is-failed lightdm.service || true)
+
+	if [ "x${test_service}" = "xinactive" ] ; then
+		systemctl restart lightdm || true
 	fi
 fi
 

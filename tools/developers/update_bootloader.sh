@@ -228,9 +228,18 @@ get_device () {
 	case "${machine}" in
 	TI_OMAP5_uEVM_board)
 		target="/dev/mmcblk1"
+		if [ ! -b ${target} ] ; then
+			target="/dev/mmcblk0"
+		fi
 		;;
 	*)
 		target="/dev/mmcblk0"
+		if [ ! -b ${target} ] ; then
+			target="/dev/mmcblk1"
+			if [ ! -b ${target} ] ; then
+				target="/dev/mmcblk2"
+			fi
+		fi
 		;;
 	esac
 }

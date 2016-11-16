@@ -89,14 +89,14 @@ option lease 30
 EOF
 	# Will start or restart udhcpd
 	/sbin/ifconfig usb0 ${deb_usb_address} netmask ${deb_usb_netmask} || true
-	/usr/sbin/udhcpd -S ${deb_udhcpd_conf}
+	/usr/sbin/udhcpd -S ${deb_udhcpd_conf} || true
 
 	#FIXME check for g_ether/usb0 module loaded, as it sometimes takes a little bit...
 	#sometimes when we see this hang, the leases file was left hanging around
 	sleep 1
-	/etc/init.d/udhcpd stop
+	/etc/init.d/udhcpd stop || true
 	rm -f /var/lib/misc/udhcpd.leases
-	/etc/init.d/udhcpd start
+	/etc/init.d/udhcpd start || true
 }
 
 
@@ -147,7 +147,7 @@ EOF
 		grep -qi "${deb_dnsmasq_warning}" ${deb_dnsmasq_conf} || \
 			echo "\n${deb_dnsmasq_warning}" >>${deb_dnsmasq_conf}
 
-		systemctl restart dnsmasq
+		systemctl restart dnsmasq || true
 	fi
 }
 

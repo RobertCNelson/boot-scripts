@@ -21,70 +21,21 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+source $(dirname "$0")/functions.sh
+
 #This script assumes, these packages are installed, as network may not be setup
 #dosfstools initramfs-tools rsync u-boot-tools
 
-version_message="1.20160618: deal with v4.4.x+ back to old eeprom location..."
+version_message="1.20161013: oemflasher improvements..."
 
-if ! id | grep -q root; then
-	echo "must be run as root"
-	exit
-fi
+check_if_run_as_root
 
-unset root_drive
-root_drive="$(cat /proc/cmdline | sed 's/ /\n/g' | grep root=UUID= | awk -F 'root=' '{print $2}' || true)"
-if [ ! "x${root_drive}" = "x" ] ; then
-	root_drive="$(/sbin/findfs ${root_drive} || true)"
-else
-	root_drive="$(cat /proc/cmdline | sed 's/ /\n/g' | grep root= | awk -F 'root=' '{print $2}' || true)"
-fi
+find_root_drive
 
 mount -t tmpfs tmpfs /tmp
 
 destination="/dev/mmcblk1"
 usb_drive="/dev/sda"
-
-flush_cache () {
-	sync
-	blockdev --flushbufs ${destination}
-}
-
-broadcast () {
-	if [ "x${message}" != "x" ] ; then
-		echo "${message}"
-		echo "${message}" > /dev/tty0 || true
-	fi
-}
-
-inf_loop () {
-	while read MAGIC ; do
-		case $MAGIC in
-		beagleboard.org)
-			echo "Your foo is strong!"
-			bash -i
-			;;
-		*)	echo "Your foo is weak."
-			;;
-		esac
-	done
-}
-
-# umount does not like device names without a valid /etc/mtab
-# find the mount point from /proc/mounts
-dev2dir () {
-	grep -m 1 '^$1 ' /proc/mounts | while read LINE ; do set -- $LINE ; echo $2 ; done
-}
-
-get_device () {
-	is_bbb="enable"
-	machine=$(cat /proc/device-tree/model | sed "s/ /_/g")
-
-	case "${machine}" in
-	TI_AM5728_BeagleBoard-X15)
-		unset is_bbb
-		;;
-	esac
-}
 
 write_failure () {
 	message="writing to [${destination}] failed..." ; broadcast
@@ -150,14 +101,14 @@ flash_emmc () {
 	flush_cache
 
 	LC_ALL=C sfdisk --force --no-reread --in-order --Linux --unit M ${destination} <<-__EOF__
-	1,,L,*
+	4,,L,*
 	__EOF__
 
 	sync
 	flush_cache
 
-	message="mkfs.ext4 -c -L rootfs ${destination}p1" ; broadcast
-	LC_ALL=C mkfs.ext4 -c -L rootfs ${destination}p1 || write_failure
+	message="mkfs.ext4 -L rootfs ${destination}p1" ; broadcast
+	LC_ALL=C mkfs.ext4 -L rootfs ${destination}p1 || write_failure
 	message="Erasing: ${destination} complete" ; broadcast
 	message="-----------------------------" ; broadcast
 
@@ -171,15 +122,25 @@ flash_emmc () {
 		else
 			message="Flashing eMMC with dd" ; broadcast
 			message="-----------------------------" ; broadcast
-			message="dd if=${wdir}/${conf_image} of=${destination} bs=1M" ; broadcast
-			dd if=${wdir}/${conf_image} of=${destination} bs=1M || write_failure
+			if [ "x${image_is_uncompressed}" = "xenable" ] ; then
+				message="dd if=${wdir}/${conf_image} of=${destination} bs=1M" ; broadcast
+				dd if=${wdir}/${conf_image} of=${destination} bs=1M || write_failure
+			else
+				message="xzcat ${wdir}/${conf_image} | dd of=${destination} bs=1M" ; broadcast
+				xzcat ${wdir}/${conf_image} | dd of=${destination} bs=1M || write_failure
+			fi
 			message="-----------------------------" ; broadcast
 		fi
 	else
 		message="Flashing eMMC with dd" ; broadcast
 		message="-----------------------------" ; broadcast
-        message="dd if=${wdir}/${conf_image} of=${destination} bs=1M" ; broadcast
-        dd if=${wdir}/${conf_image} of=${destination} bs=1M || write_failure
+			if [ "x${image_is_uncompressed}" = "xenable" ] ; then
+				message="dd if=${wdir}/${conf_image} of=${destination} bs=1M" ; broadcast
+				dd if=${wdir}/${conf_image} of=${destination} bs=1M || write_failure
+			else
+				message="xzcat ${wdir}/${conf_image} | dd of=${destination} bs=1M" ; broadcast
+				xzcat ${wdir}/${conf_image} | dd of=${destination} bs=1M || write_failure
+			fi
 		message="-----------------------------" ; broadcast
 	fi
 	flush_cache
@@ -224,18 +185,21 @@ auto_fsck () {
 }
 
 quad_partition () {
+	conf_partition2_startmb=$(($conf_partition1_startmb + $conf_partition1_endmb))
+	conf_partition3_startmb=$(($conf_partition2_startmb + $conf_partition2_endmb))
+	conf_partition4_startmb=$(($conf_partition3_startmb + $conf_partition3_endmb))
 	message="LC_ALL=C sfdisk --force --no-reread --in-order --Linux --unit M ${destination}" ; broadcast
 	message="${conf_partition1_startmb},${conf_partition1_endmb},${conf_partition1_fstype},*" ; broadcast
-	message=",${conf_partition2_endmb},${conf_partition2_fstype},-" ; broadcast
-	message=",${conf_partition3_endmb},${conf_partition3_fstype},-" ; broadcast
-	message=",,${conf_partition4_fstype},-" ; broadcast
+	message="${conf_partition2_startmb},${conf_partition2_endmb},${conf_partition2_fstype},-" ; broadcast
+	message="${conf_partition3_startmb},${conf_partition3_endmb},${conf_partition3_fstype},-" ; broadcast
+	message="${conf_partition4_startmb},,${conf_partition4_fstype},-" ; broadcast
 	message="-----------------------------" ; broadcast
 
 	LC_ALL=C sfdisk --force --no-reread --in-order --Linux --unit M ${destination} <<-__EOF__
 		${conf_partition1_startmb},${conf_partition1_endmb},${conf_partition1_fstype},*
-		,${conf_partition2_endmb},${conf_partition2_fstype},-
-		,${conf_partition3_endmb},${conf_partition3_fstype},-
-		,,${conf_partition4_fstype},-
+		${conf_partition2_startmb},${conf_partition2_endmb},${conf_partition2_fstype},-
+		${conf_partition3_startmb},${conf_partition3_endmb},${conf_partition3_fstype},-
+		${conf_partition4_startmb},,${conf_partition4_fstype},-
 	__EOF__
 
 	auto_fsck
@@ -245,16 +209,18 @@ quad_partition () {
 }
 
 tri_partition () {
+	conf_partition2_startmb=$(($conf_partition1_startmb + $conf_partition1_endmb))
+	conf_partition3_startmb=$(($conf_partition2_startmb + $conf_partition2_endmb))
 	message="LC_ALL=C sfdisk --force --no-reread --in-order --Linux --unit M ${destination}" ; broadcast
 	message="${conf_partition1_startmb},${conf_partition1_endmb},${conf_partition1_fstype},*" ; broadcast
-	message=",${conf_partition2_endmb},${conf_partition2_fstype},-" ; broadcast
-	message=",,${conf_partition3_fstype},-" ; broadcast
+	message="${conf_partition2_startmb},${conf_partition2_endmb},${conf_partition2_fstype},-" ; broadcast
+	message="${conf_partition3_startmb},,${conf_partition3_fstype},-" ; broadcast
 	message="-----------------------------" ; broadcast
 
 	LC_ALL=C sfdisk --force --no-reread --in-order --Linux --unit M ${destination} <<-__EOF__
 		${conf_partition1_startmb},${conf_partition1_endmb},${conf_partition1_fstype},*
-		,${conf_partition2_endmb},${conf_partition2_fstype},-
-		,,${conf_partition3_fstype},-
+		${conf_partition2_startmb},${conf_partition2_endmb},${conf_partition2_fstype},-
+		${conf_partition3_startmb},,${conf_partition3_fstype},-
 	__EOF__
 
 	auto_fsck
@@ -264,14 +230,15 @@ tri_partition () {
 }
 
 dual_partition () {
+	conf_partition2_startmb=$(($conf_partition1_startmb + $conf_partition1_endmb))
 	message="LC_ALL=C sfdisk --force --no-reread --in-order --Linux --unit M ${destination}" ; broadcast
 	message="${conf_partition1_startmb},${conf_partition1_endmb},${conf_partition1_fstype},*" ; broadcast
-	message=",,${conf_partition2_fstype},-" ; broadcast
+	message="${conf_partition2_startmb},,${conf_partition2_fstype},-" ; broadcast
 	message="-----------------------------" ; broadcast
 
 	LC_ALL=C sfdisk --force --no-reread --in-order --Linux --unit M ${destination} <<-__EOF__
 		${conf_partition1_startmb},${conf_partition1_endmb},${conf_partition1_fstype},*
-		,,${conf_partition2_fstype},-
+		${conf_partition2_startmb},,${conf_partition2_fstype},-
 	__EOF__
 
 	auto_fsck
@@ -389,7 +356,7 @@ set_uuid () {
 	message="`cat /tmp/rootfs/etc/fstab`" ; broadcast
 	message="-----------------------------" ; broadcast
 	flush_cache
-    
+	
 	message="running: chroot /tmp/rootfs/ /usr/bin/bb-wl18xx-wlan0" ; broadcast
 
 	mount --bind /proc /tmp/rootfs/proc
@@ -413,7 +380,7 @@ set_uuid () {
 	umount -fl /tmp/rootfs/proc
 	umount -fl /tmp/rootfs/sys
 	sleep 2
-    flush_cache
+	flush_cache
 	umount /tmp/rootfs/ || umount -l /tmp/rootfs/ || write_failure
 }
 
@@ -478,54 +445,6 @@ check_eeprom () {
 	fi
 }
 
-cylon_leds () {
-	if [ "x${is_bbb}" = "xenable" ] ; then
-		if [ -e /sys/class/leds/beaglebone\:green\:usr0/trigger ] ; then
-			BASE=/sys/class/leds/beaglebone\:green\:usr
-			echo none > ${BASE}0/trigger
-			echo none > ${BASE}1/trigger
-			echo none > ${BASE}2/trigger
-			echo none > ${BASE}3/trigger
-
-			STATE=1
-			while : ; do
-				case $STATE in
-				1)	echo 255 > ${BASE}0/brightness
-					echo 0   > ${BASE}1/brightness
-					STATE=2
-					;;
-				2)	echo 255 > ${BASE}1/brightness
-					echo 0   > ${BASE}0/brightness
-					STATE=3
-					;;
-				3)	echo 255 > ${BASE}2/brightness
-					echo 0   > ${BASE}1/brightness
-					STATE=4
-					;;
-				4)	echo 255 > ${BASE}3/brightness
-					echo 0   > ${BASE}2/brightness
-					STATE=5
-					;;
-				5)	echo 255 > ${BASE}2/brightness
-					echo 0   > ${BASE}3/brightness
-					STATE=6
-					;;
-				6)	echo 255 > ${BASE}1/brightness
-					echo 0   > ${BASE}2/brightness
-					STATE=1
-					;;
-				*)	echo 255 > ${BASE}0/brightness
-					echo 0   > ${BASE}1/brightness
-					STATE=2
-					;;
-				esac
-				sleep 0.1
-			done
-		fi
-	fi
-}
-
-
 process_job_file () {
 	job_file=found
 	if [ ! -f /usr/bin/dos2unix ] ; then
@@ -550,6 +469,16 @@ process_job_file () {
 		fi
 
 		conf_image=$(cat ${wfile} | grep -v '#' | grep conf_image | awk -F '=' '{print $2}' || true)
+		#check if it was pre-un-compressed:
+		unset image_is_uncompressed
+		if [ ! -f ${wdir}/${conf_image} ] ; then
+			test_image=$(echo ${conf_image} | awk -F '.xz' '{ print $1 }')
+			if [ -f ${wdir}/${test_image} ] ; then
+				conf_image=${test_image}
+				image_is_uncompressed="enable"
+			fi
+		fi
+
 		if [ ! "x${conf_image}" = "x" ] ; then
 			if [ -f ${wdir}/${conf_image} ] ; then
 				conf_bmap=$(cat ${wfile} | grep -v '#' | grep conf_bmap | awk -F '=' '{print $2}' || true)
