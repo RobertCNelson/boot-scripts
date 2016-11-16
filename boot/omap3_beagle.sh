@@ -31,7 +31,7 @@ if [ -f /etc/dnsmasq.d/usb0-dhcp ] ; then
 	fi
 
 	boot_drive="${root_drive%?}1"
-	modprobe g_multi file=${boot_drive} cdrom=0 ro=0 stall=0 removable=1 nofua=1 iManufacturer=Circuitco iProduct=BeagleBoard-xM || true
+	modprobe g_multi file=${boot_drive} cdrom=0 ro=0 stall=0 removable=1 nofua=1 iManufacturer=BeagleBoard.org iProduct=BeagleBoard-xM || true
 
 	sleep 1
 
