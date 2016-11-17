@@ -543,52 +543,51 @@ third_party () {
 			fi
 			;;
 		LTS41|LTS44)
+			install_pkg=""
 			if [ "x${rtl8723bu}" = "xenabled" ] ; then
-				apt-get install -y rtl8723bu-modules-${latest_kernel} || true
-				run_depmod_initramfs="enabled"
+				install_pkg="${install_pkg}rtl8723bu-modules-${latest_kernel} "
 			fi
 			if [ "x${ticmem}" = "xenabled" ] ; then
-				apt-get ${apt_options} ti-cmem-modules-${latest_kernel} || true
-				run_depmod_initramfs="enabled"
+				install_pkg="${install_pkg}ti-cmem-modules-${latest_kernel} "
 			fi
 			if [ "x${tidebugss}" = "xenabled" ] ; then
-				apt-get ${apt_options} ti-debugss-modules-${latest_kernel} || true
-				run_depmod_initramfs="enabled"
+				install_pkg="${install_pkg}ti-debugss-modules-${latest_kernel} "
 			fi
 			if [ "x${titemperature}" = "xenabled" ] ; then
-				apt-get ${apt_options} ti-temperature-modules-${latest_kernel} || true
-				run_depmod_initramfs="enabled"
+				install_pkg="${install_pkg}ti-temperature-modules-${latest_kernel} "
 			fi
 			if [ "x${sgxti335x}" = "xenabled" ] ; then
-				apt-get ${apt_options} ti-sgx-ti335x-modules-${latest_kernel} || true
-				run_depmod_initramfs="enabled"
+				install_pkg="${install_pkg}ti-sgx-ti335x-modules-${latest_kernel} "
 			fi
 			if [ "x${sgxjacinto6evm}" = "xenabled" ] ; then
-				apt-get ${apt_options} ti-sgx-jacinto6evm-modules-${latest_kernel} || true
+				install_pkg="${install_pkg}ti-sgx-jacinto6evm-modules-${latest_kernel} "
+			fi
+			if [ ! "x${install_pkg}" = "x" ] ; then
+				apt-get ${apt_options} ${install_pkg}
 				run_depmod_initramfs="enabled"
 			fi
 			;;
 		LTS49)
+			install_pkg=""
 #			if [ "x${ticmem}" = "xenabled" ] ; then
-#				apt-get ${apt_options} ti-cmem-modules-${latest_kernel} || true
-#				run_depmod_initramfs="enabled"
+#				install_pkg="${install_pkg}ti-cmem-modules-${latest_kernel} "
 #			fi
 			if [ "x${tidebugss}" = "xenabled" ] ; then
-				apt-get ${apt_options} ti-debugss-modules-${latest_kernel} || true
-				run_depmod_initramfs="enabled"
+				install_pkg="${install_pkg}ti-debugss-modules-${latest_kernel} "
 			fi
 			if [ "x${titemperature}" = "xenabled" ] ; then
-				apt-get ${apt_options} ti-temperature-modules-${latest_kernel} || true
-				run_depmod_initramfs="enabled"
+				install_pkg="${install_pkg}ti-temperature-modules-${latest_kernel} "
 			fi
 #			if [ "x${sgxti335x}" = "xenabled" ] ; then
-#				apt-get ${apt_options} ti-sgx-ti335x-modules-${latest_kernel} || true
-#				run_depmod_initramfs="enabled"
+#				install_pkg="${install_pkg}ti-sgx-ti335x-modules-${latest_kernel} "
 #			fi
 #			if [ "x${sgxjacinto6evm}" = "xenabled" ] ; then
-#				apt-get ${apt_options} ti-sgx-jacinto6evm-modules-${latest_kernel} || true
-#				run_depmod_initramfs="enabled"
+#				install_pkg="${install_pkg}ti-sgx-jacinto6evm-modules-${latest_kernel} "
 #			fi
+			if [ ! "x${install_pkg}" = "x" ] ; then
+				apt-get ${apt_options} ${install_pkg}
+				run_depmod_initramfs="enabled"
+			fi
 			;;
 		esac
 		;;
