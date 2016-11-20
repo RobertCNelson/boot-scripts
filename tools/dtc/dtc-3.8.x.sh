@@ -8,7 +8,7 @@ project="dtc"
 server="git://git.kernel.org/pub/scm/linux/kernel/git/jdl"
 
 if [ ! -f /tmp/git/ ] ; then
-	rm -rf /tmp/git/ || true
+	mkdir -p /tmp/git/ || true
 fi
 
 git clone ${server}/${project}.git /tmp/git/${project}/
