@@ -820,6 +820,39 @@ __EOF__
   fi
 }
 
+_generate_uEnv_no_uuid() {
+  local uEnv_file=${1:-${tmp_rootfs_dir}/boot/uEnv.txt}
+  empty_line
+  if [ -f $uEnv_file ]; then
+    echo_broadcast "==> Found pre-existing uEnv file at ${uEnv_file}. Using it."
+    generate_line 80 '*'
+    cat $uEnv_file
+    generate_line 80 '*'
+    empty_line
+  else
+    echo_broadcast "==> Could not find pre-existing uEnv file at ${uEnv_file}"
+    echo_broadcast "===> Generating it from template ..."
+    generate_line 40 '*'
+    cat > ${uEnv_file} <<__EOF__
+#Docs: http://elinux.org/Beagleboard:U-boot_partitioning_layout_2.0
+
+uname_r=$(uname -r)
+#uuid=
+#dtb=
+
+cmdline=coherent_pool=1M quiet cape_universal=enable
+
+##enable Generic eMMC Flasher:
+##make sure, these tools are installed: dosfstools rsync
+#cmdline=init=/opt/scripts/tools/eMMC/init-eMMC-flasher-v3.sh
+
+__EOF__
+    flush_cache
+    generate_line 40 '*'
+    empty_line
+  fi
+}
+
 get_fstab_id_for_device() {
   local device=${1}
   local device_id=$(get_device_uuid ${device})
@@ -843,6 +876,23 @@ _generate_fstab() {
   fi
   root_fs_id=$(get_fstab_id_for_device ${rootfs_partition})
   echo "${root_fs_id}  /  ext4  noatime,errors=remount-ro  0  1" >> ${tmp_rootfs_dir}/etc/fstab
+  echo "debugfs  /sys/kernel/debug  debugfs  defaults  0  0" >> ${tmp_rootfs_dir}/etc/fstab
+  echo_broadcast "===> /etc/fstab generated"
+  generate_line 40 '*'
+  cat ${tmp_rootfs_dir}/etc/fstab
+  generate_line 40 '*'
+  empty_line
+}
+
+_generate_fstab_no_uuid() {
+  empty_line
+  echo_broadcast "==> Generating: /etc/fstab"
+  echo "# /etc/fstab: static file system information." > ${tmp_rootfs_dir}/etc/fstab
+  echo "#" >> ${tmp_rootfs_dir}/etc/fstab
+  if [ "${boot_partition}x" != "${rootfs_partition}x" ] ; then
+    echo "${boot_partition} /boot vfat noauto,noatime,nouser,fmask=0022,dmask=0022 0 0" >> ${tmp_rootfs_dir}/etc/fstab
+  fi
+  echo "${rootfs_partition}  /  ext4  noatime,errors=remount-ro  0  1" >> ${tmp_rootfs_dir}/etc/fstab
   echo "debugfs  /sys/kernel/debug  debugfs  defaults  0  0" >> ${tmp_rootfs_dir}/etc/fstab
   echo_broadcast "===> /etc/fstab generated"
   generate_line 40 '*'
@@ -887,6 +937,52 @@ _copy_rootfs() {
   _generate_uEnv ${tmp_rootfs_dir}/boot/uEnv.txt
 
   _generate_fstab
+
+  #FIXME: What about when you boot from a fat partition /boot ?
+  echo_broadcast "==> /boot/uEnv.txt: disabling eMMC flasher script"
+  sed -i -e 's:'$emmcscript':#'$emmcscript':g' ${tmp_rootfs_dir}/boot/uEnv.txt
+  generate_line 40 '*'
+  cat ${tmp_rootfs_dir}/boot/uEnv.txt
+  generate_line 40 '*'
+  flush_cache
+}
+
+_copy_rootfs_no_uuid() {
+  empty_line
+  generate_line 80 '='
+  echo_broadcast "Copying: Current rootfs to ${rootfs_partition}"
+  generate_line 40
+  echo_broadcast "==> rsync: / -> ${tmp_rootfs_dir}"
+  generate_line 40
+  get_rsync_options
+  rsync -aAx $rsync_options /* ${tmp_rootfs_dir} --exclude={/dev/*,/proc/*,/sys/*,/tmp/*,/run/*,/mnt/*,/media/*,/lost+found,/lib/modules/*,/uEnv.txt} || write_failure
+  flush_cache
+  generate_line 40
+  echo_broadcast "==> Copying: Kernel modules"
+  echo_broadcast "===> Creating directory for modules"
+  mkdir -p ${tmp_rootfs_dir}/lib/modules/$(uname -r)/ || true
+  echo_broadcast "===> rsync: /lib/modules/$(uname -r)/ -> ${tmp_rootfs_dir}/lib/modules/$(uname -r)/"
+  generate_line 40
+  rsync -aAx $rsync_options /lib/modules/$(uname -r)/* ${tmp_rootfs_dir}/lib/modules/$(uname -r)/ || write_failure
+  flush_cache
+  generate_line 40
+
+  echo_broadcast "Copying: Current rootfs to ${rootfs_partition} complete"
+  generate_line 80 '='
+  empty_line
+  generate_line 80 '='
+  echo_broadcast "Final System Tweaks:"
+  generate_line 40
+  if [ -d ${tmp_rootfs_dir}/etc/ssh/ ] ; then
+    echo_broadcast "==> Applying SSH Key Regeneration trick"
+    #ssh keys will now get regenerated on the next bootup
+    touch ${tmp_rootfs_dir}/etc/ssh/ssh.regenerate
+    flush_cache
+  fi
+
+  _generate_uEnv_no_uuid ${tmp_rootfs_dir}/boot/uEnv.txt
+
+  _generate_fstab_no_uuid
 
   #FIXME: What about when you boot from a fat partition /boot ?
   echo_broadcast "==> /boot/uEnv.txt: disabling eMMC flasher script"
@@ -1202,6 +1298,44 @@ prepare_drive() {
     _prepare_future_rootfs
     media_rootfs="1"
     _copy_rootfs
+    _teardown_future_rootfs
+  fi
+  teardown_environment
+  end_script
+}
+
+prepare_drive_no_uuid() {
+  empty_line
+  generate_line 80 '='
+  echo_broadcast "Preparing drives"
+  erasing_drive ${destination}
+  loading_soc_defaults
+
+  get_ext4_options
+
+  _dd_bootloader
+
+  boot_partition=
+  rootfs_partition=
+  partition_device
+
+  if [ "${boot_partition}x" != "${rootfs_partition}x" ] ; then
+    tmp_boot_dir="/tmp/boot"
+    _prepare_future_boot
+    _copy_boot
+    _teardown_future_boot
+
+    tmp_rootfs_dir="/tmp/rootfs"
+    _prepare_future_rootfs
+    media_rootfs="2"
+    _copy_rootfs_no_uuid
+    _teardown_future_rootfs
+  else
+    rootfs_label=${boot_label}
+    tmp_rootfs_dir="/tmp/rootfs"
+    _prepare_future_rootfs
+    media_rootfs="1"
+    _copy_rootfs_no_uuid
     _teardown_future_rootfs
   fi
   teardown_environment
