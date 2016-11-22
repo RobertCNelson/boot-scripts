@@ -508,11 +508,17 @@ third_party () {
 			apt-get ${apt_options} -o Dpkg::Options::="--force-overwrite" mt7601u-modules-${latest_kernel} || true
 			run_depmod_initramfs="enabled"
 			;;
-		LTS41|LTS44|LTS49|TESTING|EXPERIMENTAL)
+		LTS41|LTS44)
 			if [ "x${es8}" = "xenabled" ] ; then
 				apt-get ${apt_options} ti-sgx-es8-modules-${latest_kernel} || true
 				run_depmod_initramfs="enabled"
 			fi
+			if [ "x${rtl8723bu}" = "xenabled" ] ; then
+				apt-get ${apt_options} rtl8723bu-modules-${latest_kernel} || true
+				run_depmod_initramfs="enabled"
+			fi
+			;;
+		LTS49|TESTING|EXPERIMENTAL)
 			if [ "x${rtl8723bu}" = "xenabled" ] ; then
 				apt-get ${apt_options} rtl8723bu-modules-${latest_kernel} || true
 				run_depmod_initramfs="enabled"
