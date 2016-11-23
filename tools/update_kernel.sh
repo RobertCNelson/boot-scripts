@@ -225,7 +225,7 @@ get_device () {
 			;;
 		*)
 			echo "Machine: [${machine}]"
-			SOC="armv7"
+			scan_armv7_kernels
 			;;
 		esac
 	fi
@@ -257,9 +257,6 @@ get_device () {
 		ticmem="enabled"
 		tidebugss="enabled"
 		titemperature="enabled"
-		;;
-	TI_OMAP5_uEVM_board)
-		kernel_headers="enabled"
 		;;
 	esac
 }
