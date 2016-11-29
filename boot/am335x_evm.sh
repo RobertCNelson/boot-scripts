@@ -316,14 +316,35 @@ else
 	esac
 fi
 
+#Create cpsw_3_mac, we need this for wl18xx access point's...
+if [ -f /usr/bin/bc ] ; then
+	mac_0_prefix=$(echo ${cpsw_0_mac} | cut -c 1-11)
+
+	cpsw_0_5=$(echo ${cpsw_0_mac} | awk -F ':' '{print $5}')
+	cpsw_0_6=$(echo ${cpsw_0_mac} | awk -F ':' '{print $6}')
+	cpsw_add=$(echo "obase=16;ibase=16;$cpsw_0_5$cpsw_0_6 + 3" | bc)
+
+	cpsw_3_mac=${mac_0_prefix}:$(echo ${cpsw_add} | cut -c 1-2):$(echo ${cpsw_add} | cut -c 3-4)
+else
+	cpsw_3_mac="1c:ba:8c:a2:ed:71"
+fi
+
+#mac address:
+#cpsw_0_mac = eth0 - wlan0 (in eeprom)
+#cpsw_1_mac = usb0 (BeagleBone Side) (in eeprom)
+#cpsw_2_mac = usb0 (USB host, pc side) ((cpsw_0_mac + cpsw_2_mac) /2 )
+#cpsw_3_mac = wl18xx (AP) (cpsw_0_mac + 3)
+
 echo "cpsw_0_mac: [${cpsw_0_mac}]"
 echo "cpsw_1_mac: [${cpsw_1_mac}]"
 echo "cpsw_2_mac: [${cpsw_2_mac}]"
+echo "cpsw_3_mac: [${cpsw_3_mac}]"
 
 #Save these to /etc/* so we don't have to recalculate again...
 echo "${cpsw_0_mac}" > /etc/cpsw_0_mac || true
 echo "${cpsw_1_mac}" > /etc/cpsw_1_mac || true
 echo "${cpsw_2_mac}" > /etc/cpsw_2_mac || true
+echo "${cpsw_3_mac}" > /etc/cpsw_3_mac || true
 
 #hack till bbgw firmware is decided on..
 if [ -d /sys/devices/platform/ocp/47810000.mmc/mmc_host/mmc2/mmc2:0001/mmc2:0001:2/ ] ; then
