@@ -238,70 +238,83 @@ if [ "x${cpsw_1_mac}" = "x00:00:00:00:00:00" ] ; then
 fi
 
 #Determine cpsw_2_mac assumed to be allocated between cpsw_0_mac and cpsw_1_mac
-cpsw_0_last=$(echo ${cpsw_0_mac} | awk -F ':' '{print $6}' | cut -c 2)
-cpsw_1_last=$(echo ${cpsw_1_mac} | awk -F ':' '{print $6}' | cut -c 2)
-mac_0_prefix=$(echo ${cpsw_0_mac} | cut -c 1-16)
-mac_1_prefix=$(echo ${cpsw_1_mac} | cut -c 1-16)
-#if cpsw_0_mac is even, add 1
-case "x${cpsw_0_last}" in
-x0)
-	cpsw_2_mac="${mac_0_prefix}1"
-	;;
-x2)
-	cpsw_2_mac="${mac_0_prefix}3"
-	;;
-x4)
-	cpsw_2_mac="${mac_0_prefix}5"
-	;;
-x6)
-	cpsw_2_mac="${mac_0_prefix}7"
-	;;
-x8)
-	cpsw_2_mac="${mac_0_prefix}9"
-	;;
-xA)
-	cpsw_2_mac="${mac_0_prefix}B"
-	;;
-xC)
-	cpsw_2_mac="${mac_0_prefix}D"
-	;;
-xE)
-	cpsw_2_mac="${mac_0_prefix}F"
-	;;
-*)
-	#else, subtract 1 from cpsw_1_mac
-	case "x${cpsw_1_last}" in
-	xF)
-		cpsw_2_mac="${mac_1_prefix}E"
+if [ -f /usr/bin/bc ] ; then
+	mac_0_prefix=$(echo ${cpsw_0_mac} | cut -c 1-11)
+	cpsw_0_5=$(echo ${cpsw_0_mac} | awk -F ':' '{print $5}')
+	cpsw_0_6=$(echo ${cpsw_0_mac} | awk -F ':' '{print $6}')
+
+	cpsw_1_5=$(echo ${cpsw_1_mac} | awk -F ':' '{print $5}')
+	cpsw_1_6=$(echo ${cpsw_1_mac} | awk -F ':' '{print $6}')
+
+	cpsw_add=$(echo "obase=16;ibase=16;$cpsw_0_5$cpsw_0_6 + $cpsw_1_5$cpsw_1_6" | bc)
+	cpsw_div=$(echo "obase=16;ibase=16;$cpsw_add / 2" | bc)
+	cpsw_2_mac=${mac_0_prefix}:$(echo ${cpsw_div} | cut -c 1-2):$(echo ${cpsw_div} | cut -c 3-4)
+else
+	cpsw_0_last=$(echo ${cpsw_0_mac} | awk -F ':' '{print $6}' | cut -c 2)
+	cpsw_1_last=$(echo ${cpsw_1_mac} | awk -F ':' '{print $6}' | cut -c 2)
+	mac_0_prefix=$(echo ${cpsw_0_mac} | cut -c 1-16)
+	mac_1_prefix=$(echo ${cpsw_1_mac} | cut -c 1-16)
+	#if cpsw_0_mac is even, add 1
+	case "x${cpsw_0_last}" in
+	x0)
+		cpsw_2_mac="${mac_0_prefix}1"
 		;;
-	xD)
-		cpsw_2_mac="${mac_1_prefix}C"
+	x2)
+		cpsw_2_mac="${mac_0_prefix}3"
 		;;
-	xB)
-		cpsw_2_mac="${mac_1_prefix}A"
+	x4)
+		cpsw_2_mac="${mac_0_prefix}5"
 		;;
-	x9)
-		cpsw_2_mac="${mac_1_prefix}8"
+	x6)
+		cpsw_2_mac="${mac_0_prefix}7"
 		;;
-	x7)
-		cpsw_2_mac="${mac_1_prefix}6"
+	x8)
+		cpsw_2_mac="${mac_0_prefix}9"
 		;;
-	x5)
-		cpsw_2_mac="${mac_1_prefix}4"
+	xA)
+		cpsw_2_mac="${mac_0_prefix}B"
 		;;
-	x3)
-		cpsw_2_mac="${mac_1_prefix}2"
+	xC)
+		cpsw_2_mac="${mac_0_prefix}D"
 		;;
-	x1)
-		cpsw_2_mac="${mac_1_prefix}0"
+	xE)
+		cpsw_2_mac="${mac_0_prefix}F"
 		;;
 	*)
-		#todo: generate random mac...
-		cpsw_2_mac="1c:ba:8c:a2:ed:6a"
+		#else, subtract 1 from cpsw_1_mac
+		case "x${cpsw_1_last}" in
+		xF)
+			cpsw_2_mac="${mac_1_prefix}E"
+			;;
+		xD)
+			cpsw_2_mac="${mac_1_prefix}C"
+			;;
+		xB)
+			cpsw_2_mac="${mac_1_prefix}A"
+			;;
+		x9)
+			cpsw_2_mac="${mac_1_prefix}8"
+			;;
+		x7)
+			cpsw_2_mac="${mac_1_prefix}6"
+			;;
+		x5)
+			cpsw_2_mac="${mac_1_prefix}4"
+			;;
+		x3)
+			cpsw_2_mac="${mac_1_prefix}2"
+			;;
+		x1)
+			cpsw_2_mac="${mac_1_prefix}0"
+			;;
+		*)
+			#todo: generate random mac...
+			cpsw_2_mac="1c:ba:8c:a2:ed:6a"
+			;;
+		esac
 		;;
 	esac
-	;;
-esac
+fi
 
 echo "cpsw_0_mac: [${cpsw_0_mac}]"
 echo "cpsw_1_mac: [${cpsw_1_mac}]"
