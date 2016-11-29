@@ -320,6 +320,11 @@ echo "cpsw_0_mac: [${cpsw_0_mac}]"
 echo "cpsw_1_mac: [${cpsw_1_mac}]"
 echo "cpsw_2_mac: [${cpsw_2_mac}]"
 
+#Save these to /etc/* so we don't have to recalculate again...
+echo "${cpsw_0_mac}" > /etc/cpsw_0_mac || true
+echo "${cpsw_1_mac}" > /etc/cpsw_1_mac || true
+echo "${cpsw_2_mac}" > /etc/cpsw_2_mac || true
+
 #hack till bbgw firmware is decided on..
 if [ -d /sys/devices/platform/ocp/47810000.mmc/mmc_host/mmc2/mmc2:0001/mmc2:0001:2/ ] ; then
 	board_bbgw="enable"
