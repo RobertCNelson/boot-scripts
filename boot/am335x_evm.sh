@@ -229,9 +229,27 @@ if [ "x${cpsw_1_mac}" = "x00:00:00:00:00:00" ] ; then
 
 		cpsw_0_5=$(echo ${cpsw_0_mac} | awk -F ':' '{print $5}')
 		cpsw_0_6=$(echo ${cpsw_0_mac} | awk -F ':' '{print $6}')
-		cpsw_add=$(echo "obase=16;ibase=16;$cpsw_0_5$cpsw_0_6 + 2" | bc)
+		cpsw_res=$(echo "obase=16;ibase=16;$cpsw_0_5$cpsw_0_6 + 2" | bc)
 
-		cpsw_1_mac=${mac_0_prefix}:$(echo ${cpsw_add} | cut -c 1-2):$(echo ${cpsw_add} | cut -c 3-4)
+		#check for :0x:xx
+		leading_zero_5=$(echo ${cpsw_0_5}| cut -c 1)
+		if [ "x${leading_zero_5}" = "x0" ] ; then
+			#check for :00:xx
+			leading_zero_5=$(echo ${cpsw_0_5}| cut -c 2)
+			if [ "x${leading_zero_5}" = "x0" ] ; then
+				#check for :00:0x
+				leading_zero_6=$(echo ${cpsw_0_6}| cut -c 1)
+				if [ "x${leading_zero_6}" = "x0" ] ; then
+					cpsw_1_mac=${mac_0_prefix}:00:0$(echo ${cpsw_res} | cut -c 1)
+				else
+					cpsw_1_mac=${mac_0_prefix}:00:$(echo ${cpsw_res} | cut -c 1-2)
+				fi
+			else
+				cpsw_1_mac=${mac_0_prefix}:0$(echo ${cpsw_res} | cut -c 1):$(echo ${cpsw_res} | cut -c 2-3)
+			fi
+		else
+			cpsw_1_mac=${mac_0_prefix}:$(echo ${cpsw_res} | cut -c 1-2):$(echo ${cpsw_res} | cut -c 3-4)
+		fi
 	else
 		cpsw_1_mac="1c:ba:8c:a2:ed:70"
 	fi
@@ -247,8 +265,27 @@ if [ -f /usr/bin/bc ] ; then
 	cpsw_1_6=$(echo ${cpsw_1_mac} | awk -F ':' '{print $6}')
 
 	cpsw_add=$(echo "obase=16;ibase=16;$cpsw_0_5$cpsw_0_6 + $cpsw_1_5$cpsw_1_6" | bc)
-	cpsw_div=$(echo "obase=16;ibase=16;$cpsw_add / 2" | bc)
-	cpsw_2_mac=${mac_0_prefix}:$(echo ${cpsw_div} | cut -c 1-2):$(echo ${cpsw_div} | cut -c 3-4)
+	cpsw_res=$(echo "obase=16;ibase=16;$cpsw_add / 2" | bc)
+
+	#check for :0x:xx
+	leading_zero_5=$(echo ${cpsw_0_5}| cut -c 1)
+	if [ "x${leading_zero_5}" = "x0" ] ; then
+		#check for :00:xx
+		leading_zero_5=$(echo ${cpsw_0_5}| cut -c 2)
+		if [ "x${leading_zero_5}" = "x0" ] ; then
+			#check for :00:0x
+			leading_zero_6=$(echo ${cpsw_0_6}| cut -c 1)
+			if [ "x${leading_zero_6}" = "x0" ] ; then
+				cpsw_2_mac=${mac_0_prefix}:00:0$(echo ${cpsw_res} | cut -c 1)
+			else
+				cpsw_2_mac=${mac_0_prefix}:00:$(echo ${cpsw_res} | cut -c 1-2)
+			fi
+		else
+			cpsw_2_mac=${mac_0_prefix}:0$(echo ${cpsw_res} | cut -c 1):$(echo ${cpsw_res} | cut -c 2-3)
+		fi
+	else
+		cpsw_2_mac=${mac_0_prefix}:$(echo ${cpsw_res} | cut -c 1-2):$(echo ${cpsw_res} | cut -c 3-4)
+	fi
 else
 	cpsw_0_last=$(echo ${cpsw_0_mac} | awk -F ':' '{print $6}' | cut -c 2)
 	cpsw_1_last=$(echo ${cpsw_1_mac} | awk -F ':' '{print $6}' | cut -c 2)
@@ -322,9 +359,27 @@ if [ -f /usr/bin/bc ] ; then
 
 	cpsw_0_5=$(echo ${cpsw_0_mac} | awk -F ':' '{print $5}')
 	cpsw_0_6=$(echo ${cpsw_0_mac} | awk -F ':' '{print $6}')
-	cpsw_add=$(echo "obase=16;ibase=16;$cpsw_0_5$cpsw_0_6 + 3" | bc)
+	cpsw_res=$(echo "obase=16;ibase=16;$cpsw_0_5$cpsw_0_6 + 3" | bc)
 
-	cpsw_3_mac=${mac_0_prefix}:$(echo ${cpsw_add} | cut -c 1-2):$(echo ${cpsw_add} | cut -c 3-4)
+	#check for :0x:xx
+	leading_zero_5=$(echo ${cpsw_0_5}| cut -c 1)
+	if [ "x${leading_zero_5}" = "x0" ] ; then
+		#check for :00:xx
+		leading_zero_5=$(echo ${cpsw_0_5}| cut -c 2)
+		if [ "x${leading_zero_5}" = "x0" ] ; then
+			#check for :00:0x
+			leading_zero_6=$(echo ${cpsw_0_6}| cut -c 1)
+			if [ "x${leading_zero_6}" = "x0" ] ; then
+				cpsw_3_mac=${mac_0_prefix}:00:0$(echo ${cpsw_res} | cut -c 1)
+			else
+				cpsw_3_mac=${mac_0_prefix}:00:$(echo ${cpsw_res} | cut -c 1-2)
+			fi
+		else
+			cpsw_3_mac=${mac_0_prefix}:0$(echo ${cpsw_res} | cut -c 1):$(echo ${cpsw_res} | cut -c 2-3)
+		fi
+	else
+		cpsw_3_mac=${mac_0_prefix}:$(echo ${cpsw_res} | cut -c 1-2):$(echo ${cpsw_res} | cut -c 3-4)
+	fi
 else
 	cpsw_3_mac="1c:ba:8c:a2:ed:71"
 fi
