@@ -250,7 +250,6 @@ if [ -f /usr/bin/bc ] ; then
 	cpsw_res=$(echo "obase=16;ibase=16;$cpsw_div + 100" | bc)
 
 	cpsw_2_mac=${mac_0_prefix}:$(echo ${cpsw_res} | cut -c 2-3)
-	fi
 else
 	cpsw_0_last=$(echo ${cpsw_0_mac} | awk -F ':' '{print $6}' | cut -c 2)
 	cpsw_1_last=$(echo ${cpsw_1_mac} | awk -F ':' '{print $6}' | cut -c 2)
@@ -327,7 +326,6 @@ if [ -f /usr/bin/bc ] ; then
 	cpsw_res=$(echo "obase=16;ibase=16;$cpsw_0_6 + 103" | bc)
 
 	cpsw_3_mac=${mac_0_prefix}:$(echo ${cpsw_res} | cut -c 2-3)
-	fi
 else
 	cpsw_3_mac="1c:ba:8c:a2:ed:71"
 fi
