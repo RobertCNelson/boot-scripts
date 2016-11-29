@@ -219,7 +219,22 @@ if [ -f ${mac_address} ] ; then
 	cpsw_1_mac=$(hexdump -v -e '1/1 "%02X" ":"' ${mac_address} | sed 's/.$//')
 else
 	#todo: generate random mac...
-	cpsw_1_mac="1c:ba:8c:a2:ed:69"
+	cpsw_1_mac="1c:ba:8c:a2:ed:70"
+fi
+
+#Some devices are showing a blank cpsw_1_mac [00:00:00:00:00:00], let's fix that up...
+if [ "x${cpsw_1_mac}" = "x00:00:00:00:00:00" ] ; then
+	if [ -f /usr/bin/bc ] ; then
+		mac_0_prefix=$(echo ${cpsw_0_mac} | cut -c 1-11)
+
+		cpsw_0_5=$(echo ${cpsw_0_mac} | awk -F ':' '{print $5}')
+		cpsw_0_6=$(echo ${cpsw_0_mac} | awk -F ':' '{print $6}')
+		cpsw_add=$(echo "obase=16;ibase=16;$cpsw_0_5$cpsw_0_6 + 2" | bc)
+
+		cpsw_1_mac=${mac_0_prefix}:$(echo ${cpsw_add} | cut -c 1-2):$(echo ${cpsw_add} | cut -c 3-4)
+	else
+		cpsw_1_mac="1c:ba:8c:a2:ed:70"
+	fi
 fi
 
 #Determine cpsw_2_mac assumed to be allocated between cpsw_0_mac and cpsw_1_mac
