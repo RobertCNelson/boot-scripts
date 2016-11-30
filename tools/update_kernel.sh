@@ -550,6 +550,7 @@ third_party () {
 				run_depmod_initramfs="enabled"
 			fi
 		;;
+		esac
 	ti|ti-rt)
 		case "${kernel}" in
 		LTS314)
