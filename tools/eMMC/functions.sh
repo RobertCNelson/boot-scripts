@@ -775,15 +775,15 @@ _copy_boot() {
 }
 
 get_device_uuid() {
-  local device=${1}
-  unset device_uuid
-  device_uuid=$(/sbin/blkid /dev/null -s UUID -o value ${device})
-  if [ ! -z "${device_uuid}" ] ; then
-    echo_debug "Device UUID should be: ${device_uuid}"
-    echo $device_uuid
-  else
-    echo_debug "Could not get a proper UUID for $device. Try with another ID"
-  fi
+	local device=${1}
+	unset device_uuid
+	device_uuid=$(/sbin/blkid /dev/null -s UUID -o value ${device})
+	if [ ! -z "${device_uuid}" ] ; then
+		echo_debug "Device UUID should be: ${device_uuid}"
+		echo $device_uuid
+	else
+		echo_debug "Could not get a proper UUID for $device. Try with another ID"
+	fi
 }
 
 _generate_uEnv() {
@@ -859,51 +859,44 @@ __EOF__
 }
 
 get_fstab_id_for_device() {
-  local device=${1}
-  local device_id=$(get_device_uuid ${device})
-  if [ -n ${device_id} ]; then
-    echo "UUID=${device_id}"
-  else
-    echo_debug "Could not find a UUID for ${device}, default to device name"
-    # Since the mmc device get reverse depending on how it was booted we need to use source
-    echo "${source}p${device:(-1)}"
-  fi
+	local device=${1}
+	local device_id=$(get_device_uuid ${device})
+	if [ -n ${device_id} ]; then
+		echo "UUID=${device_id}"
+	else
+		echo_debug "Could not find a UUID for ${device}, default to device name"
+		# Since the mmc device get reverse depending on how it was booted we need to use source
+		echo "${source}p${device:(-1)}"
+	fi
 }
 
 _generate_fstab() {
-  empty_line
-  echo_broadcast "==> Generating: /etc/fstab"
-  echo "# /etc/fstab: static file system information." > ${tmp_rootfs_dir}/etc/fstab
-  echo "#" >> ${tmp_rootfs_dir}/etc/fstab
-  if [ "${boot_partition}x" != "${rootfs_partition}x" ] ; then
-    boot_fs_id=$(get_fstab_id_for_device ${boot_partition})
-    echo "${boot_fs_id} /boot vfat noauto,noatime,nouser,fmask=0022,dmask=0022 0 0" >> ${tmp_rootfs_dir}/etc/fstab
-  fi
-  root_fs_id=$(get_fstab_id_for_device ${rootfs_partition})
-  echo "${root_fs_id}  /  ext4  noatime,errors=remount-ro  0  1" >> ${tmp_rootfs_dir}/etc/fstab
-  echo "debugfs  /sys/kernel/debug  debugfs  defaults  0  0" >> ${tmp_rootfs_dir}/etc/fstab
-  echo_broadcast "===> /etc/fstab generated"
-  generate_line 40 '*'
-  cat ${tmp_rootfs_dir}/etc/fstab
-  generate_line 40 '*'
-  empty_line
-}
-
-_generate_fstab_no_uuid() {
-  empty_line
-  echo_broadcast "==> Generating: /etc/fstab"
-  echo "# /etc/fstab: static file system information." > ${tmp_rootfs_dir}/etc/fstab
-  echo "#" >> ${tmp_rootfs_dir}/etc/fstab
-  if [ "${boot_partition}x" != "${rootfs_partition}x" ] ; then
-    echo "${boot_partition} /boot vfat noauto,noatime,nouser,fmask=0022,dmask=0022 0 0" >> ${tmp_rootfs_dir}/etc/fstab
-  fi
-  echo "${rootfs_partition}  /  ext4  noatime,errors=remount-ro  0  1" >> ${tmp_rootfs_dir}/etc/fstab
-  echo "debugfs  /sys/kernel/debug  debugfs  defaults  0  0" >> ${tmp_rootfs_dir}/etc/fstab
-  echo_broadcast "===> /etc/fstab generated"
-  generate_line 40 '*'
-  cat ${tmp_rootfs_dir}/etc/fstab
-  generate_line 40 '*'
-  empty_line
+	empty_line
+	echo_broadcast "==> Generating: /etc/fstab"
+	echo "# /etc/fstab: static file system information." > ${tmp_rootfs_dir}/etc/fstab
+	echo "#" >> ${tmp_rootfs_dir}/etc/fstab
+	if [ "${boot_partition}x" != "${rootfs_partition}x" ] ; then
+		#FIXME: x15 bug in v4.4.x-ti
+		if [ "x${device_eeprom}" = "xx15/X15_B1-eeprom" ] ; then
+			echo "${boot_partition} /boot/uboot auto defaults 0 0" >> ${tmp_rootfs_dir}/etc/fstab
+		else
+			boot_fs_id=$(get_fstab_id_for_device ${boot_partition})
+			echo "${boot_fs_id} /boot/uboot auto defaults 0 0" >> ${tmp_rootfs_dir}/etc/fstab
+		fi
+	fi
+	#FIXME: x15 bug in v4.4.x-ti
+	if [ "x${device_eeprom}" = "xx15/X15_B1-eeprom" ] ; then
+		echo "${rootfs_partition}  /  ext4  noatime,errors=remount-ro  0  1" >> ${tmp_rootfs_dir}/etc/fstab
+	else
+		root_fs_id=$(get_fstab_id_for_device ${rootfs_partition})
+		echo "${root_fs_id}  /  ext4  noatime,errors=remount-ro  0  1" >> ${tmp_rootfs_dir}/etc/fstab
+	fi
+	echo "debugfs  /sys/kernel/debug  debugfs  defaults  0  0" >> ${tmp_rootfs_dir}/etc/fstab
+	echo_broadcast "===> /etc/fstab generated"
+	generate_line 40 '*'
+	cat ${tmp_rootfs_dir}/etc/fstab
+	generate_line 40 '*'
+	empty_line
 }
 
 _copy_rootfs() {
@@ -987,7 +980,7 @@ _copy_rootfs_no_uuid() {
 
   _generate_uEnv_no_uuid ${tmp_rootfs_dir}/boot/uEnv.txt
 
-  _generate_fstab_no_uuid
+  _generate_fstab
 
   #FIXME: What about when you boot from a fat partition /boot ?
   echo_broadcast "==> /boot/uEnv.txt: disabling eMMC flasher script"
