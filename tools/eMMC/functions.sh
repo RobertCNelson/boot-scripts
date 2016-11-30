@@ -1093,6 +1093,7 @@ loading_soc_defaults() {
 				dd_spl_uboot_bs="128k"
 				dd_spl_uboot_backup="/opt/backup/uboot/MLO"
 
+				echo "" >> ${soc_file}
 				echo "spl_uboot_name=${spl_uboot_name}" >> ${soc_file}
 				echo "dd_spl_uboot_count=1" >> ${soc_file}
 				echo "dd_spl_uboot_seek=1" >> ${soc_file}
@@ -1115,14 +1116,13 @@ loading_soc_defaults() {
 				dd_uboot_bs="384k"
 				dd_uboot_backup="/opt/backup/uboot/u-boot.img"
 
+				echo "" >> ${soc_file}
 				echo "uboot_name=${uboot_name}" >> ${soc_file}
 				echo "dd_uboot_count=2" >> ${soc_file}
 				echo "dd_uboot_seek=1" >> ${soc_file}
 				echo "dd_uboot_conf=" >> ${soc_file}
 				echo "dd_uboot_bs=384k" >> ${soc_file}
 				echo "dd_uboot_backup=${dd_uboot_backup}" >> ${soc_file}
-
-				echo "dd_uboot_name=${dd_uboot_name}" >> ${soc_file}
 			fi
 
 			if [ ! -f /opt/backup/uboot/u-boot.img ] ; then
