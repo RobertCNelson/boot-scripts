@@ -571,46 +571,70 @@ check_running_system() {
 }
 
 check_running_system_initrd() {
-  empty_line
-  generate_line 80 '='
-  echo_broadcast "Checking running system"
-  echo_broadcast "==> Copying: [${source}] -> [${destination}]"
-  echo_broadcast "==> lsblk:"
-  generate_line 40
-  echo_broadcast "`lsblk || true`"
-  generate_line 40
-  echo_broadcast "==> df -h | grep rootfs:"
-  echo_broadcast "`df -h | grep rootfs || true`"
-  generate_line 40
+	empty_line
+	generate_line 80 '='
+	echo_broadcast "Checking running system"
+	echo_broadcast "==> Copying: [${source}] -> [${destination}]"
+	echo_broadcast "==> lsblk:"
+	generate_line 40
+	echo_broadcast "`lsblk || true`"
+	generate_line 40
+	echo_broadcast "==> df -h | grep rootfs:"
+	echo_broadcast "`df -h | grep rootfs || true`"
+	generate_line 40
 
-  if [ ! -b "${destination}" ] ; then
-    echo_broadcast "!==> Error: [${destination}] does not exist"
-    write_failure
-  fi
+	if [ ! -b "${destination}" ] ; then
+		echo_broadcast "!==> Error: [${destination}] does not exist"
+		write_failure
+	fi
 
-  if [ ! -f /boot/config-$(uname -r) ] ; then
-    echo_broadcast "==> generating: /boot/config-$(uname -r)"
-    zcat /proc/config.gz > /boot/config-$(uname -r)
-  fi
+	if [ ! -f /boot/config-$(uname -r) ] ; then
+		echo_broadcast "==> generating: /boot/config-$(uname -r)"
+		zcat /proc/config.gz > /boot/config-$(uname -r)
+	fi
 
-  if [ -f /boot/initrd.img-$(uname -r) ] ; then
-    echo_broadcast "==> updating: /boot/initrd.img-$(uname -r)"
-    update-initramfs -u -k $(uname -r)
-  else
-    echo_broadcast "==> creating: /boot/initrd.img-$(uname -r)"
-    update-initramfs -c -k $(uname -r)
-  fi
-  flush_cache
+	#Needed for: debian-7.5-2014-05-14
+	if [ ! -f /boot/vmlinuz-$(uname -r) ] ; then
+		echo_broadcast "==> updating: /boot/vmlinuz-$(uname -r) (old image)"
+		if [ -f /boot/uboot/zImage ] ; then
+			cp -v /boot/uboot/zImage /boot/vmlinuz-$(uname -r)
+		else
+			echo_broadcast "!==> Error: [/boot/vmlinuz-$(uname -r)] does not exist"
+			write_failure
+		fi
+		flush_cache
+	fi
 
-  if [ "x${is_bbb}" = "xenable" ] ; then
-    if [ ! -e /sys/class/leds/beaglebone\:green\:usr0/trigger ] ; then
-      modprobe leds_gpio || true
-      sleep 1
-    fi
-  fi
-  echo_broadcast "==> Giving you time to check..."
-  countdown 10
-  generate_line 80 '='
+	if [ -f /boot/initrd.img-$(uname -r) ] ; then
+		echo_broadcast "==> updating: /boot/initrd.img-$(uname -r)"
+		update-initramfs -u -k $(uname -r)
+	else
+		echo_broadcast "==> creating: /boot/initrd.img-$(uname -r)"
+		update-initramfs -c -k $(uname -r)
+	fi
+	flush_cache
+
+	#Needed for: debian-7.5-2014-05-14
+	if [ ! -f /boot/dtbs/$(uname -r) ] ; then
+		if [ -d boot/uboot/dtbs/ ] ; then
+			mkdir -p /boot/dtbs/$(uname -r) || true
+			cp -v /boot/uboot/dtbs/* /boot/dtbs/$(uname -r)/
+		else
+			echo_broadcast "!==> Error: [/boot/dtbs/$(uname -r)/] does not exist"
+			write_failure
+		fi
+		flush_cache
+	fi
+
+	if [ "x${is_bbb}" = "xenable" ] ; then
+		if [ ! -e /sys/class/leds/beaglebone\:green\:usr0/trigger ] ; then
+			modprobe leds_gpio || true
+			sleep 1
+		fi
+	fi
+	echo_broadcast "==> Giving you time to check..."
+	countdown 10
+	generate_line 80 '='
 }
 
 cylon_leds() {
