@@ -994,49 +994,55 @@ _copy_rootfs_no_uuid() {
 }
 
 _copy_rootfs_reverse() {
-  empty_line
-  generate_line 80 '='
-  echo_broadcast "Copying: Current rootfs to ${rootfs_partition}"
-  generate_line 40
-  echo_broadcast "==> rsync: / -> ${tmp_rootfs_dir}"
-  generate_line 40
-  get_rsync_options
-  rsync -aAx $rsync_options /* ${tmp_rootfs_dir} --exclude={/dev/*,/proc/*,/sys/*,/tmp/*,/run/*,/mnt/*,/media/*,/lost+found,/lib/modules/*,/uEnv.txt} || write_failure
-  flush_cache
-  generate_line 40
-  echo_broadcast "==> Copying: Kernel modules"
-  echo_broadcast "===> Creating directory for modules"
-  mkdir -p ${tmp_rootfs_dir}/lib/modules/$(uname -r)/ || true
-  echo_broadcast "===> rsync: /lib/modules/$(uname -r)/ -> ${tmp_rootfs_dir}/lib/modules/$(uname -r)/"
-  generate_line 40
-  rsync -aAx $rsync_options /lib/modules/$(uname -r)/* ${tmp_rootfs_dir}/lib/modules/$(uname -r)/ || write_failure
-  flush_cache
-  generate_line 40
+	empty_line
+	generate_line 80 '='
+	echo_broadcast "Copying: Current rootfs to ${rootfs_partition}"
+	generate_line 40
+	echo_broadcast "==> rsync: / -> ${tmp_rootfs_dir}"
+	generate_line 40
+	get_rsync_options
+	rsync -aAx $rsync_options /* ${tmp_rootfs_dir} --exclude={/dev/*,/proc/*,/sys/*,/tmp/*,/run/*,/mnt/*,/media/*,/lost+found,/lib/modules/*,/uEnv.txt} || write_failure
+	flush_cache
+	generate_line 40
+	echo_broadcast "==> Copying: Kernel modules"
+	echo_broadcast "===> Creating directory for modules"
+	mkdir -p ${tmp_rootfs_dir}/lib/modules/$(uname -r)/ || true
+	echo_broadcast "===> rsync: /lib/modules/$(uname -r)/ -> ${tmp_rootfs_dir}/lib/modules/$(uname -r)/"
+	generate_line 40
+	rsync -aAx $rsync_options /lib/modules/$(uname -r)/* ${tmp_rootfs_dir}/lib/modules/$(uname -r)/ || write_failure
+	flush_cache
+	generate_line 40
 
-  echo_broadcast "Copying: Current rootfs to ${rootfs_partition} complete"
-  generate_line 80 '='
-  empty_line
-  generate_line 80 '='
-  echo_broadcast "Final System Tweaks:"
-  generate_line 40
-#  if [ -d ${tmp_rootfs_dir}/etc/ssh/ ] ; then
-#    echo_broadcast "==> Applying SSH Key Regeneration trick"
-#    #ssh keys will now get regenerated on the next bootup
-#    touch ${tmp_rootfs_dir}/etc/ssh/ssh.regenerate
-#    flush_cache
-#  fi
+	echo_broadcast "Copying: Current rootfs to ${rootfs_partition} complete"
+	generate_line 80 '='
+	empty_line
+	generate_line 80 '='
+	echo_broadcast "Final System Tweaks:"
+	generate_line 40
 
-#  _generate_uEnv ${tmp_rootfs_dir}/boot/uEnv.txt
+	#  _generate_uEnv ${tmp_rootfs_dir}/boot/uEnv.txt
+	if [ ! -f ${tmp_rootfs_dir}/boot/uEnv.txt ] ; then
+		echo "#Docs: http://elinux.org/Beagleboard:U-boot_partitioning_layout_2.0" > ${tmp_rootfs_dir}/boot/uEnv.txt
+		echo "" >> ${tmp_rootfs_dir}/boot/uEnv.txt
+		echo "uname_r=$(uname -r)" >> ${tmp_rootfs_dir}/boot/uEnv.txt
+		echo "#uuid=" >> ${tmp_rootfs_dir}/boot/uEnv.txt
+		echo "#dtb=" >> ${tmp_rootfs_dir}/boot/uEnv.txt
+		echo "" >> ${tmp_rootfs_dir}/boot/uEnv.txt
+		echo "cmdline=coherent_pool=1M quiet" >> ${tmp_rootfs_dir}/boot/uEnv.txt
+		echo "" >> ${tmp_rootfs_dir}/boot/uEnv.txt
+		echo "##enable Generic eMMC Flasher:" >> ${tmp_rootfs_dir}/boot/uEnv.txt
+		echo "##make sure, these tools are installed: dosfstools rsync" >> ${tmp_rootfs_dir}/boot/uEnv.txt
+	fi
 
-  _generate_fstab
+	_generate_fstab
 
-  echo_broadcast "==> /boot/uEnv.txt: enabling eMMC flasher script"
-  script="cmdline=init=/opt/scripts/tools/eMMC/init-eMMC-flasher-v3.sh"
-  echo "${script}" >> ${tmp_rootfs_dir}/boot/uEnv.txt
-  generate_line 40 '*'
-  cat ${tmp_rootfs_dir}/boot/uEnv.txt
-  generate_line 40 '*'
-  flush_cache
+	echo_broadcast "==> /boot/uEnv.txt: enabling eMMC flasher script"
+	script="cmdline=init=/opt/scripts/tools/eMMC/init-eMMC-flasher-v3.sh"
+	echo "${script}" >> ${tmp_rootfs_dir}/boot/uEnv.txt
+	generate_line 40 '*'
+	cat ${tmp_rootfs_dir}/boot/uEnv.txt
+	generate_line 40 '*'
+	flush_cache
 }
 
 erasing_drive() {
