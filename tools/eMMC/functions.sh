@@ -755,15 +755,17 @@ _copy_boot() {
 	generate_line 80 '='
 	echo_broadcast "Copying boot: ${source}p1 -> ${boot_partition}"
 
-	#rcn-ee: Currently the MLO/u-boot.img are dd'ed to MBR, this is just for old rootfs:
-	if [ -f /boot/uboot/MLO ] && [ -f /boot/uboot/u-boot.img ] ; then
-		echo_broadcast "==> Found MLO and u-boot.img in current /boot/uboot/, copying"
-		#Make sure the BootLoader gets copied first:
-		cp -v /boot/uboot/MLO ${tmp_boot_dir}/MLO || write_failure
-		flush_cache
+	#rcn-ee: Currently the MLO/u-boot.img are dd'ed to MBR by default, this is just for VERY old rootfs (aka, DO NOT USE)
+	if [ ! -f /opt/backup/uboot/MLO ] ; then
+		if [ -f /boot/uboot/MLO ] && [ -f /boot/uboot/u-boot.img ] ; then
+			echo_broadcast "==> Found MLO and u-boot.img in current /boot/uboot/, copying"
+			#Make sure the BootLoader gets copied first:
+			cp -v /boot/uboot/MLO ${tmp_boot_dir}/MLO || write_failure
+			flush_cache
 
-		cp -v /boot/uboot/u-boot.img ${tmp_boot_dir}/u-boot.img || write_failure
-		flush_cache
+			cp -v /boot/uboot/u-boot.img ${tmp_boot_dir}/u-boot.img || write_failure
+			flush_cache
+		fi
 	fi
 
 	echo_broadcast "==> rsync: /boot/uboot/ -> ${tmp_boot_dir}"
