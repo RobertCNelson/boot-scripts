@@ -549,8 +549,9 @@ third_party () {
 				apt-get ${apt_options} ${install_pkg}
 				run_depmod_initramfs="enabled"
 			fi
-		;;
+			;;
 		esac
+		;;
 	ti|ti-rt)
 		case "${kernel}" in
 		LTS314)
