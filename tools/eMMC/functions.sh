@@ -5,8 +5,13 @@
 # Source it like this:
 # source $(dirname "$0")/functions.sh
 
-version_message="1.20161019: Major refactor of library"
+version_message="1.20161130: beaglebone-black-make-microSD-flasher-from-eMMC.sh fixes..."
 emmcscript="cmdline=init=/opt/scripts/tools/eMMC/$(basename $0)"
+
+#
+#https://rcn-ee.com/repos/bootloader/am335x_evm/
+http_spl="MLO-am335x_evm-v2016.11-r2"
+http_uboot="u-boot-am335x_evm-v2016.11-r2.img"
 
 set -o errtrace
 
@@ -1079,6 +1084,61 @@ loading_soc_defaults() {
 			generate_line 60 '*'
 			. ${soc_file}
 			echo_broadcast "==> Loaded"
+			if [ "x${dd_spl_uboot_backup}" = "x" ] ; then
+				echo_broadcast "==> ${soc_file} missing dd SPL"
+				spl_uboot_name="MLO"
+				dd_spl_uboot_count="1"
+				dd_spl_uboot_seek="1"
+				dd_spl_uboot_conf=""
+				dd_spl_uboot_bs="128k"
+				dd_spl_uboot_backup="/opt/backup/uboot/MLO"
+
+				echo "spl_uboot_name=${spl_uboot_name}" >> ${soc_file}
+				echo "dd_spl_uboot_count=1" >> ${soc_file}
+				echo "dd_spl_uboot_seek=1" >> ${soc_file}
+				echo "dd_spl_uboot_conf=" >> ${soc_file}
+				echo "dd_spl_uboot_bs=128k" >> ${soc_file}
+				echo "dd_spl_uboot_backup=${dd_spl_uboot_backup}" >> ${soc_file}
+			fi
+			if [ ! -f /opt/backup/uboot/MLO ] ; then
+				echo_broadcast "==> missing /opt/backup/uboot/MLO"
+				mkdir -p /opt/backup/uboot/
+				wget --directory-prefix=/opt/backup/uboot/ http://rcn-ee.com/repos/bootloader/am335x_evm/${http_spl}
+				mv /opt/backup/uboot/${http_spl} /opt/backup/uboot/MLO
+			fi
+			if [ "x${dd_uboot_backup}" = "x" ] ; then
+				echo_broadcast "==> ${soc_file} missing dd u-boot.img"
+				uboot_name="u-boot.img"
+				dd_uboot_count="2"
+				dd_uboot_seek="1"
+				dd_uboot_conf=""
+				dd_uboot_bs="384k"
+				dd_uboot_backup="/opt/backup/uboot/u-boot.img"
+
+				echo "uboot_name=${uboot_name}" >> ${soc_file}
+				echo "dd_uboot_count=2" >> ${soc_file}
+				echo "dd_uboot_seek=1" >> ${soc_file}
+				echo "dd_uboot_conf=" >> ${soc_file}
+				echo "dd_uboot_bs=384k" >> ${soc_file}
+				echo "dd_uboot_backup=${dd_uboot_backup}" >> ${soc_file}
+
+				echo "dd_uboot_name=${dd_uboot_name}" >> ${soc_file}
+			fi
+
+			if [ ! -f /opt/backup/uboot/u-boot.img ] ; then
+				echo_broadcast "==> missing /opt/backup/uboot/u-boot.img"
+				mkdir -p /opt/backup/uboot/
+				wget --directory-prefix=/opt/backup/uboot/ http://rcn-ee.com/repos/bootloader/am335x_evm/${http_uboot}
+				mv /opt/backup/uboot/${http_uboot} /opt/backup/uboot/u-boot.img
+			fi
+
+			generate_line 40
+			echo_broadcast "==> Re-Loading ${soc_file}"
+			generate_line 60 '*'
+			cat ${soc_file}
+			generate_line 60 '*'
+			. ${soc_file}
+			echo_broadcast "==> Re-Loaded"
 		else
 			echo_broadcast "!==> Could not find ${soc_file}, no defaults are loaded"
 		fi
