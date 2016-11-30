@@ -525,15 +525,30 @@ third_party () {
 		;;
 	ti-xenomai)
 		case "${kernel}" in
-		STABLE)
-			#3.8 only...
-			apt-get ${apt_options} -o Dpkg::Options::="--force-overwrite" mt7601u-modules-${latest_kernel} || true
-			if [ "x${es8}" = "xenabled" ] ; then
-				apt-get ${apt_options} ti-sgx-es8-modules-${latest_kernel} || true
+		LTS44)
+			install_pkg=""
+			if [ "x${rtl8723bu}" = "xenabled" ] ; then
+				install_pkg="${install_pkg}rtl8723bu-modules-${latest_kernel} "
 			fi
-			run_depmod_initramfs="enabled"
-			;;
-		esac
+			if [ "x${ticmem}" = "xenabled" ] ; then
+				install_pkg="${install_pkg}ti-cmem-modules-${latest_kernel} "
+			fi
+			if [ "x${tidebugss}" = "xenabled" ] ; then
+				install_pkg="${install_pkg}ti-debugss-modules-${latest_kernel} "
+			fi
+			if [ "x${titemperature}" = "xenabled" ] ; then
+				install_pkg="${install_pkg}ti-temperature-modules-${latest_kernel} "
+			fi
+			if [ "x${sgxti335x}" = "xenabled" ] ; then
+				install_pkg="${install_pkg}ti-sgx-ti335x-modules-${latest_kernel} "
+			fi
+			if [ "x${sgxjacinto6evm}" = "xenabled" ] ; then
+				install_pkg="${install_pkg}ti-sgx-jacinto6evm-modules-${latest_kernel} "
+			fi
+			if [ ! "x${install_pkg}" = "x" ] ; then
+				apt-get ${apt_options} ${install_pkg}
+				run_depmod_initramfs="enabled"
+			fi
 		;;
 	ti|ti-rt)
 		case "${kernel}" in
