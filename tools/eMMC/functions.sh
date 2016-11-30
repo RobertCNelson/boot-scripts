@@ -615,7 +615,7 @@ check_running_system_initrd() {
 	flush_cache
 
 	#Needed for: debian-7.5-2014-05-14
-	if [ ! -f /boot/dtbs/$(uname -r) ] ; then
+	if [ ! -d /boot/dtbs/$(uname -r)/ ] ; then
 		if [ -d /boot/uboot/dtbs/ ] ; then
 			mkdir -p /boot/dtbs/$(uname -r) || true
 			cp -v /boot/uboot/dtbs/* /boot/dtbs/$(uname -r)/
