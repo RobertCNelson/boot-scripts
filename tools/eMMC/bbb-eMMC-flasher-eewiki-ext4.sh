@@ -30,6 +30,15 @@ version_message="1.20161025: revert to: d9ac2858e78ef16cd86b5b3610f861ad880b3c00
 http_spl="MLO-am335x_evm-v2016.03-r7"
 http_uboot="u-boot-am335x_evm-v2016.03-r7.img"
 
+#mke2fs -c
+#Check the device for bad blocks before creating the file system.
+#If this option is specified twice, then a slower read-write test is
+#used instead of a fast read-only test.
+
+mkfs_options=""
+#mkfs_options="-c"
+#mkfs_options="-cc"
+
 if ! id | grep -q root; then
 	echo "must be run as root"
 	exit
@@ -282,9 +291,9 @@ partition_drive () {
 	LC_ALL=C mkfs.ext4 -V &> /tmp/mkfs
 	test_mkfs=$(cat /tmp/mkfs | grep mke2fs | grep 1.43 || true)
 	if [ "x${test_mkfs}" = "x" ] ; then
-		ext4_options="-c"
+		ext4_options="${mkfs_options}"
 	else
-		ext4_options="-c -O ^metadata_csum,^64bit"
+		ext4_options="${mkfs_options} -O ^metadata_csum,^64bit"
 	fi
 
 	if [ "x${dd_spl_uboot_backup}" = "x" ] ; then

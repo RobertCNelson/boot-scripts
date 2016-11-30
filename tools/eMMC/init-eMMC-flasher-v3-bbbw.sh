@@ -26,6 +26,15 @@
 
 source $(dirname "$0")/functions.sh
 
+#mke2fs -c
+#Check the device for bad blocks before creating the file system.
+#If this option is specified twice, then a slower read-write test is
+#used instead of a fast read-only test.
+
+mkfs_options=""
+#mkfs_options="-c"
+#mkfs_options="-cc"
+
 device_eeprom="bbbw-eeprom"
 
 check_if_run_as_root
