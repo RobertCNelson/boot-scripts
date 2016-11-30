@@ -616,7 +616,7 @@ check_running_system_initrd() {
 
 	#Needed for: debian-7.5-2014-05-14
 	if [ ! -f /boot/dtbs/$(uname -r) ] ; then
-		if [ -d boot/uboot/dtbs/ ] ; then
+		if [ -d /boot/uboot/dtbs/ ] ; then
 			mkdir -p /boot/dtbs/$(uname -r) || true
 			cp -v /boot/uboot/dtbs/* /boot/dtbs/$(uname -r)/
 		else
