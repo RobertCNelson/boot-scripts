@@ -26,10 +26,11 @@
 
 source $(dirname "$0")/functions.sh
 
+version_message="1.20161130: u-boot v2016.11..."
 #
 #https://rcn-ee.com/repos/bootloader/am335x_evm/
-http_spl="MLO-am335x_evm-v2016.03-r7"
-http_uboot="u-boot-am335x_evm-v2016.03-r7.img"
+http_spl="MLO-am335x_evm-v2016.11-r2"
+http_uboot="u-boot-am335x_evm-v2016.11-r2.img"
 
 check_if_run_as_root
 

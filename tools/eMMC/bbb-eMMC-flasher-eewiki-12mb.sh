@@ -24,11 +24,11 @@
 #This script assumes, these packages are installed, as network may not be setup
 #dosfstools initramfs-tools rsync u-boot-tools
 
-version_message="1.20161025: revert to: d9ac2858e78ef16cd86b5b3610f861ad880b3c00..."
+version_message="1.20161130: u-boot v2016.11..."
 #
 #https://rcn-ee.com/repos/bootloader/am335x_evm/
-http_spl="MLO-am335x_evm-v2016.03-r7"
-http_uboot="u-boot-am335x_evm-v2016.03-r7.img"
+http_spl="MLO-am335x_evm-v2016.11-r2"
+http_uboot="u-boot-am335x_evm-v2016.11-r2.img"
 
 #mke2fs -c
 #Check the device for bad blocks before creating the file system.

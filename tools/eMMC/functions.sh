@@ -1058,21 +1058,33 @@ erasing_drive() {
 }
 
 loading_soc_defaults() {
-  local soc_file="/boot/SOC.sh"
-  empty_line
-  if [ -f ${soc_file} ] ; then
-    generate_line 40
-    echo_broadcast "==> Loading ${soc_file}"
-    generate_line 60 '*'
-    cat ${soc_file}
-    generate_line 60 '*'
-    . ${soc_file}
-    echo_broadcast "==> Loaded"
-  else
-    echo_broadcast "!==> Could not find ${soc_file}, no defaults are loaded"
-  fi
-  empty_line
-  generate_line 40
+	local soc_file="/boot/SOC.sh"
+	empty_line
+	if [ -f ${soc_file} ] ; then
+		generate_line 40
+		echo_broadcast "==> Loading ${soc_file}"
+		generate_line 60 '*'
+		cat ${soc_file}
+		generate_line 60 '*'
+		. ${soc_file}
+		echo_broadcast "==> Loaded"
+	else
+		#Needed for: debian-7.5-2014-05-14
+		local soc_file="/boot/uboot/SOC.sh"
+		if [ -f ${soc_file} ] ; then
+			generate_line 40
+			echo_broadcast "==> Loading ${soc_file}"
+			generate_line 60 '*'
+			cat ${soc_file}
+			generate_line 60 '*'
+			. ${soc_file}
+			echo_broadcast "==> Loaded"
+		else
+			echo_broadcast "!==> Could not find ${soc_file}, no defaults are loaded"
+		fi
+	fi
+	empty_line
+	generate_line 40
 }
 
 get_ext4_options(){
