@@ -88,7 +88,6 @@ option domain local
 option lease 30
 EOF
 	# Will start or restart udhcpd
-	/sbin/ifconfig usb0 ${deb_usb_address} netmask ${deb_usb_netmask} || true
 	/usr/sbin/udhcpd -S ${deb_udhcpd_conf} || true
 
 	#FIXME check for g_ether/usb0 module loaded, as it sometimes takes a little bit...
@@ -195,9 +194,13 @@ if [ "x${deb_usb_address}" != "x" -a\
 			/etc/init.d/udhcpd stop || true
 		fi
 		#bbgw, pass's out: 192.168.7.3 & 192.168.7.4
-		/sbin/ifconfig usb0 ${deb_usb_address} netmask 255.255.255.0 || true
+		/sbin/ifconfig usb0 ${deb_usb_address} netmask ${deb_usb_netmask} || true
 	# usb0 is specified!
 	elif [ -f ${deb_udhcpd_default} ]; then
+		if [ -f /var/run/udhcpd.pid ] ; then
+			/etc/init.d/udhcpd stop || true
+		fi
+		/sbin/ifconfig usb0 ${deb_usb_address} netmask ${deb_usb_netmask} || true
 		deb_configure_udhcpd
 
 	elif [ -f ${deb_dnsmasq_dir}/README ]; then
