@@ -402,6 +402,11 @@ else
 fi
 
 if [ "x${usb0}" = "xenable" ] ; then
+	until [ -d /sys/class/net/usb0/ ] ; do
+		echo "g_multi: waiting for /sys/class/net/usb0/"
+		sleep 1
+	done
+
 	# Auto-configuring the usb0 network interface:
 	$(dirname $0)/autoconfigure_usb0.sh
 fi
