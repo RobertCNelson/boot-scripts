@@ -460,14 +460,15 @@ if [ "x${usb0}" = "xenable" ] ; then
 fi
 
 #Fighting Race conditions with lcd overlays...
+if [ -f /lib/systemd/system/lightdm.service ] ; then
+	unset test_service
+	test_service=$(systemctl is-enabled lightdm.service || true)
+	if [ "x${test_service}" = "xenabled" ] ; then
+		test_service=$(systemctl is-failed lightdm.service || true)
 
-unset test_service
-test_service=$(systemctl is-enabled lightdm.service || true)
-if [ "x${test_service}" = "xenabled" ] ; then
-	test_service=$(systemctl is-failed lightdm.service || true)
-
-	if [ "x${test_service}" = "xinactive" ] ; then
-		systemctl restart lightdm || true
+		if [ "x${test_service}" = "xinactive" ] ; then
+			systemctl restart lightdm || true
+		fi
 	fi
 fi
 
