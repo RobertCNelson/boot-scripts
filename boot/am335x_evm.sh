@@ -352,6 +352,13 @@ if [ -d /sys/devices/platform/ocp/47810000.mmc/mmc_host/mmc2/mmc2:0001/mmc2:0001
 	board_bbgw="enable"
 fi
 
+
+#udhcpd gets started at bootup, but we need to wait till g_multi is loaded, and we run it manually...
+if [ -f /var/run/udhcpd.pid ] ; then
+	systemctl stop udhcpd.service || true
+	systemctl disable udhcpd.service || true
+fi
+
 g_network="iSerialNumber=${SERIAL_NUMBER} iManufacturer=${manufacturer} iProduct=${PRODUCT} host_addr=${cpsw_2_mac} dev_addr=${cpsw_1_mac}"
 
 #priorty:
