@@ -115,6 +115,13 @@ prepare_environment() {
   start_time=$(date +%s)
   echo_broadcast "Starting at $(date --date="@$start_time")"
   generate_line 40
+
+	value_min_free_kbytes=$(sysctl -n vm.min_free_kbytes)
+	echo_broadcast "==> sysctl: vm.min_free_kbytes=[${value_min_free_kbytes}]"
+	echo_broadcast "==> sysctl: setting: [sysctl -w vm.min_free_kbytes=16384]"
+	sysctl -w vm.min_free_kbytes=16384
+	generate_line 40
+
   echo_broadcast "==> Preparing /tmp"
   mount -t tmpfs tmpfs /tmp
   echo_broadcast "==> Determining root drive"
@@ -158,6 +165,13 @@ prepare_environment_reverse() {
   start_time=$(date +%s)
   echo_broadcast "Starting at $(date --date="@$start_time")"
   generate_line 40
+
+	value_min_free_kbytes=$(sysctl -n vm.min_free_kbytes)
+	echo_broadcast "==> sysctl: vm.min_free_kbytes=[${value_min_free_kbytes}]"
+	echo_broadcast "==> sysctl: setting: [sysctl -w vm.min_free_kbytes=16384]"
+	sysctl -w vm.min_free_kbytes=16384
+	generate_line 40
+
 #  echo_broadcast "==> Preparing /tmp"
 #  mount -t tmpfs tmpfs /tmp
   echo_broadcast "==> Determining root drive"
