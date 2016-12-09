@@ -74,32 +74,27 @@ elif [ -f /var/local/bb_usb_mass_storage.img ] ; then
 	usb_image_file="/var/local/bb_usb_mass_storage.img"
 fi
 
-board=$(cat /proc/device-tree/model | sed "s/ /_/g")
+board=$(cat /proc/device-tree/model | sed "s/ /_/g" | tr -d '\000')
 case "${board}" in
 TI_AM335x_BeagleBone)
 	has_wifi="disable"
-	has_ethernet="enable"
 	cleanup_extra_docs
 	;;
 TI_AM335x_BeagleBone_Black)
 	has_wifi="disable"
-	has_ethernet="enable"
 	cleanup_extra_docs
 	;;
 TI_AM335x_BeagleBone_Black_Wireless)
 	has_wifi="enable"
-	has_ethernet="disable"
 	#recovers 82MB of space
 	cleanup_extra_docs
 	;;
 TI_AM335x_BeagleBone_Blue)
 	has_wifi="enable"
-	has_ethernet="disable"
 	cleanup_extra_docs
 	;;
 TI_AM335x_BeagleBone_Green)
 	has_wifi="disable"
-	has_ethernet="enable"
 	unset board_bbgw
 	unset board_sbbe
 	if [ -f /var/local/bbg_usb_mass_storage.iso ] ; then
@@ -111,7 +106,6 @@ TI_AM335x_BeagleBone_Green)
 TI_AM335x_BeagleBone_Green_Wireless)
 	board_bbgw="enable"
 	has_wifi="enable"
-	has_ethernet="disable"
 	if [ -f /var/local/bbgw_usb_mass_storage.iso ] ; then
 		usb_image_file="/var/local/bbgw_usb_mass_storage.iso"
 	elif [ -f /var/local/bbgw_usb_mass_storage.img ] ; then
@@ -121,12 +115,10 @@ TI_AM335x_BeagleBone_Green_Wireless)
 SanCloud_BeagleBone_Enhanced)
 	board_sbbe="enable"
 	has_wifi="enable"
-	has_ethernet="enable"
 	cleanup_extra_docs
 	;;
 *)
 	has_wifi="disable"
-	has_ethernet="enable"
 	unset board_bbgw
 	unset board_sbbe
 	;;
@@ -410,7 +402,7 @@ fi
 if [ "x${usb0}" = "xenable" ] ; then
 	until [ -d /sys/class/net/usb0/ ] ; do
 		echo "g_multi: waiting for /sys/class/net/usb0/"
-		sleep 1
+		sleep 5
 	done
 
 	# Auto-configuring the usb0 network interface:
@@ -432,30 +424,29 @@ if [ -f /usr/bin/create_ap ] ; then
 	fi
 fi
 
-unset eth0_addr
-if [ "x${has_ethernet}" = "xenable" ] ; then
-	eth0_addr=$(ip addr list eth0 |grep "inet " |cut -d' ' -f6|cut -d/ -f1 2>/dev/null || true)
-fi
-if [ "x${usb0}" = "xenable" ] ; then
-	unset usb0_addr
-	usb0_addr=$(ip addr list usb0 |grep "inet " |cut -d' ' -f6|cut -d/ -f1 2>/dev/null || true)
-fi
-unset wlan0_addr
-if [ "x${has_wifi}" = "xenable" ] ; then
-	wlan0_addr=$(ip addr list wlan0 |grep "inet " |cut -d' ' -f6|cut -d/ -f1 2>/dev/null || true)
-fi
-
 sed -i -e '/Address/d' /etc/issue
 
-if [ ! "x${eth0_addr}" = "x" ] ; then
-	echo "The IP Address for eth0 is: ${eth0_addr}" >> /etc/issue
+if [ -d /sys/class/net/eth0 ] ; then
+	unset eth0_addr
+	eth0_addr=$(ip addr list eth0 |grep "inet " |cut -d' ' -f6|cut -d/ -f1 2>/dev/null || true)
+	if [ ! "x${eth0_addr}" = "x" ] ; then
+		echo "The IP Address for eth0 is: ${eth0_addr}" >> /etc/issue
+	fi
 fi
-if [ ! "x${wlan0_addr}" = "x" ] ; then
-	echo "The IP Address for wlan0 is: ${wlan0_addr}" >> /etc/issue
-fi
-if [ "x${usb0}" = "xenable" ] ; then
+
+if [ -d /sys/class/net/usb0 ] ; then
+	unset usb0_addr
+	usb0_addr=$(ip addr list usb0 |grep "inet " |cut -d' ' -f6|cut -d/ -f1 2>/dev/null || true)
 	if [ ! "x${usb0_addr}" = "x" ] ; then
 		echo "The IP Address for usb0 is: ${usb0_addr}" >> /etc/issue
+	fi
+fi
+
+if [ -d /sys/class/net/wlan0 ] ; then
+	unset wlan0_addr
+	wlan0_addr=$(ip addr list wlan0 |grep "inet " |cut -d' ' -f6|cut -d/ -f1 2>/dev/null || true)
+	if [ ! "x${wlan0_addr}" = "x" ] ; then
+		echo "The IP Address for wlan0 is: ${wlan0_addr}" >> /etc/issue
 	fi
 fi
 
@@ -559,7 +550,7 @@ if [ ! "x${enable_cape_universal}" = "x" ] ; then
 					;;
 				esac
 			else
-				machine=$(cat /proc/device-tree/model | sed "s/ /_/g")
+				machine=$(cat /proc/device-tree/model | sed "s/ /_/g" | tr -d '\000')
 				case "${machine}" in
 				TI_AM335x_BeagleBone)
 					overlay="univ-all"
