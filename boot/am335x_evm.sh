@@ -352,6 +352,34 @@ fi
 
 g_network="iSerialNumber=${SERIAL_NUMBER} iManufacturer=${manufacturer} iProduct=${PRODUCT} host_addr=${cpsw_2_mac} dev_addr=${cpsw_1_mac}"
 
+usb0_fail () {
+	unset usb0
+	modprobe g_serial || true
+}
+
+update_initrd () {
+	if [ ! -f /boot/initrd.img-$(uname -r) ] ; then
+		update-initramfs -c -k $(uname -r)
+	else
+		update-initramfs -u -k $(uname -r)
+	fi
+}
+
+g_multi_retry () {
+	update_initrd
+	modprobe g_multi ${g_multi_options} || usb0_fail
+}
+
+g_ether_retry () {
+	update_initrd
+	modprobe g_ether ${g_network} || usb0_fail
+}
+
+g_serial_retry () {
+	update_initrd
+	modprobe g_serial || true
+}
+
 #priorty:
 #g_multi
 #g_ether
@@ -364,9 +392,11 @@ unset ttyGS0
 if [ -f ${usb_image_file} ] ; then
 	test_usb_image_file=$(echo ${usb_image_file} | grep .iso || true)
 	if [ ! "x${test_usb_image_file}" = "x" ] ; then
-		modprobe g_multi file=${usb_image_file} cdrom=1 ro=1 stall=0 removable=1 nofua=1 ${g_network} || true
+		g_multi_options="file=${usb_image_file} cdrom=1 ro=1 stall=0 removable=1 nofua=1 ${g_network}"
+		modprobe g_multi ${g_multi_options} || g_multi_retry
 	else
-		modprobe g_multi file=${usb_image_file} cdrom=0 ro=1 stall=0 removable=1 nofua=1 ${g_network} || true
+		g_multi_options="file=${usb_image_file} cdrom=0 ro=1 stall=0 removable=1 nofua=1 ${g_network}"
+		modprobe g_multi ${g_multi_options} || g_multi_retry
 	fi
 	usb0="enable"
 	ttyGS0="enable"
@@ -383,11 +413,11 @@ else
 	if [ "x${root_drive}" = "x/dev/mmcblk0p1" ] || [ "x${root_drive}" = "x/dev/mmcblk1p1" ] ; then
 		#g_ether: Do we have udhcpd/dnsmasq?
 		if [ -f /usr/sbin/udhcpd ] || [ -f /usr/sbin/dnsmasq ] ; then
-			modprobe g_ether ${g_network} || true
+			modprobe g_ether ${g_network} || g_ether_retry
 			usb0="enable"
 		else
 			#g_serial: As a last resort...
-			modprobe g_serial || true
+			modprobe g_serial || g_serial_retry
 			ttyGS0="enable"
 		fi
 	else
@@ -396,13 +426,12 @@ else
 		usb0="enable"
 		ttyGS0="enable"
 	fi
-
 fi
 
 if [ "x${usb0}" = "xenable" ] ; then
 	until [ -d /sys/class/net/usb0/ ] ; do
+		sleep 3
 		echo "g_multi: waiting for /sys/class/net/usb0/"
-		sleep 5
 	done
 
 	# Auto-configuring the usb0 network interface:
