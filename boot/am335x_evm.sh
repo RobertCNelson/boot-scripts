@@ -435,7 +435,7 @@ if [ "x${usb0}" = "xenable" ] ; then
 	done
 
 	# Auto-configuring the usb0 network interface:
-	$(dirname $0)/autoconfigure_usb0.sh
+	$(dirname $0)/autoconfigure_usb0.sh || true
 fi
 
 if [ "x${ttyGS0}" = "xenable" ] ; then
