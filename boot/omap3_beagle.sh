@@ -90,25 +90,6 @@ if [ -d /sys/class/tty/ttyGS0/ ] ; then
 fi
 
 
-#bb.org debian jessie Image:
-#if [ -f /etc/dnsmasq.d/usb0-dhcp ] ; then
-#	unset root_drive
-#	root_drive="$(cat /proc/cmdline | sed 's/ /\n/g' | grep root=UUID= | awk -F 'root=' '{print $2}' || true)"
-#	if [ ! "x${root_drive}" = "x" ] ; then
-#		root_drive="$(/sbin/findfs ${root_drive} || true)"
-#	else
-#		root_drive="$(cat /proc/cmdline | sed 's/ /\n/g' | grep root= | awk -F 'root=' '{print $2}' || true)"
-#	fi
-
-#	boot_drive="${root_drive%?}1"
-#	modprobe g_multi file=${boot_drive} cdrom=0 ro=0 stall=0 removable=1 nofua=1 iManufacturer=BeagleBoard.org iProduct=BeagleBoard-xM || true
-
-#	sleep 1
-#
-#	/sbin/ifconfig usb0 192.168.7.2 netmask 255.255.255.252 || true
-#fi
-
-
 #Just Cleanup /etc/issue, systemd starts up tty before these are updated...
 sed -i -e '/Address/d' /etc/issue
 
