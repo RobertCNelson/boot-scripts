@@ -89,8 +89,7 @@ test_bone_rt_kernel_version () {
 			kernel="LTS44"
 			;;
 		4.9)
-			kernel="EXPERIMENTAL"
-#			kernel="LTS49"
+			kernel="LTS49"
 			;;
 		esac
 	fi
@@ -112,8 +111,7 @@ test_bone_kernel_version () {
 			kernel="LTS44"
 			;;
 		4.9)
-			kernel="EXPERIMENTAL"
-#			kernel="LTS49"
+			kernel="LTS49"
 			;;
 		*)
 			#aka STABLE, as 3.8.13 will always be considered STABLE
@@ -155,8 +153,7 @@ test_armv7_kernel_version () {
 			kernel="LTS44"
 			;;
 		4.9)
-			kernel="EXPERIMENTAL"
-#			kernel="LTS49"
+			kernel="LTS49"
 			;;
 		*)
 			kernel="STABLE"
@@ -510,12 +507,6 @@ third_party () {
 				apt-get ${apt_options} ti-sgx-es8-modules-${latest_kernel} || true
 				run_depmod_initramfs="enabled"
 			fi
-			if [ "x${rtl8723bu}" = "xenabled" ] ; then
-				apt-get ${apt_options} rtl8723bu-modules-${latest_kernel} || true
-				run_depmod_initramfs="enabled"
-			fi
-			;;
-		LTS49|TESTING|EXPERIMENTAL)
 			if [ "x${rtl8723bu}" = "xenabled" ] ; then
 				apt-get ${apt_options} rtl8723bu-modules-${latest_kernel} || true
 				run_depmod_initramfs="enabled"
