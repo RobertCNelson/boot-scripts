@@ -38,20 +38,7 @@ if [ -f /etc/dnsmasq.d/usb0-dhcp ] ; then
 	/sbin/ifconfig usb0 192.168.7.2 netmask 255.255.255.252 || true
 fi
 
-eth0_addr=$(ip addr list eth0 |grep "inet " |cut -d' ' -f6|cut -d/ -f1)
-usb0_addr=$(ip addr list usb0 |grep "inet " |cut -d' ' -f6|cut -d/ -f1)
-#wlan0_addr=$(ip addr list wlan0 |grep "inet " |cut -d' ' -f6|cut -d/ -f1)
-
+#Just Cleanup /etc/issue, systemd starts up tty before these are updated...
 sed -i -e '/Address/d' /etc/issue
-
-if [ ! "x${eth0_addr}" = "x" ] ; then
-	echo "The IP Address for eth0 is: ${eth0_addr}" >> /etc/issue
-fi
-#if [ ! "x${wlan0_addr}" = "x" ] ; then
-#	echo "The IP Address for wlan0 is: ${wlan0_addr}" >> /etc/issue
-#fi
-if [ ! "x${usb0_addr}" = "x" ] ; then
-	echo "The IP Address for usb0 is: ${usb0_addr}" >> /etc/issue
-fi
 
 #
