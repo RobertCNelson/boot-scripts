@@ -45,38 +45,40 @@ modprobe libcomposite || true
 
 if [ -d ${usb_gadget} ] ; then
 	cd ${usb_gadget}/
-	mkdir g_multi
-	cd ${usb_gadget}/g_multi
-	echo ${usb_idVendor} > idVendor # Linux Foundation
-	echo ${usb_idProduct} > idProduct # Multifunction Composite Gadget
-	echo ${usb_bcdDevice} > bcdDevice
-	echo ${usb_bcdUSB} > bcdUSB
+	if [ ! -d ./g_multi/ ] ; then
+		mkdir g_multi
+		cd ${usb_gadget}/g_multi
+		echo ${usb_idVendor} > idVendor # Linux Foundation
+		echo ${usb_idProduct} > idProduct # Multifunction Composite Gadget
+		echo ${usb_bcdDevice} > bcdDevice
+		echo ${usb_bcdUSB} > bcdUSB
 
-	#0x409 = english strings...
-	mkdir -p strings/0x409
+		#0x409 = english strings...
+		mkdir -p strings/0x409
 
-	echo "0123456789" > strings/0x409/serialnumber
-	echo ${usb_manufacturer} > strings/0x409/manufacturer
-	cat /proc/device-tree/model > strings/0x409/product
+		echo "0123456789" > strings/0x409/serialnumber
+		echo ${usb_manufacturer} > strings/0x409/manufacturer
+		cat /proc/device-tree/model > strings/0x409/product
 
-	mkdir -p functions/acm.usb0
-	mkdir -p functions/ecm.usb0
+		mkdir -p functions/acm.usb0
+		mkdir -p functions/ecm.usb0
 
-	# first byte of address must be even
-	HOST="48:6f:73:74:50:43" # "HostPC"
-	SELF="42:61:64:55:53:42" # "BadUSB"
-	echo $HOST > functions/ecm.usb0/host_addr
-	echo $SELF > functions/ecm.usb0/dev_addr
+		# first byte of address must be even
+		HOST="48:6f:73:74:50:43" # "HostPC"
+		SELF="42:61:64:55:53:42" # "BadUSB"
+		echo $HOST > functions/ecm.usb0/host_addr
+		echo $SELF > functions/ecm.usb0/dev_addr
 
-	mkdir -p configs/c.1/strings/0x409
-	echo "Config 1: ECM network" > configs/c.1/strings/0x409/configuration
-	#250 = 500mA
-	echo 250 > configs/c.1/MaxPower
-	ln -s functions/acm.usb0 configs/c.1/
-	ln -s functions/ecm.usb0 configs/c.1/
+		mkdir -p configs/c.1/strings/0x409
+		echo "Config 1: ECM network" > configs/c.1/strings/0x409/configuration
+		#250 = 500mA
+		echo 250 > configs/c.1/MaxPower
+		ln -s functions/acm.usb0 configs/c.1/
+		ln -s functions/ecm.usb0 configs/c.1/
 
-	#ls /sys/class/udc
-	echo musb-hdrc.0.auto > UDC
+		#ls /sys/class/udc
+		echo musb-hdrc.0.auto > UDC
+	fi
 
 	# Auto-configuring the usb0 network interface:
 	$(dirname $0)/autoconfigure_usb0.sh || true
@@ -105,6 +107,7 @@ fi
 #
 #	/sbin/ifconfig usb0 192.168.7.2 netmask 255.255.255.252 || true
 #fi
+
 
 #Just Cleanup /etc/issue, systemd starts up tty before these are updated...
 sed -i -e '/Address/d' /etc/issue
