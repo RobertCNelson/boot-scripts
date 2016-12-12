@@ -195,7 +195,9 @@ if [ -f /var/lib/connman/settings ] ; then
 		ssid_append=$(echo ${cpsw_0_mac} | cut -b 13-17 | sed 's/://g' || true)
 		if [ ! "x${wifi_name}" = "x${wifi_prefix}-${ssid_append}" ] ; then
 			if [ ! "x${wifi_name}" = "x${wifi_prefix}-${ssid_append}" ] ; then
+				systemctl stop connman.service || true
 				sed -i -e 's:Tethering.Identifier='$wifi_name':Tethering.Identifier='$wifi_prefix'-'$ssid_append':g' /var/lib/connman/settings
+				systemctl daemon-reload || true
 				systemctl restart connman.service || true
 			fi
 		fi
@@ -344,7 +346,6 @@ if [ -d /sys/devices/platform/ocp/47810000.mmc/mmc_host/mmc2/mmc2:0001/mmc2:0001
 	board_bbgw="enable"
 fi
 
-
 #udhcpd gets started at bootup, but we need to wait till g_multi is loaded, and we run it manually...
 if [ -f /var/run/udhcpd.pid ] ; then
 	/etc/init.d/udhcpd stop || true
@@ -429,11 +430,6 @@ else
 fi
 
 if [ "x${usb0}" = "xenable" ] ; then
-	until [ -d /sys/class/net/usb0/ ] ; do
-		sleep 3
-		echo "g_multi: waiting for /sys/class/net/usb0/"
-	done
-
 	# Auto-configuring the usb0 network interface:
 	$(dirname $0)/autoconfigure_usb0.sh || true
 fi

@@ -87,8 +87,15 @@ option subnet ${deb_usb_netmask}
 option domain local
 option lease 30
 EOF
+
+	unset test_udhcpd
+	test_udhcpd=$(cat /etc/default/udhcpd | grep -v '#' | grep ${deb_udhcpd_conf} || true)
+	if [ "x${test_udhcpd}" = "x" ] ; then
+		sed -i -e 's:DHCPD_OPTS:#DHCPD_OPTS:g'  /etc/default/udhcpd
+		echo "DHCPD_OPTS=\"-S /etc/udhcpd.conf\"" >> /etc/default/udhcpd
+	fi
 	# Will start or restart udhcpd
-	start-stop-daemon --start --verbose --pidfile /var/run/udhcpd.pid --oknodo --exec /usr/sbin/udhcpd -- -S ${deb_udhcpd_conf} || true
+	/etc/init.d/udhcpd restart || true
 }
 
 
@@ -175,6 +182,11 @@ deb_dns_nameservers=$(sed -nr "${deb_iface_range_regex} p" ${deb_network_interfa
 if [ "x${deb_usb_address}" != "x" -a\
      "x${deb_usb_gateway}" != "x" -a\
      "x${deb_usb_netmask}" != "x" ] ; then
+
+	until [ -d /sys/class/net/usb0/ ] ; do
+		sleep 3
+		echo "g_multi: waiting for /sys/class/net/usb0/"
+	done
 
 	unset dnsmasq_got_usb0
 	#bbgw, SoftAp0/usb0 taken care of by dnsmasq..
