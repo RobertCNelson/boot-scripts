@@ -387,7 +387,6 @@ g_serial_retry () {
 #g_serial
 
 unset usb0
-unset ttyGS0
 
 #g_multi: Do we have image file?
 if [ -f ${usb_image_file} ] ; then
@@ -400,7 +399,6 @@ if [ -f ${usb_image_file} ] ; then
 		modprobe g_multi ${g_multi_options} || g_multi_retry
 	fi
 	usb0="enable"
-	ttyGS0="enable"
 else
 	#g_multi: Do we have a non-rootfs "fat" partition?
 	unset root_drive
@@ -419,13 +417,11 @@ else
 		else
 			#g_serial: As a last resort...
 			modprobe g_serial || g_serial_retry
-			ttyGS0="enable"
 		fi
 	else
 		boot_drive="${root_drive%?}1"
 		modprobe g_multi file=${boot_drive} cdrom=0 ro=0 stall=0 removable=1 nofua=1 ${g_network} || true
 		usb0="enable"
-		ttyGS0="enable"
 	fi
 fi
 
@@ -434,7 +430,7 @@ if [ "x${usb0}" = "xenable" ] ; then
 	$(dirname $0)/autoconfigure_usb0.sh || true
 fi
 
-if [ "x${ttyGS0}" = "xenable" ] ; then
+if [ -d /sys/class/tty/ttyGS0/ ] ; then
 	systemctl start serial-getty@ttyGS0.service || true
 fi
 
