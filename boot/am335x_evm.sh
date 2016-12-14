@@ -341,11 +341,6 @@ echo "${cpsw_1_mac}" > /etc/cpsw_1_mac || true
 echo "${cpsw_2_mac}" > /etc/cpsw_2_mac || true
 echo "${cpsw_3_mac}" > /etc/cpsw_3_mac || true
 
-#hack till bbgw firmware is decided on..
-if [ -d /sys/devices/platform/ocp/47810000.mmc/mmc_host/mmc2/mmc2:0001/mmc2:0001:2/ ] ; then
-	board_bbgw="enable"
-fi
-
 #udhcpd gets started at bootup, but we need to wait till g_multi is loaded, and we run it manually...
 if [ -f /var/run/udhcpd.pid ] ; then
 	/etc/init.d/udhcpd stop || true
@@ -358,26 +353,29 @@ usb0_fail () {
 	modprobe g_serial || true
 }
 
-update_initrd () {
-	if [ ! -f /boot/initrd.img-$(uname -r) ] ; then
-		update-initramfs -c -k $(uname -r)
-	else
-		update-initramfs -u -k $(uname -r)
-	fi
-}
+#update_initrd () {
+#	if [ ! -f /boot/initrd.img-$(uname -r) ] ; then
+#		update-initramfs -c -k $(uname -r)
+#	else
+#		update-initramfs -u -k $(uname -r)
+#	fi
+#}
 
 g_multi_retry () {
-	update_initrd
+	echo "info: [modprobe g_multi ${g_multi_options}] failed"
+#	update_initrd
 	modprobe g_multi ${g_multi_options} || usb0_fail
 }
 
 g_ether_retry () {
-	update_initrd
+	echo "info: [modprobe g_ether ${g_network}] failed"
+#	update_initrd
 	modprobe g_ether ${g_network} || usb0_fail
 }
 
 g_serial_retry () {
-	update_initrd
+	echo "info: [modprobe g_serial] failed"
+#	update_initrd
 	modprobe g_serial || true
 }
 
