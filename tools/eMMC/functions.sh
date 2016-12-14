@@ -827,7 +827,23 @@ get_device_uuid() {
 }
 
 _generate_uEnv() {
-  local uEnv_file=${1:-${tmp_rootfs_dir}/boot/uEnv.txt}
+	local uEnv_file=${1:-${tmp_rootfs_dir}/boot/uEnv.txt}
+	local linux_major=$(uname -r | cut -d. -f1)
+	local linux_minor=$(uname -r | cut -d. -f2)
+	local use_uuid="false"
+
+	#v4.4.x+ just use /dev/mmcblkXpY
+	compare_major="4"
+	compare_minor="4"
+
+	if [ "${linux_major}" -lt "${compare_major}" ] ; then
+		use_uuid="true"
+	elif [ "${linux_major}" -eq "${compare_major}" ] ; then
+		if [ "${linux_minor}" -lt "${compare_minor}" ] ; then
+			use_uuid="true"
+		fi
+	fi
+
   empty_line
   if [ -f $uEnv_file ]; then
     echo_broadcast "==> Found pre-existing uEnv file at ${uEnv_file}. Using it."
@@ -844,7 +860,6 @@ _generate_uEnv() {
 
 uname_r=$(uname -r)
 #uuid=
-#dtb=
 
 cmdline=coherent_pool=1M quiet cape_universal=enable
 
@@ -857,12 +872,15 @@ __EOF__
     generate_line 40 '*'
     empty_line
   fi
-  root_uuid=$(get_device_uuid ${rootfs_partition})
-  if [ ! -z "${root_uuid}" ] ; then
-    echo_broadcast "==> Put root uuid in uEnv.txt"
-    sed -i -e 's:^uuid=:#uuid=:g' ${tmp_rootfs_dir}/boot/uEnv.txt
-    echo "uuid=${root_uuid}" >> ${tmp_rootfs_dir}/boot/uEnv.txt
-  fi
+
+	if [ "x${use_uuid}" = "xtrue" ] ; then
+		root_uuid=$(get_device_uuid ${rootfs_partition})
+		if [ ! -z "${root_uuid}" ] ; then
+			echo_broadcast "==> Put root uuid in uEnv.txt"
+			sed -i -e 's:^uuid=:#uuid=:g' ${tmp_rootfs_dir}/boot/uEnv.txt
+			echo "uuid=${root_uuid}" >> ${tmp_rootfs_dir}/boot/uEnv.txt
+		fi
+	fi
 }
 
 _generate_uEnv_no_uuid() {
@@ -900,12 +918,32 @@ __EOF__
 
 get_fstab_id_for_device() {
 	local device=${1}
-	local device_id=$(get_device_uuid ${device})
-	if [ -n ${device_id} ]; then
-		echo "UUID=${device_id}"
+	local linux_major=$(uname -r | cut -d. -f1)
+	local linux_minor=$(uname -r | cut -d. -f2)
+	local use_uuid="false"
+
+	#v4.4.x+ just use /dev/mmcblkXpY
+	compare_major="4"
+	compare_minor="4"
+
+	if [ "${linux_major}" -lt "${compare_major}" ] ; then
+		use_uuid="true"
+	elif [ "${linux_major}" -eq "${compare_major}" ] ; then
+		if [ "${linux_minor}" -lt "${compare_minor}" ] ; then
+			use_uuid="true"
+		fi
+	fi
+
+	if [ "x${use_uuid}" = "xtrue" ] ; then
+		local device_id=$(get_device_uuid ${device})
+		if [ -n ${device_id} ]; then
+			echo "UUID=${device_id}"
+		else
+			echo_debug "Could not find a UUID for ${device}, default to device name"
+			# Since the mmc device get reverse depending on how it was booted we need to use source
+			echo "${source}p${device:(-1)}"
+		fi
 	else
-		echo_debug "Could not find a UUID for ${device}, default to device name"
-		# Since the mmc device get reverse depending on how it was booted we need to use source
 		echo "${source}p${device:(-1)}"
 	fi
 }
@@ -916,21 +954,11 @@ _generate_fstab() {
 	echo "# /etc/fstab: static file system information." > ${tmp_rootfs_dir}/etc/fstab
 	echo "#" >> ${tmp_rootfs_dir}/etc/fstab
 	if [ "${boot_partition}x" != "${rootfs_partition}x" ] ; then
-		#FIXME: x15 bug in v4.4.x-ti
-		if [ "x${device_eeprom}" = "xx15/X15_B1-eeprom" ] ; then
-			echo "${boot_partition} /boot/uboot auto defaults 0 0" >> ${tmp_rootfs_dir}/etc/fstab
-		else
-			boot_fs_id=$(get_fstab_id_for_device ${boot_partition})
-			echo "${boot_fs_id} /boot/uboot auto defaults 0 0" >> ${tmp_rootfs_dir}/etc/fstab
-		fi
+		boot_fs_id=$(get_fstab_id_for_device ${boot_partition})
+		echo "${boot_fs_id} /boot/uboot auto defaults 0 0" >> ${tmp_rootfs_dir}/etc/fstab
 	fi
-	#FIXME: x15 bug in v4.4.x-ti
-	if [ "x${device_eeprom}" = "xx15/X15_B1-eeprom" ] ; then
-		echo "${rootfs_partition}  /  ext4  noatime,errors=remount-ro  0  1" >> ${tmp_rootfs_dir}/etc/fstab
-	else
-		root_fs_id=$(get_fstab_id_for_device ${rootfs_partition})
-		echo "${root_fs_id}  /  ext4  noatime,errors=remount-ro  0  1" >> ${tmp_rootfs_dir}/etc/fstab
-	fi
+	root_fs_id=$(get_fstab_id_for_device ${rootfs_partition})
+	echo "${root_fs_id}  /  ext4  noatime,errors=remount-ro  0  1" >> ${tmp_rootfs_dir}/etc/fstab
 	echo "debugfs  /sys/kernel/debug  debugfs  defaults  0  0" >> ${tmp_rootfs_dir}/etc/fstab
 	echo_broadcast "===> /etc/fstab generated"
 	generate_line 40 '*'
@@ -1084,21 +1112,21 @@ _copy_rootfs_reverse() {
 }
 
 erasing_drive() {
-  local drive="${1:?UNKNOWN}"
-  empty_line
-  generate_line 40
-  echo_broadcast "==> Erasing: ${drive}"
-  flush_cache
-  generate_line 40
-  dd if=/dev/zero of=${drive} bs=1M count=108
-  sync
-  generate_line 40
-  dd if=${drive} of=/dev/null bs=1M count=108
-  sync
-  generate_line 40
-  flush_cache
-  echo_broadcast "==> Erasing: ${drive} complete"
-  generate_line 40
+	local drive="${1:?UNKNOWN}"
+	empty_line
+	generate_line 40
+	echo_broadcast "==> Erasing: ${drive}"
+	flush_cache
+	generate_line 40
+	dd if=/dev/zero of=${drive} bs=1M count=108
+	sync
+	generate_line 40
+	dd if=${drive} of=/dev/null bs=1M count=108
+	sync
+	generate_line 40
+	flush_cache
+	echo_broadcast "==> Erasing: ${drive} complete"
+	generate_line 40
 }
 
 loading_soc_defaults() {
