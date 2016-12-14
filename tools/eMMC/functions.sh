@@ -116,10 +116,10 @@ prepare_environment() {
   echo_broadcast "Starting at $(date --date="@$start_time")"
   generate_line 40
 
-	value_min_free_kbytes=$(sysctl -n vm.min_free_kbytes)
+	value_min_free_kbytes=$(sysctl -n vm.min_free_kbytes || true)
 	echo_broadcast "==> sysctl: vm.min_free_kbytes=[${value_min_free_kbytes}]"
 	echo_broadcast "==> sysctl: setting: [sysctl -w vm.min_free_kbytes=16384]"
-	sysctl -w vm.min_free_kbytes=16384
+	sysctl -w vm.min_free_kbytes=16384 || true
 	generate_line 40
 
   echo_broadcast "==> Preparing /tmp"
