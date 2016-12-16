@@ -5,7 +5,7 @@
 # Source it like this:
 # source $(dirname "$0")/functions.sh
 
-version_message="1.20161130: beaglebone-black-make-microSD-flasher-from-eMMC.sh fixes..."
+version_message="1.20161216: more fixes..."
 emmcscript="cmdline=init=/opt/scripts/tools/eMMC/$(basename $0)"
 
 #
@@ -110,30 +110,32 @@ __dry_run__(){
 }
 
 prepare_environment() {
-  generate_line 80 '='
-  echo_broadcast "Prepare environment for flashing"
-  start_time=$(date +%s)
-  echo_broadcast "Starting at $(date --date="@$start_time")"
-  generate_line 40
+	generate_line 80 '='
+	echo_broadcast "Prepare environment for flashing"
+	start_time=$(date +%s)
+	echo_broadcast "Starting at $(date --date="@$start_time")"
+	generate_line 40
 
+	echo_broadcast "==> Preparing /tmp"
+	mount -t tmpfs tmpfs /tmp
+
+	echo_broadcast "==> Preparing sysctl"
 	value_min_free_kbytes=$(sysctl -n vm.min_free_kbytes)
 	echo_broadcast "==> sysctl: vm.min_free_kbytes=[${value_min_free_kbytes}]"
 	echo_broadcast "==> sysctl: setting: [sysctl -w vm.min_free_kbytes=16384]"
 	sysctl -w vm.min_free_kbytes=16384
 	generate_line 40
 
-  echo_broadcast "==> Preparing /tmp"
-  mount -t tmpfs tmpfs /tmp
-  echo_broadcast "==> Determining root drive"
-  find_root_drive
-  echo_broadcast "====> Root drive identified at ${root_drive}"
-  echo_broadcast "==> Determining boot drive"
-  boot_drive="${root_drive%?}1"
-  if [ ! "x${boot_drive}" = "x${root_drive}" ] ; then
-    echo_broadcast "====> The Boot and Root drives are identified to be different."
-    echo_broadcast "====> Mounting ${boot_drive} Read Only over /boot/uboot"
-    mount ${boot_drive} /boot/uboot -o ro
-  fi
+	echo_broadcast "==> Determining root drive"
+	find_root_drive
+	echo_broadcast "====> Root drive identified at ${root_drive}"
+	echo_broadcast "==> Determining boot drive"
+	boot_drive="${root_drive%?}1"
+	if [ ! "x${boot_drive}" = "x${root_drive}" ] ; then
+		echo_broadcast "====> The Boot and Root drives are identified to be different."
+		echo_broadcast "====> Mounting ${boot_drive} Read Only over /boot/uboot"
+		mount ${boot_drive} /boot/uboot -o ro
+	fi
   echo_broadcast "==> Figuring out Source and Destination devices"
   if [ "x${boot_drive}" = "x/dev/mmcblk0p1" ] ; then
     source="/dev/mmcblk0"
@@ -301,13 +303,21 @@ check_if_run_as_root(){
 }
 
 find_root_drive(){
-  unset root_drive
-  root_drive="$(cat /proc/cmdline | sed 's/ /\n/g' | grep root=UUID= | awk -F 'root=' '{print $2}' || true)"
-  if [ ! "x${root_drive}" = "x" ] ; then
-    root_drive="$(/sbin/findfs ${root_drive} || true)"
-  else
-    root_drive="$(cat /proc/cmdline | sed 's/ /\n/g' | grep root= | awk -F 'root=' '{print $2}' || true)"
-  fi
+	unset root_drive
+	if [ -f /proc/cmdline ] ; then
+		proc_cmdline=$(cat /proc/cmdline)
+		echo_broadcast "==> ${proc_cmdline}"
+		generate_line 40
+		root_drive="$(cat /proc/cmdline | sed 's/ /\n/g' | grep root=UUID= | awk -F 'root=' '{print $2}' || true)"
+		if [ ! "x${root_drive}" = "x" ] ; then
+			root_drive="$(/sbin/findfs ${root_drive} || true)"
+		else
+			root_drive="$(cat /proc/cmdline | sed 's/ /\n/g' | grep root= | awk -F 'root=' '{print $2}' || true)"
+		fi
+		echo_broadcast "==> root_drive=${root_drive}"
+	else
+		echo_broadcast "no /proc/cmdline"
+	fi
 }
 
 flush_cache() {
