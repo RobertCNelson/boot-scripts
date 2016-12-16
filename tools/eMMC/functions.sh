@@ -174,6 +174,8 @@ prepare_environment() {
 
 	if [ ! "x${boot_drive}" = "x${root_drive}" ] ; then
 		echo_broadcast "====> The Boot and Root drives are identified to be different."
+		echo_broadcast "====> Giving system time to stablize..."
+		countdown 5
 		echo_broadcast "====> Mounting ${boot_drive} Read Only over /boot/uboot"
 		mount ${boot_drive} /boot/uboot -o ro || try_vfat
 	fi
