@@ -174,19 +174,6 @@ prepare_environment() {
 
 	if [ ! "x${boot_drive}" = "x${root_drive}" ] ; then
 		echo_broadcast "====> The Boot and Root drives are identified to be different."
-
-		if [ ! -b ${source} ] ; then
-			mknod ${source} b 179 0
-		fi
-
-		if [ ! -b ${source}p1 ] ; then
-			mknod ${source}p1 b 179 1
-		fi
-
-		if [ ! -b ${source}p2 ] ; then
-			mknod ${source}p2 b 179 2
-		fi
-
 		echo_broadcast "====> Mounting ${boot_drive} Read Only over /boot/uboot"
 		mount ${boot_drive} /boot/uboot -o ro || try_vfat
 	fi
