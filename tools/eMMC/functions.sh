@@ -134,6 +134,9 @@ prepare_environment() {
 	echo_broadcast "Starting at $(date --date="@$start_time")"
 	generate_line 40
 
+	echo_broadcast "==> Giving system time to stablize..."
+	countdown 5
+
 	echo_broadcast "==> Preparing /tmp"
 	mount -t tmpfs tmpfs /tmp
 
