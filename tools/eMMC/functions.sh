@@ -109,6 +109,13 @@ __dry_run__(){
   export -f cp
 }
 
+mmc_mount_fail() {
+	generate_line 80 '='
+	dmesg | grep mmc
+	ls -lh /dev/mmcblk*
+	generate_line 80 '='
+}
+
 prepare_environment() {
 	generate_line 80 '='
 	echo_broadcast "Prepare environment for flashing"
@@ -157,7 +164,7 @@ prepare_environment() {
 	if [ ! "x${boot_drive}" = "x${root_drive}" ] ; then
 		echo_broadcast "====> The Boot and Root drives are identified to be different."
 		echo_broadcast "====> Mounting ${boot_drive} Read Only over /boot/uboot"
-		mount ${boot_drive} /boot/uboot -o ro || dmesg | grep mmc ; ls -lh /dev/mmcblk*
+		mount ${boot_drive} /boot/uboot -o ro || mmc_mount_fail
 	fi
 
 	generate_line 80 '='
