@@ -128,9 +128,10 @@ prepare_environment() {
 
 	echo_broadcast "==> Determining root drive"
 	find_root_drive
-	echo_broadcast "====> Root drive identified at ${root_drive}"
-	echo_broadcast "==> Determining boot drive"
-	boot_drive="${root_drive%?}1"
+	echo_broadcast "====> Root drive identified at [${root_drive}]"
+	boot_drive=${root_drive%?}1
+	echo_broadcast "==> Determining boot drive testing [${boot_drive}]"
+
 	if [ ! "x${boot_drive}" = "x${root_drive}" ] ; then
 		echo_broadcast "====> The Boot and Root drives are identified to be different."
 		echo_broadcast "====> Mounting ${boot_drive} Read Only over /boot/uboot"
@@ -305,16 +306,16 @@ check_if_run_as_root(){
 find_root_drive(){
 	unset root_drive
 	if [ -f /proc/cmdline ] ; then
-		proc_cmdline=$(cat /proc/cmdline)
+		proc_cmdline=$(cat /proc/cmdline | tr -d '\000')
 		echo_broadcast "==> ${proc_cmdline}"
 		generate_line 40
-		root_drive="$(cat /proc/cmdline | sed 's/ /\n/g' | grep root=UUID= | awk -F 'root=' '{print $2}' || true)"
+		root_drive=$(cat /proc/cmdline | tr -d '\000' | sed 's/ /\n/g' | grep root=UUID= | awk -F 'root=' '{print $2}' || true)
 		if [ ! "x${root_drive}" = "x" ] ; then
-			root_drive="$(/sbin/findfs ${root_drive} || true)"
+			root_drive=$(/sbin/findfs ${root_drive} || true)
 		else
-			root_drive="$(cat /proc/cmdline | sed 's/ /\n/g' | grep root= | awk -F 'root=' '{print $2}' || true)"
+			root_drive=$(cat /proc/cmdline | sed 's/ /\n/g' | grep root= | awk -F 'root=' '{print $2}' || true)
 		fi
-		echo_broadcast "==> root_drive=${root_drive}"
+		echo_broadcast "==> root_drive=[${root_drive}]"
 	else
 		echo_broadcast "no /proc/cmdline"
 	fi
