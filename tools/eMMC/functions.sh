@@ -130,36 +130,37 @@ prepare_environment() {
 	find_root_drive
 	echo_broadcast "====> Root drive identified at [${root_drive}]"
 	boot_drive=${root_drive%?}1
-	echo_broadcast "==> Determining boot drive testing [${boot_drive}]"
+	echo_broadcast "==> Boot Drive [${boot_drive}]"
+	echo_broadcast "==> Figuring out Source and Destination devices"
+	if [ "x${boot_drive}" = "x/dev/mmcblk0p1" ] ; then
+		source="/dev/mmcblk0"
+		destination="/dev/mmcblk1"
+	elif [ "x${boot_drive}" = "x/dev/mmcblk1p1" ] ; then
+		source="/dev/mmcblk1"
+		destination="/dev/mmcblk0"
+	else
+		echo_broadcast "!!! Could not reliably determine Source and Destination"
+		echo_broadcast "!!! We need to stop here"
+		teardown_environment
+		write_failure
+		exit 2
+	fi
+	echo_broadcast "====> Source identified: [${source}]"
+	echo_broadcast "====> Destination identified: [${destination}]"
+	echo_broadcast "==> Figuring out machine"
+	get_device
+	echo_broadcast "====> Machine is ${machine}"
+	if [ "x${is_bbb}" = "xenable" ] ; then
+		echo_broadcast "====> Machine is compatible with BeagleBone Black"
+	fi
 
 	if [ ! "x${boot_drive}" = "x${root_drive}" ] ; then
 		echo_broadcast "====> The Boot and Root drives are identified to be different."
 		echo_broadcast "====> Mounting ${boot_drive} Read Only over /boot/uboot"
-		mount ${boot_drive} /boot/uboot -o ro
+		mount ${boot_drive} /boot/uboot -o ro || dmesg | grep mmc ; ls -lh /dev/mmcblk*
 	fi
-  echo_broadcast "==> Figuring out Source and Destination devices"
-  if [ "x${boot_drive}" = "x/dev/mmcblk0p1" ] ; then
-    source="/dev/mmcblk0"
-    destination="/dev/mmcblk1"
-  elif [ "x${boot_drive}" = "x/dev/mmcblk1p1" ] ; then
-    source="/dev/mmcblk1"
-    destination="/dev/mmcblk0"
-  else
-    echo_broadcast "!!! Could not reliably determine Source and Destination"
-    echo_broadcast "!!! We need to stop here"
-    teardown_environment
-    write_failure
-    exit 2
-  fi
-  echo_broadcast "====> Source identified: [${source}]"
-  echo_broadcast "====> Destination identified: [${destination}]"
-  echo_broadcast "==> Figuring out machine"
-  get_device
-  echo_broadcast "====> Machine is ${machine}"
-  if [ "x${is_bbb}" = "xenable" ] ; then
-    echo_broadcast "====> Machine is compatible with BeagleBone Black"
-  fi
-  generate_line 80 '='
+
+	generate_line 80 '='
 }
 
 prepare_environment_reverse() {
