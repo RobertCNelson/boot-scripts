@@ -111,9 +111,20 @@ __dry_run__(){
 
 mmc_mount_fail() {
 	generate_line 80 '='
+	echo_broadcast "====> grep mmc"
 	dmesg | grep mmc
-	ls -lh /dev/mmcblk*
+	generate_line 40
+	echo_broadcast "====> ls -l /sys/class/block/*"
+	ls -l /sys/class/block/*
+	generate_line 40
+	echo_broadcast "====> ls -l /dev/mmc*"
+	ls -l /dev/mmc*
 	generate_line 80 '='
+}
+
+try_vfat() {
+	echo_broadcast "====> Mounting ${boot_drive} Read Only over /boot/uboot (trying vfat)"
+	mount -t vfat ${boot_drive} /boot/uboot/ -o ro || mmc_mount_fail
 }
 
 prepare_environment() {
@@ -164,7 +175,7 @@ prepare_environment() {
 	if [ ! "x${boot_drive}" = "x${root_drive}" ] ; then
 		echo_broadcast "====> The Boot and Root drives are identified to be different."
 		echo_broadcast "====> Mounting ${boot_drive} Read Only over /boot/uboot"
-		mount ${boot_drive} /boot/uboot -o ro || mmc_mount_fail
+		mount ${boot_drive} /boot/uboot -o ro || try_vfat
 	fi
 
 	generate_line 80 '='
