@@ -446,19 +446,6 @@ fi
 #Just Cleanup /etc/issue, systemd starts up tty before these are updated...
 sed -i -e '/Address/d' /etc/issue
 
-#Fighting Race conditions with lcd overlays...
-if [ -f /lib/systemd/system/lightdm.service ] ; then
-	unset test_service
-	test_service=$(systemctl is-enabled lightdm.service || true)
-	if [ "x${test_service}" = "xenabled" ] ; then
-		test_service=$(systemctl is-failed lightdm.service || true)
-
-		if [ "x${test_service}" = "xinactive" ] ; then
-			systemctl restart lightdm || true
-		fi
-	fi
-fi
-
 #legacy support of: 2014-05-14
 if [ "x${abi}" = "x" ] ; then
 	#taken care by the init flasher
