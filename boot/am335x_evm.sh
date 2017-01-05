@@ -395,7 +395,20 @@ use_libcomposite () {
 			echo "${log} FIXME: no usb_image_file"
 		fi
 	else
-		echo "${log} FIXME: no usb_image_file"
+		#We don't use a physical partition anymore...
+		unset root_drive
+		root_drive="$(cat /proc/cmdline | sed 's/ /\n/g' | grep root=UUID= | awk -F 'root=' '{print $2}' || true)"
+		if [ ! "x${root_drive}" = "x" ] ; then
+			root_drive="$(/sbin/findfs ${root_drive} || true)"
+		else
+			root_drive="$(cat /proc/cmdline | sed 's/ /\n/g' | grep root= | awk -F 'root=' '{print $2}' || true)"
+		fi
+
+		if [ "x${root_drive}" = "x/dev/mmcblk0p1" ] || [ "x${root_drive}" = "x/dev/mmcblk1p1" ] ; then
+			echo "${log} FIXME: no valid drive to share over usb"
+		else
+			actual_image_file="${root_drive%?}1"
+		fi
 	fi
 	echo "${log} modprobe libcomposite"
 	modprobe libcomposite || true
