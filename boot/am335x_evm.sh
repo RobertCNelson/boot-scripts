@@ -468,51 +468,66 @@ g_serial_retry () {
 	modprobe g_serial || true
 }
 
-if [ "x" = "x" ] ; then
+use_old_g_multi () {
+	#priorty:
+	#g_multi
+	#g_ether
+	#g_serial
 
-#priorty:
-#g_multi
-#g_ether
-#g_serial
+	unset usb0
 
-unset usb0
-
-#g_multi: Do we have image file?
-if [ -f ${usb_image_file} ] ; then
-	test_usb_image_file=$(echo ${usb_image_file} | grep .iso || true)
-	if [ ! "x${test_usb_image_file}" = "x" ] ; then
-		usb_ms_cdrom=1
-	fi
-	g_multi_options="file=${usb_image_file} cdrom=${usb_ms_cdrom} ro=${usb_ms_ro}"
-	g_multi_options="${g_multi_options} stall=${usb_ms_stall} removable=${usb_ms_removable}"
-	g_multi_options="${g_multi_options} nofua=${usb_ms_nofua} ${g_network}}"
-	modprobe g_multi ${g_multi_options} || g_multi_retry
-	usb0="enable"
-else
-	#g_multi: Do we have a non-rootfs "fat" partition?
-	unset root_drive
-	root_drive="$(cat /proc/cmdline | sed 's/ /\n/g' | grep root=UUID= | awk -F 'root=' '{print $2}' || true)"
-	if [ ! "x${root_drive}" = "x" ] ; then
-		root_drive="$(/sbin/findfs ${root_drive} || true)"
-	else
-		root_drive="$(cat /proc/cmdline | sed 's/ /\n/g' | grep root= | awk -F 'root=' '{print $2}' || true)"
-	fi
-
-	if [ "x${root_drive}" = "x/dev/mmcblk0p1" ] || [ "x${root_drive}" = "x/dev/mmcblk1p1" ] ; then
-		#g_ether: Do we have udhcpd/dnsmasq?
-		if [ -f /usr/sbin/udhcpd ] || [ -f /usr/sbin/dnsmasq ] ; then
-			modprobe g_ether ${g_network} || g_ether_retry
-			usb0="enable"
-		else
-			#g_serial: As a last resort...
-			modprobe g_serial || g_serial_retry
+	#g_multi: Do we have image file?
+	if [ -f ${usb_image_file} ] ; then
+		test_usb_image_file=$(echo ${usb_image_file} | grep .iso || true)
+		if [ ! "x${test_usb_image_file}" = "x" ] ; then
+			usb_ms_cdrom=1
 		fi
-	else
-		boot_drive="${root_drive%?}1"
-		modprobe g_multi file=${boot_drive} cdrom=0 ro=0 stall=0 removable=1 nofua=1 ${g_network} || true
+		g_multi_options="file=${usb_image_file} cdrom=${usb_ms_cdrom} ro=${usb_ms_ro}"
+		g_multi_options="${g_multi_options} stall=${usb_ms_stall} removable=${usb_ms_removable}"
+		g_multi_options="${g_multi_options} nofua=${usb_ms_nofua} ${g_network}}"
+		modprobe g_multi ${g_multi_options} || g_multi_retry
 		usb0="enable"
+	else
+		#g_multi: Do we have a non-rootfs "fat" partition?
+		unset root_drive
+		root_drive="$(cat /proc/cmdline | sed 's/ /\n/g' | grep root=UUID= | awk -F 'root=' '{print $2}' || true)"
+		if [ ! "x${root_drive}" = "x" ] ; then
+			root_drive="$(/sbin/findfs ${root_drive} || true)"
+		else
+			root_drive="$(cat /proc/cmdline | sed 's/ /\n/g' | grep root= | awk -F 'root=' '{print $2}' || true)"
+		fi
+
+		if [ "x${root_drive}" = "x/dev/mmcblk0p1" ] || [ "x${root_drive}" = "x/dev/mmcblk1p1" ] ; then
+			#g_ether: Do we have udhcpd/dnsmasq?
+			if [ -f /usr/sbin/udhcpd ] || [ -f /usr/sbin/dnsmasq ] ; then
+				modprobe g_ether ${g_network} || g_ether_retry
+				usb0="enable"
+			else
+				#g_serial: As a last resort...
+				modprobe g_serial || g_serial_retry
+			fi
+		else
+			boot_drive="${root_drive%?}1"
+			modprobe g_multi file=${boot_drive} cdrom=0 ro=0 stall=0 removable=1 nofua=1 ${g_network} || true
+			usb0="enable"
+		fi
 	fi
-fi
+}
+
+#use libcomposite with v4.9.x+ kernel's...
+kernel_major=$(uname -r | cut -d. -f1 || true)
+kernel_minor=$(uname -r | cut -d. -f2 || true)
+compare_major="4"
+compare_minor="9"
+
+if [ "${kernel_major}" -lt "${compare_major}" ] ; then
+	use_old_g_multi
+elif [ "${kernel_major}" -eq "${compare_major}" ] ; then
+	if [ "${kernel_minor}" -lt "${compare_minor}" ] ; then
+		use_old_g_multi
+	else
+		use_libcomposite
+	fi
 else
 	use_libcomposite
 fi
