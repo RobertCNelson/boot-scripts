@@ -27,6 +27,8 @@ if [ -f /etc/rcn-ee.conf ] ; then
 	. /etc/rcn-ee.conf
 fi
 
+log="am335x_evm:"
+
 usb_gadget="/sys/kernel/config/usb_gadget"
 
 #  idVendor           0x1d6b Linux Foundation
@@ -78,9 +80,11 @@ fi
 cleanup_extra_docs () {
 	#recovers 82MB of space
 	if [ -d /var/cache/doc-beaglebonegreen-getting-started ] ; then
+		echo "${log} Cleaning up: /var/cache/doc-beaglebonegreen-getting-started"
 		rm -rf /var/cache/doc-beaglebonegreen-getting-started || true
 	fi
 	if [ -d /var/cache/doc-seeed-bbgw-getting-started ] ; then
+		echo "${log} Cleaning up: /var/cache/doc-seeed-bbgw-getting-started"
 		rm -rf /var/cache/doc-seeed-bbgw-getting-started || true
 	fi
 }
@@ -144,6 +148,10 @@ SanCloud_BeagleBone_Enhanced)
 	unset board_sbbe
 	;;
 esac
+
+if [ ! "x${usb_image_file}" = "x" ] ; then
+	echo "${log} usb_image_file=[`readlink -f ${usb_image_file}`]"
+fi
 
 usb_iserialnumber="1234BBBK5678"
 ISBLACK=""
@@ -351,10 +359,10 @@ fi
 #cpsw_2_mac = usb0 (USB host, pc side) ((cpsw_0_mac + cpsw_2_mac) /2 )
 #cpsw_3_mac = wl18xx (AP) (cpsw_0_mac + 3)
 
-echo "cpsw_0_mac: [${cpsw_0_mac}]"
-echo "cpsw_1_mac: [${cpsw_1_mac}]"
-echo "cpsw_2_mac: [${cpsw_2_mac}]"
-echo "cpsw_3_mac: [${cpsw_3_mac}]"
+echo "${log} cpsw_0_mac: [${cpsw_0_mac}]"
+echo "${log} cpsw_1_mac: [${cpsw_1_mac}]"
+echo "${log} cpsw_2_mac: [${cpsw_2_mac}]"
+echo "${log} cpsw_3_mac: [${cpsw_3_mac}]"
 
 #Save these to /etc/* so we don't have to recalculate again...
 echo "${cpsw_0_mac}" > /etc/cpsw_0_mac || true
@@ -364,10 +372,12 @@ echo "${cpsw_3_mac}" > /etc/cpsw_3_mac || true
 
 #udhcpd gets started at bootup, but we need to wait till g_multi is loaded, and we run it manually...
 if [ -f /var/run/udhcpd.pid ] ; then
+	echo "${log} [/etc/init.d/udhcpd stop]"
 	/etc/init.d/udhcpd stop || true
 fi
 
 use_libcomposite () {
+	echo "${log} use_libcomposite"
 	unset has_img_file
 	if [ -f ${usb_image_file} ] ; then
 		actual_image_file=$(readlink -f ${usb_image_file} || true)
@@ -381,10 +391,12 @@ use_libcomposite () {
 			fi
 		fi
 	fi
+	echo "${log} modprobe libcomposite"
 	modprobe libcomposite || true
 	if [ -d /sys/module/libcomposite ] ; then
 		if [ -d ${usb_gadget} ] ; then
 			if [ ! -d ${usb_gadget}/g_multi/ ] ; then
+				echo "${log} Creating g_multi"
 				mkdir -p ${usb_gadget}/g_multi || true
 				cd ${usb_gadget}/g_multi
 
@@ -430,6 +442,7 @@ use_libcomposite () {
 				#ls /sys/class/udc
 				echo musb-hdrc.0.auto > UDC
 				usb0="enable"
+				echo "${log} g_multi Created"
 			fi
 		fi
 	fi
@@ -469,6 +482,7 @@ g_serial_retry () {
 }
 
 use_old_g_multi () {
+	echo "${log} use_old_g_multi"
 	#priorty:
 	#g_multi
 	#g_ether
@@ -533,11 +547,13 @@ else
 fi
 
 if [ "x${usb0}" = "xenable" ] ; then
+	echo "${log} Starting usb0 network"
 	# Auto-configuring the usb0 network interface:
 	$(dirname $0)/autoconfigure_usb0.sh || true
 fi
 
 if [ -d /sys/class/tty/ttyGS0/ ] ; then
+	echo "${log} Starting serial-getty@ttyGS0.service"
 	systemctl start serial-getty@ttyGS0.service || true
 fi
 
