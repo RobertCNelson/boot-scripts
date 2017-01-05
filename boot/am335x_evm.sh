@@ -394,15 +394,15 @@ use_libcomposite () {
 				echo ${usb_iproduct} > strings/0x409/product
 
 				mkdir -p functions/acm.usb0
-				if [ -f ${usb_image_file} ] ; then
-					mkdir -p functions/mass_storage.usb0
-					echo ${usb_image_file} > functions/mass_storage.0/lun.0/file
-				fi
-
 				mkdir -p functions/rndis.usb0
 				# first byte of address must be even
 				echo ${cpsw_2_mac} > functions/rndis.usb0/host_addr
 				echo ${cpsw_1_mac} > functions/rndis.usb0/dev_addr
+
+				if [ -f ${usb_image_file} ] ; then
+					mkdir -p functions/mass_storage.usb0
+					echo ${usb_image_file} > functions/mass_storage.0/lun.0/file
+				fi
 
 				mkdir -p configs/c.1/strings/0x409
 				echo "Multifunction with RNDIS" > configs/c.1/strings/0x409/configuration
@@ -410,10 +410,10 @@ use_libcomposite () {
 				echo 500 > configs/c.1/MaxPower
 
 				ln -s functions/acm.usb0 configs/c.1/
+				ln -s functions/rndis.usb0 configs/c.1/
 				if [ -f ${usb_image_file} ] ; then
 					ln -s functions/mass_storage.usb0 configs/c.1/
 				fi
-				ln -s functions/rndis.usb0 configs/c.1/
 
 				#ls /sys/class/udc
 				echo musb-hdrc.0.auto > UDC
