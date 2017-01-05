@@ -365,8 +365,8 @@ use_libcomposite () {
 	modprobe libcomposite || true
 	if [ -d /sys/module/libcomposite ] ; then
 		if [ -d ${usb_gadget} ] ; then
-			if [ ! -d ./g_multi/ ] ; then
-				mkdir g_multi
+			if [ ! -d ${usb_gadget}/g_multi/ ] ; then
+				mkdir -p ${usb_gadget}/g_multi || true
 				cd ${usb_gadget}/g_multi
 				echo ${usb_idVendor} > idVendor # Linux Foundation
 				echo ${usb_idProduct} > idProduct # Multifunction Composite Gadget
