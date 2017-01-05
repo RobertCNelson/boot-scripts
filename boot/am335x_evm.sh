@@ -429,6 +429,7 @@ use_libcomposite () {
 
 				#ls /sys/class/udc
 				echo musb-hdrc.0.auto > UDC
+				usb0="enable"
 			fi
 		fi
 	fi
