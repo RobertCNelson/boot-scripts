@@ -50,12 +50,6 @@ use_libcomposite () {
 				cd ${usb_gadget}/g_multi
 
 				echo ${usb_bcdUSB} > bcdUSB
-
-				#Matching lsusb of old g_muilti
-				echo 239 > bDeviceClass
-				echo 2 > bDeviceSubClass
-				echo 1 > bDeviceProtocol
-
 				echo ${usb_idVendor} > idVendor # Linux Foundation
 				echo ${usb_idProduct} > idProduct # Multifunction Composite Gadget
 				echo ${usb_bcdDevice} > bcdDevice
