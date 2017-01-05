@@ -553,11 +553,11 @@ use_old_g_multi () {
 
 unset usb0
 
-#use libcomposite with v4.9.x+ kernel's...
+#use libcomposite with v4.4.x+ kernel's...
 kernel_major=$(uname -r | cut -d. -f1 || true)
 kernel_minor=$(uname -r | cut -d. -f2 || true)
 compare_major="4"
-compare_minor="9"
+compare_minor="4"
 
 if [ "${kernel_major}" -lt "${compare_major}" ] ; then
 	use_old_g_multi
