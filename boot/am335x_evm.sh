@@ -380,20 +380,17 @@ use_libcomposite () {
 				echo ${usb_iproduct} > strings/0x409/product
 
 				mkdir -p functions/acm.usb0
-				mkdir -p functions/ecm.usb0
+				mkdir -p functions/rndis.usb0
 
 				# first byte of address must be even
-				HOST="48:6f:73:74:50:43" # "HostPC"
-				SELF="42:61:64:55:53:42" # "BadUSB"
-				echo $HOST > functions/ecm.usb0/host_addr
-				echo $SELF > functions/ecm.usb0/dev_addr
+				echo ${cpsw_2_mac} > functions/rndis.usb0/host_addr
+				echo ${cpsw_1_mac} > functions/rndis.usb0/dev_addr
 
 				mkdir -p configs/c.1/strings/0x409
-				echo "Config 1: ECM network" > configs/c.1/strings/0x409/configuration
-				#250 = 500mA
-				echo 250 > configs/c.1/MaxPower
+				echo "Multifunction with RNDIS" > configs/c.1/strings/0x409/configuration
+				echo 500 > configs/c.1/MaxPower
 				ln -s functions/acm.usb0 configs/c.1/
-				ln -s functions/ecm.usb0 configs/c.1/
+				ln -s functions/rndis.usb0 configs/c.1/
 
 				#ls /sys/class/udc
 				echo musb-hdrc.0.auto > UDC
