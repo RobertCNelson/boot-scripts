@@ -41,6 +41,13 @@ usb_bcdUSB="0x0200"
 usb_serialnr="000000"
 usb_product="USB Device"
 
+#usb0 mass_storage
+usb_ms_cdrom=0
+usb_ms_ro=1
+usb_ms_stall=0
+usb_ms_removable=1
+usb_ms_nofua=1
+
 #legacy support of: 2014-05-14
 if [ "x${abi}" = "x" ] ; then
 	eeprom="/sys/bus/i2c/devices/0-0050/eeprom"
@@ -387,16 +394,25 @@ use_libcomposite () {
 				echo ${usb_iproduct} > strings/0x409/product
 
 				mkdir -p functions/acm.usb0
-				mkdir -p functions/rndis.usb0
+				if [ -f ${usb_image_file} ] ; then
+					mkdir -p functions/mass_storage.usb0
+					echo ${usb_image_file} > functions/mass_storage.0/lun.0/file
+				fi
 
+				mkdir -p functions/rndis.usb0
 				# first byte of address must be even
 				echo ${cpsw_2_mac} > functions/rndis.usb0/host_addr
 				echo ${cpsw_1_mac} > functions/rndis.usb0/dev_addr
 
 				mkdir -p configs/c.1/strings/0x409
 				echo "Multifunction with RNDIS" > configs/c.1/strings/0x409/configuration
+
 				echo 500 > configs/c.1/MaxPower
+
 				ln -s functions/acm.usb0 configs/c.1/
+				if [ -f ${usb_image_file} ] ; then
+					ln -s functions/mass_storage.usb0 configs/c.1/
+				fi
 				ln -s functions/rndis.usb0 configs/c.1/
 
 				#ls /sys/class/udc
@@ -452,12 +468,12 @@ unset usb0
 if [ -f ${usb_image_file} ] ; then
 	test_usb_image_file=$(echo ${usb_image_file} | grep .iso || true)
 	if [ ! "x${test_usb_image_file}" = "x" ] ; then
-		g_multi_options="file=${usb_image_file} cdrom=1 ro=1 stall=0 removable=1 nofua=1 ${g_network}"
-		modprobe g_multi ${g_multi_options} || g_multi_retry
-	else
-		g_multi_options="file=${usb_image_file} cdrom=0 ro=1 stall=0 removable=1 nofua=1 ${g_network}"
-		modprobe g_multi ${g_multi_options} || g_multi_retry
+		usb_ms_cdrom=1
 	fi
+	g_multi_options="file=${usb_image_file} cdrom=${usb_ms_cdrom} ro=${usb_ms_ro}"
+	g_multi_options="${g_multi_options} stall=${usb_ms_stall} removable=${usb_ms_removable}"
+	g_multi_options="${g_multi_options} nofua=${usb_ms_nofua} ${g_network}}"
+	modprobe g_multi ${g_multi_options} || g_multi_retry
 	usb0="enable"
 else
 	#g_multi: Do we have a non-rootfs "fat" partition?
