@@ -401,7 +401,12 @@ use_libcomposite () {
 
 				if [ -f ${usb_image_file} ] ; then
 					mkdir -p functions/mass_storage.usb0
+					echo ${usb_ms_stall} > functions/mass_storage.0/stall
+					echo ${usb_ms_cdrom} > functions/mass_storage.0/lun.0/cdrom
 					echo ${usb_image_file} > functions/mass_storage.0/lun.0/file
+					echo ${usb_ms_nofua} > functions/mass_storage.0/lun.0/nofua
+					echo ${usb_ms_removable} > functions/mass_storage.0/lun.0/removable
+					echo ${usb_ms_ro} > functions/mass_storage.0/lun.0/ro
 				fi
 
 				mkdir -p configs/c.1/strings/0x409
