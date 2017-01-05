@@ -39,7 +39,6 @@ usb_idProduct="0x0104"
 usb_bcdDevice="0x0404"
 usb_bcdUSB="0x0200"
 usb_serialnr="000000"
-usb_manufacturer="BeagleBoard.org"
 usb_product="USB Device"
 
 #legacy support of: 2014-05-14
@@ -139,17 +138,17 @@ SanCloud_BeagleBone_Enhanced)
 	;;
 esac
 
-SERIAL_NUMBER="1234BBBK5678"
+usb_iserialnumber="1234BBBK5678"
 ISBLACK=""
 ISGREEN=""
-PRODUCT="am335x_evm"
-manufacturer="BeagleBoard.org"
+usb_iproduct="am335x_evm"
+usb_imanufacturer="BeagleBoard.org"
 wifi_prefix="BeagleBone"
 
 #pre nvmem...
 eeprom="/sys/bus/i2c/devices/0-0050/eeprom"
 if [ -f ${eeprom} ] ; then
-	SERIAL_NUMBER=$(hexdump -e '8/1 "%c"' ${eeprom} -n 28 | cut -b 17-28)
+	usb_iserialnumber=$(hexdump -e '8/1 "%c"' ${eeprom} -n 28 | cut -b 17-28)
 	ISBLACK=$(hexdump -e '8/1 "%c"' ${eeprom} -n 12 | cut -b 9-12)
 	ISGREEN=$(hexdump -e '8/1 "%c"' ${eeprom} -n 19 | cut -b 17-19)
 	ISBLACKVARIENT=$(hexdump -e '8/1 "%c"' ${eeprom} -n 16 | cut -b 13-16)
@@ -158,7 +157,7 @@ fi
 #[PATCH (pre v8) 0/9] Add simple NVMEM Framework via regmap.
 eeprom="/sys/class/nvmem/at24-0/nvmem"
 if [ -f ${eeprom} ] ; then
-	SERIAL_NUMBER=$(hexdump -e '8/1 "%c"' ${eeprom} -n 28 | cut -b 17-28)
+	usb_iserialnumber=$(hexdump -e '8/1 "%c"' ${eeprom} -n 28 | cut -b 17-28)
 	ISBLACK=$(hexdump -e '8/1 "%c"' ${eeprom} -n 12 | cut -b 9-12)
 	ISGREEN=$(hexdump -e '8/1 "%c"' ${eeprom} -n 19 | cut -b 17-19)
 	ISBLACKVARIENT=$(hexdump -e '8/1 "%c"' ${eeprom} -n 16 | cut -b 13-16)
@@ -167,28 +166,28 @@ fi
 #[PATCH v8 0/9] Add simple NVMEM Framework via regmap.
 eeprom="/sys/bus/nvmem/devices/at24-0/nvmem"
 if [ -f ${eeprom} ] ; then
-	SERIAL_NUMBER=$(hexdump -e '8/1 "%c"' ${eeprom} -n 28 | cut -b 17-28)
+	usb_iserialnumber=$(hexdump -e '8/1 "%c"' ${eeprom} -n 28 | cut -b 17-28)
 	ISBLACK=$(hexdump -e '8/1 "%c"' ${eeprom} -n 12 | cut -b 9-12)
 	ISGREEN=$(hexdump -e '8/1 "%c"' ${eeprom} -n 19 | cut -b 17-19)
 	ISBLACKVARIENT=$(hexdump -e '8/1 "%c"' ${eeprom} -n 16 | cut -b 13-16)
 fi
 
-PRODUCT="BeagleBone"
+usb_iproduct="BeagleBone"
 if [ "x${ISBLACK}" = "xBBBK" ] || [ "x${ISBLACK}" = "xBNLT" ] ; then
 	if [ "x${ISGREEN}" = "xBBG" ] ; then
-		manufacturer="Seeed"
-		PRODUCT="BeagleBoneGreen"
+		usb_imanufacturer="Seeed"
+		usb_iproduct="BeagleBoneGreen"
 	else
 		#FIXME: should be a case statement, on the next varient..
 		if [ "x${ISBLACKVARIENT}" = "xGW1A" ] ; then
-			manufacturer="Seeed"
-			PRODUCT="BeagleBoneGreenWireless"
+			usb_imanufacturer="Seeed"
+			usb_iproduct="BeagleBoneGreenWireless"
 		else
 			if [ "x$board_sbbe" = "xenable" ] ; then
-				manufacturer="SanCloud"
-				PRODUCT="BeagleBoneEnhanced"
+				usb_imanufacturer="SanCloud"
+				usb_iproduct="BeagleBoneEnhanced"
 			else
-				PRODUCT="BeagleBoneBlack"
+				usb_iproduct="BeagleBoneBlack"
 			fi
 		fi
 	fi
@@ -376,9 +375,9 @@ use_libcomposite () {
 				#0x409 = english strings...
 				mkdir -p strings/0x409
 
-				echo "0123456789" > strings/0x409/serialnumber
-				echo ${usb_manufacturer} > strings/0x409/manufacturer
-				cat /proc/device-tree/model > strings/0x409/product
+				echo ${usb_iserialnumber} > strings/0x409/serialnumber
+				echo ${usb_imanufacturer} > strings/0x409/manufacturer
+				echo ${usb_iproduct} > strings/0x409/product
 
 				mkdir -p functions/acm.usb0
 				mkdir -p functions/ecm.usb0
@@ -403,7 +402,7 @@ use_libcomposite () {
 	fi
 }
 
-g_network="iSerialNumber=${SERIAL_NUMBER} iManufacturer=${manufacturer} iProduct=${PRODUCT} host_addr=${cpsw_2_mac} dev_addr=${cpsw_1_mac}"
+g_network="iSerialNumber=${usb_iserialnumber} iManufacturer=${usb_imanufacturer} iProduct=${usb_iproduct} host_addr=${cpsw_2_mac} dev_addr=${cpsw_1_mac}"
 
 usb0_fail () {
 	unset usb0
