@@ -474,8 +474,6 @@ use_old_g_multi () {
 	#g_ether
 	#g_serial
 
-	unset usb0
-
 	#g_multi: Do we have image file?
 	if [ -f ${usb_image_file} ] ; then
 		test_usb_image_file=$(echo ${usb_image_file} | grep .iso || true)
@@ -513,6 +511,8 @@ use_old_g_multi () {
 		fi
 	fi
 }
+
+unset usb0
 
 #use libcomposite with v4.9.x+ kernel's...
 kernel_major=$(uname -r | cut -d. -f1 || true)
