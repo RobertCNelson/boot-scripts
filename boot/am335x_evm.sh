@@ -393,11 +393,11 @@ use_libcomposite () {
 				echo ${usb_imanufacturer} > strings/0x409/manufacturer
 				echo ${usb_iproduct} > strings/0x409/product
 
-				mkdir -p functions/acm.usb0
 				mkdir -p functions/rndis.usb0
 				# first byte of address must be even
 				echo ${cpsw_2_mac} > functions/rndis.usb0/host_addr
 				echo ${cpsw_1_mac} > functions/rndis.usb0/dev_addr
+				mkdir -p functions/acm.usb0
 
 				if [ -f ${usb_image_file} ] ; then
 					mkdir -p functions/mass_storage.usb0
@@ -409,8 +409,8 @@ use_libcomposite () {
 
 				echo 500 > configs/c.1/MaxPower
 
-				ln -s functions/acm.usb0 configs/c.1/
 				ln -s functions/rndis.usb0 configs/c.1/
+				ln -s functions/acm.usb0 configs/c.1/
 				if [ -f ${usb_image_file} ] ; then
 					ln -s functions/mass_storage.usb0 configs/c.1/
 				fi
