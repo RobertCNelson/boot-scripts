@@ -374,10 +374,10 @@ use_libcomposite () {
 		if [ ! "x${actual_image_file}" = "x" ] ; then
 			if [ -f ${actual_image_file} ] ; then
 				has_img_file="true"
-#				mkdir /tmp/usb_img/
-#				losetup -v -f ${actual_image_file}
-#				partx -v --add /dev/loop0
-#				mount -t vfat -o ro /dev/loop0p1 /tmp/usb_img/
+				test_usb_image_file=$(echo ${actual_image_file} | grep .iso || true)
+				if [ ! "x${test_usb_image_file}" = "x" ] ; then
+					usb_ms_cdrom=1
+				fi
 			fi
 		fi
 	fi
@@ -420,7 +420,6 @@ use_libcomposite () {
 					echo ${usb_ms_removable} > functions/mass_storage.usb0/lun.0/removable
 					echo ${usb_ms_ro} > functions/mass_storage.usb0/lun.0/ro
 					echo ${actual_image_file} > functions/mass_storage.usb0/lun.0/file
-#					echo /tmp/usb_img/ > functions/mass_storage.usb0/lun.0/file
 				fi
 
 				mkdir -p configs/c.1/strings/0x409
