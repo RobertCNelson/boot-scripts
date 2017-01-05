@@ -374,10 +374,10 @@ use_libcomposite () {
 		if [ ! "x${actual_image_file}" = "x" ] ; then
 			if [ -f ${actual_image_file} ] ; then
 				has_img_file="true"
-				mkdir /tmp/usb_img/
-				losetup -v -f ${actual_image_file}
-				partx -v --add /dev/loop0
-				mount -t vfat -o ro /dev/loop0p1 /tmp/usb_img/
+#				mkdir /tmp/usb_img/
+#				losetup -v -f ${actual_image_file}
+#				partx -v --add /dev/loop0
+#				mount -t vfat -o ro /dev/loop0p1 /tmp/usb_img/
 			fi
 		fi
 	fi
@@ -414,12 +414,13 @@ use_libcomposite () {
 
 				if [ "x${has_img_file}" = "xtrue" ] ; then
 					mkdir -p functions/mass_storage.usb0
-					echo ${usb_ms_stall} > functions/mass_storage.0/stall
-					echo ${usb_ms_cdrom} > functions/mass_storage.0/lun.0/cdrom
-					echo ${usb_ms_nofua} > functions/mass_storage.0/lun.0/nofua
-					echo ${usb_ms_removable} > functions/mass_storage.0/lun.0/removable
-					echo ${usb_ms_ro} > functions/mass_storage.0/lun.0/ro
-					echo /tmp/usb_img/ > functions/mass_storage.0/lun.0/file
+					echo ${usb_ms_stall} > functions/mass_storage.usb0/stall
+					echo ${usb_ms_cdrom} > functions/mass_storage.usb0/lun.0/cdrom
+					echo ${usb_ms_nofua} > functions/mass_storage.usb0/lun.0/nofua
+					echo ${usb_ms_removable} > functions/mass_storage.usb0/lun.0/removable
+					echo ${usb_ms_ro} > functions/mass_storage.usb0/lun.0/ro
+					echo ${actual_image_file} > functions/mass_storage.usb0/lun.0/file
+#					echo /tmp/usb_img/ > functions/mass_storage.usb0/lun.0/file
 				fi
 
 				mkdir -p configs/c.1/strings/0x409
