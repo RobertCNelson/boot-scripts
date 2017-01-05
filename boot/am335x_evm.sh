@@ -346,6 +346,13 @@ if [ -f /var/run/udhcpd.pid ] ; then
 	/etc/init.d/udhcpd stop || true
 fi
 
+use_libcomposite () {
+	ls /sys/module/
+	modprobe libcomposite || true
+	ls /sys/module/
+	exit 2
+}
+
 g_network="iSerialNumber=${SERIAL_NUMBER} iManufacturer=${manufacturer} iProduct=${PRODUCT} host_addr=${cpsw_2_mac} dev_addr=${cpsw_1_mac}"
 
 usb0_fail () {
@@ -378,6 +385,8 @@ g_serial_retry () {
 #	update_initrd
 	modprobe g_serial || true
 }
+
+if [ 1 ] ; then
 
 #priorty:
 #g_multi
@@ -421,6 +430,9 @@ else
 		modprobe g_multi file=${boot_drive} cdrom=0 ro=0 stall=0 removable=1 nofua=1 ${g_network} || true
 		usb0="enable"
 	fi
+fi
+else
+	use_libcomposite
 fi
 
 if [ "x${usb0}" = "xenable" ] ; then
