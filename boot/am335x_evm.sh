@@ -1,6 +1,6 @@
 #!/bin/sh -e
 #
-# Copyright (c) 2013-2016 Robert Nelson <robertcnelson@gmail.com>
+# Copyright (c) 2013-2017 Robert Nelson <robertcnelson@gmail.com>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -26,6 +26,21 @@
 if [ -f /etc/rcn-ee.conf ] ; then
 	. /etc/rcn-ee.conf
 fi
+
+usb_gadget="/sys/kernel/config/usb_gadget"
+
+#  idVendor           0x1d6b Linux Foundation
+#  idProduct          0x0104 Multifunction Composite Gadget
+#  bcdDevice            4.04
+#  bcdUSB               2.00
+
+usb_idVendor="0x1d6b"
+usb_idProduct="0x0104"
+usb_bcdDevice="0x0404"
+usb_bcdUSB="0x0200"
+usb_serialnr="000000"
+usb_manufacturer="BeagleBoard.org"
+usb_product="USB Device"
 
 #legacy support of: 2014-05-14
 if [ "x${abi}" = "x" ] ; then
@@ -347,10 +362,45 @@ if [ -f /var/run/udhcpd.pid ] ; then
 fi
 
 use_libcomposite () {
-	ls /sys/module/
 	modprobe libcomposite || true
-	ls /sys/module/
-	exit 2
+	if [ -d /sys/module/libcomposite ] ; then
+		if [ -d ${usb_gadget} ] ; then
+			if [ ! -d ./g_multi/ ] ; then
+				mkdir g_multi
+				cd ${usb_gadget}/g_multi
+				echo ${usb_idVendor} > idVendor # Linux Foundation
+				echo ${usb_idProduct} > idProduct # Multifunction Composite Gadget
+				echo ${usb_bcdDevice} > bcdDevice
+				echo ${usb_bcdUSB} > bcdUSB
+
+				#0x409 = english strings...
+				mkdir -p strings/0x409
+
+				echo "0123456789" > strings/0x409/serialnumber
+				echo ${usb_manufacturer} > strings/0x409/manufacturer
+				cat /proc/device-tree/model > strings/0x409/product
+
+				mkdir -p functions/acm.usb0
+				mkdir -p functions/ecm.usb0
+
+				# first byte of address must be even
+				HOST="48:6f:73:74:50:43" # "HostPC"
+				SELF="42:61:64:55:53:42" # "BadUSB"
+				echo $HOST > functions/ecm.usb0/host_addr
+				echo $SELF > functions/ecm.usb0/dev_addr
+
+				mkdir -p configs/c.1/strings/0x409
+				echo "Config 1: ECM network" > configs/c.1/strings/0x409/configuration
+				#250 = 500mA
+				echo 250 > configs/c.1/MaxPower
+				ln -s functions/acm.usb0 configs/c.1/
+				ln -s functions/ecm.usb0 configs/c.1/
+
+				#ls /sys/class/udc
+				echo musb-hdrc.0.auto > UDC
+			fi
+		fi
+	fi
 }
 
 g_network="iSerialNumber=${SERIAL_NUMBER} iManufacturer=${manufacturer} iProduct=${PRODUCT} host_addr=${cpsw_2_mac} dev_addr=${cpsw_1_mac}"
@@ -386,7 +436,7 @@ g_serial_retry () {
 	modprobe g_serial || true
 }
 
-if [ 1 ] ; then
+if [ "x" = "x" ] ; then
 
 #priorty:
 #g_multi
