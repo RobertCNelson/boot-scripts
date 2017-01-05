@@ -367,10 +367,17 @@ use_libcomposite () {
 			if [ ! -d ${usb_gadget}/g_multi/ ] ; then
 				mkdir -p ${usb_gadget}/g_multi || true
 				cd ${usb_gadget}/g_multi
+
+				echo ${usb_bcdUSB} > bcdUSB
+
+				#Matching lsusb of old g_muilti
+				echo 239 > bDeviceClass
+				echo 2 > bDeviceSubClass
+				echo 1 > bDeviceProtocol
+
 				echo ${usb_idVendor} > idVendor # Linux Foundation
 				echo ${usb_idProduct} > idProduct # Multifunction Composite Gadget
 				echo ${usb_bcdDevice} > bcdDevice
-				echo ${usb_bcdUSB} > bcdUSB
 
 				#0x409 = english strings...
 				mkdir -p strings/0x409
