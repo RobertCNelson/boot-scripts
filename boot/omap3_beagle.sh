@@ -20,6 +20,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+log="omap3_beagle:"
+
 #Bus 005 Device 014: ID 1d6b:0104 Linux Foundation Multifunction Composite Gadget
 usb_gadget="/sys/kernel/config/usb_gadget"
 
@@ -42,10 +44,12 @@ if [ -f /var/run/udhcpd.pid ] ; then
 fi
 
 use_libcomposite () {
+	echo "${log} modprobe libcomposite"
 	modprobe libcomposite || true
 	if [ -d /sys/module/libcomposite ] ; then
 		if [ -d ${usb_gadget} ] ; then
 			if [ ! -d ${usb_gadget}/g_multi/ ] ; then
+				echo "${log} Creating g_multi"
 				mkdir -p ${usb_gadget}/g_multi || true
 				cd ${usb_gadget}/g_multi
 
@@ -79,17 +83,25 @@ use_libcomposite () {
 
 				#ls /sys/class/udc
 				echo musb-hdrc.0.auto > UDC
+				echo "${log} g_multi Created"
 
 				# Auto-configuring the usb0 network interface:
 				$(dirname $0)/autoconfigure_usb0.sh || true
+			else
+				echo "${log} FIXME: need to bring down g_multi first, before running a second time."
 			fi
+		else
+			echo "${log} ERROR: no [${usb_gadget}]"
 		fi
+	else
+		echo "${log} ERROR: [libcomposite didn't load]"
 	fi
 }
 
 use_libcomposite
 
 if [ -d /sys/class/tty/ttyGS0/ ] ; then
+	echo "${log} Starting serial-getty@ttyGS0.service"
 	systemctl start serial-getty@ttyGS0.service || true
 fi
 
