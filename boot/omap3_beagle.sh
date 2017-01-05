@@ -41,54 +41,63 @@ if [ -f /var/run/udhcpd.pid ] ; then
 	/etc/init.d/udhcpd stop || true
 fi
 
-modprobe libcomposite || true
+use_libcomposite () {
+	modprobe libcomposite || true
+	if [ -d /sys/module/libcomposite ] ; then
+		if [ -d ${usb_gadget} ] ; then
+			if [ ! -d ${usb_gadget}/g_multi/ ] ; then
+				mkdir -p ${usb_gadget}/g_multi || true
+				cd ${usb_gadget}/g_multi
 
-if [ -d ${usb_gadget} ] ; then
-	cd ${usb_gadget}/
-	if [ ! -d ./g_multi/ ] ; then
-		mkdir g_multi
-		cd ${usb_gadget}/g_multi
-		echo ${usb_idVendor} > idVendor # Linux Foundation
-		echo ${usb_idProduct} > idProduct # Multifunction Composite Gadget
-		echo ${usb_bcdDevice} > bcdDevice
-		echo ${usb_bcdUSB} > bcdUSB
+				echo ${usb_bcdUSB} > bcdUSB
 
-		#0x409 = english strings...
-		mkdir -p strings/0x409
+				#Matching lsusb of old g_muilti
+				echo 239 > bDeviceClass
+				echo 2 > bDeviceSubClass
+				echo 1 > bDeviceProtocol
 
-		echo "0123456789" > strings/0x409/serialnumber
-		echo ${usb_manufacturer} > strings/0x409/manufacturer
-		cat /proc/device-tree/model > strings/0x409/product
+				echo ${usb_idVendor} > idVendor # Linux Foundation
+				echo ${usb_idProduct} > idProduct # Multifunction Composite Gadget
+				echo ${usb_bcdDevice} > bcdDevice
 
-		mkdir -p functions/acm.usb0
-		mkdir -p functions/ecm.usb0
+				#0x409 = english strings...
+				mkdir -p strings/0x409
 
-		# first byte of address must be even
-		HOST="48:6f:73:74:50:43" # "HostPC"
-		SELF="42:61:64:55:53:42" # "BadUSB"
-		echo $HOST > functions/ecm.usb0/host_addr
-		echo $SELF > functions/ecm.usb0/dev_addr
+				echo "0123456789" > strings/0x409/serialnumber
+				echo ${usb_imanufacturer} > strings/0x409/manufacturer
+				cat /proc/device-tree/model > strings/0x409/product
 
-		mkdir -p configs/c.1/strings/0x409
-		echo "Config 1: ECM network" > configs/c.1/strings/0x409/configuration
-		#250 = 500mA
-		echo 250 > configs/c.1/MaxPower
-		ln -s functions/acm.usb0 configs/c.1/
-		ln -s functions/ecm.usb0 configs/c.1/
+				mkdir -p functions/rndis.usb0
+				# first byte of address must be even
+				HOST="48:6f:73:74:50:43" # "HostPC"
+				SELF="42:61:64:55:53:42" # "BadUSB"
+				echo $HOST > functions/ecm.usb0/host_addr
+				echo $SELF > functions/ecm.usb0/dev_addr
+				mkdir -p functions/acm.usb0
 
-		#ls /sys/class/udc
-		echo musb-hdrc.0.auto > UDC
+				mkdir -p configs/c.1/strings/0x409
+				echo "Multifunction with RNDIS" > configs/c.1/strings/0x409/configuration
+
+				echo 500 > configs/c.1/MaxPower
+
+				ln -s functions/rndis.usb0 configs/c.1/
+				ln -s functions/acm.usb0 configs/c.1/
+
+				#ls /sys/class/udc
+				echo musb-hdrc.0.auto > UDC
+
+				# Auto-configuring the usb0 network interface:
+				$(dirname $0)/autoconfigure_usb0.sh || true
+			fi
+		fi
 	fi
+}
 
-	# Auto-configuring the usb0 network interface:
-	$(dirname $0)/autoconfigure_usb0.sh || true
-
-fi
+use_libcomposite
 
 if [ -d /sys/class/tty/ttyGS0/ ] ; then
 	systemctl start serial-getty@ttyGS0.service || true
 fi
-
 
 #Just Cleanup /etc/issue, systemd starts up tty before these are updated...
 sed -i -e '/Address/d' /etc/issue
