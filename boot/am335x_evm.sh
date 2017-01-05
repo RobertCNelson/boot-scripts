@@ -388,8 +388,14 @@ use_libcomposite () {
 				if [ ! "x${test_usb_image_file}" = "x" ] ; then
 					usb_ms_cdrom=1
 				fi
+			else
+				echo "${log} FIXME: no usb_image_file"
 			fi
+		else
+			echo "${log} FIXME: no usb_image_file"
 		fi
+	else
+		echo "${log} FIXME: no usb_image_file"
 	fi
 	echo "${log} modprobe libcomposite"
 	modprobe libcomposite || true
@@ -443,8 +449,14 @@ use_libcomposite () {
 				echo musb-hdrc.0.auto > UDC
 				usb0="enable"
 				echo "${log} g_multi Created"
+			else
+				echo "${log} FIXME: need to bring down g_multi first, before running a second time."
 			fi
+		else
+			echo "${log} ERROR: no [${usb_gadget}]"
 		fi
+	else
+		echo "${log} ERROR: [libcomposite didn't load]"
 	fi
 }
 
