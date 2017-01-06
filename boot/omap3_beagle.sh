@@ -67,8 +67,8 @@ use_libcomposite () {
 
 				mkdir -p functions/rndis.usb0
 				# first byte of address must be even
-				HOST="48:6f:73:74:50:43" # "HostPC"
-				SELF="42:61:64:55:53:42" # "BadUSB"
+				HOST=$(cat /proc/device-tree/model /etc/dogtag |md5sum|sed 's/^\(..\)\(..\)\(..\)\(..\)\(..\).*$/02:\1:\2:\3:\4:\5/')
+				SELF=$(cat /proc/device-tree/model /etc/rcn-ee.conf |md5sum|sed 's/^\(..\)\(..\)\(..\)\(..\)\(..\).*$/02:\1:\2:\3:\4:\5/')
 				echo ${HOST} > functions/rndis.usb0/host_addr
 				echo ${SELF} > functions/rndis.usb0/dev_addr
 				mkdir -p functions/acm.usb0
