@@ -69,8 +69,8 @@ use_libcomposite () {
 				# first byte of address must be even
 				HOST="48:6f:73:74:50:43" # "HostPC"
 				SELF="42:61:64:55:53:42" # "BadUSB"
-				echo $HOST > functions/ecm.usb0/host_addr
-				echo $SELF > functions/ecm.usb0/dev_addr
+				echo ${HOST} > functions/rndis.usb0/host_addr
+				echo ${SELF} > functions/rndis.usb0/dev_addr
 				mkdir -p functions/acm.usb0
 
 				mkdir -p configs/c.1/strings/0x409
