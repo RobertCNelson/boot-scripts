@@ -106,10 +106,14 @@ if [ -d /sys/class/tty/ttyGS0/ ] ; then
 fi
 
 if [ -f /usr/bin/amixer ] ; then
-	# Enable the Headset (Audio Out):
+	echo "${log} Enabling Headset (Audio Out):"
+	echo "${log} [amixer sset 'DAC1 Digital Fine' 40]:"
 	amixer -c0 sset 'DAC1 Digital Fine' 40
+	echo "${log} [amixer sset 'Headset' 2]:"
 	amixer -c0 sset 'Headset' 2
+	echo "${log} [amixer sset 'HeadsetL Mixer AudioL1' on]:"
 	amixer -c0 sset 'HeadsetL Mixer AudioL1' on
+	echo "${log} [amixer sset 'HeadsetR Mixer AudioR1' on]:"
 	amixer -c0 sset 'HeadsetR Mixer AudioR1' on
 fi
 
