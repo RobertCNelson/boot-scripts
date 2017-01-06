@@ -69,7 +69,9 @@ use_libcomposite () {
 				# first byte of address must be even
 				HOST=$(cat /proc/device-tree/model /etc/dogtag |md5sum|sed 's/^\(..\)\(..\)\(..\)\(..\)\(..\).*$/02:\1:\2:\3:\4:\5/')
 				SELF=$(cat /proc/device-tree/model /etc/rcn-ee.conf |md5sum|sed 's/^\(..\)\(..\)\(..\)\(..\)\(..\).*$/02:\1:\2:\3:\4:\5/')
+				echo "${log} rndis.usb0/host_addr=[${HOST}]"
 				echo ${HOST} > functions/rndis.usb0/host_addr
+				echo "${log} rndis.usb0/dev_addr=[${SELF}]"
 				echo ${SELF} > functions/rndis.usb0/dev_addr
 				mkdir -p functions/acm.usb0
 
