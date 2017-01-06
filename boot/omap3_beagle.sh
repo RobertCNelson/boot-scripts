@@ -107,6 +107,7 @@ fi
 
 if [ -f /usr/bin/amixer ] ; then
 	# Enable the Headset (Audio Out):
+	amixer -c0 sset 'DAC1 Digital Fine' 40
 	amixer -c0 sset 'Headset' 2
 	amixer -c0 sset 'HeadsetL Mixer AudioL1' on
 	amixer -c0 sset 'HeadsetR Mixer AudioR1' on unmute
