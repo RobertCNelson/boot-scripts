@@ -105,6 +105,13 @@ if [ -d /sys/class/tty/ttyGS0/ ] ; then
 	systemctl start serial-getty@ttyGS0.service || true
 fi
 
+if [ -f /usr/bin/amixer ] ; then
+	# Enable the Headset (Audio Out):
+	amixer -c0 sset 'Headset' 2
+	amixer -c0 sset 'HeadsetL Mixer AudioL1' on
+	amixer -c0 sset 'HeadsetR Mixer AudioR1' on unmute
+fi
+
 #Just Cleanup /etc/issue, systemd starts up tty before these are updated...
 sed -i -e '/Address/d' /etc/issue
 
