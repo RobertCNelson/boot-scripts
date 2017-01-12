@@ -130,7 +130,7 @@ deb_configure_dnsmasq ()
 # disable DNS by setting port to 0
 #port=0
 #one address range
-dhcp-range=usb,${deb_usb_address},${deb_usb_gateway}
+dhcp-range=usb,${deb_usb_address},${deb_usb_gateway},20m
 dhcp-option=usb,3
 # either use listen-address, then include 127.0.0.1
 #listen-address=${deb_usb_address}
