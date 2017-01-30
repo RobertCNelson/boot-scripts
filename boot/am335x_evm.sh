@@ -150,7 +150,7 @@ SanCloud_BeagleBone_Enhanced)
 esac
 
 if [ ! "x${usb_image_file}" = "x" ] ; then
-	echo "${log} usb_image_file=[`readlink -f ${usb_image_file}`]"
+	echo "${log} usb_image_file=[`readlink ${usb_image_file}`]"
 fi
 
 usb_iserialnumber="1234BBBK5678"
