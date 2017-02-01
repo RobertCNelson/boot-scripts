@@ -18,7 +18,7 @@ echo "sudo mkdir /tmp/rootfs/"
 echo "sudo mount -t nfs -o rw,nfsvers=3,rsize=8192,wsize=8192 192.168.0.10:/opt/${dist}/ /tmp/rootfs/"
 
 if [ -d /tmp/rootfs/ ] ; then
-	sudo rsync -aAXv --delete /* /tmp/rootfs/ --exclude={/dev/*,/proc/*,/sys/*,/tmp/*,/run/*,/mnt/*,/media/*,/lost+found}
+	sudo rsync -aAx --human-readable --info=name0,progress2 --delete /* /tmp/rootfs/ --exclude={/dev/*,/proc/*,/sys/*,/tmp/*,/run/*,/mnt/*,/media/*,/lost+found}
 	sudo sh -c "echo 'debugfs  /sys/kernel/debug  debugfs  defaults  0  0' > /tmp/rootfs/etc/fstab"
 
 	if [ ! "x${dist}" = "xstretch" ] ;then
