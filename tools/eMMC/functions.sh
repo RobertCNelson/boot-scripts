@@ -406,7 +406,7 @@ dev2dir() {
 
 get_device() {
   is_bbb="enable"
-  machine=$(cat /proc/device-tree/model | sed "s/ /_/g")
+  machine=$(cat /proc/device-tree/model | sed "s/ /_/g" | tr -d '\000')
 
   case "${machine}" in
     TI_AM5728_BeagleBoard*)
