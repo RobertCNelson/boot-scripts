@@ -36,6 +36,6 @@ if [ -f /usr/bin/amixer ] ; then
 fi
 
 #Just Cleanup /etc/issue, systemd starts up tty before these are updated...
-sed -i -e '/Address/d' /etc/issue
+sed -i -e '/Address/d' /etc/issue || true
 
 #
