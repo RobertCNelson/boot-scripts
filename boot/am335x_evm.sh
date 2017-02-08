@@ -594,7 +594,7 @@ if [ -f /usr/bin/create_ap ] ; then
 fi
 
 #Just Cleanup /etc/issue, systemd starts up tty before these are updated...
-sed -i -e '/Address/d' /etc/issue
+sed -i -e '/Address/d' /etc/issue || true
 
 #legacy support of: 2014-05-14
 if [ "x${abi}" = "x" ] ; then
