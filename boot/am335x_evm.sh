@@ -643,6 +643,13 @@ if [ ! "x${enable_cape_universal}" = "x" ] ; then
 		#cape-univ-audio Exports pins used by HDMI audio
 
 		unset stop_cape_load
+		#Make sure bone_capemgr.uboot_capemgr_enabled=1 wasn't passed to cmdline...
+		if [ "x${stop_cape_load}" = "x" ] ; then
+			check_enable_partno=$(grep bone_capemgr.uboot_capemgr_enabled=1 /proc/cmdline || true)
+			if [ ! "x${check_enable_partno}" = "x" ] ; then
+				stop_cape_load="stop"
+			fi
+		fi
 
 		#Make sure bone_capemgr.enable_partno wasn't passed to cmdline...
 		if [ "x${stop_cape_load}" = "x" ] ; then
