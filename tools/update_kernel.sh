@@ -580,21 +580,21 @@ third_party () {
 			;;
 		LTS49)
 			install_pkg=""
-#			if [ "x${ticmem}" = "xenabled" ] ; then
-#				install_pkg="${install_pkg}ti-cmem-modules-${latest_kernel} "
-#			fi
+			if [ "x${ticmem}" = "xenabled" ] ; then
+				install_pkg="${install_pkg}ti-cmem-modules-${latest_kernel} "
+			fi
 			if [ "x${tidebugss}" = "xenabled" ] ; then
 				install_pkg="${install_pkg}ti-debugss-modules-${latest_kernel} "
 			fi
 			if [ "x${titemperature}" = "xenabled" ] ; then
 				install_pkg="${install_pkg}ti-temperature-modules-${latest_kernel} "
 			fi
-#			if [ "x${sgxti335x}" = "xenabled" ] ; then
-#				install_pkg="${install_pkg}ti-sgx-ti335x-modules-${latest_kernel} "
-#			fi
-#			if [ "x${sgxjacinto6evm}" = "xenabled" ] ; then
-#				install_pkg="${install_pkg}ti-sgx-jacinto6evm-modules-${latest_kernel} "
-#			fi
+			if [ "x${sgxti335x}" = "xenabled" ] ; then
+				install_pkg="${install_pkg}ti-sgx-ti335x-modules-${latest_kernel} "
+			fi
+			if [ "x${sgxjacinto6evm}" = "xenabled" ] ; then
+				install_pkg="${install_pkg}ti-sgx-jacinto6evm-modules-${latest_kernel} "
+			fi
 			if [ ! "x${install_pkg}" = "x" ] ; then
 				apt-get ${apt_options} ${install_pkg}
 				run_depmod_initramfs="enabled"
