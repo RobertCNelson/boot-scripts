@@ -1,4 +1,4 @@
-#!/bin/sh -e
+#!/bin/bash -ex
 #
 
 if ! id | grep -q root; then
