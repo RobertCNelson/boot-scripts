@@ -10,9 +10,10 @@ git_bin=$(which git)
 
 if [ -f ${git_bin} ] ; then
 	if [ -d /opt/scripts/ ] ; then
-		cd /opt/scripts/ 2>/dev/null || true
+		old_dir="`pwd`"
+		cd /opt/scripts/ || true
 		echo "git:/opt/scripts/:[`${git_bin} rev-parse HEAD`]"
-		cd - 2>/dev/null || true
+		cd "${old_dir}" || true
 	fi
 fi
 
