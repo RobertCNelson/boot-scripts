@@ -10,9 +10,9 @@ git_bin=$(which git)
 
 if [ -f ${git_bin} ] ; then
 	if [ -d /opt/scripts/ ] ; then
-		cd /opt/scripts/
+		cd /opt/scripts/ 2>/dev/null || true
 		echo "git:/opt/scripts/:[`${git_bin} rev-parse HEAD`]"
-		cd -
+		cd - 2>/dev/null || true
 	fi
 fi
 
