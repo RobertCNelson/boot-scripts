@@ -17,6 +17,11 @@ if [ -f ${git_bin} ] ; then
 	fi
 fi
 
+if [ -f /sys/bus/i2c/devices/0-0050/eeprom ] ; then
+	board_eeprom=$(hexdump -e '8/1 "%c"' /sys/bus/i2c/devices/0-0050/eeprom -n 28 | cut -b 5-28 || true)
+	echo "eeprom:[${board_eeprom}]"
+fi
+
 if [ -f /etc/dogtag ] ; then
 	echo "dogtag:[`cat /etc/dogtag`]"
 fi
