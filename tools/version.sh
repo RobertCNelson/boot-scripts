@@ -12,7 +12,8 @@ omap_bootloader () {
 	unset test_var
 	test_var=$(dd if=${drive} count=6 skip=393248 bs=1 2>/dev/null || true)
 	if [ "x${test_var}" = "xU-Boot" ] ; then
-		uboot=$(dd if=${drive} count=32 skip=393248 bs=1 | awk '{print $2}' 2>/dev/null || true)
+		uboot=$(dd if=${drive} count=32 skip=393248 bs=1 2>/dev/null || true)
+		uboot=$(echo ${uboot} | awk '{print $2}')
 		unset test_var
 		test_var=$(dd if=${drive} count=7 skip=663185 bs=1 2>/dev/null || true)
 		if [ "x${test_var}" = "xjenkins" ] ; then
