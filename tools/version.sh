@@ -8,6 +8,22 @@ fi
 
 git_bin=$(which git)
 
+omap_bootloader () {
+	unset test_var
+	test_var=$(dd if=${drive} count=6 skip=393248 bs=1 2>/dev/null || true)
+	if [ "x${test_var}" = "xU-Boot" ] ; then
+		uboot=$(dd if=${drive} count=32 skip=393248 bs=1 2>/dev/null || true)
+		unset test_var
+		test_var=$(dd if=${drive} count=6 skip=663185 bs=1 2>/dev/null || true)
+		if [ "x${test_var}" = "xjenkins" ] ; then
+			build=$(dd if=${drive} count=3 skip=663219 bs=1 2>/dev/null || true)
+			echo "bootloader:[${drive}]:[${uboot}]:[Build ${build}]"
+		else
+			echo "bootloader:[${drive}]:[${uboot}]"
+		fi
+	fi
+}
+
 if [ -f ${git_bin} ] ; then
 	if [ -d /opt/scripts/ ] ; then
 		old_dir="`pwd`"
@@ -28,20 +44,12 @@ fi
 
 if [ -b /dev/mmcblk0 ] ; then
 	drive=/dev/mmcblk0
-	test=$(dd if=${drive} count=6  skip=393248 bs=1 2>/dev/null || true)
-	if [ "x${test}" = "xU-Boot" ] ; then
-		uboot=$(dd if=${drive} count=32 skip=393248 bs=1 2>/dev/null || true)
-		echo "bootloader:[${drive}]:[${uboot}]"
-	fi
+	omap_bootloader
 fi
 
 if [ -b /dev/mmcblk1 ] ; then
 	drive=/dev/mmcblk1
-	test=$(dd if=${drive} count=6  skip=393248 bs=1 2>/dev/null || true)
-	if [ "x${test}" = "xU-Boot" ] ; then
-		uboot=$(dd if=${drive} count=32 skip=393248 bs=1 2>/dev/null || true)
-		echo "bootloader:[${drive}]:[${uboot}]"
-	fi
+	omap_bootloader
 fi
 
 echo "kernel:[`uname -r`]"
