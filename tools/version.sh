@@ -12,14 +12,14 @@ omap_bootloader () {
 	unset test_var
 	test_var=$(dd if=${drive} count=6 skip=393248 bs=1 2>/dev/null || true)
 	if [ "x${test_var}" = "xU-Boot" ] ; then
-		uboot=$(dd if=${drive} count=32 skip=393248 bs=1 2>/dev/null || true)
+		uboot=$(dd if=${drive} count=32 skip=393248 bs=1 | awk '{print $2}' 2>/dev/null || true)
 		unset test_var
 		test_var=$(dd if=${drive} count=7 skip=663185 bs=1 2>/dev/null || true)
 		if [ "x${test_var}" = "xjenkins" ] ; then
 			build=$(dd if=${drive} count=3 skip=663219 bs=1 2>/dev/null || true)
-			echo "bootloader:[${drive}]:[${uboot}]:[Build ${build}]"
+			echo "bootloader:[${drive}]:[U-Boot ${uboot}]:[Build ${build}]"
 		else
-			echo "bootloader:[${drive}]:[${uboot}]"
+			echo "bootloader:[${drive}]:[U-Boot ${uboot}]"
 		fi
 	fi
 }
