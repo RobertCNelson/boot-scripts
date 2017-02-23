@@ -33,12 +33,15 @@ usb_gadget="/sys/kernel/config/usb_gadget"
 
 #  idVendor           0x1d6b Linux Foundation
 #  idProduct          0x0104 Multifunction Composite Gadget
-#  bcdDevice            4.04
+#  bcdDevice            10.00
 #  bcdUSB               2.00
+
+# Note: bcdDevice needs to be changed to get Windows OS descriptor to
+# re-enumerate, so if config c.2 is changed, bcdDevice needs to be changed
 
 usb_idVendor="0x1d6b"
 usb_idProduct="0x0104"
-usb_bcdDevice="0x0404"
+usb_bcdDevice="0x1000"
 usb_bcdUSB="0x0200"
 usb_serialnr="000000"
 usb_product="USB Device"
@@ -431,10 +434,25 @@ use_libcomposite () {
 				echo ${usb_imanufacturer} > strings/0x409/manufacturer
 				echo ${usb_iproduct} > strings/0x409/product
 
+				# OS desciptor magic for Windows - used to tell Windows to use configuration c.2
+				# https://msdn.microsoft.com/en-us/library/windows/hardware/ff537430(v=vs.85).aspx
+				echo "1" > os_desc/use
+				echo "0xcd" > os_desc/b_vendor_code # 0xcd == Microsoft
+				echo "MSFT100" > os_desc/qw_sign
+
+				mkdir -p functions/ecm.usb0
+				# first byte of address must be even
+				echo ${cpsw_2_mac} > functions/ecm.usb0/host_addr
+				echo ${cpsw_1_mac} > functions/ecm.usb0/dev_addr
+
 				mkdir -p functions/rndis.usb0
 				# first byte of address must be even
 				echo ${cpsw_2_mac} > functions/rndis.usb0/host_addr
 				echo ${cpsw_1_mac} > functions/rndis.usb0/dev_addr
+				echo "RNDIS" > functions/rndis.usb0/os_desc/interface.rndis/compatible_id
+				# 5162001 == Windows RNDIS 6.0 Driver
+				echo "5162001" > functions/rndis.usb0/os_desc/interface.rndis/sub_compatible_id
+
 				mkdir -p functions/acm.usb0
 
 				if [ "x${has_img_file}" = "xtrue" ] ; then
@@ -448,15 +466,28 @@ use_libcomposite () {
 				fi
 
 				mkdir -p configs/c.1/strings/0x409
-				echo "Multifunction with RNDIS" > configs/c.1/strings/0x409/configuration
+				echo "Multifunction with CDC/ECM" > configs/c.1/strings/0x409/configuration
 
 				echo 500 > configs/c.1/MaxPower
 
-				ln -s functions/rndis.usb0 configs/c.1/
+				ln -s functions/ecm.usb0 configs/c.1/
 				ln -s functions/acm.usb0 configs/c.1/
 				if [ "x${has_img_file}" = "xtrue" ] ; then
 					ln -s functions/mass_storage.usb0 configs/c.1/
 				fi
+
+				mkdir -p configs/c.2/strings/0x409
+				echo "Multifunction with RNDIS" > configs/c.2/strings/0x409/configuration
+
+				echo 500 > configs/c.2/MaxPower
+
+				ln -s functions/rndis.usb0 configs/c.2/
+				ln -s functions/acm.usb0 configs/c.2/
+				if [ "x${has_img_file}" = "xtrue" ] ; then
+					ln -s functions/mass_storage.usb0 configs/c.2/
+				fi
+
+				ln -s configs/c.2 os_desc
 
 				#ls /sys/class/udc
 				echo musb-hdrc.0.auto > UDC
