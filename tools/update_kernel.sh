@@ -1,6 +1,6 @@
 #!/bin/sh -e
 #
-# Copyright (c) 2014-2016 Robert Nelson <robertcnelson@gmail.com>
+# Copyright (c) 2014-2017 Robert Nelson <robertcnelson@gmail.com>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -30,17 +30,17 @@ test_ti_kernel_version () {
 		major=$(uname -r | awk '{print $1}' | cut -d. -f1)
 		minor=$(uname -r | awk '{print $1}' | cut -d. -f2)
 
-		case "${major}.${minor}" in
-		3.14)
+		case "x${major}.${minor}x" in
+		x3.14x)
 			kernel="LTS314"
 			;;
-		4.1)
+		x4.1x)
 			kernel="LTS41"
 			;;
-		4.4)
+		x4.4x)
 			kernel="LTS44"
 			;;
-		4.9)
+		x4.9x)
 			kernel="LTS49"
 			;;
 		esac
@@ -81,14 +81,14 @@ test_bone_rt_kernel_version () {
 		major=$(uname -r | awk '{print $1}' | cut -d. -f1)
 		minor=$(uname -r | awk '{print $1}' | cut -d. -f2)
 
-		case "${major}.${minor}" in
-		4.1)
+		case "x${major}.${minor}x" in
+		x4.1x)
 			kernel="LTS41"
 			;;
-		4.4)
+		x4.4x)
 			kernel="LTS44"
 			;;
-		4.9)
+		x4.9x)
 			kernel="LTS49"
 			;;
 		esac
@@ -100,17 +100,17 @@ test_bone_kernel_version () {
 		major=$(uname -r | awk '{print $1}' | cut -d. -f1)
 		minor=$(uname -r | awk '{print $1}' | cut -d. -f2)
 
-		case "${major}.${minor}" in
-		3.8)
+		case "x${major}.${minor}x" in
+		x3.8x)
 			kernel="STABLE"
 			;;
-		4.1)
+		x4.1x)
 			kernel="LTS41"
 			;;
-		4.4)
+		x4.4x)
 			kernel="LTS44"
 			;;
-		4.9)
+		x4.9x)
 			kernel="LTS49"
 			;;
 		*)
@@ -145,14 +145,14 @@ test_armv7_kernel_version () {
 		major=$(uname -r | awk '{print $1}' | cut -d. -f1)
 		minor=$(uname -r | awk '{print $1}' | cut -d. -f2)
 
-		case "${major}.${minor}" in
-		4.1)
+		case "x${major}.${minor}x" in
+		x4.1x)
 			kernel="LTS41"
 			;;
-		4.4)
+		x4.4x)
 			kernel="LTS44"
 			;;
-		4.9)
+		x4.9x)
 			kernel="LTS49"
 			;;
 		*)
@@ -334,6 +334,14 @@ latest_version_repo () {
 				fi
 			fi
 			apt-get update || true
+
+			if [ "x${cleanup_old_kernels}" = "xenabled" ] ; then
+				unset pkg_list
+				pkg_list=$(dpkg --list | grep linux-image | awk '{print $2}' | grep -v linux-image-`uname -r` | tr '\n' ' ' || true)
+				if [ ! "x${pkg_list}" = "x" ] ; then
+					apt-get -y remove --purge ${pkg_list}
+				fi
+			fi
 
 			unset flag_reinstall
 			pkg="linux-image-${latest_kernel}"
@@ -735,6 +743,9 @@ while [ ! -z "$1" ] ; do
 		;;
 	--pre-fall-2014-rootfs)
 		old_rootfs="enable"
+		;;
+	--cleanup-old-kernels)
+		cleanup_old_kernels="enable"
 		;;
 	esac
 	shift
