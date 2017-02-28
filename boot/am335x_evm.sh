@@ -467,6 +467,7 @@ use_libcomposite () {
 				#ls /sys/class/udc
 				echo musb-hdrc.0.auto > UDC
 				usb0="enable"
+				usb1="enable"
 				echo "${log} g_multi Created"
 			else
 				echo "${log} FIXME: need to bring down g_multi first, before running a second time."
@@ -557,7 +558,7 @@ use_old_g_multi () {
 	fi
 }
 
-unset usb0
+unset usb0 usb1
 
 #use libcomposite with v4.4.x+ kernel's...
 kernel_major=$(uname -r | cut -d. -f1 || true)
@@ -581,6 +582,12 @@ if [ "x${usb0}" = "xenable" ] ; then
 	echo "${log} Starting usb0 network"
 	# Auto-configuring the usb0 network interface:
 	$(dirname $0)/autoconfigure_usb0.sh || true
+fi
+
+if [ "x${usb1}" = "xenable" ] ; then
+	echo "${log} Starting usb1 network"
+	# Auto-configuring the usb1 network interface:
+	$(dirname $0)/autoconfigure_usb1.sh || true
 fi
 
 if [ -d /sys/class/tty/ttyGS0/ ] ; then
