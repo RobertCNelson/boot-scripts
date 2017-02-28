@@ -435,6 +435,11 @@ use_libcomposite () {
 				# first byte of address must be even
 				echo ${cpsw_2_mac} > functions/rndis.usb0/host_addr
 				echo ${cpsw_1_mac} > functions/rndis.usb0/dev_addr
+
+				mkdir -p functions/ecm.usb0
+				echo ${cpsw_2_mac} > functions/ecm.usb0/host_addr
+				echo ${cpsw_1_mac} > functions/ecm.usb0/dev_addr
+
 				mkdir -p functions/acm.usb0
 
 				if [ "x${has_img_file}" = "xtrue" ] ; then
@@ -453,6 +458,7 @@ use_libcomposite () {
 				echo 500 > configs/c.1/MaxPower
 
 				ln -s functions/rndis.usb0 configs/c.1/
+				ln -s functions/ecm.usb0 configs/c.1/
 				ln -s functions/acm.usb0 configs/c.1/
 				if [ "x${has_img_file}" = "xtrue" ] ; then
 					ln -s functions/mass_storage.usb0 configs/c.1/
