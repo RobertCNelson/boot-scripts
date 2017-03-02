@@ -353,22 +353,54 @@ else
 	cpsw_3_mac="1c:ba:8c:a2:ed:71"
 fi
 
+#Create cpsw_4_mac, we need this for usb1 (BeagleBone Side)...
+if [ -f /usr/bin/bc ] ; then
+	mac_0_prefix=$(echo ${cpsw_0_mac} | cut -c 1-14)
+
+	cpsw_0_6=$(echo ${cpsw_0_mac} | awk -F ':' '{print $6}')
+	#bc cuts off leading zero's, we need ten/ones value
+	cpsw_res=$(echo "obase=16;ibase=16;$cpsw_0_6 + 104" | bc)
+
+	cpsw_4_mac=${mac_0_prefix}:$(echo ${cpsw_res} | cut -c 2-3)
+else
+	cpsw_4_mac="1c:ba:8c:a2:ed:72"
+fi
+
+#Create cpsw_5_mac, we need this for usb1 (USB host, pc side)...
+if [ -f /usr/bin/bc ] ; then
+	mac_0_prefix=$(echo ${cpsw_0_mac} | cut -c 1-14)
+
+	cpsw_0_6=$(echo ${cpsw_0_mac} | awk -F ':' '{print $6}')
+	#bc cuts off leading zero's, we need ten/ones value
+	cpsw_res=$(echo "obase=16;ibase=16;$cpsw_0_6 + 105" | bc)
+
+	cpsw_4_mac=${mac_0_prefix}:$(echo ${cpsw_res} | cut -c 2-3)
+else
+	cpsw_4_mac="1c:ba:8c:a2:ed:73"
+fi
+
 #mac address:
 #cpsw_0_mac = eth0 - wlan0 (in eeprom)
 #cpsw_1_mac = usb0 (BeagleBone Side) (in eeprom)
 #cpsw_2_mac = usb0 (USB host, pc side) ((cpsw_0_mac + cpsw_2_mac) /2 )
 #cpsw_3_mac = wl18xx (AP) (cpsw_0_mac + 3)
+#cpsw_4_mac = usb1 (BeagleBone Side)
+#cpsw_5_mac = usb1 (USB host, pc side)
 
 echo "${log} cpsw_0_mac: [${cpsw_0_mac}]"
 echo "${log} cpsw_1_mac: [${cpsw_1_mac}]"
 echo "${log} cpsw_2_mac: [${cpsw_2_mac}]"
 echo "${log} cpsw_3_mac: [${cpsw_3_mac}]"
+echo "${log} cpsw_4_mac: [${cpsw_4_mac}]"
+echo "${log} cpsw_5_mac: [${cpsw_5_mac}]"
 
 #Save these to /etc/* so we don't have to recalculate again...
 echo "${cpsw_0_mac}" > /etc/cpsw_0_mac || true
 echo "${cpsw_1_mac}" > /etc/cpsw_1_mac || true
 echo "${cpsw_2_mac}" > /etc/cpsw_2_mac || true
 echo "${cpsw_3_mac}" > /etc/cpsw_3_mac || true
+echo "${cpsw_4_mac}" > /etc/cpsw_4_mac || true
+echo "${cpsw_5_mac}" > /etc/cpsw_5_mac || true
 
 #udhcpd gets started at bootup, but we need to wait till g_multi is loaded, and we run it manually...
 if [ -f /var/run/udhcpd.pid ] ; then
@@ -437,8 +469,8 @@ use_libcomposite () {
 				echo ${cpsw_1_mac} > functions/rndis.usb0/dev_addr
 
 				mkdir -p functions/ecm.usb0
-				echo ${cpsw_2_mac} > functions/ecm.usb0/host_addr
-				echo ${cpsw_1_mac} > functions/ecm.usb0/dev_addr
+				echo ${cpsw_4_mac} > functions/ecm.usb0/host_addr
+				echo ${cpsw_5_mac} > functions/ecm.usb0/dev_addr
 
 				mkdir -p functions/acm.usb0
 
