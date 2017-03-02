@@ -374,9 +374,9 @@ if [ -f /usr/bin/bc ] ; then
 	#bc cuts off leading zero's, we need ten/ones value
 	cpsw_res=$(echo "obase=16;ibase=16;$cpsw_0_6 + 105" | bc)
 
-	cpsw_4_mac=${mac_0_prefix}:$(echo ${cpsw_res} | cut -c 2-3)
+	cpsw_5_mac=${mac_0_prefix}:$(echo ${cpsw_res} | cut -c 2-3)
 else
-	cpsw_4_mac="1c:ba:8c:a2:ed:73"
+	cpsw_5_mac="1c:ba:8c:a2:ed:73"
 fi
 
 #mac address:
