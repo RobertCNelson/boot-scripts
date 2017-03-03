@@ -748,10 +748,10 @@ while [ ! -z "$1" ] ; do
 		SOC="ti-xenomai"
 		;;
 	--pre-fall-2014-rootfs)
-		old_rootfs="enable"
+		old_rootfs="enabled"
 		;;
 	--cleanup-old-kernels)
-		cleanup_old_kernels="enable"
+		cleanup_old_kernels="enabled"
 		;;
 	esac
 	shift
