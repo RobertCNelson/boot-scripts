@@ -287,6 +287,16 @@ check_apt_cache () {
 	apt_cache=$(LC_ALL=C apt-cache search "^${pkg}$" | awk '{print $1}' || true)
 }
 
+cleanup_old_kernels () {
+	if [ "x${cleanup_old_kernels}" = "xenabled" ] ; then
+		unset pkg_list
+		pkg_list=$(dpkg --list | grep linux-image | awk '{print $2}' | grep -v linux-image-`uname -r` | tr '\n' ' ' || true)
+		if [ ! "x${pkg_list}" = "x" ] ; then
+			apt-get -y remove --purge ${pkg_list}
+		fi
+	fi
+}
+
 latest_version_repo () {
 	if [ ! "x${SOC}" = "x" ] ; then
 		cd /tmp/
@@ -335,13 +345,7 @@ latest_version_repo () {
 			fi
 			apt-get update || true
 
-			if [ "x${cleanup_old_kernels}" = "xenabled" ] ; then
-				unset pkg_list
-				pkg_list=$(dpkg --list | grep linux-image | awk '{print $2}' | grep -v linux-image-`uname -r` | tr '\n' ' ' || true)
-				if [ ! "x${pkg_list}" = "x" ] ; then
-					apt-get -y remove --purge ${pkg_list}
-				fi
-			fi
+			cleanup_old_kernels
 
 			unset flag_reinstall
 			pkg="linux-image-${latest_kernel}"
@@ -465,6 +469,8 @@ latest_version () {
 specific_version_repo () {
 	latest_kernel=$(echo ${kernel_version})
 	apt-get update || true
+
+	cleanup_old_kernels
 
 	unset flag_reinstall
 	pkg="linux-image-${latest_kernel}"
