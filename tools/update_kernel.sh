@@ -190,7 +190,7 @@ scan_armv7_kernels () {
 }
 
 get_device () {
-	machine=$(cat /proc/device-tree/model | sed "s/ /_/g")
+	machine=$(cat /proc/device-tree/model | sed "s/ /_/g" | tr -d '\000')
 
 	if [ "x${SOC}" = "x" ] ; then
 		case "${machine}" in
