@@ -41,5 +41,7 @@ done
 # gadget is not supported by ConnMan provisioning files, so we have to do this
 # the ugly way. Advanced users can comment these line to gain full control of
 # the usb1 network interface.
-connmanctl enable gadget >/dev/null 2>&1
-connmanctl tether gadget on >/dev/null 2>&1
+#connmanctl enable gadget >/dev/null 2>&1
+#connmanctl tether gadget on >/dev/null 2>&1
+
+/sbin/ifconfig usb1 192.168.6.2 netmask 255.255.255.252 || true
