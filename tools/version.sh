@@ -15,7 +15,6 @@ omap_bootloader () {
 		uboot=$(dd if=${drive} count=32 skip=393248 bs=1 2>/dev/null || true)
 		uboot=$(echo ${uboot} | awk '{print $2}')
 		echo "bootloader:[${drive}]:[U-Boot ${uboot}]"
-		fi
 	fi
 }
 
