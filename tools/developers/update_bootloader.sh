@@ -227,7 +227,7 @@ get_uboot_version () {
 	test_var=$(dd if=${drive} count=${uboot_count} skip=${uboot_skip} bs=${uboot_bs} 2>/dev/null || true)
 	if [ "x${test_var}" = "xU-Boot" ] ; then
 		uboot_version=$(dd if=${drive} count=${uboot_full_count} skip=${uboot_skip} bs=${uboot_bs} 2>/dev/null || true)
-		uboot_version=$(echo ${uboot} | awk '{print $2}')
+		uboot_version=$(echo ${uboot_version} | awk '{print $2}')
 		echo "bootloader:[${drive}]:[U-Boot ${uboot_version}]"
 	fi
 }
