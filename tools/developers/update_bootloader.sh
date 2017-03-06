@@ -237,6 +237,7 @@ am335x_dd_default () {
 	uboot_full_count=32
 	uboot_skip=393248
 	uboot_bs=1
+	drive=${target}
 	get_uboot_version
 }
 
