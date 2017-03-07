@@ -99,15 +99,19 @@ elif [ -f /var/local/bb_usb_mass_storage.img ] ; then
 	usb_image_file="/var/local/bb_usb_mass_storage.img"
 fi
 
+unset dnsmasq_usb0_usb1
+
 board=$(cat /proc/device-tree/model | sed "s/ /_/g" | tr -d '\000')
 case "${board}" in
 TI_AM335x_BeagleBone)
 	has_wifi="disable"
 	cleanup_extra_docs
+	dnsmasq_usb0_usb1="enabled"
 	;;
 TI_AM335x_BeagleBone_Black)
 	has_wifi="disable"
 	cleanup_extra_docs
+	dnsmasq_usb0_usb1="enabled"
 	;;
 TI_AM335x_BeagleBone_Black_Wireless)
 	has_wifi="enable"
@@ -642,14 +646,13 @@ if [ "x${usb1}" = "xenable" ] ; then
 	$(dirname $0)/autoconfigure_usb1.sh || true
 fi
 
-if [ -d /sys/kernel/config/usb_gadget ] ; then
-	if [ -f /var/run/udhcpd.pid ] ; then
-		/etc/init.d/udhcpd stop || true
-	fi
-	if [ ! -f /etc/dnsmasq.d/SoftAp0 ] ; then
-		ap_interface=SoftAp0
+	dnsmasq_usb0_usb1="enabled"
 
-		wfile="/etc/dnsmasq.d/${ap_interface}"
+if [ "x${dnsmasq_usb0_usb1}" = "xenabled" ] ; then
+	if [ -d /sys/kernel/config/usb_gadget ] ; then
+		/etc/init.d/udhcpd stop || true
+
+		wfile="/etc/dnsmasq.d/SoftAp0"
 		echo "interface=usb0" >> ${wfile}
 		echo "interface=usb1" >> ${wfile}
 		echo "port=53" >> ${wfile}
