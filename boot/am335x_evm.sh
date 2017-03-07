@@ -634,6 +634,11 @@ else
 	use_libcomposite
 fi
 
+if [ -f /var/lib/misc/dnsmasq.leases ] ; then
+	systemctl stop dnsmasq || true
+	rm -rf /var/lib/misc/dnsmasq.leases || true
+fi
+
 if [ "x${usb0}" = "xenable" ] ; then
 	echo "${log} Starting usb0 network"
 	# Auto-configuring the usb0 network interface:
@@ -645,8 +650,6 @@ if [ "x${usb1}" = "xenable" ] ; then
 	# Auto-configuring the usb1 network interface:
 	$(dirname $0)/autoconfigure_usb1.sh || true
 fi
-
-	dnsmasq_usb0_usb1="enabled"
 
 if [ "x${dnsmasq_usb0_usb1}" = "xenabled" ] ; then
 	if [ -d /sys/kernel/config/usb_gadget ] ; then
