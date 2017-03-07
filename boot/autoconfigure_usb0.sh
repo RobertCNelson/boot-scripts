@@ -146,7 +146,13 @@ EOF
 		grep -qi "${deb_dnsmasq_warning}" ${deb_dnsmasq_conf} || \
 			echo "\n${deb_dnsmasq_warning}" >>${deb_dnsmasq_conf}
 
-		systemctl restart dnsmasq || true
+		if [ -f /var/lib/misc/dnsmasq.leases ] ; then
+			systemctl stop dnsmasq || true
+			rm -rf /var/lib/misc/dnsmasq.leases || true
+			systemctl start dnsmasq || true
+		else
+			systemctl restart dnsmasq || true
+		fi
 	fi
 }
 
