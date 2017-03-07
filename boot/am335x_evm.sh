@@ -496,24 +496,25 @@ use_libcomposite () {
 					ln -s functions/mass_storage.usb0 configs/c.1/
 				fi
 
-				# If Linux sees a device with RNDIS as the first
-				# interface and there is a second configuration,
-				# it will prefer the second configuration. OS X
-				# used to do the same, but it was broken in 10.11
-				# which is why we have to include the ecm in the
-				# first configuration (c.1). So, c.1 will be used
-				# on Windows and macOS >= 10.11 and c.2 will be
-				# used on Linux and macOS <= 10.10
-				mkdir -p configs/c.2/strings/0x409
-				echo "Multifunction without RNDIS" > configs/c.2/strings/0x409/configuration
-
-				echo 500 > configs/c.2/MaxPower
-
-				ln -s functions/ecm.usb0 configs/c.2/
-				ln -s functions/acm.usb0 configs/c.2/
-				if [ "x${has_img_file}" = "xtrue" ] ; then
-					ln -s functions/mass_storage.usb0 configs/c.2/
-				fi
+#FIXME, needs more testing in Windows 7 & 10, as the inteface doesn't show up (no usb flash, serial, ethernet)
+#				# If Linux sees a device with RNDIS as the first
+#				# interface and there is a second configuration,
+#				# it will prefer the second configuration. OS X
+#				# used to do the same, but it was broken in 10.11
+#				# which is why we have to include the ecm in the
+#				# first configuration (c.1). So, c.1 will be used
+#				# on Windows and macOS >= 10.11 and c.2 will be
+#				# used on Linux and macOS <= 10.10
+#				mkdir -p configs/c.2/strings/0x409
+#				echo "Multifunction without RNDIS" > configs/c.2/strings/0x409/configuration
+#
+#				echo 500 > configs/c.2/MaxPower
+#
+#				ln -s functions/ecm.usb0 configs/c.2/
+#				ln -s functions/acm.usb0 configs/c.2/
+#				if [ "x${has_img_file}" = "xtrue" ] ; then
+#					ln -s functions/mass_storage.usb0 configs/c.2/
+#				fi
 
 				#ls /sys/class/udc
 				echo musb-hdrc.0.auto > UDC
