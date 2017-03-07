@@ -194,27 +194,31 @@ if [ "x${deb_usb_address}" != "x" -a\
 		echo "g_multi: waiting for /sys/class/net/usb0/"
 	done
 
-	unset dnsmasq_got_usb0
-	#bbgw, SoftAp0/usb0 taken care of by dnsmasq..
-	if [ -f /etc/dnsmasq.d/SoftAp0 ] ; then
-		dnsmasq_got_usb0=$(cat /etc/dnsmasq.d/SoftAp0 | grep usb0 || true)
-	fi
-
-	if [ ! "x${dnsmasq_got_usb0}" = "x" ]; then
-		#bbgw, pass's out: 192.168.7.3 & 192.168.7.4
+	if [ -d /sys/kernel/config/usb_gadget ] ; then
 		/sbin/ifconfig usb0 ${deb_usb_address} netmask ${deb_usb_netmask} || true
-	# usb0 is specified!
-	elif [ -f ${deb_udhcpd_default} ]; then
-		/sbin/ifconfig usb0 ${deb_usb_address} netmask ${deb_usb_netmask} || true
-		deb_configure_udhcpd
+	else
+		unset dnsmasq_got_usb0
+		#bbgw, SoftAp0/usb0 taken care of by dnsmasq..
+		if [ -f /etc/dnsmasq.d/SoftAp0 ] ; then
+			dnsmasq_got_usb0=$(cat /etc/dnsmasq.d/SoftAp0 | grep usb0 || true)
+		fi
 
-	elif [ -f ${deb_dnsmasq_dir}/README ]; then
-		deb_configure_dnsmasq
+		if [ ! "x${dnsmasq_got_usb0}" = "x" ]; then
+			#bbgw, pass's out: 192.168.7.3 & 192.168.7.4
+			/sbin/ifconfig usb0 ${deb_usb_address} netmask ${deb_usb_netmask} || true
+		# usb0 is specified!
+		elif [ -f ${deb_udhcpd_default} ]; then
+			/sbin/ifconfig usb0 ${deb_usb_address} netmask ${deb_usb_netmask} || true
+			deb_configure_udhcpd
 
+		elif [ -f ${deb_dnsmasq_dir}/README ]; then
+			deb_configure_dnsmasq
+
+		fi
+		${deb_post_up}
+
+		[ "x$deb_dns_nameservers" != "x" ] && echo nameserver $deb_dns_nameservers >> /etc/resolv.conf
 	fi
-	${deb_post_up}
-
-	[ "x$deb_dns_nameservers" != "x" ] && echo nameserver $deb_dns_nameservers >> /etc/resolv.conf
 fi
 
 #

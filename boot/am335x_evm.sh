@@ -642,6 +642,37 @@ if [ "x${usb1}" = "xenable" ] ; then
 	$(dirname $0)/autoconfigure_usb1.sh || true
 fi
 
+if [ -d /sys/kernel/config/usb_gadget ] ; then
+	if [ -f /var/run/udhcpd.pid ] ; then
+		/etc/init.d/udhcpd stop || true
+	fi
+	if [ ! -f /etc/dnsmasq.d/SoftAp0 ] ; then
+		ap_interface=SoftAp0
+
+		wfile="/etc/dnsmasq.d/${ap_interface}"
+		echo "interface=usb0" >> ${wfile}
+		echo "interface=usb1" >> ${wfile}
+		echo "port=53" >> ${wfile}
+		echo "dhcp-authoritative" >> ${wfile}
+		echo "domain-needed" >> ${wfile}
+		echo "bogus-priv" >> ${wfile}
+		echo "expand-hosts" >> ${wfile}
+		echo "cache-size=2048" >> ${wfile}
+		echo "dhcp-range=usb0,192.168.7.1,192.168.7.1,2m" >> ${wfile}
+		echo "dhcp-range=usb1,192.168.6.1,192.168.6.1,2m" >> ${wfile}
+		echo "listen-address=127.0.0.1" >> ${wfile}
+		echo "listen-address=192.168.7.2" >> ${wfile}
+		echo "listen-address=192.168.6.2" >> ${wfile}
+		echo "dhcp-option=usb0,3" >> ${wfile}
+		echo "dhcp-option=usb0,6" >> ${wfile}
+		echo "dhcp-option=usb1,3" >> ${wfile}
+		echo "dhcp-option=usb1,6" >> ${wfile}
+		echo "address=/#/172.1.8.1" >> ${wfile}
+
+		systemctl restart dnsmasq || true
+	fi
+fi
+
 if [ -d /sys/class/tty/ttyGS0/ ] ; then
 	echo "${log} Starting serial-getty@ttyGS0.service"
 	systemctl start serial-getty@ttyGS0.service || true
