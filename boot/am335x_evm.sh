@@ -653,7 +653,7 @@ if [ "x${dnsmasq_usb0_usb1}" = "xenabled" ] ; then
 		/etc/init.d/udhcpd stop || true
 
 		wfile="/etc/dnsmasq.d/SoftAp0"
-		echo "interface=usb0" >> ${wfile}
+		echo "interface=usb0" > ${wfile}
 		echo "interface=usb1" >> ${wfile}
 		echo "port=53" >> ${wfile}
 		echo "dhcp-authoritative" >> ${wfile}
