@@ -682,6 +682,7 @@ if [ "x${dnsmasq_usb0_usb1}" = "xenabled" ] ; then
 			echo "dhcp-option=usb1,3" >> ${wfile}
 			echo "dhcp-option=usb1,6" >> ${wfile}
 			echo "address=/#/172.1.8.1" >> ${wfile}
+			echo "dhcp-leasefile=/var/run/dnsmasq.leases" >> ${wfile}
 
 			systemctl restart dnsmasq || true
 		else
