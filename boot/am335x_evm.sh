@@ -23,6 +23,20 @@
 #Based off:
 #https://github.com/beagleboard/meta-beagleboard/blob/master/meta-beagleboard-extras/recipes-support/usb-gadget/gadget-init/g-ether-load.sh
 
+disable_connman_dnsproxy () {
+	if [ -f /lib/systemd/system/connman.service ] ; then
+		#netstat -tapnd
+		unset check_connman
+		check_connman=$(cat /lib/systemd/system/connman.service | grep ExecStart | grep nodnsproxy || true)
+		if [ "x${check_connman}" = "x" ] ; then
+			systemctl stop connman.service || true
+			sed -i -e 's:connmand -n:connmand -n --nodnsproxy:g' /lib/systemd/system/connman.service || true
+			systemctl daemon-reload || true
+			systemctl start connman.service || true
+		fi
+	fi
+}
+
 if [ -f /etc/rcn-ee.conf ] ; then
 	. /etc/rcn-ee.conf
 fi
@@ -654,6 +668,8 @@ fi
 if [ "x${dnsmasq_usb0_usb1}" = "xenabled" ] ; then
 	if [ -d /sys/kernel/config/usb_gadget ] ; then
 		/etc/init.d/udhcpd stop || true
+
+		disable_connman_dnsproxy
 
 		wfile="/etc/dnsmasq.d/SoftAp0"
 		echo "interface=usb0" > ${wfile}
