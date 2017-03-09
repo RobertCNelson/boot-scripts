@@ -64,31 +64,9 @@ usb_ms_stall=0
 usb_ms_removable=1
 usb_ms_nofua=1
 
-#legacy support of: 2014-05-14
+#legacy support of: 2014-05-14 (now taken care by the init flasher)
 if [ "x${abi}" = "x" ] ; then
-	eeprom="/sys/bus/i2c/devices/0-0050/eeprom"
-	#taken care by the init flasher
-	#Flash BeagleBone Black's eeprom:
-	if [ -f /boot/uboot/flash-eMMC.txt ] ; then
-		eeprom_location=$(ls /sys/devices/ocp.*/44e0b000.i2c/i2c-0/0-0050/eeprom 2> /dev/null)
-		eeprom_header=$(hexdump -e '8/1 "%c"' ${eeprom} -s 5 -n 3)
-		if [ "x${eeprom_header}" = "x335" ] ; then
-			echo "Valid EEPROM header found"
-		else
-			echo "Invalid EEPROM header detected"
-			if [ -f /opt/scripts/device/bone/bbb-eeprom.dump ] ; then
-				if [ ! "x${eeprom_location}" = "x" ] ; then
-					echo "Adding header to EEPROM"
-					dd if=/opt/scripts/device/bone/bbb-eeprom.dump of=${eeprom_location}
-					sync
-					#We have to reboot, to load eMMC cape
-					reboot
-					#We shouldnt hit this...
-					exit
-				fi
-			fi
-		fi
-	fi
+	$(dirname $0)/legacy/write_eeprom.sh || true
 fi
 
 cleanup_extra_docs () {
@@ -694,38 +672,14 @@ fi
 #Just Cleanup /etc/issue, systemd starts up tty before these are updated...
 sed -i -e '/Address/d' /etc/issue || true
 
-#legacy support of: 2014-05-14
+#legacy support of: 2014-05-14 (now taken care by the init flasher)
 if [ "x${abi}" = "x" ] ; then
-	#taken care by the init flasher
-	if [ -f /boot/uboot/flash-eMMC.txt ] ; then
-		if [ ! -d /boot/uboot/debug/ ] ; then
-			mkdir -p /boot/uboot/debug/ || true
-		fi
-
-		if [ -f /opt/scripts/tools/beaglebone-black-eMMC-flasher.sh ] ; then
-			/bin/bash /opt/scripts/tools/beaglebone-black-eMMC-flasher.sh >/boot/uboot/debug/flash-eMMC.log 2>&1
-		fi
-	fi
+	$(dirname $0)/legacy/write_emmc.sh || true
 fi
 
-#legacy support of: 2014-05-14
+#legacy support of: 2014-05-14 (now taken care by the init flasher)
 if [ "x${abi}" = "x" ] ; then
-	#Taken care by:
-	#https://github.com/RobertCNelson/omap-image-builder/blob/master/target/init_scripts/generic-debian.sh#L51
-	if [ -f /resizerootfs ] ; then
-		if [ ! -d /boot/debug/ ] ; then
-			mkdir -p /boot/debug/ || true
-		fi
-
-		drive=$(cat /resizerootfs)
-		if [ "x${drive}" = "x" ] ; then
-			drive="/dev/mmcblk0"
-		fi
-
-		#FIXME: only good for two partition "/dev/mmcblkXp2" setups...
-		resize2fs ${drive}p2 >/boot/debug/resize.log 2>&1
-		rm -rf /resizerootfs || true
-	fi
+	$(dirname $0)/legacy/old_resize.sh || true
 fi
 
 unset enable_cape_universal
