@@ -235,7 +235,6 @@ fi
 
 if [ "x${use_cached_cpsw_mac}" = "xtrue" ] && [ -f /etc/cpsw_1_mac ] ; then
 	cpsw_1_mac=$(cat /etc/cpsw_1_mac)
-	echo "${log} cached cpsw_1_mac: [${cpsw_1_mac}]"
 else
 	mac_address="/proc/device-tree/ocp/ethernet@4a100000/slave@4a100300/mac-address"
 	if [ -f ${mac_address} ] ; then
@@ -265,7 +264,6 @@ fi
 
 if [ "x${use_cached_cpsw_mac}" = "xtrue" ] && [ -f /etc/cpsw_2_mac ] ; then
 	cpsw_2_mac=$(cat /etc/cpsw_2_mac)
-	echo "${log} cached cpsw_2_mac: [${cpsw_2_mac}]"
 else
 	#Determine cpsw_2_mac assumed to be allocated between cpsw_0_mac and cpsw_1_mac
 	if [ -f /usr/bin/bc ] ; then
@@ -352,7 +350,6 @@ fi
 
 if [ "x${use_cached_cpsw_mac}" = "xtrue" ] && [ -f /etc/cpsw_3_mac ] ; then
 	cpsw_3_mac=$(cat /etc/cpsw_3_mac)
-	echo "${log} cached cpsw_3_mac: [${cpsw_3_mac}]"
 else
 	#Create cpsw_3_mac, we need this for wl18xx access point's...
 	if [ -f /usr/bin/bc ] ; then
@@ -363,7 +360,6 @@ else
 		cpsw_res=$(echo "obase=16;ibase=16;$cpsw_0_6 + 103" | bc)
 
 		cpsw_3_mac=${mac_0_prefix}:$(echo ${cpsw_res} | cut -c 2-3)
-		echo "${log} uncached cpsw_3_mac: [${cpsw_3_mac}]"
 	else
 		cpsw_3_mac="1C:BA:8C:A2:ED:71"
 	fi
@@ -372,7 +368,6 @@ fi
 
 if [ "x${use_cached_cpsw_mac}" = "xtrue" ] && [ -f /etc/cpsw_4_mac ] ; then
 	cpsw_4_mac=$(cat /etc/cpsw_4_mac)
-	echo "${log} cached cpsw_4_mac: [${cpsw_4_mac}]"
 else
 	#Create cpsw_4_mac, we need this for usb1 (BeagleBone Side)...
 	if [ -f /usr/bin/bc ] ; then
@@ -383,7 +378,6 @@ else
 		cpsw_res=$(echo "obase=16;ibase=16;$cpsw_0_6 + 104" | bc)
 
 		cpsw_4_mac=${mac_0_prefix}:$(echo ${cpsw_res} | cut -c 2-3)
-		echo "${log} uncached cpsw_4_mac: [${cpsw_4_mac}]"
 	else
 		cpsw_4_mac="1C:BA:8C:A2:ED:72"
 	fi
@@ -392,7 +386,6 @@ fi
 
 if [ "x${use_cached_cpsw_mac}" = "xtrue" ] && [ -f /etc/cpsw_5_mac ] ; then
 	cpsw_5_mac=$(cat /etc/cpsw_5_mac)
-	echo "${log} cached cpsw_5_mac: [${cpsw_5_mac}]"
 else
 	#Create cpsw_5_mac, we need this for usb1 (USB host, pc side)...
 	if [ -f /usr/bin/bc ] ; then
@@ -403,7 +396,6 @@ else
 		cpsw_res=$(echo "obase=16;ibase=16;$cpsw_0_6 + 105" | bc)
 
 		cpsw_5_mac=${mac_0_prefix}:$(echo ${cpsw_res} | cut -c 2-3)
-		echo "${log} uncached cpsw_5_mac: [${cpsw_5_mac}]"
 	else
 		cpsw_5_mac="1C:BA:8C:A2:ED:73"
 	fi
