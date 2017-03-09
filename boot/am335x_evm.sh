@@ -224,7 +224,7 @@ unset use_cached_cpsw_mac
 if [ -f /etc/cpsw_0_mac ] ; then
 	unset test_cpsw_0_mac
 	test_cpsw_0_mac=$(cat /etc/cpsw_0_mac)
-	if [ "x${cpsw_0_mac}" = "${test_cpsw_0_mac}" ] ; then
+	if [ "x${cpsw_0_mac}" = "x${test_cpsw_0_mac}" ] ; then
 		use_cached_cpsw_mac="true"
 	else
 		echo "${cpsw_0_mac}" > /etc/cpsw_0_mac || true
