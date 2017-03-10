@@ -133,6 +133,11 @@ TI_AM335x_BeagleBone_Green_Wireless)
 		usb_image_file="/var/local/bbgw_usb_mass_storage.img"
 	fi
 	;;
+TI_AM335x_PocketBone)
+	has_wifi="disable"
+	cleanup_extra_docs
+	dnsmasq_usb0_usb1="enabled"
+	;;
 SanCloud_BeagleBone_Enhanced)
 	board_sbbe="enable"
 	has_wifi="enable"
