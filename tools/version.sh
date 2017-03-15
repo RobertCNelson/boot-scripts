@@ -53,6 +53,10 @@ if [ -f /usr/bin/nodejs ] ; then
 fi
 
 if [ -f /boot/uEnv.txt ] ; then
-	echo "device-tree-override:[`cat /boot/uEnv.txt | grep -v '#' | grep dtb || true`"
+	unset test_var
+	test_var=$(cat /boot/uEnv.txt | grep -v '#' | grep dtb || true)
+	if [ "x${test_var}" != "x" ] ; then
+		echo "device-tree-override:[$test_var]"
+	fi
 fi
 
