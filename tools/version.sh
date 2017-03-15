@@ -51,3 +51,8 @@ echo "kernel:[`uname -r`]"
 if [ -f /usr/bin/nodejs ] ; then
 	echo "nodejs:[`/usr/bin/nodejs --version`]"
 fi
+
+if [ -f /boot/uEnv.txt ] ; then
+	echo "device-tree-override:[`cat /boot/uEnv.txt | grep -v '#' | grep dtb || true`"
+fi
+
