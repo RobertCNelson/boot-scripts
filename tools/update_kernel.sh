@@ -314,7 +314,6 @@ latest_version_repo () {
 			echo "-----------------------------"
 			echo "Kernel version options:"
 			echo "-----------------------------"
-			echo "LTS314: --lts-3_14"
 			echo "LTS41: --lts-4_1"
 			echo "LTS44: --lts-4_4"
 			echo "LTS49: --lts-4_9"
