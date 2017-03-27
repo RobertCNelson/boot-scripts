@@ -123,6 +123,7 @@ TI_AM335x_BeagleBone_Green)
 	elif [ -f /var/local/bbg_usb_mass_storage.img ] ; then
 		usb_image_file="/var/local/bbg_usb_mass_storage.img"
 	fi
+	dnsmasq_usb0_usb1="enabled"
 	;;
 TI_AM335x_BeagleBone_Green_Wireless)
 	board_bbgw="enable"
