@@ -791,13 +791,13 @@ if [ ! "x${enable_cape_universal}" = "x" ] ; then
 					overlay="univ-all"
 					;;
 				TI_AM335x_BeagleBone_Black_Wireless)
-					overlay="cape-universaln"
+					overlay="cape-universal"
 					;;
 				TI_AM335x_BeagleBone_Blue)
 					unset overlay
 					;;
 				TI_AM335x_BeagleBone_Black)
-					overlay="cape-universaln"
+					overlay="cape-universal"
 					;;
 				TI_AM335x_BeagleBone_Green)
 					overlay="univ-emmc"
