@@ -14,7 +14,7 @@ omap_bootloader () {
 	if [ "x${test_var}" = "xU-Boot" ] ; then
 		uboot=$(dd if=${drive} count=32 skip=393248 bs=1 2>/dev/null || true)
 		uboot=$(echo ${uboot} | awk '{print $2}')
-		echo "bootloader:[${drive}]:[U-Boot ${uboot}]"
+		echo "bootloader:[${label}][${drive}]:[U-Boot ${uboot}]"
 	fi
 }
 
@@ -37,11 +37,13 @@ if [ -f /etc/dogtag ] ; then
 fi
 
 if [ -b /dev/mmcblk0 ] ; then
+	label="microSD"
 	drive=/dev/mmcblk0
 	omap_bootloader
 fi
 
 if [ -b /dev/mmcblk1 ] ; then
+	label="eMMC"
 	drive=/dev/mmcblk1
 	omap_bootloader
 fi
