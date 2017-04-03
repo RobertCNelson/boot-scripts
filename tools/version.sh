@@ -14,7 +14,7 @@ omap_bootloader () {
 	if [ "x${test_var}" = "xU-Boot" ] ; then
 		uboot=$(dd if=${drive} count=32 skip=393248 bs=1 2>/dev/null || true)
 		uboot=$(echo ${uboot} | awk '{print $2}')
-		echo "bootloader:[${label}][${drive}]:[U-Boot ${uboot}]"
+		echo "bootloader:[${label}]:[${drive}]:[U-Boot ${uboot}]"
 	fi
 }
 
