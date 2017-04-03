@@ -37,13 +37,13 @@ if [ -f /etc/dogtag ] ; then
 fi
 
 if [ -b /dev/mmcblk0 ] ; then
-	label="microSD"
+	label="microSD-(push-button-default)"
 	drive=/dev/mmcblk0
 	omap_bootloader
 fi
 
 if [ -b /dev/mmcblk1 ] ; then
-	label="eMMC"
+	label="eMMC-(bootrom-default)"
 	drive=/dev/mmcblk1
 	omap_bootloader
 fi
