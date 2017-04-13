@@ -50,6 +50,9 @@ fi
 chown -R root:gpio /sys/class/gpio || true
 chmod -R ug+rw /sys/class/gpio || true
 
+chown -R root:pwm /sys/class/pwm || true
+chmod -R ug+rw /sys/class/pwm || true
+
 if [ -f /proc/device-tree/model ] ; then
 	board=$(cat /proc/device-tree/model | sed "s/ /_/g")
 	echo "generic-board-startup: [model=${board}]"
