@@ -47,12 +47,8 @@ if [ -f /resizerootfs ] ; then
 	sync
 fi
 
-unset test_gpio
-test_gpio=$(grep gpio /etc/group || true)
-if [ ! "x${test_gpio}" = "x" ] ; then
-	chown -R root:gpio /sys/class/gpio
-	chmod -R ug+rw /sys/class/gpio
-fi
+chown -R root:gpio /sys/class/gpio || true
+chmod -R ug+rw /sys/class/gpio || true
 
 if [ -f /proc/device-tree/model ] ; then
 	board=$(cat /proc/device-tree/model | sed "s/ /_/g")
