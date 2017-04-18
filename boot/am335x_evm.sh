@@ -536,7 +536,15 @@ use_libcomposite () {
 				fi
 
 				#ls /sys/class/udc
-				echo musb-hdrc.0.auto > UDC
+				#v4.4.x-ti
+				if [ -d /sys/class/udc/musb-hdrc.0.auto ] ; then
+					echo musb-hdrc.0.auto > UDC
+				else
+					#v4.9.x-ti
+					if [ -d /sys/class/udc/musb-hdrc.0 ] ; then
+						echo musb-hdrc.0 > UDC
+					fi
+				fi
 				usb0="enable"
 				usb1="enable"
 				echo "${log} g_multi Created"
