@@ -838,4 +838,8 @@ if [ ! "x${enable_cape_universal}" = "x" ] ; then
 		fi
 	fi
 fi
+
+echo "${log} Setting config-pin pinmux to root:gpio"
+chown -R root:gpio /sys/devices/platform/ocp/ocp:P*pinmux/ || true
+chmod -R ug+rw /sys/devices/platform/ocp/ocp:P*pinmux/ || true
 #
