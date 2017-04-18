@@ -461,7 +461,7 @@ unset flashed
 # parse commandline options
 while [ ! -z "$1" ] ; do
 	case $1 in
-	--use-beta-bootloader)
+	--use-beta-bootloader|--beta)
 		USE_BETA_BOOTLOADER=1
 		;;
 	--bbb-blank)
