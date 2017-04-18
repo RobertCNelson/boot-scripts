@@ -221,6 +221,11 @@ fi
 mac_address="/proc/device-tree/ocp/ethernet@4a100000/slave@4a100200/mac-address"
 if [ -f ${mac_address} ] ; then
 	cpsw_0_mac=$(hexdump -v -e '1/1 "%02X" ":"' ${mac_address} | sed 's/.$//')
+
+	#Some devices are showing a blank cpsw_0_mac [00:00:00:00:00:00], let's fix that up...
+	if [ "x${cpsw_0_mac}" = "x00:00:00:00:00:00" ] ; then
+		cpsw_0_mac="1C:BA:8C:A2:ED:68"
+	fi
 else
 	#todo: generate random mac... (this is a development tre board in the lab...)
 	cpsw_0_mac="1C:BA:8C:A2:ED:68"
