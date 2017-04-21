@@ -24,6 +24,13 @@ if [ -f /etc/ssh/ssh.regenerate ] ; then
 	fi
 
 	dpkg-reconfigure openssh-server
+
+	# while we're at it, make sure we have unique machine IDs as well
+	rm -f /var/lib/dbus/machine-id || true
+	rm -f /etc/machine-id || true
+	dbus-uuidgen --ensure
+	systemd-machine-id-setup
+
 	sync
 	if [ -s /etc/ssh/ssh_host_ed25519_key.pub ] ; then
 		rm -f /etc/ssh/ssh.regenerate || true
