@@ -59,11 +59,6 @@ if [ -d /sys/class/gpio/ ] ; then
 	chmod -R ug+rw /sys/class/gpio/ || true
 fi
 
-if [ -d /sys/class/pwm/ ] ; then
-	chown -R root:pwm /sys/class/pwm/ || true
-	chmod -R ug+rw /sys/class/pwm/ || true
-fi
-
 if [ -d /sys/class/leds ] ; then
 	chown -R root:gpio /sys/class/leds/ || true
 	chmod -R ug+rw /sys/class/leds/ || true
