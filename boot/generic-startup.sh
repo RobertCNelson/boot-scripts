@@ -54,11 +54,25 @@ if [ -f /resizerootfs ] ; then
 	sync
 fi
 
-chown -R root:gpio /sys/class/gpio || true
-chmod -R ug+rw /sys/class/gpio || true
+if [ -d /sys/class/gpio/ ] ; then
+	chown -R root:gpio /sys/class/gpio/ || true
+	chmod -R ug+rw /sys/class/gpio/ || true
+fi
 
-chown -R root:pwm /sys/class/pwm || true
-chmod -R ug+rw /sys/class/pwm || true
+if [ -d /sys/class/pwm/ ] ; then
+	chown -R root:pwm /sys/class/pwm/ || true
+	chmod -R ug+rw /sys/class/pwm/ || true
+fi
+
+if [ -d /sys/class/leds ] ; then
+	chown -R root:gpio /sys/class/leds/ || true
+	chmod -R ug+rw /sys/class/leds/ || true
+
+	if [ -d /sys/devices/platform/leds/leds/ ] ; then
+		chown -R root:gpio /sys/devices/platform/leds/leds/ || true
+		chmod -R ug+rw  /sys/devices/platform/leds/leds/ || true
+	fi
+fi
 
 if [ -f /proc/device-tree/model ] ; then
 	board=$(cat /proc/device-tree/model | sed "s/ /_/g")
