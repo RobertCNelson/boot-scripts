@@ -36,6 +36,10 @@ if [ -f /etc/dogtag ] ; then
 	echo "dogtag:[`cat /etc/dogtag`]"
 fi
 
+if [ -f /bin/lsblk ] ; then
+	lsblk | sed 's/^/partition_table:[/' | sed 's/$/]/'
+fi
+
 if [ -b /dev/mmcblk0 ] ; then
 	label="microSD-(push-button)"
 	drive=/dev/mmcblk0
@@ -56,9 +60,9 @@ fi
 
 if [ -f /boot/uEnv.txt ] ; then
 	unset test_var
-	test_var=$(cat /boot/uEnv.txt | grep -v '#' | grep dtb || true)
+	test_var=$(cat /boot/uEnv.txt | grep -v '#' | grep dtb | grep -v dtbo || true)
 	if [ "x${test_var}" != "x" ] ; then
 		echo "device-tree-override:[$test_var]"
 	fi
 fi
-
+#
