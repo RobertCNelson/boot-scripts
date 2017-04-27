@@ -5,13 +5,13 @@
 # Source it like this:
 # source $(dirname "$0")/functions.sh
 
-version_message="1.20161216: more fixes..."
+version_message="1.20170427: u-boot v2017.05-rc2..."
 emmcscript="cmdline=init=/opt/scripts/tools/eMMC/$(basename $0)"
 
 #
 #https://rcn-ee.com/repos/bootloader/am335x_evm/
-http_spl="MLO-am335x_evm-v2016.11-r2"
-http_uboot="u-boot-am335x_evm-v2016.11-r2.img"
+http_spl="MLO-am335x_evm-v2017.05-rc2-r4"
+http_uboot="u-boot-am335x_evm-v2017.05-rc2-r4.img"
 
 set -o errtrace
 
