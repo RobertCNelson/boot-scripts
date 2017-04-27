@@ -65,4 +65,12 @@ if [ -f /boot/uEnv.txt ] ; then
 		echo "device-tree-override:[$test_var]"
 	fi
 fi
+
+if [ -f /boot/uEnv.txt ] ; then
+	unset test_var
+	test_var=$(cat /boot/uEnv.txt | grep -v '#' | grep enable_uboot_overlays=1 || true)
+	if [ "x${test_var}" != "x" ] ; then
+		cat /boot/uEnv.txt | grep uboot_ | grep -v '#' | sed 's/^/uboot_overlay_options:[/' | sed 's/$/]/'
+	fi
+fi
 #
