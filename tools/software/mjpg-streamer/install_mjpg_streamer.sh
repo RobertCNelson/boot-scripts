@@ -23,4 +23,5 @@ fi
 
 install -m 644 ./mjpg-streamer.rules /etc/udev/rules.d
 install -m 644 ./mjpg-streamer.service /etc/systemd/system
-systemctl restart mjpg-streamer
+systemctl daemon-reload || true
+systemctl restart mjpg-streamer || true
