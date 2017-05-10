@@ -1,4 +1,10 @@
 #!/bin/bash
+
+if ! id | grep -q root; then
+	echo "must be run as root"
+	exit
+fi
+
 cat /etc/dogtag
 # BeagleBoard.org Debian Image 2017-01-17
 uname -a
@@ -29,28 +35,12 @@ v4l2-ctl --info
 #./mjpg_streamer ./mjpg_streamer -i "./input_uvc.so -yuv" -o "./output_http.so -p 8090 -w ./www"
 #make install
 #mjpg_streamer -i "/usr/local/lib/input_uvc.so -yuv" -o "/usr/local/lib/output_http.so -p 8090 -w /usr/local/www"
-apt-get update
-# Hit http://security.debian.org jessie/updates InRelease
-# Hit http://repos.rcn-ee.com jessie InRelease  
-# Hit https://deb.nodesource.com jessie InRelease                           
-# Ign http://httpredir.debian.org jessie InRelease                          
-# Get:1 http://security.debian.org jessie/updates/main armhf Packages [425 kB]
-# Hit http://httpredir.debian.org jessie-updates InRelease                  
-# Get:2 http://repos.rcn-ee.com jessie/main armhf Packages [771 kB]         
-# Hit http://httpredir.debian.org jessie Release.gpg                        
-# Get:3 https://deb.nodesource.com jessie/main armhf Packages [968 B]       
-# Hit http://httpredir.debian.org jessie Release                            
-# Get:4 http://security.debian.org jessie/updates/contrib armhf Packages [994 B]
-# Get:5 http://security.debian.org jessie/updates/non-free armhf Packages [20 B]
-# Get:6 http://httpredir.debian.org jessie-updates/main armhf Packages [17.6 kB]
-# Get:7 http://httpredir.debian.org jessie-updates/contrib armhf Packages [20 B]
-# Get:8 http://httpredir.debian.org jessie-updates/non-free armhf Packages [450 B]
-# Get:9 http://httpredir.debian.org jessie/main armhf Packages [8,850 kB] 
-# Get:10 http://httpredir.debian.org jessie/contrib armhf Packages [44.7 kB]
-# Get:11 http://httpredir.debian.org jessie/non-free armhf Packages [74.9 kB]
-# Fetched 10.2 MB in 19s (519 kB/s)                                         
-# Reading package lists... Done
-apt-get install -y mjpg-streamer
-install -m 644 51a4d83c8180e259bcb5661002712166/mjpg-streamer.rules /etc/udev/rules.d
-install -m 644 51a4d83c8180e259bcb5661002712166/mjpg-streamer.service /etc/systemd/system
+
+if [ ! -f /usr/bin/mjpg_streamer ] ; then
+	apt update
+	apt install -y mjpg-streamer
+fi
+
+install -m ./mjpg-streamer.rules /etc/udev/rules.d
+install -m ./mjpg-streamer.service /etc/systemd/system
 systemctl restart mjpg-streamer
