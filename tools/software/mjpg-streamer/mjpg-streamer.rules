@@ -1,0 +1,6 @@
+KERNEL=="event*", ATTRS{idVendor}=="046d", ATTRS{idProduct}=="0825",\
+    TAG+="systemd", ENV{SYSTEMD_WANTS}="mjpg-streamer.service"
+KERNEL=="event*", ATTRS{idVendor}=="046d", ATTRS{idProduct}=="082d",\
+    TAG+="systemd", ENV{SYSTEMD_WANTS}="mjpg-streamer.service"
+KERNEL=="event*", ATTRS{idVendor}=="0c45", ATTRS{idProduct}=="62e0",\
+    TAG+="systemd", ENV{SYSTEMD_WANTS}="mjpg-streamer.service"
