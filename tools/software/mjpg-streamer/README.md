@@ -1,7 +1,10 @@
-To install and run mjpg_streamer on a BeagleBone with a Logitech C270 webcam:
+To install and run mjpg_streamer on a BeagleBone with a Logitech C270/C920 webcam:
 
-    git clone https://gist.github.com/jadonk/51a4d83c8180e259bcb5661002712166
-    bash 51a4d83c8180e259bcb5661002712166/install_mjpg_streamer.sh
+    debian@beaglebone:~$
+    debian@beaglebone:~$ cd /opt/scripts/tools/software/mjpg-streamer/
+    debian@beaglebone:/opt/scripts/tools/software/mjpg-streamer$ git pull
+    Already up-to-date.
+    debian@beaglebone:/opt/scripts/tools/software/mjpg-streamer$ sudo ./install_mjpg_streamer.sh
 
 Browse to your BeagleBone from a web browser specifying port 8090: http://beaglebone.local:8090
 
