@@ -46,5 +46,5 @@ countdown 5
 check_am57xx_eeprom
 check_running_system
 activate_cylon_leds
-prepare_drive_no_uuid
+prepare_drive
 #
