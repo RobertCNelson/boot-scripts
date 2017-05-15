@@ -36,9 +36,9 @@ if [ -f /etc/dogtag ] ; then
 	echo "dogtag:[`cat /etc/dogtag`]"
 fi
 
-if [ -f /bin/lsblk ] ; then
-	lsblk | sed 's/^/partition_table:[/' | sed 's/$/]/'
-fi
+#if [ -f /bin/lsblk ] ; then
+#	lsblk | sed 's/^/partition_table:[/' | sed 's/$/]/'
+#fi
 
 if [ -b /dev/mmcblk0 ] ; then
 	label="microSD-(push-button)"
