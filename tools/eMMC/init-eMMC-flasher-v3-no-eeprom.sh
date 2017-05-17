@@ -35,8 +35,6 @@ mkfs_options=""
 #mkfs_options="-c"
 #mkfs_options="-cc"
 
-device_eeprom="bbb-eeprom"
-
 check_if_run_as_root
 
 startup_message
@@ -45,5 +43,5 @@ prepare_environment
 countdown 5
 check_running_system
 activate_cylon_leds
-prepare_drive
+prepare_drive_no_uuid
 #

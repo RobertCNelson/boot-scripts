@@ -974,6 +974,24 @@ _generate_fstab() {
 	empty_line
 }
 
+_generate_fstab_no_uuid() {
+	empty_line
+	echo_broadcast "==> Generating: /etc/fstab"
+	echo "# /etc/fstab: static file system information." > ${tmp_rootfs_dir}/etc/fstab
+	echo "#" >> ${tmp_rootfs_dir}/etc/fstab
+	if [ "${boot_partition}x" != "${rootfs_partition}x" ] ; then
+		echo "${boot_partition} /boot/uboot auto defaults 0 0" >> ${tmp_rootfs_dir}/etc/fstab
+	fi
+	echo "${rootfs_partition}  /  ext4  noatime,errors=remount-ro  0  1" >> ${tmp_rootfs_dir}/etc/fstab
+	echo "debugfs  /sys/kernel/debug  debugfs  defaults  0  0" >> ${tmp_rootfs_dir}/etc/fstab
+	echo_broadcast "===> /etc/fstab generated"
+	generate_line 40 '*'
+	cat ${tmp_rootfs_dir}/etc/fstab
+	generate_line 40 '*'
+	empty_line
+	sed -i -e 's:^uuid=:#uuid=:g' ${tmp_rootfs_dir}/boot/uEnv.txt
+}
+
 _copy_rootfs() {
   empty_line
   generate_line 80 '='
@@ -1055,7 +1073,7 @@ _copy_rootfs_no_uuid() {
 
   _generate_uEnv_no_uuid ${tmp_rootfs_dir}/boot/uEnv.txt
 
-  _generate_fstab
+  _generate_fstab_no_uuid
 
   #FIXME: What about when you boot from a fat partition /boot ?
   echo_broadcast "==> /boot/uEnv.txt: disabling eMMC flasher script"
