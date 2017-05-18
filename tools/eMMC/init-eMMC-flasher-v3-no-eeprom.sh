@@ -43,5 +43,5 @@ prepare_environment
 countdown 5
 check_running_system
 activate_cylon_leds
-prepare_drive_no_uuid
+prepare_drive
 #
