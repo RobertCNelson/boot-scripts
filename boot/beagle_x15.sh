@@ -40,9 +40,6 @@ usb_idProduct="0x0104"
 usb_bcdDevice="0x0404"
 usb_bcdUSB="0x0200"
 usb_serialnr="000000"
-usb_iserialnumber="1234BBBK5678"
-usb_iproduct="BeagleBoardX15"
-usb_manufacturer="BeagleBoard.org"
 usb_product="USB Device"
 
 #usb0 mass_storage
@@ -52,6 +49,23 @@ usb_ms_stall=0
 usb_ms_removable=1
 usb_ms_nofua=1
 
+#*.iso priority over *.img
+if [ -f /var/local/bb_usb_mass_storage.iso ] ; then
+	usb_image_file="/var/local/bb_usb_mass_storage.iso"
+elif [ -f /var/local/bb_usb_mass_storage.img ] ; then
+	usb_image_file="/var/local/bb_usb_mass_storage.img"
+fi
+
+unset dnsmasq_usb0_usb1
+
+if [ ! "x${usb_image_file}" = "x" ] ; then
+	echo "${log} usb_image_file=[`readlink -f ${usb_image_file}`]"
+fi
+
+usb_iserialnumber="1234BBBK5678"
+usb_iproduct="BeagleBoardX15"
+usb_manufacturer="BeagleBoard.org"
+
 #udhcpd gets started at bootup, but we need to wait till g_multi is loaded, and we run it manually...
 if [ -f /var/run/udhcpd.pid ] ; then
 	echo "${log} [/etc/init.d/udhcpd stop]"
@@ -59,6 +73,24 @@ if [ -f /var/run/udhcpd.pid ] ; then
 fi
 
 use_libcomposite () {
+	echo "${log} use_libcomposite"
+	unset has_img_file
+	if [ -f ${usb_image_file} ] ; then
+		actual_image_file=$(readlink -f ${usb_image_file} || true)
+		if [ ! "x${actual_image_file}" = "x" ] ; then
+			if [ -f ${actual_image_file} ] ; then
+				has_img_file="true"
+				test_usb_image_file=$(echo ${actual_image_file} | grep .iso || true)
+				if [ ! "x${test_usb_image_file}" = "x" ] ; then
+					usb_ms_cdrom=1
+				fi
+			else
+				echo "${log} FIXME: no usb_image_file"
+			fi
+		else
+			echo "${log} FIXME: no usb_image_file"
+		fi
+	fi
 	echo "${log} modprobe libcomposite"
 	modprobe libcomposite || true
 	if [ -d /sys/module/libcomposite ] ; then
