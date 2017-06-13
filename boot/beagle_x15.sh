@@ -27,7 +27,6 @@ if [ -f /sys/class/thermal/thermal_zone0/mode ] ; then
 	echo enabled > /sys/class/thermal/thermal_zone0/mode
 fi
 
-#Bus 005 Device 014: ID 1d6b:0104 Linux Foundation Multifunction Composite Gadget
 usb_gadget="/sys/kernel/config/usb_gadget"
 
 #  idVendor           0x1d6b Linux Foundation
@@ -57,6 +56,8 @@ elif [ -f /var/local/bb_usb_mass_storage.img ] ; then
 fi
 
 unset dnsmasq_usb0_usb1
+
+dnsmasq_usb0_usb1="enabled"
 
 if [ ! "x${usb_image_file}" = "x" ] ; then
 	echo "${log} usb_image_file=[`readlink -f ${usb_image_file}`]"

@@ -276,7 +276,6 @@ fi
 if [ "x${use_cached_cpsw_mac}" = "xtrue" ] && [ -f /etc/cpsw_2_mac ] ; then
 	cpsw_2_mac=$(cat /etc/cpsw_2_mac)
 else
-	#Determine cpsw_2_mac assumed to be allocated between cpsw_0_mac and cpsw_1_mac
 	if [ -f /usr/bin/bc ] ; then
 		mac_0_prefix=$(echo ${cpsw_0_mac} | cut -c 1-14)
 
@@ -362,7 +361,6 @@ fi
 if [ "x${use_cached_cpsw_mac}" = "xtrue" ] && [ -f /etc/cpsw_3_mac ] ; then
 	cpsw_3_mac=$(cat /etc/cpsw_3_mac)
 else
-	#Create cpsw_3_mac, we need this for wl18xx access point's...
 	if [ -f /usr/bin/bc ] ; then
 		mac_0_prefix=$(echo ${cpsw_0_mac} | cut -c 1-14)
 
@@ -380,7 +378,6 @@ fi
 if [ "x${use_cached_cpsw_mac}" = "xtrue" ] && [ -f /etc/cpsw_4_mac ] ; then
 	cpsw_4_mac=$(cat /etc/cpsw_4_mac)
 else
-	#Create cpsw_4_mac, we need this for usb1 (BeagleBone Side)...
 	if [ -f /usr/bin/bc ] ; then
 		mac_0_prefix=$(echo ${cpsw_0_mac} | cut -c 1-14)
 
@@ -398,7 +395,6 @@ fi
 if [ "x${use_cached_cpsw_mac}" = "xtrue" ] && [ -f /etc/cpsw_5_mac ] ; then
 	cpsw_5_mac=$(cat /etc/cpsw_5_mac)
 else
-	#Create cpsw_5_mac, we need this for usb1 (USB host, pc side)...
 	if [ -f /usr/bin/bc ] ; then
 		mac_0_prefix=$(echo ${cpsw_0_mac} | cut -c 1-14)
 
