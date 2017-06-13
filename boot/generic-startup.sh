@@ -77,7 +77,7 @@ if [ -f /proc/device-tree/model ] ; then
 	TI_AM335x*|Arrow_BeagleBone_Black_Industrial|SanCloud_BeagleBone_Enhanced)
 		script="am335x_evm.sh"
 		;;
-	TI_AM5728_BeagleBoard-X15)
+	TI_AM5728*)
 		script="beagle_x15.sh"
 		;;
 	TI_OMAP3_Beagle*)
