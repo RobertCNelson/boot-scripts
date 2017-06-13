@@ -89,7 +89,7 @@ use_libcomposite () {
 				ln -s functions/acm.usb0 configs/c.1/
 
 				#ls /sys/class/udc
-				echo musb-hdrc.0.auto > UDC
+				echo 488d0000.usb > UDC
 				echo "${log} g_multi Created"
 
 				# Auto-configuring the usb0 network interface:
