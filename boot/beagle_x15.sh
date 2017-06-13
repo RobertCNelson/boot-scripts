@@ -66,6 +66,144 @@ usb_iserialnumber="1234BBBK5678"
 usb_iproduct="BeagleBoardX15"
 usb_manufacturer="BeagleBoard.org"
 
+#mac address:
+#cpsw_0_mac = eth0
+#cpsw_1_mac = eth1
+#cpsw_2_mac = usb0 (Beagle Side)
+#cpsw_3_mac = usb0 (USB host, pc side)
+#cpsw_4_mac = usb1 (Beagle Side)
+#cpsw_5_mac = usb1 (USB host, pc side)
+
+mac_address="/proc/device-tree/ocp/ethernet@48484000/slave@48480200/mac-address"
+if [ -f ${mac_address} ] ; then
+	cpsw_0_mac=$(hexdump -v -e '1/1 "%02X" ":"' ${mac_address} | sed 's/.$//')
+
+	#Some devices are showing a blank cpsw_0_mac [00:00:00:00:00:00], let's fix that up...
+	if [ "x${cpsw_0_mac}" = "x00:00:00:00:00:00" ] ; then
+		cpsw_0_mac="1C:BA:8C:A2:ED:70"
+	fi
+else
+	#todo: generate random mac... (this is a development tre board in the lab...)
+	cpsw_0_mac="1C:BA:8C:A2:ED:68"
+fi
+
+unset use_cached_cpsw_mac
+if [ -f /etc/cpsw_0_mac ] ; then
+	unset test_cpsw_0_mac
+	test_cpsw_0_mac=$(cat /etc/cpsw_0_mac)
+	if [ "x${cpsw_0_mac}" = "x${test_cpsw_0_mac}" ] ; then
+		use_cached_cpsw_mac="true"
+	else
+		echo "${cpsw_0_mac}" > /etc/cpsw_0_mac || true
+	fi
+else
+	echo "${cpsw_0_mac}" > /etc/cpsw_0_mac || true
+fi
+
+if [ "x${use_cached_cpsw_mac}" = "xtrue" ] && [ -f /etc/cpsw_1_mac ] ; then
+	cpsw_1_mac=$(cat /etc/cpsw_1_mac)
+else
+	mac_address="/proc/device-tree/ocp/ethernet@48484000/slave@48480300/mac-address"
+	if [ -f ${mac_address} ] ; then
+		cpsw_1_mac=$(hexdump -v -e '1/1 "%02X" ":"' ${mac_address} | sed 's/.$//')
+
+		#Some devices are showing a blank cpsw_1_mac [00:00:00:00:00:00], let's fix that up...
+		if [ "x${cpsw_1_mac}" = "x00:00:00:00:00:00" ] ; then
+			if [ -f /usr/bin/bc ] ; then
+				mac_0_prefix=$(echo ${cpsw_0_mac} | cut -c 1-14)
+
+				cpsw_0_6=$(echo ${cpsw_0_mac} | awk -F ':' '{print $6}')
+				#bc cuts off leading zero's, we need ten/ones value
+				cpsw_res=$(echo "obase=16;ibase=16;$cpsw_0_6 + 102" | bc)
+
+				cpsw_1_mac=${mac_0_prefix}:$(echo ${cpsw_res} | cut -c 2-3)
+			else
+				cpsw_1_mac="1C:BA:8C:A2:ED:71"
+			fi
+		fi
+		echo "${cpsw_1_mac}" > /etc/cpsw_1_mac || true
+	else
+		#todo: generate random mac...
+		cpsw_1_mac="1C:BA:8C:A2:ED:71"
+		echo "${cpsw_1_mac}" > /etc/cpsw_1_mac || true
+	fi
+fi
+
+if [ "x${use_cached_cpsw_mac}" = "xtrue" ] && [ -f /etc/cpsw_2_mac ] ; then
+	cpsw_2_mac=$(cat /etc/cpsw_2_mac)
+else
+	if [ -f /usr/bin/bc ] ; then
+		mac_0_prefix=$(echo ${cpsw_0_mac} | cut -c 1-14)
+
+		cpsw_0_6=$(echo ${cpsw_0_mac} | awk -F ':' '{print $6}')
+		#bc cuts off leading zero's, we need ten/ones value
+		cpsw_res=$(echo "obase=16;ibase=16;$cpsw_0_6 + 102" | bc)
+
+		cpsw_2_mac=${mac_0_prefix}:$(echo ${cpsw_res} | cut -c 2-3)
+	else
+		cpsw_2_mac="1C:BA:8C:A2:ED:72"
+	fi
+	echo "${cpsw_2_mac}" > /etc/cpsw_2_mac || true
+fi
+
+if [ "x${use_cached_cpsw_mac}" = "xtrue" ] && [ -f /etc/cpsw_3_mac ] ; then
+	cpsw_3_mac=$(cat /etc/cpsw_3_mac)
+else
+	if [ -f /usr/bin/bc ] ; then
+		mac_0_prefix=$(echo ${cpsw_0_mac} | cut -c 1-14)
+
+		cpsw_0_6=$(echo ${cpsw_0_mac} | awk -F ':' '{print $6}')
+		#bc cuts off leading zero's, we need ten/ones value
+		cpsw_res=$(echo "obase=16;ibase=16;$cpsw_0_6 + 103" | bc)
+
+		cpsw_3_mac=${mac_0_prefix}:$(echo ${cpsw_res} | cut -c 2-3)
+	else
+		cpsw_3_mac="1C:BA:8C:A2:ED:73"
+	fi
+	echo "${cpsw_3_mac}" > /etc/cpsw_3_mac || true
+fi
+
+if [ "x${use_cached_cpsw_mac}" = "xtrue" ] && [ -f /etc/cpsw_4_mac ] ; then
+	cpsw_4_mac=$(cat /etc/cpsw_4_mac)
+else
+	if [ -f /usr/bin/bc ] ; then
+		mac_0_prefix=$(echo ${cpsw_0_mac} | cut -c 1-14)
+
+		cpsw_0_6=$(echo ${cpsw_0_mac} | awk -F ':' '{print $6}')
+		#bc cuts off leading zero's, we need ten/ones value
+		cpsw_res=$(echo "obase=16;ibase=16;$cpsw_0_6 + 104" | bc)
+
+		cpsw_4_mac=${mac_0_prefix}:$(echo ${cpsw_res} | cut -c 2-3)
+	else
+		cpsw_4_mac="1C:BA:8C:A2:ED:74"
+	fi
+	echo "${cpsw_4_mac}" > /etc/cpsw_4_mac || true
+fi
+
+if [ "x${use_cached_cpsw_mac}" = "xtrue" ] && [ -f /etc/cpsw_5_mac ] ; then
+	cpsw_5_mac=$(cat /etc/cpsw_5_mac)
+else
+	if [ -f /usr/bin/bc ] ; then
+		mac_0_prefix=$(echo ${cpsw_0_mac} | cut -c 1-14)
+
+		cpsw_0_6=$(echo ${cpsw_0_mac} | awk -F ':' '{print $6}')
+		#bc cuts off leading zero's, we need ten/ones value
+		cpsw_res=$(echo "obase=16;ibase=16;$cpsw_0_6 + 105" | bc)
+
+		cpsw_5_mac=${mac_0_prefix}:$(echo ${cpsw_res} | cut -c 2-3)
+	else
+		cpsw_5_mac="1C:BA:8C:A2:ED:75"
+	fi
+	echo "${cpsw_5_mac}" > /etc/cpsw_5_mac || true
+fi
+
+echo "${log} cpsw_0_mac: [${cpsw_0_mac}]"
+echo "${log} cpsw_1_mac: [${cpsw_1_mac}]"
+echo "${log} cpsw_2_mac: [${cpsw_2_mac}]"
+echo "${log} cpsw_3_mac: [${cpsw_3_mac}]"
+echo "${log} cpsw_4_mac: [${cpsw_4_mac}]"
+echo "${log} cpsw_5_mac: [${cpsw_5_mac}]"
+
 #udhcpd gets started at bootup, but we need to wait till g_multi is loaded, and we run it manually...
 if [ -f /var/run/udhcpd.pid ] ; then
 	echo "${log} [/etc/init.d/udhcpd stop]"
@@ -114,16 +252,12 @@ use_libcomposite () {
 
 				mkdir -p functions/rndis.usb0
 				# first byte of address must be even
-				HOST=$(cat /proc/device-tree/model /etc/dogtag |md5sum|sed 's/^\(..\)\(..\)\(..\)\(..\)\(..\).*$/02:\1:\2:\3:\4:\5/')
-				SELF=$(cat /proc/device-tree/model /etc/rcn-ee.conf |md5sum|sed 's/^\(..\)\(..\)\(..\)\(..\)\(..\).*$/02:\1:\2:\3:\4:\5/')
-				echo "${log} rndis.usb0/host_addr=[${HOST}]"
-				echo ${HOST} > functions/rndis.usb0/host_addr
-				echo "${log} rndis.usb0/dev_addr=[${SELF}]"
-				echo ${SELF} > functions/rndis.usb0/dev_addr
+				echo ${cpsw_2_mac} > functions/rndis.usb0/host_addr
+				echo ${cpsw_3_mac} > functions/rndis.usb0/dev_addr
 
-#				mkdir -p functions/ecm.usb0
-#				echo ${cpsw_4_mac} > functions/ecm.usb0/host_addr
-#				echo ${cpsw_5_mac} > functions/ecm.usb0/dev_addr
+				mkdir -p functions/ecm.usb0
+				echo ${cpsw_4_mac} > functions/ecm.usb0/host_addr
+				echo ${cpsw_5_mac} > functions/ecm.usb0/dev_addr
 
 				mkdir -p functions/acm.usb0
 
@@ -143,7 +277,7 @@ use_libcomposite () {
 				echo 500 > configs/c.1/MaxPower
 
 				ln -s functions/rndis.usb0 configs/c.1/
-				#ln -s functions/ecm.usb0 configs/c.1/
+				ln -s functions/ecm.usb0 configs/c.1/
 				ln -s functions/acm.usb0 configs/c.1/
 				if [ "x${has_img_file}" = "xtrue" ] ; then
 					ln -s functions/mass_storage.usb0 configs/c.1/
@@ -152,7 +286,7 @@ use_libcomposite () {
 				#ls /sys/class/udc
 				echo 488d0000.usb > UDC
 				usb0="enable"
-				#usb1="enable"
+				usb1="enable"
 				echo "${log} g_multi Created"
 			else
 				echo "${log} FIXME: need to bring down g_multi first, before running a second time."
