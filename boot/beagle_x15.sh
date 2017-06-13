@@ -204,27 +204,6 @@ echo "${log} cpsw_3_mac: [${cpsw_3_mac}]"
 echo "${log} cpsw_4_mac: [${cpsw_4_mac}]"
 echo "${log} cpsw_5_mac: [${cpsw_5_mac}]"
 
-if [ -f /var/lib/connman/settings ] ; then
-	wifi_name=$(grep Tethering.Identifier= /var/lib/connman/settings | awk -F '=' '{print $2}' || true)
-
-	#Dont blindly, change Tethering.Identifier as user may have changed it, just match ${wifi_prefix}
-	if [ "x${wifi_name}" = "x${wifi_prefix}" ] ; then
-		ssid_append=$(echo ${cpsw_0_mac} | cut -b 13-17 | sed 's/://g' || true)
-		if [ ! "x${wifi_name}" = "x${wifi_prefix}-${ssid_append}" ] ; then
-			if [ ! "x${wifi_name}" = "x${wifi_prefix}-${ssid_append}" ] ; then
-				systemctl stop connman.service || true
-				sed -i -e 's:Tethering.Identifier='$wifi_name':Tethering.Identifier='$wifi_prefix'-'$ssid_append':g' /var/lib/connman/settings
-				systemctl daemon-reload || true
-				systemctl restart connman.service || true
-			fi
-		fi
-	fi
-
-	if [ -f /etc/systemd/system/network-online.target.wants/connman-wait-online.service ] ; then
-		systemctl disable connman-wait-online.service || true
-	fi
-fi
-
 #udhcpd gets started at bootup, but we need to wait till g_multi is loaded, and we run it manually...
 if [ -f /var/run/udhcpd.pid ] ; then
 	echo "${log} [/etc/init.d/udhcpd stop]"
