@@ -841,7 +841,7 @@ _copy_boot() {
 		fi
 	fi
 
-	if [ -d /boot/uboot/ ] ; then
+	if [ -f /boot/uboot/MLO ] ; then
 		echo_broadcast "==> rsync: /boot/uboot/ -> ${tmp_boot_dir}"
 		get_rsync_options
 		rsync -aAxv $rsync_options /boot/uboot/* ${tmp_boot_dir} --exclude={MLO,u-boot.img,uEnv.txt} || write_failure
