@@ -43,6 +43,9 @@ test_ti_kernel_version () {
 		x4.9x)
 			kernel="LTS49"
 			;;
+		x4.14x)
+			kernel="LTS414"
+			;;
 		esac
 	fi
 }
@@ -91,6 +94,9 @@ test_bone_rt_kernel_version () {
 		x4.9x)
 			kernel="LTS49"
 			;;
+		x4.14x)
+			kernel="LTS414"
+			;;
 		esac
 	fi
 }
@@ -112,6 +118,9 @@ test_bone_kernel_version () {
 			;;
 		x4.9x)
 			kernel="LTS49"
+			;;
+		x4.14x)
+			kernel="LTS414"
 			;;
 		*)
 			#aka STABLE, as 3.8.13 will always be considered STABLE
@@ -154,6 +163,9 @@ test_armv7_kernel_version () {
 			;;
 		x4.9x)
 			kernel="LTS49"
+			;;
+		x4.14x)
+			kernel="LTS414"
 			;;
 		*)
 			kernel="STABLE"
@@ -317,6 +329,7 @@ latest_version_repo () {
 			echo "LTS41: --lts-4_1"
 			echo "LTS44: --lts-4_4"
 			echo "LTS49: --lts-4_9"
+#			echo "LTS414: --lts-4_14"
 			echo "STABLE: --stable"
 			echo "TESTING: --testing"
 			echo "-----------------------------"
@@ -561,6 +574,28 @@ third_party () {
 				run_depmod_initramfs="enabled"
 			fi
 			;;
+		LTS49)
+			install_pkg=""
+			if [ "x${ticmem}" = "xenabled" ] ; then
+				install_pkg="${install_pkg}ti-cmem-modules-${latest_kernel} "
+			fi
+			if [ "x${tidebugss}" = "xenabled" ] ; then
+				install_pkg="${install_pkg}ti-debugss-modules-${latest_kernel} "
+			fi
+			if [ "x${titemperature}" = "xenabled" ] ; then
+				install_pkg="${install_pkg}ti-temperature-modules-${latest_kernel} "
+			fi
+			if [ "x${sgxti335x}" = "xenabled" ] ; then
+				install_pkg="${install_pkg}ti-sgx-ti335x-modules-${latest_kernel} "
+			fi
+			if [ "x${sgxjacinto6evm}" = "xenabled" ] ; then
+				install_pkg="${install_pkg}ti-sgx-jacinto6evm-modules-${latest_kernel} "
+			fi
+			if [ ! "x${install_pkg}" = "x" ] ; then
+				apt-get ${apt_options} ${install_pkg}
+				run_depmod_initramfs="enabled"
+			fi
+			;;
 		esac
 		;;
 	ti|ti-rt)
@@ -698,6 +733,9 @@ while [ ! -z "$1" ] ; do
 		kernel="LTS44"
 		;;
 	--lts-4_9-kernel|--lts-4_9)
+		kernel="LTS49"
+		;;
+	--lts-4_14-kernel|--lts-4_14)
 		kernel="LTS49"
 		;;
 	--stable-kernel|--stable)
