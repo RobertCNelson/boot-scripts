@@ -18,8 +18,17 @@ omap_bootloader () {
 	else
 		if [ -f /boot/uboot/u-boot.img ] ; then
 			if [ -f /usr/bin/mkimage ] ; then
+				unset uboot
 				uboot=$(/usr/bin/mkimage -l /boot/uboot/u-boot.img | grep Description | head -n1 | awk '{print $3}' 2>/dev/null || true)
-				echo "bootloader:[${label}]:[${drive}]:[U-Boot ${uboot}]"
+				if [ ! "x${uboot}" = "x" ] ; then
+					echo "bootloader:[${label}]:[${drive}]:[U-Boot ${uboot}]"
+				else
+					unset uboot
+					uboot=$(/usr/bin/mkimage -l /boot/uboot/u-boot.img | grep Name:| head -n1 | awk '{print $4}' 2>/dev/null || true)
+					if [ ! "x${uboot}" = "x" ] ; then
+						echo "bootloader:[${label}]:[${drive}]:[U-Boot ${uboot}]"
+					fi
+				fi
 			fi
 		fi
 	fi
@@ -54,6 +63,10 @@ if [ "x${SOC}" = "x" ] ; then
 	TI_AM5728_Beagle*)
 		mmc0_label="microSD-(primary)"
 		mmc1_label="eMMC-(secondary)"
+		;;
+	TI_OMAP5_uEVM)
+		mmc0_label="eMMC-(secondary)"
+		mmc1_label="microSD-(primary)"
 		;;
 	*)
 		mmc0_label="microSD-(push-button)"
