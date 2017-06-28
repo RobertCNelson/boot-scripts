@@ -15,6 +15,12 @@ omap_bootloader () {
 		uboot=$(dd if=${drive} count=32 skip=393248 bs=1 2>/dev/null || true)
 		uboot=$(echo ${uboot} | awk '{print $2}')
 		echo "bootloader:[${label}]:[${drive}]:[U-Boot ${uboot}]"
+	else
+		if [ -f /boot/uboot/u-boot.img ] ; then
+			if [ -f /usr/bin/mkimage ] ; then
+				uboot=$(/usr/bin/mkimage -l /boot/uboot/u-boot.img | grep Description | head -n1 | awk '{print $3}' 2>/dev/null || true)
+			fi
+		fi
 	fi
 }
 
