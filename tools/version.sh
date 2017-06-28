@@ -64,7 +64,7 @@ if [ "x${SOC}" = "x" ] ; then
 		mmc0_label="microSD-(primary)"
 		mmc1_label="eMMC-(secondary)"
 		;;
-	TI_OMAP5_uEVM)
+	TI_OMAP5_uEVM_board)
 		mmc0_label="eMMC-(secondary)"
 		mmc1_label="microSD-(primary)"
 		;;
