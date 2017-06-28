@@ -19,6 +19,7 @@ omap_bootloader () {
 		if [ -f /boot/uboot/u-boot.img ] ; then
 			if [ -f /usr/bin/mkimage ] ; then
 				uboot=$(/usr/bin/mkimage -l /boot/uboot/u-boot.img | grep Description | head -n1 | awk '{print $3}' 2>/dev/null || true)
+				echo "bootloader:[${label}]:[${drive}]:[U-Boot ${uboot}]"
 			fi
 		fi
 	fi
