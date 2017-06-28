@@ -40,14 +40,29 @@ fi
 #	lsblk | sed 's/^/partition_table:[/' | sed 's/$/]/'
 #fi
 
+machine=$(cat /proc/device-tree/model | sed "s/ /_/g" | tr -d '\000')
+
+if [ "x${SOC}" = "x" ] ; then
+	case "${machine}" in
+	TI_AM5728_Beagle*)
+		mmc0_label="microSD-(primary)"
+		mmc1_label="eMMC-(secondary)"
+		;;
+	*)
+		mmc0_label="microSD-(push-button)"
+		mmc1_label="eMMC-(default)"
+		;;
+	esac
+fi
+
 if [ -b /dev/mmcblk0 ] ; then
-	label="microSD-(push-button)"
+	label=${mmc0_label}
 	drive=/dev/mmcblk0
 	omap_bootloader
 fi
 
 if [ -b /dev/mmcblk1 ] ; then
-	label="eMMC-(default)"
+	label=${mmc1_label}
 	drive=/dev/mmcblk1
 	omap_bootloader
 fi
