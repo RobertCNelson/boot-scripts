@@ -99,12 +99,12 @@ case "${board}" in
 TI_AM335x_BeagleBone)
 	has_wifi="disable"
 	cleanup_extra_docs
-	dnsmasq_usb0_usb1="enabled"
+	dnsmasq_usb0_usb1="enable"
 	;;
 TI_AM335x_BeagleBone_Black)
 	has_wifi="disable"
 	cleanup_extra_docs
-	dnsmasq_usb0_usb1="enabled"
+	dnsmasq_usb0_usb1="enable"
 	;;
 TI_AM335x_BeagleBone_Black_Wireless)
 	has_wifi="enable"
@@ -125,7 +125,7 @@ TI_AM335x_BeagleBone_Green)
 	elif [ -f /var/local/bbg_usb_mass_storage.img ] ; then
 		usb_image_file="/var/local/bbg_usb_mass_storage.img"
 	fi
-	dnsmasq_usb0_usb1="enabled"
+	dnsmasq_usb0_usb1="enable"
 	;;
 TI_AM335x_BeagleBone_Green_Wireless)
 	board_bbgw="enable"
@@ -139,7 +139,7 @@ TI_AM335x_BeagleBone_Green_Wireless)
 TI_AM335x_PocketBone)
 	has_wifi="disable"
 	cleanup_extra_docs
-	dnsmasq_usb0_usb1="enabled"
+	dnsmasq_usb0_usb1="enable"
 	;;
 SanCloud_BeagleBone_Enhanced)
 	board_sbbe="enable"
@@ -672,7 +672,7 @@ if [ "x${usb1}" = "xenable" ] ; then
 	$(dirname $0)/autoconfigure_usb1.sh || true
 fi
 
-if [ "x${dnsmasq_usb0_usb1}" = "xenabled" ] ; then
+if [ "x${dnsmasq_usb0_usb1}" = "xenable" ] ; then
 	if [ -d /sys/kernel/config/usb_gadget ] ; then
 		/etc/init.d/udhcpd stop || true
 
@@ -739,7 +739,7 @@ if [ "x${abi}" = "x" ] ; then
 fi
 
 #these are expected to be set by default...
-if [ "x${blue_fix_uarts}" = "xenabled" ] ; then
+if [ "x${blue_fix_uarts}" = "xenable" ] ; then
 	/usr/bin/config-pin -q P9.24 &> /tmp/config-pin || true
 	test_config_pin=$(cat /tmp/config-pin | grep pinmux | sed "s/ /_/g" | tr -d '\000' || true)
 	if [ "x${test_config_pin}x" = "xP9_24_pinmux_file_not_found!x" ] ; then
