@@ -744,6 +744,13 @@ if [ "x${blue_fix_uarts}" = "xenable" ] ; then
 		test_config_pin=$(/usr/bin/config-pin -q P9.24 2>&1 | grep pinmux | sed "s/ /_/g" | sed "s/\!/_/g" | tr -d '\000' || true)
 		if [ "x${test_config_pin}x" = "xP9_24_pinmux_file_not_found_x" ] ; then
 			echo "${log} broken /usr/bin/config-pin upgrade bb-cape-overlays"
+		else
+			echo "${log} config-pin: GPS: Setting P9.21/P9.22 as: uart: [/dev/ttyS2]"
+			/usr/bin/config-pin P9.21 uart || true
+			/usr/bin/config-pin P9.22 uart || true
+			echo "${log} config-pin: UT1: Setting P9.24/P9.26 as: uart: [/dev/ttyS1]"
+			/usr/bin/config-pin P9.24 uart || true
+			/usr/bin/config-pin P9.26 uart || true
 		fi
 	fi
 fi
