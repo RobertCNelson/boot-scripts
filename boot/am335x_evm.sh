@@ -92,6 +92,7 @@ elif [ -f /var/local/bb_usb_mass_storage.img ] ; then
 fi
 
 unset dnsmasq_usb0_usb1
+unset blue_fix_uarts
 
 board=$(cat /proc/device-tree/model | sed "s/ /_/g" | tr -d '\000')
 case "${board}" in
@@ -113,6 +114,7 @@ TI_AM335x_BeagleBone_Black_Wireless)
 TI_AM335x_BeagleBone_Blue)
 	has_wifi="enable"
 	cleanup_extra_docs
+	blue_fix_uarts="enable"
 	;;
 TI_AM335x_BeagleBone_Green)
 	has_wifi="disable"
@@ -734,6 +736,15 @@ fi
 #legacy support of: 2014-05-14 (now taken care by the init flasher)
 if [ "x${abi}" = "x" ] ; then
 	$(dirname $0)/legacy/old_resize.sh || true
+fi
+
+#these are expected to be set by default...
+if [ "x${blue_fix_uarts}" = "xenabled" ] ; then
+	/usr/bin/config-pin -q P9.24 &> /tmp/config-pin
+	test_config_pin=$(cat /tmp/config-pin | grep pinmux | sed "s/ /_/g" | tr -d '\000' || true)
+	if [ "x${test_config_pin}x" = "xP9_24_pinmux_file_not_found!x" ] ; then
+		echo "${log} broken /usr/bin/config-pin upgrade bb-cape-overlays"
+	fi
 fi
 
 unset enable_cape_universal
