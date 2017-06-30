@@ -740,10 +740,11 @@ fi
 
 #these are expected to be set by default...
 if [ "x${blue_fix_uarts}" = "xenable" ] ; then
-	/usr/bin/config-pin -q P9.24 &> /tmp/config-pin || true
-	test_config_pin=$(cat /tmp/config-pin | grep pinmux | sed "s/ /_/g" | tr -d '\000' || true)
-	if [ "x${test_config_pin}x" = "xP9_24_pinmux_file_not_found!x" ] ; then
-		echo "${log} broken /usr/bin/config-pin upgrade bb-cape-overlays"
+	if [ -f /usr/bin/config-pin ] ; then
+		test_config_pin=$(/usr/bin/config-pin -q P9.24 2>&1 | grep pinmux | sed "s/ /_/g" | sed "s/\!/_/g" | tr -d '\000' || true)
+		if [ "x${test_config_pin}x" = "xP9_24_pinmux_file_not_found_x" ] ; then
+			echo "${log} broken /usr/bin/config-pin upgrade bb-cape-overlays"
+		fi
 	fi
 fi
 
