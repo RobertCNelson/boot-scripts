@@ -34,6 +34,14 @@ omap_bootloader () {
 	fi
 }
 
+dpkg_check_version () {
+	unset pkg_version
+	pkg_version=$(dpkg -l | awk '$2=="$pkg" { print $3 }' || true)
+	if [ ! "x${$pkg_version}" = "x" ] ; then
+		echo "pkg:[$pkg]:[$pkg_version]"
+	fi
+}
+
 if [ -f ${git_bin} ] ; then
 	if [ -d /opt/scripts/ ] ; then
 		old_dir="`pwd`"
@@ -108,4 +116,7 @@ if [ -f /boot/uEnv.txt ] ; then
 		cat /boot/uEnv.txt | grep uboot_ | grep -v '#' | sed 's/^/uboot_overlay_options:[/' | sed 's/$/]/'
 	fi
 fi
+
+pkg="bb-cape-overlays" ; dpkg_check_version
+pkg="bb-wl18xx-firmware" ; dpkg_check_version
 #
