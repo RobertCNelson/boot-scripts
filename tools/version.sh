@@ -36,7 +36,7 @@ omap_bootloader () {
 
 dpkg_check_version () {
 	unset pkg_version
-	pkg_version=$(dpkg -l | awk '$2=="$pkg" { print $3 }' || true)
+	pkg_version=$(dpkg -l | awk '$2=="'$pkg'" { print $3 }' || true)
 	if [ ! "x${pkg_version}" = "x" ] ; then
 		echo "pkg:[$pkg]:[$pkg_version]"
 	fi
