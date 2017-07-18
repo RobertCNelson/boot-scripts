@@ -39,6 +39,8 @@ dpkg_check_version () {
 	pkg_version=$(dpkg -l | awk '$2=="'$pkg'" { print $3 }' || true)
 	if [ ! "x${pkg_version}" = "x" ] ; then
 		echo "pkg:[$pkg]:[$pkg_version]"
+	else
+		echo "WARNING:pkg:[$pkg]:[NOT_INSTALLED]"
 	fi
 }
 
@@ -119,4 +121,5 @@ fi
 
 pkg="bb-cape-overlays" ; dpkg_check_version
 pkg="bb-wl18xx-firmware" ; dpkg_check_version
+pkg="firmware-ti-connectivity" ; dpkg_check_version
 #
