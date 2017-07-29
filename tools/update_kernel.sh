@@ -31,12 +31,6 @@ test_ti_kernel_version () {
 		minor=$(uname -r | awk '{print $1}' | cut -d. -f2)
 
 		case "x${major}.${minor}x" in
-		x3.14x)
-			kernel="LTS314"
-			;;
-		x4.1x)
-			kernel="LTS41"
-			;;
 		x4.4x)
 			kernel="LTS44"
 			;;
@@ -85,9 +79,6 @@ test_bone_rt_kernel_version () {
 		minor=$(uname -r | awk '{print $1}' | cut -d. -f2)
 
 		case "x${major}.${minor}x" in
-		x4.1x)
-			kernel="LTS41"
-			;;
 		x4.4x)
 			kernel="LTS44"
 			;;
@@ -109,9 +100,6 @@ test_bone_kernel_version () {
 		case "x${major}.${minor}x" in
 		x3.8x)
 			kernel="STABLE"
-			;;
-		x4.1x)
-			kernel="LTS41"
 			;;
 		x4.4x)
 			kernel="LTS44"
@@ -155,9 +143,6 @@ test_armv7_kernel_version () {
 		minor=$(uname -r | awk '{print $1}' | cut -d. -f2)
 
 		case "x${major}.${minor}x" in
-		x4.1x)
-			kernel="LTS41"
-			;;
 		x4.4x)
 			kernel="LTS44"
 			;;
@@ -326,7 +311,6 @@ latest_version_repo () {
 			echo "-----------------------------"
 			echo "Kernel version options:"
 			echo "-----------------------------"
-			echo "LTS41: --lts-4_1"
 			echo "LTS44: --lts-4_4"
 			echo "LTS49: --lts-4_9"
 #			echo "LTS414: --lts-4_14"
@@ -528,7 +512,7 @@ third_party () {
 			apt-get ${apt_options} -o Dpkg::Options::="--force-overwrite" mt7601u-modules-${latest_kernel} || true
 			run_depmod_initramfs="enabled"
 			;;
-		LTS41|LTS44)
+		LTS44)
 			if [ "x${es8}" = "xenabled" ] ; then
 				apt-get ${apt_options} ti-sgx-es8-modules-${latest_kernel} || true
 				run_depmod_initramfs="enabled"
@@ -600,15 +584,7 @@ third_party () {
 		;;
 	ti|ti-rt)
 		case "${kernel}" in
-		LTS314)
-			apt-get ${apt_options} mt7601u-modules-${latest_kernel} || true
-			run_depmod_initramfs="enabled"
-			if [ "x${rtl8723bu}" = "xenabled" ] ; then
-				apt-get ${apt_options} rtl8723bu-modules-${latest_kernel} || true
-				run_depmod_initramfs="enabled"
-			fi
-			;;
-		LTS41|LTS44)
+		LTS44)
 			install_pkg=""
 			if [ "x${rtl8723bu}" = "xenabled" ] ; then
 				install_pkg="${install_pkg}rtl8723bu-modules-${latest_kernel} "
@@ -724,12 +700,12 @@ while [ ! -z "$1" ] ; do
 		daily_cron="enabled"
 		;;
 	--lts-3_14-kernel|--lts-3_14)
-		kernel="LTS314"
+		kernel="LTS44"
 		;;
-	--lts-kernel|--lts|--lts-4_1-kernel|--lts-4_1)
-		kernel="LTS41"
+	--lts-kernel|--lts-4_1-kernel|--lts-4_1)
+		kernel="LTS44"
 		;;
-	--lts-4_4-kernel|--lts-4_4)
+	--lts-4_4-kernel|--lts-4_4|--lts)
 		kernel="LTS44"
 		;;
 	--lts-4_9-kernel|--lts-4_9)
