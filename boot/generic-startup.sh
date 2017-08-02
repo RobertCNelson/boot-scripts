@@ -24,6 +24,13 @@ if [ -f /etc/ssh/ssh.regenerate ] ; then
 	fi
 
 	dpkg-reconfigure openssh-server
+
+	# while we're at it, make sure we have unique machine IDs as well
+	rm -f /var/lib/dbus/machine-id || true
+	rm -f /etc/machine-id || true
+	dbus-uuidgen --ensure
+	systemd-machine-id-setup
+
 	sync
 	if [ -s /etc/ssh/ssh_host_ed25519_key.pub ] ; then
 		rm -f /etc/ssh/ssh.regenerate || true
@@ -47,15 +54,30 @@ if [ -f /resizerootfs ] ; then
 	sync
 fi
 
+if [ -d /sys/class/gpio/ ] ; then
+	chown -R root:gpio /sys/class/gpio/ || true
+	chmod -R ug+rw /sys/class/gpio/ || true
+fi
+
+if [ -d /sys/class/leds ] ; then
+	chown -R root:gpio /sys/class/leds/ || true
+	chmod -R ug+rw /sys/class/leds/ || true
+
+	if [ -d /sys/devices/platform/leds/leds/ ] ; then
+		chown -R root:gpio /sys/devices/platform/leds/leds/ || true
+		chmod -R ug+rw  /sys/devices/platform/leds/leds/ || true
+	fi
+fi
+
 if [ -f /proc/device-tree/model ] ; then
 	board=$(cat /proc/device-tree/model | sed "s/ /_/g")
 	echo "generic-board-startup: [model=${board}]"
 
 	case "${board}" in
-	TI_AM335x_Beagle*|TI_AM335x_Arduino_Tre|Arrow_BeagleBone_Black_Industrial|SanCloud_BeagleBone_Enhanced)
+	TI_AM335x*|Arrow_BeagleBone_Black_Industrial|SanCloud_BeagleBone_Enhanced)
 		script="am335x_evm.sh"
 		;;
-	TI_AM5728_BeagleBoard-X15)
+	TI_AM5728*)
 		script="beagle_x15.sh"
 		;;
 	TI_OMAP3_Beagle*)

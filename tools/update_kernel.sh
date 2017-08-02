@@ -1,6 +1,6 @@
 #!/bin/sh -e
 #
-# Copyright (c) 2014-2016 Robert Nelson <robertcnelson@gmail.com>
+# Copyright (c) 2014-2017 Robert Nelson <robertcnelson@gmail.com>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -30,18 +30,15 @@ test_ti_kernel_version () {
 		major=$(uname -r | awk '{print $1}' | cut -d. -f1)
 		minor=$(uname -r | awk '{print $1}' | cut -d. -f2)
 
-		case "${major}.${minor}" in
-		3.14)
-			kernel="LTS314"
-			;;
-		4.1)
-			kernel="LTS41"
-			;;
-		4.4)
+		case "x${major}.${minor}x" in
+		x4.4x)
 			kernel="LTS44"
 			;;
-		4.9)
+		x4.9x)
 			kernel="LTS49"
+			;;
+		x4.14x)
+			kernel="LTS414"
 			;;
 		esac
 	fi
@@ -81,16 +78,15 @@ test_bone_rt_kernel_version () {
 		major=$(uname -r | awk '{print $1}' | cut -d. -f1)
 		minor=$(uname -r | awk '{print $1}' | cut -d. -f2)
 
-		case "${major}.${minor}" in
-		4.1)
-			kernel="LTS41"
-			;;
-		4.4)
+		case "x${major}.${minor}x" in
+		x4.4x)
 			kernel="LTS44"
 			;;
-		4.9)
-			kernel="EXPERIMENTAL"
-#			kernel="LTS49"
+		x4.9x)
+			kernel="LTS49"
+			;;
+		x4.14x)
+			kernel="LTS414"
 			;;
 		esac
 	fi
@@ -101,19 +97,18 @@ test_bone_kernel_version () {
 		major=$(uname -r | awk '{print $1}' | cut -d. -f1)
 		minor=$(uname -r | awk '{print $1}' | cut -d. -f2)
 
-		case "${major}.${minor}" in
-		3.8)
+		case "x${major}.${minor}x" in
+		x3.8x)
 			kernel="STABLE"
 			;;
-		4.1)
-			kernel="LTS41"
-			;;
-		4.4)
+		x4.4x)
 			kernel="LTS44"
 			;;
-		4.9)
-			kernel="EXPERIMENTAL"
-#			kernel="LTS49"
+		x4.9x)
+			kernel="LTS49"
+			;;
+		x4.14x)
+			kernel="LTS414"
 			;;
 		*)
 			#aka STABLE, as 3.8.13 will always be considered STABLE
@@ -147,16 +142,15 @@ test_armv7_kernel_version () {
 		major=$(uname -r | awk '{print $1}' | cut -d. -f1)
 		minor=$(uname -r | awk '{print $1}' | cut -d. -f2)
 
-		case "${major}.${minor}" in
-		4.1)
-			kernel="LTS41"
-			;;
-		4.4)
+		case "x${major}.${minor}x" in
+		x4.4x)
 			kernel="LTS44"
 			;;
-		4.9)
-			kernel="EXPERIMENTAL"
-#			kernel="LTS49"
+		x4.9x)
+			kernel="LTS49"
+			;;
+		x4.14x)
+			kernel="LTS414"
 			;;
 		*)
 			kernel="STABLE"
@@ -193,7 +187,7 @@ scan_armv7_kernels () {
 }
 
 get_device () {
-	machine=$(cat /proc/device-tree/model | sed "s/ /_/g")
+	machine=$(cat /proc/device-tree/model | sed "s/ /_/g" | tr -d '\000')
 
 	if [ "x${SOC}" = "x" ] ; then
 		case "${machine}" in
@@ -225,7 +219,7 @@ get_device () {
 			;;
 		*)
 			echo "Machine: [${machine}]"
-			SOC="armv7"
+			scan_armv7_kernels
 			;;
 		esac
 	fi
@@ -257,9 +251,6 @@ get_device () {
 		ticmem="enabled"
 		tidebugss="enabled"
 		titemperature="enabled"
-		;;
-	TI_OMAP5_uEVM_board)
-		kernel_headers="enabled"
 		;;
 	esac
 }
@@ -293,6 +284,16 @@ check_apt_cache () {
 	apt_cache=$(LC_ALL=C apt-cache search "^${pkg}$" | awk '{print $1}' || true)
 }
 
+cleanup_old_kernels () {
+	if [ "x${cleanup_old_kernels}" = "xenabled" ] ; then
+		unset pkg_list
+		pkg_list=$(dpkg --list | grep linux-image | awk '{print $2}' | grep -v linux-image-`uname -r` | tr '\n' ' ' || true)
+		if [ ! "x${pkg_list}" = "x" ] ; then
+			apt-get -y remove --purge ${pkg_list}
+		fi
+	fi
+}
+
 latest_version_repo () {
 	if [ ! "x${SOC}" = "x" ] ; then
 		cd /tmp/
@@ -310,10 +311,9 @@ latest_version_repo () {
 			echo "-----------------------------"
 			echo "Kernel version options:"
 			echo "-----------------------------"
-			echo "LTS314: --lts-3_14"
-			echo "LTS41: --lts-4_1"
 			echo "LTS44: --lts-4_4"
 			echo "LTS49: --lts-4_9"
+#			echo "LTS414: --lts-4_14"
 			echo "STABLE: --stable"
 			echo "TESTING: --testing"
 			echo "-----------------------------"
@@ -340,6 +340,8 @@ latest_version_repo () {
 				fi
 			fi
 			apt-get update || true
+
+			cleanup_old_kernels
 
 			unset flag_reinstall
 			pkg="linux-image-${latest_kernel}"
@@ -464,6 +466,8 @@ specific_version_repo () {
 	latest_kernel=$(echo ${kernel_version})
 	apt-get update || true
 
+	cleanup_old_kernels
+
 	unset flag_reinstall
 	pkg="linux-image-${latest_kernel}"
 	#is the package installed?
@@ -508,13 +512,20 @@ third_party () {
 			apt-get ${apt_options} -o Dpkg::Options::="--force-overwrite" mt7601u-modules-${latest_kernel} || true
 			run_depmod_initramfs="enabled"
 			;;
-		LTS41|LTS44|LTS49|TESTING|EXPERIMENTAL)
+		LTS44)
 			if [ "x${es8}" = "xenabled" ] ; then
 				apt-get ${apt_options} ti-sgx-es8-modules-${latest_kernel} || true
 				run_depmod_initramfs="enabled"
 			fi
 			if [ "x${rtl8723bu}" = "xenabled" ] ; then
 				apt-get ${apt_options} rtl8723bu-modules-${latest_kernel} || true
+				run_depmod_initramfs="enabled"
+			fi
+			;;
+		TESTING)
+			#v4.11.x sgx modules are working again...
+			if [ "x${es8}" = "xenabled" ] ; then
+				apt-get ${apt_options} ti-sgx-es8-modules-${latest_kernel} || true
 				run_depmod_initramfs="enabled"
 			fi
 			;;
@@ -522,73 +533,103 @@ third_party () {
 		;;
 	ti-xenomai)
 		case "${kernel}" in
-		STABLE)
-			#3.8 only...
-			apt-get ${apt_options} -o Dpkg::Options::="--force-overwrite" mt7601u-modules-${latest_kernel} || true
-			if [ "x${es8}" = "xenabled" ] ; then
-				apt-get ${apt_options} ti-sgx-es8-modules-${latest_kernel} || true
+		LTS44)
+			install_pkg=""
+			if [ "x${rtl8723bu}" = "xenabled" ] ; then
+				install_pkg="${install_pkg}rtl8723bu-modules-${latest_kernel} "
 			fi
-			run_depmod_initramfs="enabled"
+			if [ "x${ticmem}" = "xenabled" ] ; then
+				install_pkg="${install_pkg}ti-cmem-modules-${latest_kernel} "
+			fi
+			if [ "x${tidebugss}" = "xenabled" ] ; then
+				install_pkg="${install_pkg}ti-debugss-modules-${latest_kernel} "
+			fi
+			if [ "x${titemperature}" = "xenabled" ] ; then
+				install_pkg="${install_pkg}ti-temperature-modules-${latest_kernel} "
+			fi
+			if [ "x${sgxti335x}" = "xenabled" ] ; then
+				install_pkg="${install_pkg}ti-sgx-ti335x-modules-${latest_kernel} "
+			fi
+			if [ "x${sgxjacinto6evm}" = "xenabled" ] ; then
+				install_pkg="${install_pkg}ti-sgx-jacinto6evm-modules-${latest_kernel} "
+			fi
+			if [ ! "x${install_pkg}" = "x" ] ; then
+				apt-get ${apt_options} ${install_pkg}
+				run_depmod_initramfs="enabled"
+			fi
+			;;
+		LTS49)
+			install_pkg=""
+			if [ "x${ticmem}" = "xenabled" ] ; then
+				install_pkg="${install_pkg}ti-cmem-modules-${latest_kernel} "
+			fi
+			if [ "x${tidebugss}" = "xenabled" ] ; then
+				install_pkg="${install_pkg}ti-debugss-modules-${latest_kernel} "
+			fi
+			if [ "x${titemperature}" = "xenabled" ] ; then
+				install_pkg="${install_pkg}ti-temperature-modules-${latest_kernel} "
+			fi
+			if [ "x${sgxti335x}" = "xenabled" ] ; then
+				install_pkg="${install_pkg}ti-sgx-ti335x-modules-${latest_kernel} "
+			fi
+			if [ "x${sgxjacinto6evm}" = "xenabled" ] ; then
+				install_pkg="${install_pkg}ti-sgx-jacinto6evm-modules-${latest_kernel} "
+			fi
+			if [ ! "x${install_pkg}" = "x" ] ; then
+				apt-get ${apt_options} ${install_pkg}
+				run_depmod_initramfs="enabled"
+			fi
 			;;
 		esac
 		;;
 	ti|ti-rt)
 		case "${kernel}" in
-		LTS314)
-			apt-get ${apt_options} mt7601u-modules-${latest_kernel} || true
-			run_depmod_initramfs="enabled"
+		LTS44)
+			install_pkg=""
 			if [ "x${rtl8723bu}" = "xenabled" ] ; then
-				apt-get ${apt_options} rtl8723bu-modules-${latest_kernel} || true
-				run_depmod_initramfs="enabled"
-			fi
-			;;
-		LTS41|LTS44)
-			if [ "x${rtl8723bu}" = "xenabled" ] ; then
-				apt-get install -y rtl8723bu-modules-${latest_kernel} || true
-				run_depmod_initramfs="enabled"
+				install_pkg="${install_pkg}rtl8723bu-modules-${latest_kernel} "
 			fi
 			if [ "x${ticmem}" = "xenabled" ] ; then
-				apt-get ${apt_options} ti-cmem-modules-${latest_kernel} || true
-				run_depmod_initramfs="enabled"
+				install_pkg="${install_pkg}ti-cmem-modules-${latest_kernel} "
 			fi
 			if [ "x${tidebugss}" = "xenabled" ] ; then
-				apt-get ${apt_options} ti-debugss-modules-${latest_kernel} || true
-				run_depmod_initramfs="enabled"
+				install_pkg="${install_pkg}ti-debugss-modules-${latest_kernel} "
 			fi
 			if [ "x${titemperature}" = "xenabled" ] ; then
-				apt-get ${apt_options} ti-temperature-modules-${latest_kernel} || true
-				run_depmod_initramfs="enabled"
+				install_pkg="${install_pkg}ti-temperature-modules-${latest_kernel} "
 			fi
 			if [ "x${sgxti335x}" = "xenabled" ] ; then
-				apt-get ${apt_options} ti-sgx-ti335x-modules-${latest_kernel} || true
-				run_depmod_initramfs="enabled"
+				install_pkg="${install_pkg}ti-sgx-ti335x-modules-${latest_kernel} "
 			fi
 			if [ "x${sgxjacinto6evm}" = "xenabled" ] ; then
-				apt-get ${apt_options} ti-sgx-jacinto6evm-modules-${latest_kernel} || true
+				install_pkg="${install_pkg}ti-sgx-jacinto6evm-modules-${latest_kernel} "
+			fi
+			if [ ! "x${install_pkg}" = "x" ] ; then
+				apt-get ${apt_options} ${install_pkg}
 				run_depmod_initramfs="enabled"
 			fi
 			;;
 		LTS49)
-#			if [ "x${ticmem}" = "xenabled" ] ; then
-#				apt-get ${apt_options} ti-cmem-modules-${latest_kernel} || true
-#				run_depmod_initramfs="enabled"
-#			fi
+			install_pkg=""
+			if [ "x${ticmem}" = "xenabled" ] ; then
+				install_pkg="${install_pkg}ti-cmem-modules-${latest_kernel} "
+			fi
 			if [ "x${tidebugss}" = "xenabled" ] ; then
-				apt-get ${apt_options} ti-debugss-modules-${latest_kernel} || true
-				run_depmod_initramfs="enabled"
+				install_pkg="${install_pkg}ti-debugss-modules-${latest_kernel} "
 			fi
 			if [ "x${titemperature}" = "xenabled" ] ; then
-				apt-get ${apt_options} ti-temperature-modules-${latest_kernel} || true
+				install_pkg="${install_pkg}ti-temperature-modules-${latest_kernel} "
+			fi
+			if [ "x${sgxti335x}" = "xenabled" ] ; then
+				install_pkg="${install_pkg}ti-sgx-ti335x-modules-${latest_kernel} "
+			fi
+			if [ "x${sgxjacinto6evm}" = "xenabled" ] ; then
+				install_pkg="${install_pkg}ti-sgx-jacinto6evm-modules-${latest_kernel} "
+			fi
+			if [ ! "x${install_pkg}" = "x" ] ; then
+				apt-get ${apt_options} ${install_pkg}
 				run_depmod_initramfs="enabled"
 			fi
-#			if [ "x${sgxti335x}" = "xenabled" ] ; then
-#				apt-get ${apt_options} ti-sgx-ti335x-modules-${latest_kernel} || true
-#				run_depmod_initramfs="enabled"
-#			fi
-#			if [ "x${sgxjacinto6evm}" = "xenabled" ] ; then
-#				apt-get ${apt_options} ti-sgx-jacinto6evm-modules-${latest_kernel} || true
-#				run_depmod_initramfs="enabled"
-#			fi
 			;;
 		esac
 		;;
@@ -659,15 +700,18 @@ while [ ! -z "$1" ] ; do
 		daily_cron="enabled"
 		;;
 	--lts-3_14-kernel|--lts-3_14)
-		kernel="LTS314"
+		kernel="LTS44"
 		;;
-	--lts-kernel|--lts|--lts-4_1-kernel|--lts-4_1)
-		kernel="LTS41"
+	--lts-kernel|--lts-4_1-kernel|--lts-4_1)
+		kernel="LTS44"
 		;;
-	--lts-4_4-kernel|--lts-4_4)
+	--lts-4_4-kernel|--lts-4_4|--lts)
 		kernel="LTS44"
 		;;
 	--lts-4_9-kernel|--lts-4_9)
+		kernel="LTS49"
+		;;
+	--lts-4_14-kernel|--lts-4_14)
 		kernel="LTS49"
 		;;
 	--stable-kernel|--stable)
@@ -724,7 +768,10 @@ while [ ! -z "$1" ] ; do
 		SOC="ti-xenomai"
 		;;
 	--pre-fall-2014-rootfs)
-		old_rootfs="enable"
+		old_rootfs="enabled"
+		;;
+	--cleanup-old-kernels)
+		cleanup_old_kernels="enabled"
 		;;
 	esac
 	shift

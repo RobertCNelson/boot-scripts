@@ -1,0 +1,9 @@
+[Unit]
+Description=Webcam Video Streaming
+Requires=dev-video0.device
+BindsTo=dev-video0.device
+
+[Service]
+#ExecStart=/usr/local/bin/mjpg_streamer -i "/usr/local/lib/input_uvc.so -yuv" -o "/usr/local/lib/output_http.so -p 8090 -w /usr/local/www"
+ExecStart=/usr/bin/mjpg_streamer -i "/usr/lib/mjpg-streamer/input_uvc.so" -o "/usr/lib/mjpg-streamer/output_http.so -p 8090 -w /usr/share/mjpg-streamer/www"
+

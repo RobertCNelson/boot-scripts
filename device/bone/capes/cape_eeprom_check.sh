@@ -33,6 +33,12 @@ if [ -f /sys/bus/i2c/devices/1-0054/eeprom ] ; then
 	eeprom_dump
 fi
 
+if [ -f /sys/bus/i2c/devices/2-0054/eeprom ] ; then
+	pre="/sys/bus/i2c/devices/2-"
+	post="eeprom"
+	eeprom_dump
+fi
+
 if [ -f /sys/bus/nvmem/devices/at24-1/nvmem ] ; then
 	pre="/sys/bus/nvmem/devices/"
 	post="nvmem"

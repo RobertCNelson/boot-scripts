@@ -87,16 +87,15 @@ option subnet ${deb_usb_netmask}
 option domain local
 option lease 30
 EOF
-	# Will start or restart udhcpd
-	/sbin/ifconfig usb0 ${deb_usb_address} netmask ${deb_usb_netmask} || true
-	/usr/sbin/udhcpd -S ${deb_udhcpd_conf} || true
 
-	#FIXME check for g_ether/usb0 module loaded, as it sometimes takes a little bit...
-	#sometimes when we see this hang, the leases file was left hanging around
-	sleep 1
-	/etc/init.d/udhcpd stop || true
-	rm -f /var/lib/misc/udhcpd.leases
-	/etc/init.d/udhcpd start || true
+	unset test_udhcpd
+	test_udhcpd=$(cat /etc/default/udhcpd | grep -v '#' | grep ${deb_udhcpd_conf} || true)
+	if [ "x${test_udhcpd}" = "x" ] ; then
+		sed -i -e 's:DHCPD_OPTS:#DHCPD_OPTS:g'  /etc/default/udhcpd
+		echo "DHCPD_OPTS=\"-S /etc/udhcpd.conf\"" >> /etc/default/udhcpd
+	fi
+	# Will start or restart udhcpd
+	/etc/init.d/udhcpd restart || true
 }
 
 
@@ -131,7 +130,7 @@ deb_configure_dnsmasq ()
 # disable DNS by setting port to 0
 #port=0
 #one address range
-dhcp-range=usb,${deb_usb_address},${deb_usb_gateway}
+dhcp-range=usb,${deb_usb_address},${deb_usb_gateway},20m
 dhcp-option=usb,3
 # either use listen-address, then include 127.0.0.1
 #listen-address=${deb_usb_address}
@@ -147,7 +146,13 @@ EOF
 		grep -qi "${deb_dnsmasq_warning}" ${deb_dnsmasq_conf} || \
 			echo "\n${deb_dnsmasq_warning}" >>${deb_dnsmasq_conf}
 
-		systemctl restart dnsmasq || true
+		if [ -f /var/lib/misc/dnsmasq.leases ] ; then
+			systemctl stop dnsmasq || true
+			rm -rf /var/lib/misc/dnsmasq.leases || true
+			systemctl start dnsmasq || true
+		else
+			systemctl restart dnsmasq || true
+		fi
 	fi
 }
 
@@ -184,27 +189,36 @@ if [ "x${deb_usb_address}" != "x" -a\
      "x${deb_usb_gateway}" != "x" -a\
      "x${deb_usb_netmask}" != "x" ] ; then
 
-	unset dnsmasq_got_usb0
-	#bbgw, SoftAp0/usb0 taken care of by dnsmasq..
-	if [ -f /etc/dnsmasq.d/SoftAp0 ] ; then
-		dnsmasq_got_usb0=$(cat /etc/dnsmasq.d/SoftAp0 | grep usb0 || true)
+	until [ -d /sys/class/net/usb0/ ] ; do
+		sleep 3
+		echo "g_multi: waiting for /sys/class/net/usb0/"
+	done
+
+	if [ -d /sys/kernel/config/usb_gadget ] ; then
+		/sbin/ifconfig usb0 ${deb_usb_address} netmask ${deb_usb_netmask} || true
+	else
+		unset dnsmasq_got_usb0
+		#bbgw, SoftAp0/usb0 taken care of by dnsmasq..
+		if [ -f /etc/dnsmasq.d/SoftAp0 ] ; then
+			dnsmasq_got_usb0=$(cat /etc/dnsmasq.d/SoftAp0 | grep usb0 || true)
+		fi
+
+		if [ ! "x${dnsmasq_got_usb0}" = "x" ]; then
+			#bbgw, pass's out: 192.168.7.3 & 192.168.7.4
+			/sbin/ifconfig usb0 ${deb_usb_address} netmask ${deb_usb_netmask} || true
+		# usb0 is specified!
+		elif [ -f ${deb_udhcpd_default} ]; then
+			/sbin/ifconfig usb0 ${deb_usb_address} netmask ${deb_usb_netmask} || true
+			deb_configure_udhcpd
+
+		elif [ -f ${deb_dnsmasq_dir}/README ]; then
+			deb_configure_dnsmasq
+
+		fi
+		${deb_post_up}
+
+		[ "x$deb_dns_nameservers" != "x" ] && echo nameserver $deb_dns_nameservers >> /etc/resolv.conf
 	fi
-
-	if [ ! "x${dnsmasq_got_usb0}" = "x" ]; then
-		/etc/init.d/udhcpd stop || true
-		#bbgw, pass's out: 192.168.7.3 & 192.168.7.4
-		/sbin/ifconfig usb0 ${deb_usb_address} netmask 255.255.255.0 || true
-	# usb0 is specified!
-	elif [ -f ${deb_udhcpd_default} ]; then
-		deb_configure_udhcpd
-
-	elif [ -f ${deb_dnsmasq_dir}/README ]; then
-		deb_configure_dnsmasq
-
-	fi
-	${deb_post_up}
-
-	[ "x$deb_dns_nameservers" != "x" ] && echo nameserver $deb_dns_nameservers >> /etc/resolv.conf
 fi
 
 #

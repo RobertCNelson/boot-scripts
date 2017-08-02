@@ -5,8 +5,13 @@
 # Source it like this:
 # source $(dirname "$0")/functions.sh
 
-version_message="1.20161019: Major refactor of library"
+version_message="1.20170427: u-boot v2017.05-rc2..."
 emmcscript="cmdline=init=/opt/scripts/tools/eMMC/$(basename $0)"
+
+#
+#https://rcn-ee.com/repos/bootloader/am335x_evm/
+http_spl="MLO-am335x_evm-v2017.05-rc2-r4"
+http_uboot="u-boot-am335x_evm-v2017.05-rc2-r4.img"
 
 set -o errtrace
 
@@ -104,47 +109,81 @@ __dry_run__(){
   export -f cp
 }
 
+mmc_mount_fail() {
+	generate_line 80 '='
+	echo_broadcast "====> grep mmc"
+	dmesg | grep mmc || true
+	generate_line 40
+	echo_broadcast "====> ls /sys/class/block/"
+	ls -l /sys/class/block/ || true
+	generate_line 40
+	echo_broadcast "====> ls /dev/mmc*"
+	ls -l /dev/mmc* || true
+	generate_line 80 '='
+}
+
+try_vfat() {
+	echo_broadcast "====> Mounting ${boot_drive} Read Only over /boot/uboot (trying vfat)"
+	mount -t vfat ${boot_drive} /boot/uboot/ -o ro || mmc_mount_fail
+}
+
 prepare_environment() {
-  generate_line 80 '='
-  echo_broadcast "Prepare environment for flashing"
-  start_time=$(date +%s)
-  echo_broadcast "Starting at $(date --date="@$start_time")"
-  generate_line 40
-  echo_broadcast "==> Preparing /tmp"
-  mount -t tmpfs tmpfs /tmp
-  echo_broadcast "==> Determining root drive"
-  find_root_drive
-  echo_broadcast "====> Root drive identified at ${root_drive}"
-  echo_broadcast "==> Determining boot drive"
-  boot_drive="${root_drive%?}1"
-  if [ ! "x${boot_drive}" = "x${root_drive}" ] ; then
-    echo_broadcast "====> The Boot and Root drives are identified to be different."
-    echo_broadcast "====> Mounting ${boot_drive} Read Only over /boot/uboot"
-    mount ${boot_drive} /boot/uboot -o ro
-  fi
-  echo_broadcast "==> Figuring out Source and Destination devices"
-  if [ "x${boot_drive}" = "x/dev/mmcblk0p1" ] ; then
-    source="/dev/mmcblk0"
-    destination="/dev/mmcblk1"
-  elif [ "x${boot_drive}" = "x/dev/mmcblk1p1" ] ; then
-    source="/dev/mmcblk1"
-    destination="/dev/mmcblk0"
-  else
-    echo_broadcast "!!! Could not reliably determine Source and Destination"
-    echo_broadcast "!!! We need to stop here"
-    teardown_environment
-    write_failure
-    exit 2
-  fi
-  echo_broadcast "====> Source identified: [${source}]"
-  echo_broadcast "====> Destination identified: [${destination}]"
-  echo_broadcast "==> Figuring out machine"
-  get_device
-  echo_broadcast "====> Machine is ${machine}"
-  if [ "x${is_bbb}" = "xenable" ] ; then
-    echo_broadcast "====> Machine is compatible with BeagleBone Black"
-  fi
-  generate_line 80 '='
+	generate_line 80 '='
+	echo_broadcast "Prepare environment for flashing"
+	start_time=$(date +%s)
+	echo_broadcast "Starting at $(date --date="@$start_time")"
+	generate_line 40
+
+	echo_broadcast "==> Giving system time to stablize..."
+	countdown 5
+
+	echo_broadcast "==> Preparing /tmp"
+	mount -t tmpfs tmpfs /tmp
+
+	echo_broadcast "==> Preparing sysctl"
+	value_min_free_kbytes=$(sysctl -n vm.min_free_kbytes)
+	echo_broadcast "==> sysctl: vm.min_free_kbytes=[${value_min_free_kbytes}]"
+	echo_broadcast "==> sysctl: setting: [sysctl -w vm.min_free_kbytes=16384]"
+	sysctl -w vm.min_free_kbytes=16384
+	generate_line 40
+
+	echo_broadcast "==> Determining root drive"
+	find_root_drive
+	echo_broadcast "====> Root drive identified at [${root_drive}]"
+	boot_drive=${root_drive%?}1
+	echo_broadcast "==> Boot Drive [${boot_drive}]"
+	echo_broadcast "==> Figuring out Source and Destination devices"
+	if [ "x${boot_drive}" = "x/dev/mmcblk0p1" ] ; then
+		source="/dev/mmcblk0"
+		destination="/dev/mmcblk1"
+	elif [ "x${boot_drive}" = "x/dev/mmcblk1p1" ] ; then
+		source="/dev/mmcblk1"
+		destination="/dev/mmcblk0"
+	else
+		echo_broadcast "!!! Could not reliably determine Source and Destination"
+		echo_broadcast "!!! We need to stop here"
+		teardown_environment
+		write_failure
+		exit 2
+	fi
+	echo_broadcast "====> Source identified: [${source}]"
+	echo_broadcast "====> Destination identified: [${destination}]"
+	echo_broadcast "==> Figuring out machine"
+	get_device
+	echo_broadcast "====> Machine is ${machine}"
+	if [ "x${is_bbb}" = "xenable" ] ; then
+		echo_broadcast "====> Machine is compatible with BeagleBone Black"
+	fi
+
+	if [ ! "x${boot_drive}" = "x${root_drive}" ] ; then
+		echo_broadcast "====> The Boot and Root drives are identified to be different."
+		echo_broadcast "====> Giving system time to stablize..."
+		countdown 5
+		echo_broadcast "====> Mounting ${boot_drive} Read Only over /boot/uboot"
+		mount ${boot_drive} /boot/uboot -o ro || try_vfat
+	fi
+
+	generate_line 80 '='
 }
 
 prepare_environment_reverse() {
@@ -153,6 +192,13 @@ prepare_environment_reverse() {
   start_time=$(date +%s)
   echo_broadcast "Starting at $(date --date="@$start_time")"
   generate_line 40
+
+	value_min_free_kbytes=$(sysctl -n vm.min_free_kbytes)
+	echo_broadcast "==> sysctl: vm.min_free_kbytes=[${value_min_free_kbytes}]"
+	echo_broadcast "==> sysctl: setting: [sysctl -w vm.min_free_kbytes=16384]"
+	sysctl -w vm.min_free_kbytes=16384
+	generate_line 40
+
 #  echo_broadcast "==> Preparing /tmp"
 #  mount -t tmpfs tmpfs /tmp
   echo_broadcast "==> Determining root drive"
@@ -282,13 +328,21 @@ check_if_run_as_root(){
 }
 
 find_root_drive(){
-  unset root_drive
-  root_drive="$(cat /proc/cmdline | sed 's/ /\n/g' | grep root=UUID= | awk -F 'root=' '{print $2}' || true)"
-  if [ ! "x${root_drive}" = "x" ] ; then
-    root_drive="$(/sbin/findfs ${root_drive} || true)"
-  else
-    root_drive="$(cat /proc/cmdline | sed 's/ /\n/g' | grep root= | awk -F 'root=' '{print $2}' || true)"
-  fi
+	unset root_drive
+	if [ -f /proc/cmdline ] ; then
+		proc_cmdline=$(cat /proc/cmdline | tr -d '\000')
+		echo_broadcast "==> ${proc_cmdline}"
+		generate_line 40
+		root_drive=$(cat /proc/cmdline | tr -d '\000' | sed 's/ /\n/g' | grep root=UUID= | awk -F 'root=' '{print $2}' || true)
+		if [ ! "x${root_drive}" = "x" ] ; then
+			root_drive=$(/sbin/findfs ${root_drive} || true)
+		else
+			root_drive=$(cat /proc/cmdline | sed 's/ /\n/g' | grep root= | awk -F 'root=' '{print $2}' || true)
+		fi
+		echo_broadcast "==> root_drive=[${root_drive}]"
+	else
+		echo_broadcast "no /proc/cmdline"
+	fi
 }
 
 flush_cache() {
@@ -352,7 +406,7 @@ dev2dir() {
 
 get_device() {
   is_bbb="enable"
-  machine=$(cat /proc/device-tree/model | sed "s/ /_/g")
+  machine=$(cat /proc/device-tree/model | sed "s/ /_/g" | tr -d '\000')
 
   case "${machine}" in
     TI_AM5728_BeagleBoard*)
@@ -566,46 +620,70 @@ check_running_system() {
 }
 
 check_running_system_initrd() {
-  empty_line
-  generate_line 80 '='
-  echo_broadcast "Checking running system"
-  echo_broadcast "==> Copying: [${source}] -> [${destination}]"
-  echo_broadcast "==> lsblk:"
-  generate_line 40
-  echo_broadcast "`lsblk || true`"
-  generate_line 40
-  echo_broadcast "==> df -h | grep rootfs:"
-  echo_broadcast "`df -h | grep rootfs || true`"
-  generate_line 40
+	empty_line
+	generate_line 80 '='
+	echo_broadcast "Checking running system"
+	echo_broadcast "==> Copying: [${source}] -> [${destination}]"
+	echo_broadcast "==> lsblk:"
+	generate_line 40
+	echo_broadcast "`lsblk || true`"
+	generate_line 40
+	echo_broadcast "==> df -h | grep rootfs:"
+	echo_broadcast "`df -h | grep rootfs || true`"
+	generate_line 40
 
-  if [ ! -b "${destination}" ] ; then
-    echo_broadcast "!==> Error: [${destination}] does not exist"
-    write_failure
-  fi
+	if [ ! -b "${destination}" ] ; then
+		echo_broadcast "!==> Error: [${destination}] does not exist"
+		write_failure
+	fi
 
-  if [ ! -f /boot/config-$(uname -r) ] ; then
-    echo_broadcast "==> generating: /boot/config-$(uname -r)"
-    zcat /proc/config.gz > /boot/config-$(uname -r)
-  fi
+	if [ ! -f /boot/config-$(uname -r) ] ; then
+		echo_broadcast "==> generating: /boot/config-$(uname -r)"
+		zcat /proc/config.gz > /boot/config-$(uname -r)
+	fi
 
-  if [ -f /boot/initrd.img-$(uname -r) ] ; then
-    echo_broadcast "==> updating: /boot/initrd.img-$(uname -r)"
-    update-initramfs -u -k $(uname -r)
-  else
-    echo_broadcast "==> creating: /boot/initrd.img-$(uname -r)"
-    update-initramfs -c -k $(uname -r)
-  fi
-  flush_cache
+	#Needed for: debian-7.5-2014-05-14
+	if [ ! -f /boot/vmlinuz-$(uname -r) ] ; then
+		echo_broadcast "==> updating: /boot/vmlinuz-$(uname -r) (old image)"
+		if [ -f /boot/uboot/zImage ] ; then
+			cp -v /boot/uboot/zImage /boot/vmlinuz-$(uname -r)
+		else
+			echo_broadcast "!==> Error: [/boot/vmlinuz-$(uname -r)] does not exist"
+			write_failure
+		fi
+		flush_cache
+	fi
 
-  if [ "x${is_bbb}" = "xenable" ] ; then
-    if [ ! -e /sys/class/leds/beaglebone\:green\:usr0/trigger ] ; then
-      modprobe leds_gpio || true
-      sleep 1
-    fi
-  fi
-  echo_broadcast "==> Giving you time to check..."
-  countdown 10
-  generate_line 80 '='
+	if [ -f /boot/initrd.img-$(uname -r) ] ; then
+		echo_broadcast "==> updating: /boot/initrd.img-$(uname -r)"
+		update-initramfs -u -k $(uname -r)
+	else
+		echo_broadcast "==> creating: /boot/initrd.img-$(uname -r)"
+		update-initramfs -c -k $(uname -r)
+	fi
+	flush_cache
+
+	#Needed for: debian-7.5-2014-05-14
+	if [ ! -d /boot/dtbs/$(uname -r)/ ] ; then
+		if [ -d /boot/uboot/dtbs/ ] ; then
+			mkdir -p /boot/dtbs/$(uname -r) || true
+			cp -v /boot/uboot/dtbs/* /boot/dtbs/$(uname -r)/
+		else
+			echo_broadcast "!==> Error: [/boot/dtbs/$(uname -r)/] does not exist"
+			write_failure
+		fi
+		flush_cache
+	fi
+
+	if [ "x${is_bbb}" = "xenable" ] ; then
+		if [ ! -e /sys/class/leds/beaglebone\:green\:usr0/trigger ] ; then
+			modprobe leds_gpio || true
+			sleep 1
+		fi
+	fi
+	echo_broadcast "==> Giving you time to check..."
+	countdown 10
+	generate_line 80 '='
 }
 
 cylon_leds() {
@@ -746,39 +824,43 @@ _format_root() {
 }
 
 _copy_boot() {
-  empty_line
-  generate_line 80 '='
-  echo_broadcast "Copying boot: ${source}p1 -> ${boot_partition}"
+	empty_line
+	generate_line 80 '='
+	echo_broadcast "Copying boot: ${source}p1 -> ${boot_partition}"
 
-  #rcn-ee: Currently the MLO/u-boot.img are dd'ed to MBR, this is just for old rootfs:
-  if [ -f /boot/uboot/MLO ] && [ -f /boot/uboot/u-boot.img ] ; then
-    echo_broadcast "==> Found MLO and u-boot.img in current /boot/uboot/, copying"
-    #Make sure the BootLoader gets copied first:
-    cp -v /boot/uboot/MLO ${tmp_boot_dir}/MLO || write_failure
-    flush_cache
+	#rcn-ee: Currently the MLO/u-boot.img are dd'ed to MBR by default, this is just for VERY old rootfs (aka, DO NOT USE)
+	if [ ! -f /opt/backup/uboot/MLO ] ; then
+		if [ -f /boot/uboot/MLO ] && [ -f /boot/uboot/u-boot.img ] ; then
+			echo_broadcast "==> Found MLO and u-boot.img in current /boot/uboot/, copying"
+			#Make sure the BootLoader gets copied first:
+			cp -v /boot/uboot/MLO ${tmp_boot_dir}/MLO || write_failure
+			flush_cache
 
-    cp -v /boot/uboot/u-boot.img ${tmp_boot_dir}/u-boot.img || write_failure
-    flush_cache
-  fi
+			cp -v /boot/uboot/u-boot.img ${tmp_boot_dir}/u-boot.img || write_failure
+			flush_cache
+		fi
+	fi
 
-  echo_broadcast "==> rsync: /boot/uboot/ -> ${tmp_boot_dir}"
-  get_rsync_options
-  rsync -aAx $rsync_options /boot/uboot/* ${tmp_boot_dir} --exclude={MLO,u-boot.img,uEnv.txt} || write_failure
-  flush_cache
-  empty_line
-  generate_line 80 '='
+	if [ -f /boot/uboot/MLO ] ; then
+		echo_broadcast "==> rsync: /boot/uboot/ -> ${tmp_boot_dir}"
+		get_rsync_options
+		rsync -aAxv $rsync_options /boot/uboot/* ${tmp_boot_dir} --exclude={MLO,u-boot.img,uEnv.txt} || write_failure
+		flush_cache
+		empty_line
+		generate_line 80 '='
+	fi
 }
 
 get_device_uuid() {
-  local device=${1}
-  unset device_uuid
-  device_uuid=$(/sbin/blkid /dev/null -s UUID -o value ${device})
-  if [ ! -z "${device_uuid}" ] ; then
-    echo_debug "Device UUID should be: ${device_uuid}"
-    echo $device_uuid
-  else
-    echo_debug "Could not get a proper UUID for $device. Try with another ID"
-  fi
+	local device=${1}
+	unset device_uuid
+	device_uuid=$(/sbin/blkid /dev/null -s UUID -o value ${device})
+	if [ ! -z "${device_uuid}" ] ; then
+		echo_debug "Device UUID should be: ${device_uuid}"
+		echo $device_uuid
+	else
+		echo_debug "Could not get a proper UUID for $device. Try with another ID"
+	fi
 }
 
 _generate_uEnv() {
@@ -812,43 +894,65 @@ __EOF__
     generate_line 40 '*'
     empty_line
   fi
-  root_uuid=$(get_device_uuid ${rootfs_partition})
-  if [ ! -z "${root_uuid}" ] ; then
-    echo_broadcast "==> Put root uuid in uEnv.txt"
-    sed -i -e 's:^uuid=:#uuid=:g' ${tmp_rootfs_dir}/boot/uEnv.txt
-    echo "uuid=${root_uuid}" >> ${tmp_rootfs_dir}/boot/uEnv.txt
-  fi
+	#UUID support for 3.8.x kernel
+	if [ -d /sys/devices/bone_capemgr.*/ ] ; then
+		root_uuid=$(get_device_uuid ${rootfs_partition})
+		if [ ! -z "${root_uuid}" ] ; then
+			echo_broadcast "==> Put root uuid in uEnv.txt"
+			sed -i -e 's:^uuid=:#uuid=:g' ${tmp_rootfs_dir}/boot/uEnv.txt
+			echo "uuid=${root_uuid}" >> ${tmp_rootfs_dir}/boot/uEnv.txt
+		fi
+	fi
 }
 
 get_fstab_id_for_device() {
-  local device=${1}
-  local device_id=$(get_device_uuid ${device})
-  if [ -n ${device_id} ]; then
-    echo "UUID=${device_id}"
-  else
-    echo_debug "Could not find a UUID for ${device}, default to device name"
-    # Since the mmc device get reverse depending on how it was booted we need to use source
-    echo "${source}p${device:(-1)}"
-  fi
+	local device=${1}
+	local device_id=$(get_device_uuid ${device})
+	if [ -n ${device_id} ]; then
+		echo "UUID=${device_id}"
+	else
+		echo_debug "Could not find a UUID for ${device}, default to device name"
+		# Since the mmc device get reverse depending on how it was booted we need to use source
+		echo "${source}p${device:(-1)}"
+	fi
 }
 
 _generate_fstab() {
-  empty_line
-  echo_broadcast "==> Generating: /etc/fstab"
-  echo "# /etc/fstab: static file system information." > ${tmp_rootfs_dir}/etc/fstab
-  echo "#" >> ${tmp_rootfs_dir}/etc/fstab
-  if [ "${boot_partition}x" != "${rootfs_partition}x" ] ; then
-    boot_fs_id=$(get_fstab_id_for_device ${boot_partition})
-    echo "${boot_fs_id} /boot vfat noauto,noatime,nouser,fmask=0022,dmask=0022 0 0" >> ${tmp_rootfs_dir}/etc/fstab
-  fi
-  root_fs_id=$(get_fstab_id_for_device ${rootfs_partition})
-  echo "${root_fs_id}  /  ext4  noatime,errors=remount-ro  0  1" >> ${tmp_rootfs_dir}/etc/fstab
-  echo "debugfs  /sys/kernel/debug  debugfs  defaults  0  0" >> ${tmp_rootfs_dir}/etc/fstab
-  echo_broadcast "===> /etc/fstab generated"
-  generate_line 40 '*'
-  cat ${tmp_rootfs_dir}/etc/fstab
-  generate_line 40 '*'
-  empty_line
+	empty_line
+	echo_broadcast "==> Generating: /etc/fstab"
+	echo "# /etc/fstab: static file system information." > ${tmp_rootfs_dir}/etc/fstab
+	echo "#" >> ${tmp_rootfs_dir}/etc/fstab
+	if [ "${boot_partition}x" != "${rootfs_partition}x" ] ; then
+
+		#UUID support for 3.8.x kernel
+		if [ -d /sys/devices/bone_capemgr.*/ ] ; then
+			boot_fs_id=$(get_fstab_id_for_device ${boot_partition})
+			echo "${boot_fs_id} /boot/uboot auto defaults 0 0" >> ${tmp_rootfs_dir}/etc/fstab
+		else
+			echo "${boot_partition} /boot/uboot auto defaults 0 0" >> ${tmp_rootfs_dir}/etc/fstab
+		fi
+
+	fi
+
+	#UUID support for 3.8.x kernel
+	if [ -d /sys/devices/bone_capemgr.*/ ] ; then
+		root_fs_id=$(get_fstab_id_for_device ${rootfs_partition})
+		echo "${root_fs_id}  /  ext4  noatime,errors=remount-ro  0  1" >> ${tmp_rootfs_dir}/etc/fstab
+	else
+		echo "${rootfs_partition}  /  ext4  noatime,errors=remount-ro  0  1" >> ${tmp_rootfs_dir}/etc/fstab
+	fi
+
+	echo "debugfs  /sys/kernel/debug  debugfs  defaults  0  0" >> ${tmp_rootfs_dir}/etc/fstab
+	echo_broadcast "===> /etc/fstab generated"
+	generate_line 40 '*'
+	cat ${tmp_rootfs_dir}/etc/fstab
+	generate_line 40 '*'
+	empty_line
+
+	#UUID support for 3.8.x kernel
+	if [ ! -d /sys/devices/bone_capemgr.*/ ] ; then
+		sed -i -e 's:^uuid=:#uuid=:g' ${tmp_rootfs_dir}/boot/uEnv.txt
+	fi
 }
 
 _copy_rootfs() {
@@ -898,49 +1002,55 @@ _copy_rootfs() {
 }
 
 _copy_rootfs_reverse() {
-  empty_line
-  generate_line 80 '='
-  echo_broadcast "Copying: Current rootfs to ${rootfs_partition}"
-  generate_line 40
-  echo_broadcast "==> rsync: / -> ${tmp_rootfs_dir}"
-  generate_line 40
-  get_rsync_options
-  rsync -aAx $rsync_options /* ${tmp_rootfs_dir} --exclude={/dev/*,/proc/*,/sys/*,/tmp/*,/run/*,/mnt/*,/media/*,/lost+found,/lib/modules/*,/uEnv.txt} || write_failure
-  flush_cache
-  generate_line 40
-  echo_broadcast "==> Copying: Kernel modules"
-  echo_broadcast "===> Creating directory for modules"
-  mkdir -p ${tmp_rootfs_dir}/lib/modules/$(uname -r)/ || true
-  echo_broadcast "===> rsync: /lib/modules/$(uname -r)/ -> ${tmp_rootfs_dir}/lib/modules/$(uname -r)/"
-  generate_line 40
-  rsync -aAx $rsync_options /lib/modules/$(uname -r)/* ${tmp_rootfs_dir}/lib/modules/$(uname -r)/ || write_failure
-  flush_cache
-  generate_line 40
+	empty_line
+	generate_line 80 '='
+	echo_broadcast "Copying: Current rootfs to ${rootfs_partition}"
+	generate_line 40
+	echo_broadcast "==> rsync: / -> ${tmp_rootfs_dir}"
+	generate_line 40
+	get_rsync_options
+	rsync -aAx $rsync_options /* ${tmp_rootfs_dir} --exclude={/dev/*,/proc/*,/sys/*,/tmp/*,/run/*,/mnt/*,/media/*,/lost+found,/lib/modules/*,/uEnv.txt} || write_failure
+	flush_cache
+	generate_line 40
+	echo_broadcast "==> Copying: Kernel modules"
+	echo_broadcast "===> Creating directory for modules"
+	mkdir -p ${tmp_rootfs_dir}/lib/modules/$(uname -r)/ || true
+	echo_broadcast "===> rsync: /lib/modules/$(uname -r)/ -> ${tmp_rootfs_dir}/lib/modules/$(uname -r)/"
+	generate_line 40
+	rsync -aAx $rsync_options /lib/modules/$(uname -r)/* ${tmp_rootfs_dir}/lib/modules/$(uname -r)/ || write_failure
+	flush_cache
+	generate_line 40
 
-  echo_broadcast "Copying: Current rootfs to ${rootfs_partition} complete"
-  generate_line 80 '='
-  empty_line
-  generate_line 80 '='
-  echo_broadcast "Final System Tweaks:"
-  generate_line 40
-#  if [ -d ${tmp_rootfs_dir}/etc/ssh/ ] ; then
-#    echo_broadcast "==> Applying SSH Key Regeneration trick"
-#    #ssh keys will now get regenerated on the next bootup
-#    touch ${tmp_rootfs_dir}/etc/ssh/ssh.regenerate
-#    flush_cache
-#  fi
+	echo_broadcast "Copying: Current rootfs to ${rootfs_partition} complete"
+	generate_line 80 '='
+	empty_line
+	generate_line 80 '='
+	echo_broadcast "Final System Tweaks:"
+	generate_line 40
 
-#  _generate_uEnv ${tmp_rootfs_dir}/boot/uEnv.txt
+	#  _generate_uEnv ${tmp_rootfs_dir}/boot/uEnv.txt
+	if [ ! -f ${tmp_rootfs_dir}/boot/uEnv.txt ] ; then
+		echo "#Docs: http://elinux.org/Beagleboard:U-boot_partitioning_layout_2.0" > ${tmp_rootfs_dir}/boot/uEnv.txt
+		echo "" >> ${tmp_rootfs_dir}/boot/uEnv.txt
+		echo "uname_r=$(uname -r)" >> ${tmp_rootfs_dir}/boot/uEnv.txt
+		echo "#uuid=" >> ${tmp_rootfs_dir}/boot/uEnv.txt
+		echo "#dtb=" >> ${tmp_rootfs_dir}/boot/uEnv.txt
+		echo "" >> ${tmp_rootfs_dir}/boot/uEnv.txt
+		echo "cmdline=coherent_pool=1M quiet" >> ${tmp_rootfs_dir}/boot/uEnv.txt
+		echo "" >> ${tmp_rootfs_dir}/boot/uEnv.txt
+		echo "##enable Generic eMMC Flasher:" >> ${tmp_rootfs_dir}/boot/uEnv.txt
+		echo "##make sure, these tools are installed: dosfstools rsync" >> ${tmp_rootfs_dir}/boot/uEnv.txt
+	fi
 
-  _generate_fstab
+	_generate_fstab
 
-  echo_broadcast "==> /boot/uEnv.txt: enabling eMMC flasher script"
-  script="cmdline=init=/opt/scripts/tools/eMMC/init-eMMC-flasher-v3.sh"
-  echo "${script}" >> ${tmp_rootfs_dir}/boot/uEnv.txt
-  generate_line 40 '*'
-  cat ${tmp_rootfs_dir}/boot/uEnv.txt
-  generate_line 40 '*'
-  flush_cache
+	echo_broadcast "==> /boot/uEnv.txt: enabling eMMC flasher script"
+	script="cmdline=init=/opt/scripts/tools/eMMC/init-eMMC-flasher-v3.sh"
+	echo "${script}" >> ${tmp_rootfs_dir}/boot/uEnv.txt
+	generate_line 40 '*'
+	cat ${tmp_rootfs_dir}/boot/uEnv.txt
+	generate_line 40 '*'
+	flush_cache
 }
 
 erasing_drive() {
@@ -962,21 +1072,88 @@ erasing_drive() {
 }
 
 loading_soc_defaults() {
-  local soc_file="/boot/SOC.sh"
-  empty_line
-  if [ -f ${soc_file} ] ; then
-    generate_line 40
-    echo_broadcast "==> Loading ${soc_file}"
-    generate_line 60 '*'
-    cat ${soc_file}
-    generate_line 60 '*'
-    . ${soc_file}
-    echo_broadcast "==> Loaded"
-  else
-    echo_broadcast "!==> Could not find ${soc_file}, no defaults are loaded"
-  fi
-  empty_line
-  generate_line 40
+	local soc_file="/boot/SOC.sh"
+	empty_line
+	if [ -f ${soc_file} ] ; then
+		generate_line 40
+		echo_broadcast "==> Loading ${soc_file}"
+		generate_line 60 '*'
+		cat ${soc_file}
+		generate_line 60 '*'
+		. ${soc_file}
+		echo_broadcast "==> Loaded"
+	else
+		#Needed for: debian-7.5-2014-05-14
+		local soc_file="/boot/uboot/SOC.sh"
+		if [ -f ${soc_file} ] ; then
+			generate_line 40
+			echo_broadcast "==> Loading ${soc_file}"
+			generate_line 60 '*'
+			cat ${soc_file}
+			generate_line 60 '*'
+			. ${soc_file}
+			echo_broadcast "==> Loaded"
+			if [ "x${dd_spl_uboot_backup}" = "x" ] ; then
+				echo_broadcast "==> ${soc_file} missing dd SPL"
+				spl_uboot_name="MLO"
+				dd_spl_uboot_count="1"
+				dd_spl_uboot_seek="1"
+				dd_spl_uboot_conf=""
+				dd_spl_uboot_bs="128k"
+				dd_spl_uboot_backup="/opt/backup/uboot/MLO"
+
+				echo "" >> ${soc_file}
+				echo "spl_uboot_name=${spl_uboot_name}" >> ${soc_file}
+				echo "dd_spl_uboot_count=1" >> ${soc_file}
+				echo "dd_spl_uboot_seek=1" >> ${soc_file}
+				echo "dd_spl_uboot_conf=" >> ${soc_file}
+				echo "dd_spl_uboot_bs=128k" >> ${soc_file}
+				echo "dd_spl_uboot_backup=${dd_spl_uboot_backup}" >> ${soc_file}
+			fi
+			if [ ! -f /opt/backup/uboot/MLO ] ; then
+				echo_broadcast "==> missing /opt/backup/uboot/MLO"
+				mkdir -p /opt/backup/uboot/
+				wget --directory-prefix=/opt/backup/uboot/ http://rcn-ee.com/repos/bootloader/am335x_evm/${http_spl}
+				mv /opt/backup/uboot/${http_spl} /opt/backup/uboot/MLO
+			fi
+			if [ "x${dd_uboot_backup}" = "x" ] ; then
+				echo_broadcast "==> ${soc_file} missing dd u-boot.img"
+				uboot_name="u-boot.img"
+				dd_uboot_count="2"
+				dd_uboot_seek="1"
+				dd_uboot_conf=""
+				dd_uboot_bs="384k"
+				dd_uboot_backup="/opt/backup/uboot/u-boot.img"
+
+				echo "" >> ${soc_file}
+				echo "uboot_name=${uboot_name}" >> ${soc_file}
+				echo "dd_uboot_count=2" >> ${soc_file}
+				echo "dd_uboot_seek=1" >> ${soc_file}
+				echo "dd_uboot_conf=" >> ${soc_file}
+				echo "dd_uboot_bs=384k" >> ${soc_file}
+				echo "dd_uboot_backup=${dd_uboot_backup}" >> ${soc_file}
+			fi
+
+			if [ ! -f /opt/backup/uboot/u-boot.img ] ; then
+				echo_broadcast "==> missing /opt/backup/uboot/u-boot.img"
+				mkdir -p /opt/backup/uboot/
+				wget --directory-prefix=/opt/backup/uboot/ http://rcn-ee.com/repos/bootloader/am335x_evm/${http_uboot}
+				mv /opt/backup/uboot/${http_uboot} /opt/backup/uboot/u-boot.img
+			fi
+
+			generate_line 40
+			echo_broadcast "==> Re-Loading ${soc_file}"
+			generate_line 60 '*'
+			cat ${soc_file}
+			generate_line 60 '*'
+			. ${soc_file}
+			echo_broadcast "==> Re-Loaded"
+		else
+			echo_broadcast "!==> Could not find ${soc_file}, no defaults are loaded"
+		fi
+	fi
+	empty_line
+	generate_line 40
 }
 
 get_ext4_options(){
@@ -986,9 +1163,9 @@ get_ext4_options(){
   LC_ALL=C mkfs.ext4 -V &> /tmp/mkfs
   test_mkfs=$(cat /tmp/mkfs | grep mke2fs | grep 1.43 || true)
   if [ "x${test_mkfs}" = "x" ] ; then
-    ext4_options="-c"
+    ext4_options="${mkfs_options}"
   else
-    ext4_options="-c -O ^metadata_csum,^64bit"
+    ext4_options="${mkfs_options} -O ^metadata_csum,^64bit"
   fi
 }
 

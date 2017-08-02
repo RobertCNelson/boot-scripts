@@ -1,6 +1,6 @@
 #!/bin/sh -e
 #
-# Copyright (c) 2013-2015 Robert Nelson <robertcnelson@gmail.com>
+# Copyright (c) 2013-2017 Robert Nelson <robertcnelson@gmail.com>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -20,38 +20,106 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-#bb.org debian jessie Image:
-if [ -f /etc/dnsmasq.d/usb0-dhcp ] ; then
-	unset root_drive
-	root_drive="$(cat /proc/cmdline | sed 's/ /\n/g' | grep root=UUID= | awk -F 'root=' '{print $2}' || true)"
-	if [ ! "x${root_drive}" = "x" ] ; then
-		root_drive="$(/sbin/findfs ${root_drive} || true)"
+log="omap3_beagle:"
+
+#Bus 005 Device 014: ID 1d6b:0104 Linux Foundation Multifunction Composite Gadget
+usb_gadget="/sys/kernel/config/usb_gadget"
+
+#  idVendor           0x1d6b Linux Foundation
+#  idProduct          0x0104 Multifunction Composite Gadget
+#  bcdDevice            4.04
+#  bcdUSB               2.00
+
+usb_idVendor="0x1d6b"
+usb_idProduct="0x0104"
+usb_bcdDevice="0x0404"
+usb_bcdUSB="0x0200"
+usb_serialnr="000000"
+usb_manufacturer="BeagleBoard.org"
+usb_product="USB Device"
+
+#udhcpd gets started at bootup, but we need to wait till g_multi is loaded, and we run it manually...
+if [ -f /var/run/udhcpd.pid ] ; then
+	/etc/init.d/udhcpd stop || true
+fi
+
+use_libcomposite () {
+	echo "${log} modprobe libcomposite"
+	modprobe libcomposite || true
+	if [ -d /sys/module/libcomposite ] ; then
+		if [ -d ${usb_gadget} ] ; then
+			if [ ! -d ${usb_gadget}/g_multi/ ] ; then
+				echo "${log} Creating g_multi"
+				mkdir -p ${usb_gadget}/g_multi || true
+				cd ${usb_gadget}/g_multi
+
+				echo ${usb_bcdUSB} > bcdUSB
+				echo ${usb_idVendor} > idVendor # Linux Foundation
+				echo ${usb_idProduct} > idProduct # Multifunction Composite Gadget
+				echo ${usb_bcdDevice} > bcdDevice
+
+				#0x409 = english strings...
+				mkdir -p strings/0x409
+
+				echo "0123456789" > strings/0x409/serialnumber
+				echo ${usb_imanufacturer} > strings/0x409/manufacturer
+				cat /proc/device-tree/model > strings/0x409/product
+
+				mkdir -p functions/rndis.usb0
+				# first byte of address must be even
+				HOST=$(cat /proc/device-tree/model /etc/dogtag |md5sum|sed 's/^\(..\)\(..\)\(..\)\(..\)\(..\).*$/02:\1:\2:\3:\4:\5/')
+				SELF=$(cat /proc/device-tree/model /etc/rcn-ee.conf |md5sum|sed 's/^\(..\)\(..\)\(..\)\(..\)\(..\).*$/02:\1:\2:\3:\4:\5/')
+				echo "${log} rndis.usb0/host_addr=[${HOST}]"
+				echo ${HOST} > functions/rndis.usb0/host_addr
+				echo "${log} rndis.usb0/dev_addr=[${SELF}]"
+				echo ${SELF} > functions/rndis.usb0/dev_addr
+				mkdir -p functions/acm.usb0
+
+				mkdir -p configs/c.1/strings/0x409
+				echo "Multifunction with RNDIS" > configs/c.1/strings/0x409/configuration
+
+				echo 500 > configs/c.1/MaxPower
+
+				ln -s functions/rndis.usb0 configs/c.1/
+				ln -s functions/acm.usb0 configs/c.1/
+
+				#ls /sys/class/udc
+				echo musb-hdrc.0.auto > UDC
+				echo "${log} g_multi Created"
+
+				# Auto-configuring the usb0 network interface:
+				$(dirname $0)/autoconfigure_usb0.sh || true
+			else
+				echo "${log} FIXME: need to bring down g_multi first, before running a second time."
+			fi
+		else
+			echo "${log} ERROR: no [${usb_gadget}]"
+		fi
 	else
-		root_drive="$(cat /proc/cmdline | sed 's/ /\n/g' | grep root= | awk -F 'root=' '{print $2}' || true)"
+		echo "${log} ERROR: [libcomposite didn't load]"
 	fi
+}
 
-	boot_drive="${root_drive%?}1"
-	modprobe g_multi file=${boot_drive} cdrom=0 ro=0 stall=0 removable=1 nofua=1 iManufacturer=Circuitco iProduct=BeagleBoard-xM || true
+use_libcomposite
 
-	sleep 1
-
-	/sbin/ifconfig usb0 192.168.7.2 netmask 255.255.255.252 || true
+if [ -d /sys/class/tty/ttyGS0/ ] ; then
+	echo "${log} Starting serial-getty@ttyGS0.service"
+	systemctl start serial-getty@ttyGS0.service || true
 fi
 
-eth0_addr=$(ip addr list eth0 |grep "inet " |cut -d' ' -f6|cut -d/ -f1)
-usb0_addr=$(ip addr list usb0 |grep "inet " |cut -d' ' -f6|cut -d/ -f1)
-#wlan0_addr=$(ip addr list wlan0 |grep "inet " |cut -d' ' -f6|cut -d/ -f1)
-
-sed -i -e '/Address/d' /etc/issue
-
-if [ ! "x${eth0_addr}" = "x" ] ; then
-	echo "The IP Address for eth0 is: ${eth0_addr}" >> /etc/issue
+if [ -f /usr/bin/amixer ] ; then
+	echo "${log} Enabling Headset (Audio Out):"
+	echo "${log} [amixer sset 'DAC1 Digital Fine' 40]:"
+	amixer -c0 sset 'DAC1 Digital Fine' 40
+	echo "${log} [amixer sset 'Headset' 2]:"
+	amixer -c0 sset 'Headset' 2
+	echo "${log} [amixer sset 'HeadsetL Mixer AudioL1' on]:"
+	amixer -c0 sset 'HeadsetL Mixer AudioL1' on
+	echo "${log} [amixer sset 'HeadsetR Mixer AudioR1' on]:"
+	amixer -c0 sset 'HeadsetR Mixer AudioR1' on
 fi
-#if [ ! "x${wlan0_addr}" = "x" ] ; then
-#	echo "The IP Address for wlan0 is: ${wlan0_addr}" >> /etc/issue
-#fi
-if [ ! "x${usb0_addr}" = "x" ] ; then
-	echo "The IP Address for usb0 is: ${usb0_addr}" >> /etc/issue
-fi
+
+#Just Cleanup /etc/issue, systemd starts up tty before these are updated...
+sed -i -e '/Address/d' /etc/issue || true
 
 #

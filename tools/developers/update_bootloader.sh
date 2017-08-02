@@ -1,6 +1,6 @@
 #!/bin/sh -e
 #
-# Copyright (c) 2014-2016 Robert Nelson <robertcnelson@gmail.com>
+# Copyright (c) 2014-2017 Robert Nelson <robertcnelson@gmail.com>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -222,14 +222,105 @@ dd_spl_uboot_boot () {
 	fi
 }
 
+get_uboot_version () {
+	unset test_var
+	test_var=$(dd if=${drive} count=${uboot_count} skip=${uboot_skip} bs=${uboot_bs} 2>/dev/null || true)
+	if [ "x${test_var}" = "xU-Boot" ] ; then
+		uboot_version=$(dd if=${drive} count=${uboot_full_count} skip=${uboot_skip} bs=${uboot_bs} 2>/dev/null || true)
+		uboot_version=$(echo ${uboot_version} | awk '{print $2}')
+		echo "bootloader:[${drive}]:[U-Boot ${uboot_version}]"
+	fi
+}
+
+am335x_dd_default () {
+	uboot_count=6
+	uboot_full_count=32
+	uboot_skip=393248
+	uboot_bs=1
+	drive=${target}
+	get_uboot_version
+}
+
 get_device () {
-	machine=$(cat /proc/device-tree/model | sed "s/ /_/g")
+	machine=$(cat /proc/device-tree/model | sed "s/ /_/g" | tr -d '\000')
 
 	case "${machine}" in
 	TI_OMAP5_uEVM_board)
 		target="/dev/mmcblk1"
 		if [ ! -b ${target} ] ; then
 			target="/dev/mmcblk0"
+		fi
+		;;
+	I_AM335x_BeagleBone)
+		target="/dev/mmcblk0"
+		if [ -b ${target} ] ; then
+			am335x_dd_default
+		fi
+		;;
+	TI_AM335x_BeagleBone_Black)
+		target="/dev/mmcblk0"
+		if [ -b ${target} ] ; then
+			am335x_dd_default
+		else
+			target="/dev/mmcblk1"
+			if [ -b ${target} ] ; then
+				am335x_dd_default
+			fi
+		fi
+		;;
+	TI_AM335x_BeagleBone_Black_Wireless)
+		target="/dev/mmcblk0"
+		if [ -b ${target} ] ; then
+			am335x_dd_default
+		else
+			target="/dev/mmcblk1"
+			if [ -b ${target} ] ; then
+				am335x_dd_default
+			fi
+		fi
+		;;
+	TI_AM335x_BeagleBone_Blue)
+		target="/dev/mmcblk0"
+		if [ -b ${target} ] ; then
+			am335x_dd_default
+		else
+			target="/dev/mmcblk1"
+			if [ -b ${target} ] ; then
+				am335x_dd_default
+			fi
+		fi
+		;;
+	TI_AM335x_BeagleBone_Green)
+		target="/dev/mmcblk0"
+		if [ -b ${target} ] ; then
+			am335x_dd_default
+		else
+			target="/dev/mmcblk1"
+			if [ -b ${target} ] ; then
+				am335x_dd_default
+			fi
+		fi
+		;;
+	TI_AM335x_BeagleBone_Green_Wireless)
+		target="/dev/mmcblk0"
+		if [ -b ${target} ] ; then
+			am335x_dd_default
+		else
+			target="/dev/mmcblk1"
+			if [ -b ${target} ] ; then
+				am335x_dd_default
+			fi
+		fi
+		;;
+	SanCloud_BeagleBone_Enhanced)
+		target="/dev/mmcblk0"
+		if [ -b ${target} ] ; then
+			am335x_dd_default
+		else
+			target="/dev/mmcblk1"
+			if [ -b ${target} ] ; then
+				am335x_dd_default
+			fi
 		fi
 		;;
 	*)
@@ -370,7 +461,7 @@ unset flashed
 # parse commandline options
 while [ ! -z "$1" ] ; do
 	case $1 in
-	--use-beta-bootloader)
+	--use-beta-bootloader|--beta)
 		USE_BETA_BOOTLOADER=1
 		;;
 	--bbb-blank)
