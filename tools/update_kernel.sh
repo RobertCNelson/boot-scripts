@@ -307,7 +307,7 @@ latest_version_repo () {
 
 			echo "-----------------------------"
 			echo "Kernel Options:"
-			cat /tmp/LATEST-${SOC}
+			cat /tmp/LATEST-${SOC} | grep -v LTS314 | grep -v LTS41
 			echo "-----------------------------"
 			echo "Kernel version options:"
 			echo "-----------------------------"
