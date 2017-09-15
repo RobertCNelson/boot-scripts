@@ -203,6 +203,12 @@ get_device () {
 			scan_armv7_kernels
 			es8="enabled"
 			;;
+		TI_AM335x_P*)
+			scan_ti_kernels
+			scan_bone_kernels
+			scan_armv7_kernels
+			es8="enabled"
+			;;
 		SanCloud_BeagleBone_Enhanced)
 			scan_ti_kernels
 			scan_bone_kernels
@@ -238,6 +244,10 @@ get_device () {
 		sgxti335x="enabled"
 		;;
 	TI_AM335x_BeagleBone*)
+		es8="enabled"
+		sgxti335x="enabled"
+		;;
+	TI_AM335x_P*)
 		es8="enabled"
 		sgxti335x="enabled"
 		;;
@@ -313,7 +323,7 @@ latest_version_repo () {
 			echo "-----------------------------"
 			echo "LTS44: --lts-4_4"
 			echo "LTS49: --lts-4_9"
-#			echo "LTS414: --lts-4_14"
+			echo "LTS414: --lts-4_14"
 			echo "STABLE: --stable"
 			echo "TESTING: --testing"
 			echo "-----------------------------"
@@ -522,7 +532,7 @@ third_party () {
 				run_depmod_initramfs="enabled"
 			fi
 			;;
-		TESTING)
+		TESTING|LTS414)
 			#v4.11.x sgx modules are working again...
 			if [ "x${es8}" = "xenabled" ] ; then
 				apt-get ${apt_options} ti-sgx-es8-modules-${latest_kernel} || true
