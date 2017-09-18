@@ -722,7 +722,7 @@ while [ ! -z "$1" ] ; do
 		kernel="LTS49"
 		;;
 	--lts-4_14-kernel|--lts-4_14)
-		kernel="LTS49"
+		kernel="LTS414"
 		;;
 	--stable-kernel|--stable)
 		kernel="STABLE"
