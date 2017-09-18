@@ -532,7 +532,7 @@ third_party () {
 				run_depmod_initramfs="enabled"
 			fi
 			;;
-		TESTING|LTS414)
+		TESTING)
 			#v4.11.x sgx modules are working again...
 			if [ "x${es8}" = "xenabled" ] ; then
 				apt-get ${apt_options} ti-sgx-es8-modules-${latest_kernel} || true
