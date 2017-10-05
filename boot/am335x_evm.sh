@@ -553,6 +553,9 @@ use_libcomposite () {
 			echo "${log} ERROR: no [${usb_gadget}]"
 		fi
 	else
+		if [ -f /sbin/depmod ] ; then
+			/sbin/depmod -a
+		fi
 		echo "${log} ERROR: [libcomposite didn't load]"
 	fi
 }
