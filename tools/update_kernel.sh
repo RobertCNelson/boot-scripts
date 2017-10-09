@@ -299,7 +299,7 @@ cleanup_old_kernels () {
 		unset pkg_list
 		pkg_list=$(dpkg --list | grep linux-image | awk '{print $2}' | grep -v linux-image-`uname -r` | tr '\n' ' ' || true)
 		if [ ! "x${pkg_list}" = "x" ] ; then
-			apt-get -y remove --purge ${pkg_list}
+			${apt_bin} -y remove --purge ${pkg_list}
 		fi
 	fi
 }
@@ -345,11 +345,11 @@ latest_version_repo () {
 
 			if [ "x${current_kernel}" = "x${latest_kernel}" ] ; then
 				if [ "x${daily_cron}" = "xenabled" ] ; then
-					apt-get clean
+					${apt_bin} clean
 					exit
 				fi
 			fi
-			apt-get update || true
+			${apt_bin} update || true
 
 			cleanup_old_kernels
 
@@ -364,7 +364,7 @@ latest_version_repo () {
 					pkg="${pkg} linux-headers-${latest_kernel}"
 				fi
 				echo "debug: installing: [${pkg}]"
-				apt-get install -y ${pkg}
+				${apt_bin} install -y ${pkg}
 				update_uEnv_txt
 			elif [ "x${pkg}" = "x${apt_cache}" ] ; then
 				if [ "x${kernel_headers}" = "xenabled" ] ; then
@@ -372,7 +372,7 @@ latest_version_repo () {
 				fi
 				echo "debug: reinstalling: [${pkg}]"
 				flag_reinstall=true
-				apt-get install -y ${pkg} --reinstall
+				${apt_bin} install -y ${pkg} --reinstall
 				update_uEnv_txt
 			else
 				echo "info: [${pkg}] (latest) is currently unavailable on [rcn-ee.com/repos]"
@@ -474,7 +474,7 @@ latest_version () {
 
 specific_version_repo () {
 	latest_kernel=$(echo ${kernel_version})
-	apt-get update || true
+	${apt_bin} update || true
 
 	cleanup_old_kernels
 
@@ -488,11 +488,11 @@ specific_version_repo () {
 		if [ "x${kernel_headers}" = "xenabled" ] ; then
 			pkg="${pkg} linux-headers-${latest_kernel}"
 		fi
-		apt-get install -y ${pkg}
+		${apt_bin} install -y ${pkg}
 		update_uEnv_txt
 	elif [ "x${pkg}" = "x${apt_cache}" ] ; then
 		flag_reinstall=true
-		apt-get install -y ${pkg} --reinstall
+		${apt_bin} install -y ${pkg} --reinstall
 		update_uEnv_txt
 	else
 		echo "error: [${pkg}] unavailable"
@@ -519,23 +519,23 @@ third_party () {
 		case "${kernel}" in
 		STABLE)
 			#3.8 only...
-			apt-get ${apt_options} -o Dpkg::Options::="--force-overwrite" mt7601u-modules-${latest_kernel} || true
+			${apt_bin} ${apt_options} -o Dpkg::Options::="--force-overwrite" mt7601u-modules-${latest_kernel} || true
 			run_depmod_initramfs="enabled"
 			;;
 		LTS44)
 			if [ "x${es8}" = "xenabled" ] ; then
-				apt-get ${apt_options} ti-sgx-es8-modules-${latest_kernel} || true
+				${apt_bin} ${apt_options} ti-sgx-es8-modules-${latest_kernel} || true
 				run_depmod_initramfs="enabled"
 			fi
 			if [ "x${rtl8723bu}" = "xenabled" ] ; then
-				apt-get ${apt_options} rtl8723bu-modules-${latest_kernel} || true
+				${apt_bin} ${apt_options} rtl8723bu-modules-${latest_kernel} || true
 				run_depmod_initramfs="enabled"
 			fi
 			;;
 		TESTING|LTS414)
 			#v4.11.x sgx modules are working again...
 			if [ "x${es8}" = "xenabled" ] ; then
-				apt-get ${apt_options} ti-sgx-es8-modules-${latest_kernel} || true
+				${apt_bin} ${apt_options} ti-sgx-es8-modules-${latest_kernel} || true
 				run_depmod_initramfs="enabled"
 			fi
 			;;
@@ -564,7 +564,7 @@ third_party () {
 				install_pkg="${install_pkg}ti-sgx-jacinto6evm-modules-${latest_kernel} "
 			fi
 			if [ ! "x${install_pkg}" = "x" ] ; then
-				apt-get ${apt_options} ${install_pkg}
+				${apt_bin} ${apt_options} ${install_pkg}
 				run_depmod_initramfs="enabled"
 			fi
 			;;
@@ -586,7 +586,7 @@ third_party () {
 				install_pkg="${install_pkg}ti-sgx-jacinto6evm-modules-${latest_kernel} "
 			fi
 			if [ ! "x${install_pkg}" = "x" ] ; then
-				apt-get ${apt_options} ${install_pkg}
+				${apt_bin} ${apt_options} ${install_pkg}
 				run_depmod_initramfs="enabled"
 			fi
 			;;
@@ -615,7 +615,7 @@ third_party () {
 				install_pkg="${install_pkg}ti-sgx-jacinto6evm-modules-${latest_kernel} "
 			fi
 			if [ ! "x${install_pkg}" = "x" ] ; then
-				apt-get ${apt_options} ${install_pkg}
+				${apt_bin} ${apt_options} ${install_pkg}
 				run_depmod_initramfs="enabled"
 			fi
 			;;
@@ -637,7 +637,7 @@ third_party () {
 				install_pkg="${install_pkg}ti-sgx-jacinto6evm-modules-${latest_kernel} "
 			fi
 			if [ ! "x${install_pkg}" = "x" ] ; then
-				apt-get ${apt_options} ${install_pkg}
+				${apt_bin} ${apt_options} ${install_pkg}
 				run_depmod_initramfs="enabled"
 			fi
 			;;
@@ -657,21 +657,28 @@ checkparm () {
 
 get_dist=$(cat /etc/apt/sources.list | grep -v deb-src | grep armhf | grep repos.rcn-ee.com | head -1 | awk '{print $4}' || true)
 case "${get_dist}" in
-wheezy|jessie|stretch|sid)
+wheezy|jessie)
 	dist="${get_dist}"
+	apt_bin="apt-get"
 	;;
-trusty|utopic|vivid|wily|xenial|yakkety)
+stretch|sid)
 	dist="${get_dist}"
+	apt_bin="apt"
+	;;
+trusty|utopic|vivid|wily|xenial|yakkety|artful)
+	dist="${get_dist}"
+	apt_bin="apt-get"
 	;;
 *)
 	dist=""
+	apt_bin="apt-get"
 	;;
 esac
 
 if [ "x${dist}" = "x" ] ; then
 	if [ ! -f /usr/bin/lsb_release ] ; then
 		echo "install lsb-release"
-		echo "sudo apt-get install lsb-release"
+		echo "sudo ${apt_bin} install lsb-release"
 		exit
 	fi
 
@@ -809,7 +816,7 @@ if [ ! "x${test_rcnee}" = "x" ] && [ "x${old_rootfs}" = "x" ] ; then
 		specific_version_repo
 	fi
 	third_party
-	apt-get clean
+	${apt_bin} clean
 else
 	get_device
 	latest_version
