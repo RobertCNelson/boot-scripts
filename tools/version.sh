@@ -58,6 +58,8 @@ if [ -f /sys/bus/i2c/devices/0-0050/eeprom ] ; then
 	echo "eeprom:[${board_eeprom}]"
 fi
 
+echo "model:[`cat /proc/device-tree/model | sed "s/ /_/g" | tr -d '\000'`]"
+
 if [ -f /etc/dogtag ] ; then
 	echo "dogtag:[`cat /etc/dogtag`]"
 fi
@@ -77,6 +79,9 @@ if [ "x${SOC}" = "x" ] ; then
 	TI_OMAP5_uEVM_board)
 		mmc0_label="eMMC-(secondary)"
 		mmc1_label="microSD-(primary)"
+		;;
+	TI_AM335x_PocketBeagle)
+		mmc0_label="microSD"
 		;;
 	*)
 		mmc0_label="microSD-(push-button)"
