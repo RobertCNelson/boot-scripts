@@ -1,7 +1,7 @@
 # PPP configuration for Hologram iota modem using Hologram SIM card
 # For more information see hologram.io
 
-connect "/usr/sbin/chat -v -f /etc/chatscripts/iota "
+connect "/usr/sbin/chat -v -f /etc/chatscripts/nova "
 
 # Serial device to which the modem is connected.
 /dev/ttyACM0
