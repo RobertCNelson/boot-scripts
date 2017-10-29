@@ -215,10 +215,9 @@ if [ "x${deb_usb_address}" != "x" -a\
 			deb_configure_dnsmasq
 
 		fi
-		${deb_post_up}
-
-		[ "x$deb_dns_nameservers" != "x" ] && echo nameserver $deb_dns_nameservers >> /etc/resolv.conf
 	fi
+	${deb_post_up}
+	[ "x$deb_dns_nameservers" != "x" ] && echo nameserver $deb_dns_nameservers >> /etc/resolv.conf
 fi
 
 #
