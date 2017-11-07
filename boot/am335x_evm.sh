@@ -43,6 +43,17 @@ fi
 
 log="am335x_evm:"
 
+unset detected_capes
+detected_capes=$(cat /proc/cmdline | sed 's/ /\n/g' | grep uboot_detected_capes= || true)
+if [ ! "x${detected_capes}" = "x" ] ; then
+	got_DLPDLCR2000=$(echo ${detected_capes} | grep DLPDLCR2000 || true)
+	if [ ! "x${got_DLPDLCR2000}" = "x" ] ; then
+		echo "${log} found: DLPDLCR2000 init display"
+		i2cset -y 2 0x1b 0x0b 0x00 0x00 0x00 0x00 i || true
+		i2cset -y 2 0x1b 0x0c 0x00 0x00 0x00 0x1b i || true
+	fi
+fi
+
 usb_gadget="/sys/kernel/config/usb_gadget"
 
 #  idVendor           0x1d6b Linux Foundation
