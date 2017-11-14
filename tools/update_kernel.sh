@@ -661,7 +661,7 @@ wheezy|jessie)
 	dist="${get_dist}"
 	apt_bin="apt-get"
 	;;
-stretch|sid)
+stretch|buster|sid)
 	dist="${get_dist}"
 	apt_bin="apt"
 	;;
