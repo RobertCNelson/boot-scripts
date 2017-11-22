@@ -20,12 +20,15 @@ if [ ! "x${detected_capes}" = "x" ] ; then
 	unset scan_ts
 	got_4D4R=$(echo ${detected_capes} | grep BB-BONE-4D4R-01 || true)
 	if [ ! "x${got_4D4R}" = "x" ] ; then
-		echo "found: 4D4R touchscreen (ar1021 I2C Touchscreen)"
+		echo "xinput_calibrator: found: 4D4R touchscreen (ar1021 I2C Touchscreen)"
 		scan_ts="ar1021"
 	fi
 	if [ ! "x${scan_ts}" = "x" ] ; then
 		CALFILE="/etc/pointercal.xinput.${scan_ts}"
+		echo "xinput_calibrator: xinput_calibrator --list | grep ${scan_ts}"
 		device_id=`$BINARY --list | grep ${scan_ts} | sed 's/ /\n/g' | grep id | awk -F "id=" '{print $2}'`
+
+		echo "xinput_calibrator: using: xinput: id=${device_id}"
 
 		if [ -e $CALFILE ] ; then
 		  if grep replace $CALFILE ; then
@@ -37,6 +40,7 @@ if [ ! "x${detected_capes}" = "x" ] ; then
 		  fi
 		fi
 
+		echo "xinput_calibrator: xinput_calibrator --device ${device_id} --output-type xinput -v"
 		CALDATA=`$BINARY --device ${device_id} --output-type xinput -v | tee $LOGFILE | grep '    xinput set' | sed 's/^    //g; s/$/;/g'`
 		if [ ! -z "$CALDATA" ] ; then
 		  echo $CALDATA > $CALFILE
