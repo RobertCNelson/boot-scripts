@@ -29,7 +29,7 @@ if [ ! "x${detected_capes}" = "x" ] ; then
 		device_id=`$BINARY --list | grep ${scan_ts} | sed 's/ /\n/g' | grep id | awk -F "id=" '{print $2}'`
 		if [ "x${device_id}" = "x" ] ; then
 			echo "xinput_calibrator: too fast... sleep 5..."
-			sleep 5
+			sleep 30
 			device_id=`$BINARY --list | grep ${scan_ts} | sed 's/ /\n/g' | grep id | awk -F "id=" '{print $2}'`
 		fi
 
