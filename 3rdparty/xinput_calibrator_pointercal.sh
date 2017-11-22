@@ -20,11 +20,12 @@ if [ ! "x${detected_capes}" = "x" ] ; then
 	unset scan_ts
 	got_4D4R=$(echo ${detected_capes} | grep BB-BONE-4D4R-01 || true)
 	if [ ! "x${got_4D4R}" = "x" ] ; then
-		echo "${log} found: 4D4R touchscreen (ar1021 I2C Touchscreen)"
+		echo "found: 4D4R touchscreen (ar1021 I2C Touchscreen)" | tee $LOGFILE
 		scan_ts="ar1021"
 	fi
 	if [ ! "x${scan_ts}" = "x" ] ; then
 		CALFILE="/etc/pointercal.xinput.${scan_ts}"
+		$BINARY --list tee $LOGFILE
 		device_id=`$BINARY --list | grep ${scan_ts} | sed 's/ /\n/g' | grep id | awk -F "id=" '{print $2}'`
 
 		if [ -e $CALFILE ] ; then
