@@ -46,6 +46,20 @@ if [ ! "x${detected_capes}" = "x" ] ; then
 			  fi
 			fi
 
+			###FIXME: xinput input no longer works..
+			#Section "InputClass"
+			#	Identifier	"calibration"
+			#	MatchProduct	"ar1021 I2C Touchscreen"
+			#	Option	"MinX"	"1320"
+			#	Option	"MaxX"	"62850"
+			#	Option	"MinY"	"4377"
+			#	Option	"MaxY"	"62845"
+			#	Option	"SwapXY"	"0" # unless it was already set to 1
+			#	Option	"InvertX"	"0"  # unless it was already set
+			#	Option	"InvertY"	"0"  # unless it was already set
+			#EndSection
+
+
 			echo "xinput_calibrator: xinput_calibrator --device ${device_id} --output-type xinput -v"
 			CALDATA=`$BINARY --device ${device_id} --output-type xinput -v | tee $LOGFILE | grep '    xinput set' | sed 's/^    //g; s/$/;/g'`
 			if [ ! -z "$CALDATA" ] ; then
