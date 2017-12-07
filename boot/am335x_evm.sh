@@ -525,6 +525,15 @@ use_libcomposite () {
 				echo ${cpsw_2_mac} > functions/rndis.usb0/host_addr
 				echo ${cpsw_1_mac} > functions/rndis.usb0/dev_addr
 
+				# Starting with kernel 4.14, we can do this to match Microsoft's built-in RNDIS driver.
+				# Earlier kernels require the patch below as a work-around instead:
+				# https://github.com/beagleboard/linux/commit/e94487c59cec8ba32dc1eb83900297858fdc590b
+				if [ -f functions/rndis.usb0/class ]; then
+					echo 239 > functions/rndis.usb0/class
+					echo 4 > functions/rndis.usb0/subclass
+					echo 1 > functions/rndis.usb0/protocol
+				fi
+
 				mkdir -p functions/ecm.usb0
 				echo ${cpsw_4_mac} > functions/ecm.usb0/host_addr
 				echo ${cpsw_5_mac} > functions/ecm.usb0/dev_addr
