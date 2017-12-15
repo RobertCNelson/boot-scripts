@@ -472,7 +472,10 @@ fi
 use_libcomposite () {
 	echo "${log} use_libcomposite"
 	unset has_img_file
-	if [ -f ${usb_image_file} ] ; then
+	if [ "x${USB_IMAGE_FILE_DISABLED}" = "xyes" ]; then
+		echo "${log} usb_image_file disabled by bb-boot config file."
+		has_img_file="false"
+	elif [ -f ${usb_image_file} ] ; then
 		actual_image_file=$(readlink -f ${usb_image_file} || true)
 		if [ ! "x${actual_image_file}" = "x" ] ; then
 			if [ -f ${actual_image_file} ] ; then
@@ -836,7 +839,7 @@ if [ ! "x${enable_cape_universal}" = "x" ] ; then
 				case "${check_dtb}" in
 				am335x-boneblack-overlay.dtb)
 					overlay="univ-all"
-					;;
+						;;
 				am335x-boneblack-emmc-overlay.dtb)
 					overlay="univ-emmc"
 					;;
