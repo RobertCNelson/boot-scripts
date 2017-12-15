@@ -1,0 +1,6 @@
+# USB_IMAGE_FILE_DISABLED
+# default value  which means the usb_image_file will be loaded.
+# expected values "yes" to disable loading the image_file.
+USB_IMAGE_FILE_DISABLED=no
+
+
