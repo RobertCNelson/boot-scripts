@@ -547,6 +547,7 @@ use_libcomposite () {
 				mkdir -p functions/acm.usb0
 
 				if [ "x${has_img_file}" = "xtrue" ] ; then
+					echo "${log} enable USB mass_storage ${usb_image_file}"
 					mkdir -p functions/mass_storage.usb0
 					echo ${usb_ms_stall} > functions/mass_storage.usb0/stall
 					echo ${usb_ms_cdrom} > functions/mass_storage.usb0/lun.0/cdrom
