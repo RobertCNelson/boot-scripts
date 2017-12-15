@@ -41,6 +41,10 @@ if [ -f /etc/rcn-ee.conf ] ; then
 	. /etc/rcn-ee.conf
 fi
 
+if [ -f /etc/default/bb-boot ] ; then
+	. /etc/default/bb-boot
+fi
+
 log="am335x_evm:"
 
 unset detected_capes
