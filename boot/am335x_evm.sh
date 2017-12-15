@@ -839,7 +839,7 @@ if [ ! "x${enable_cape_universal}" = "x" ] ; then
 				case "${check_dtb}" in
 				am335x-boneblack-overlay.dtb)
 					overlay="univ-all"
-						;;
+					;;
 				am335x-boneblack-emmc-overlay.dtb)
 					overlay="univ-emmc"
 					;;
