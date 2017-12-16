@@ -1,6 +1,6 @@
-# USB_IMAGE_FILE_DISABLED
-# default value  which means the usb_image_file will be loaded.
-# expected values "yes" to disable loading the image_file.
-USB_IMAGE_FILE_DISABLED=no
-
-
+# This file allows some control on the boot process
+#
+# USB_IMAGE_FILE_DISABLED=yes #disable the loading of the mass storage file.
+# when UNSET the detected file (based on the board detected) will be used.
+# other values take no effect, and are ignored. The only expected value is "yes"
+# USB_IMAGE_FILE_DISABLED=yes
