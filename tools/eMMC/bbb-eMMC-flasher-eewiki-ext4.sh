@@ -263,7 +263,7 @@ copy_rootfs () {
 	else
 		mount
 
-		message="eMMC has been flashed: please wait for device to power down." ; broadcast
+		message="eMMC has been flashed:" ; broadcast
 		message="-----------------------------" ; broadcast
 
 		flush_cache
