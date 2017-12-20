@@ -129,7 +129,7 @@ TI_AM335x_BeagleBone_Black_Wireless)
 TI_AM335x_BeagleBone_Blue)
 	has_wifi="enable"
 	cleanup_extra_docs
-	blue_fix_uarts="enable"
+#	blue_fix_uarts="enable"
 	;;
 TI_AM335x_BeagleBone_Green)
 	has_wifi="disable"
