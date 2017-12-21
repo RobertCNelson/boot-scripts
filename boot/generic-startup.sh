@@ -44,10 +44,21 @@ if [ -f /resizerootfs ] ; then
 	echo "generic-board-startup: resizerootfs"
 	drive=$(cat /resizerootfs)
 	if [ ! "x${drive}" = "x" ] ; then
+		unset is_btrfs
 		if [ "x${drive}" = "x/dev/mmcblk0" ] || [ "x${drive}" = "x/dev/mmcblk1" ] ; then
-			resize2fs ${drive}p2 >/var/log/resize.log 2>&1 || true
+			is_btrfs=$(lsblk -f ${drive}p2 2>&1 | grep btrfs || true)
+			if [ "x${is_btrfs}" = "x" ] ; then
+				resize2fs ${drive}p2 >/var/log/resize.log 2>&1 || true
+			else
+				btrfs filesystem resize max /
+			fi
 		else
-			resize2fs ${drive} >/var/log/resize.log 2>&1 || true
+			is_btrfs=$(lsblk -f ${drive}p1 2>&1 | grep btrfs || true)
+			if [ "x${is_btrfs}" = "x" ] ; then
+				resize2fs ${drive} >/var/log/resize.log 2>&1 || true
+			else
+				btrfs filesystem resize max /
+			fi
 		fi
 	fi
 	rm -rf /resizerootfs || true
