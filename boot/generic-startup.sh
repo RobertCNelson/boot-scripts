@@ -47,12 +47,16 @@ if [ -f /resizerootfs ] ; then
 		unset is_btrfs
 		is_btrfs=$(cat /proc/cmdline | grep btrfs || true)
 		if [ "x${is_btrfs}" = "x" ] ; then
+			echo "generic-board-startup: "
 			if [ "x${drive}" = "x/dev/mmcblk0" ] || [ "x${drive}" = "x/dev/mmcblk1" ] ; then
+				echo "generic-board-startup: resize2fs ${drive}p2"
 				resize2fs ${drive}p2 >/var/log/resize.log 2>&1 || true
 			else
+				echo "generic-board-startup: resize2fs ${drive}"
 				resize2fs ${drive} >/var/log/resize.log 2>&1 || true
 			fi
 		else
+			echo "generic-board-startup: btrfs filesystem resize max /"
 			btrfs filesystem resize max / >/var/log/resize.log 2>&1 || true
 		fi
 	fi
