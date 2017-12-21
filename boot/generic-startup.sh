@@ -45,20 +45,15 @@ if [ -f /resizerootfs ] ; then
 	drive=$(cat /resizerootfs)
 	if [ ! "x${drive}" = "x" ] ; then
 		unset is_btrfs
-		if [ "x${drive}" = "x/dev/mmcblk0" ] || [ "x${drive}" = "x/dev/mmcblk1" ] ; then
-			is_btrfs=$(lsblk -f ${drive}p2 2>&1 | grep btrfs || true)
-			if [ "x${is_btrfs}" = "x" ] ; then
+		is_btrfs=$(cat /proc/cmdline | grep btrfs || true)
+		if [ "x${is_btrfs}" = "x" ] ; then
+			if [ "x${drive}" = "x/dev/mmcblk0" ] || [ "x${drive}" = "x/dev/mmcblk1" ] ; then
 				resize2fs ${drive}p2 >/var/log/resize.log 2>&1 || true
 			else
-				btrfs filesystem resize max /
+				resize2fs ${drive} >/var/log/resize.log 2>&1 || true
 			fi
 		else
-			is_btrfs=$(lsblk -f ${drive}p1 2>&1 | grep btrfs || true)
-			if [ "x${is_btrfs}" = "x" ] ; then
-				resize2fs ${drive} >/var/log/resize.log 2>&1 || true
-			else
-				btrfs filesystem resize max /
-			fi
+			btrfs filesystem resize max / >/var/log/resize.log 2>&1 || true
 		fi
 	fi
 	rm -rf /resizerootfs || true
