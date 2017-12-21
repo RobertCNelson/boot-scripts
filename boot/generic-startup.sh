@@ -42,11 +42,13 @@ fi
 #Resize drive when requested
 if [ -f /resizerootfs ] ; then
 	echo "generic-board-startup: resizerootfs"
-	drive=$(cat /resizerootfs)
-	if [ ! "x${drive}" = "x" ] ; then
-		unset is_btrfs
-		is_btrfs=$(cat /proc/cmdline | grep btrfs || true)
-		if [ "x${is_btrfs}" = "x" ] ; then
+
+	unset is_btrfs
+	is_btrfs=$(cat /proc/cmdline | grep btrfs || true)
+
+	if [ "x${is_btrfs}" = "x" ] ; then
+		drive=$(cat /resizerootfs)
+		if [ ! "x${drive}" = "x" ] ; then
 			echo "generic-board-startup: "
 			if [ "x${drive}" = "x/dev/mmcblk0" ] || [ "x${drive}" = "x/dev/mmcblk1" ] ; then
 				echo "generic-board-startup: resize2fs ${drive}p2"
@@ -55,11 +57,12 @@ if [ -f /resizerootfs ] ; then
 				echo "generic-board-startup: resize2fs ${drive}"
 				resize2fs ${drive} >/var/log/resize.log 2>&1 || true
 			fi
-		else
-			echo "generic-board-startup: btrfs filesystem resize max /"
-			btrfs filesystem resize max / >/var/log/resize.log 2>&1 || true
 		fi
+	else
+		echo "generic-board-startup: btrfs filesystem resize max /"
+		btrfs filesystem resize max / >/var/log/resize.log 2>&1 || true
 	fi
+
 	rm -rf /resizerootfs || true
 	sync
 fi
