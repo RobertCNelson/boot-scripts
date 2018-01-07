@@ -86,14 +86,18 @@ while( <> ) {
 	s/\s*\z//;
 	/^pin / or next;
 
+	my ($pin, $reg, $mux);
 	if(/PIN/) {
 		/^pin (\d+) \(PIN\d+\) 44e1([0-9a-f]{4}) 000000([0-7][0-9a-f]) pinctrl-single\z/ or die "parse error";
+		$pin = $1;
+		$reg = hex $2;
+		$mux = hex $3;
 	} else {
 		/^pin (\d+) \(44e1([0-9a-f]{4})\.0\) 000000([0-7][0-9a-f]) pinctrl-single\z/ or die "parse error";
+		$pin = $1;
+		$reg = hex $2;
+		$mux = hex $3;
 	}
-	my $pin = $1;
-	my $reg = hex $2;
-	my $mux = hex $3;
 	0x800 + 4 * $pin == $reg  or die "sanity check failed";
 
 	my $zcz_ball = $data[ $pin ][ 9 ] || "";
