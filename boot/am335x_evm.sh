@@ -535,9 +535,9 @@ use_libcomposite () {
 				# Earlier kernels require the patch below as a work-around instead:
 				# https://github.com/beagleboard/linux/commit/e94487c59cec8ba32dc1eb83900297858fdc590b
 				if [ -f functions/rndis.usb0/class ]; then
-					echo 239 > functions/rndis.usb0/class
-					echo 4 > functions/rndis.usb0/subclass
-					echo 1 > functions/rndis.usb0/protocol
+					echo EF > functions/rndis.usb0/class
+					echo 04 > functions/rndis.usb0/subclass
+					echo 01 > functions/rndis.usb0/protocol
 				fi
 
 				mkdir -p functions/ecm.usb0
