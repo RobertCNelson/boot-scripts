@@ -70,6 +70,9 @@ fi
 if [ -d /sys/class/gpio/ ] ; then
 	chown -R root:gpio /sys/class/gpio/ || true
 	chmod -R ug+rw /sys/class/gpio/ || true
+
+	chown -R root:gpio /dev/gpiochip* || true
+	chmod -R ug+rw /dev/gpiochip* || true
 fi
 
 if [ -d /sys/class/leds ] ; then
