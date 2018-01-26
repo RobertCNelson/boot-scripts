@@ -18,58 +18,11 @@ unset detected_capes
 detected_capes=$(cat /proc/cmdline | sed 's/ /\n/g' | grep uboot_detected_capes= || true)
 if [ ! "x${detected_capes}" = "x" ] ; then
 	unset scan_ts
-	got_4D4R=$(echo ${detected_capes} | grep BB-BONE-4D4R-01 || true)
-	if [ ! "x${got_4D4R}" = "x" ] ; then
-		echo "xinput_calibrator: found: 4D4R touchscreen (ar1021 I2C Touchscreen)"
-		scan_ts="ar1021"
-	fi
-	if [ ! "x${scan_ts}" = "x" ] ; then
-		CALFILE="/etc/pointercal.xinput.${scan_ts}"
-		echo "xinput_calibrator: xinput_calibrator --list | grep ${scan_ts}"
-		device_id=`$BINARY --list | grep ${scan_ts} | sed 's/ /\n/g' | grep id | awk -F "id=" '{print $2}'`
-		if [ "x${device_id}" = "x" ] ; then
-			echo "xinput_calibrator: too fast... sleep 10..."
-			sleep 10
-			device_id=`$BINARY --list | grep ${scan_ts} | sed 's/ /\n/g' | grep id | awk -F "id=" '{print $2}'`
-		fi
-
-		if [ ! "x${device_id}" = "x" ] ; then
-			echo "xinput_calibrator: using: xinput: id=${device_id}"
-
-			if [ -e $CALFILE ] ; then
-			  if grep replace $CALFILE ; then
-			    echo "Empty calibration file found, removing it"
-			    rm $CALFILE
-			  else
-			    echo "Using calibration data stored in $CALFILE"
-			    . $CALFILE && exit 0
-			  fi
-			fi
-
-			###FIXME: xinput input no longer works..
-			#Section "InputClass"
-			#	Identifier	"calibration"
-			#	MatchProduct	"ar1021 I2C Touchscreen"
-			#	Option	"MinX"	"1320"
-			#	Option	"MaxX"	"62850"
-			#	Option	"MinY"	"4377"
-			#	Option	"MaxY"	"62845"
-			#	Option	"SwapXY"	"0" # unless it was already set to 1
-			#	Option	"InvertX"	"0"  # unless it was already set
-			#	Option	"InvertY"	"0"  # unless it was already set
-			#EndSection
-
-
-			echo "xinput_calibrator: xinput_calibrator --device ${device_id} --output-type xinput -v"
-			CALDATA=`$BINARY --device ${device_id} --output-type xinput -v | tee $LOGFILE | grep '    xinput set' | sed 's/^    //g; s/$/;/g'`
-			if [ ! -z "$CALDATA" ] ; then
-			  echo $CALDATA > $CALFILE
-			  echo "Calibration data stored in $CALFILE (log in $LOGFILE)"
-			fi
-		else
-			echo "xinput_calibrator: failed to get device_id..."
-		fi
-	fi
+#	got_4D4R=$(echo ${detected_capes} | grep BB-BONE-4D4R-01 || true)
+#	if [ ! "x${got_4D4R}" = "x" ] ; then
+#		echo "xinput_calibrator: found: 4D4R touchscreen (ar1021 I2C Touchscreen)"
+#		scan_ts="ar1021"
+#	fi
 
 ###FIXME: 3.8.x do all this old crap...
 else
