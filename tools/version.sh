@@ -128,7 +128,7 @@ pkg="bb-cape-overlays" ; dpkg_check_version
 pkg="bb-wl18xx-firmware" ; dpkg_check_version
 pkg="firmware-ti-connectivity" ; dpkg_check_version
 
-echo "User Belongs to Groups:[`groups`]"
+echo "groups:[`groups debian`]"
 
 echo "dmesg | grep pinctrl-single"
 dmesg | grep pinctrl-single
