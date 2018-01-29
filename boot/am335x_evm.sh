@@ -586,9 +586,9 @@ use_libcomposite () {
 		fi
 	fi
 
-	ls -lha /sys/kernel/*
-	ls -lha /sys/kernel/config/*
-	if [ ! -d /sys/kernel/config/usb_gadget/ ] ; then
+	#ls -lha /sys/kernel/*
+	#ls -lha /sys/kernel/config/*
+#	if [ ! -d /sys/kernel/config/usb_gadget/ ] ; then
 		echo "${log} modprobe libcomposite"
 		modprobe libcomposite || true
 		if [ -d /sys/module/libcomposite ] ; then
@@ -599,10 +599,10 @@ use_libcomposite () {
 			fi
 			echo "${log} ERROR: [libcomposite didn't load]"
 		fi
-	echo
-		echo "${log} libcomposite built-in"
-		run_libcomposite
-	fi
+#	echo
+#		echo "${log} libcomposite built-in"
+#		run_libcomposite
+#	fi
 }
 
 g_network="iSerialNumber=${usb_iserialnumber} iManufacturer=${usb_imanufacturer} iProduct=${usb_iproduct} host_addr=${cpsw_2_mac} dev_addr=${cpsw_1_mac}"
