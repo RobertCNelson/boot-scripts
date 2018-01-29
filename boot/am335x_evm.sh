@@ -589,16 +589,18 @@ use_libcomposite () {
 	#ls -lha /sys/kernel/*
 	#ls -lha /sys/kernel/config/*
 #	if [ ! -d /sys/kernel/config/usb_gadget/ ] ; then
-		echo "${log} modprobe libcomposite"
-		modprobe libcomposite || true
-		if [ -d /sys/module/libcomposite ] ; then
-			run_libcomposite
-		else
-			if [ -f /sbin/depmod ] ; then
-				/sbin/depmod -a
-			fi
-			echo "${log} ERROR: [libcomposite didn't load]"
+
+	echo "${log} modprobe libcomposite"
+	modprobe libcomposite || true
+	if [ -d /sys/module/libcomposite ] ; then
+		run_libcomposite
+	else
+		if [ -f /sbin/depmod ] ; then
+			/sbin/depmod -a
 		fi
+		echo "${log} ERROR: [libcomposite didn't load]"
+	fi
+
 #	echo
 #		echo "${log} libcomposite built-in"
 #		run_libcomposite
