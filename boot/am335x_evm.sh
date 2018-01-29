@@ -507,7 +507,9 @@ use_libcomposite () {
 	fi
 
 	unset run_libcomposite
-	if [ ! -d /sys/kernel/config/usb_gadget ] ; then
+	ls -lha /sys/kernel/*
+	ls -lha /sys/kernel/config/*
+	if [ ! -d /sys/kernel/config/usb_gadget/ ] ; then
 		echo "${log} modprobe libcomposite"
 		modprobe libcomposite || true
 		if [ -d /sys/module/libcomposite ] ; then
@@ -594,6 +596,7 @@ use_libcomposite () {
 					echo musb-hdrc.0 > UDC
 				fi
 			fi
+
 			usb0="enable"
 			usb1="enable"
 			echo "${log} g_multi Created"
