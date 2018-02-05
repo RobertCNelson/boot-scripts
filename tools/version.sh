@@ -14,19 +14,19 @@ omap_bootloader () {
 	if [ "x${test_var}" = "xU-Boot" ] ; then
 		uboot=$(dd if=${drive} count=32 skip=393248 bs=1 2>/dev/null || true)
 		uboot=$(echo ${uboot} | awk '{print $2}')
-		echo "bootloader:[${label}]:[${drive}]:[U-Boot ${uboot}]"
+		echo "bootloader:[${label}]:[${drive}]:[U-Boot ${uboot}]:[location: dd MBR]"
 	else
 		if [ -f /boot/uboot/u-boot.img ] ; then
 			if [ -f /usr/bin/mkimage ] ; then
 				unset uboot
 				uboot=$(/usr/bin/mkimage -l /boot/uboot/u-boot.img | grep Description | head -n1 | awk '{print $3}' 2>/dev/null || true)
 				if [ ! "x${uboot}" = "x" ] ; then
-					echo "bootloader:[${label}]:[${drive}]:[U-Boot ${uboot}]"
+					echo "bootloader:[${label}]:[${drive}]:[U-Boot ${uboot}]:[location: fatfs /boot/uboot/MLO]"
 				else
 					unset uboot
 					uboot=$(/usr/bin/mkimage -l /boot/uboot/u-boot.img | grep Name:| head -n1 | awk '{print $4}' 2>/dev/null || true)
 					if [ ! "x${uboot}" = "x" ] ; then
-						echo "bootloader:[${label}]:[${drive}]:[U-Boot ${uboot}]"
+						echo "bootloader:[${label}]:[${drive}]:[U-Boot ${uboot}]:[location: fatfs /boot/uboot/MLO]"
 					fi
 				fi
 			fi
