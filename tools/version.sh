@@ -128,7 +128,15 @@ pkg="bb-cape-overlays" ; dpkg_check_version
 pkg="bb-wl18xx-firmware" ; dpkg_check_version
 pkg="firmware-ti-connectivity" ; dpkg_check_version
 
-echo "groups:[`groups debian`]"
+if [ -d /home/debian/ ] ; then
+	echo "groups:[`groups debian`]"
+fi
+
+if [ -d /home/ubuntu/ ] ; then
+	echo "groups:[`groups ubuntu`]"
+fi
+
+echo "cmdline:[`cat /proc/cmdline`]" ; then
 
 echo "dmesg | grep pinctrl-single"
 dmesg | grep pinctrl-single
