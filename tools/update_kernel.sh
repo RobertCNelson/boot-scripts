@@ -532,8 +532,9 @@ third_party () {
 				run_depmod_initramfs="enabled"
 			fi
 			;;
-		TESTING|LTS414)
-			#v4.11.x sgx modules are working again...
+		LTS414)
+			#TESTING|LTS414
+			#v4.15.x sgx modules are broken...
 			if [ "x${es8}" = "xenabled" ] ; then
 				${apt_bin} ${apt_options} ti-sgx-es8-modules-${latest_kernel} || true
 				run_depmod_initramfs="enabled"
