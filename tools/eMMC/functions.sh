@@ -10,8 +10,8 @@ emmcscript="cmdline=init=/opt/scripts/tools/eMMC/$(basename $0)"
 
 #
 #https://rcn-ee.com/repos/bootloader/am335x_evm/
-http_spl="MLO-am335x_evm-v2018.01-rc2-r4"
-http_uboot="u-boot-am335x_evm-v2018.01-rc2-r4.img"
+http_spl="MLO-am335x_evm-v2018.01-r13"
+http_uboot="u-boot-am335x_evm-v2018.01-r13.img"
 
 set -o errtrace
 
@@ -144,12 +144,14 @@ prepare_environment() {
 	echo_broadcast "==> Preparing /tmp"
 	mount -t tmpfs tmpfs /tmp
 
-	echo_broadcast "==> Preparing sysctl"
-	value_min_free_kbytes=$(sysctl -n vm.min_free_kbytes)
-	echo_broadcast "==> sysctl: vm.min_free_kbytes=[${value_min_free_kbytes}]"
-	echo_broadcast "==> sysctl: setting: [sysctl -w vm.min_free_kbytes=16384]"
-	sysctl -w vm.min_free_kbytes=16384
-	generate_line 40
+	if [ -f /proc/sys/vm/min_free_kbytes ] ; then
+		echo_broadcast "==> Preparing sysctl"
+		value_min_free_kbytes=$(sysctl -n vm.min_free_kbytes)
+		echo_broadcast "==> sysctl: vm.min_free_kbytes=[${value_min_free_kbytes}]"
+		echo_broadcast "==> sysctl: setting: [sysctl -w vm.min_free_kbytes=16384]"
+		sysctl -w vm.min_free_kbytes=16384
+		generate_line 40
+	fi
 
 	echo_broadcast "==> Determining root drive"
 	find_root_drive
