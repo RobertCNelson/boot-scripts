@@ -187,7 +187,11 @@ scan_armv7_kernels () {
 }
 
 get_device () {
-	machine=$(cat /proc/device-tree/model | sed "s/ /_/g" | tr -d '\000')
+	if [ "x${FORCEMACHINE}" = "x" ] ; then
+		machine=$(cat /proc/device-tree/model | sed "s/ /_/g" | tr -d '\000')
+	else
+		machine=$(echo ${FORCEMACHINE} | sed "s/ /_/g" | tr -d '\000')
+	fi
 
 	if [ "x${SOC}" = "x" ] ; then
 		case "${machine}" in
@@ -238,6 +242,7 @@ get_device () {
 	unset tidebugss
 	unset titemperature
 	unset kernel_headers
+
 	case "${machine}" in
 	Arrow_BeagleBone_Black_Industrial)
 		es8="enabled"
