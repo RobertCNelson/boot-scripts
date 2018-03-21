@@ -39,6 +39,16 @@ if [ -f /etc/ssh/ssh.regenerate ] ; then
 	fi
 fi
 
+if [ -f /boot/efi/EFI/efi.gen ] ; then
+	echo "grub-install --efi-directory=/boot/efi/ --target=arm-efi --no-nvram"
+	grub-install --efi-directory=/boot/efi/ --target=arm-efi --no-nvram
+	echo "update-grub"
+	update-grub
+	sync
+	rm -rf /boot/efi/EFI/efi.gen || true
+	sync
+fi
+
 #Resize drive when requested
 if [ -f /resizerootfs ] ; then
 	echo "generic-board-startup: resizerootfs"
