@@ -165,6 +165,11 @@ SanCloud_BeagleBone_Enhanced)
 	has_wifi="enable"
 	cleanup_extra_docs
 	;;
+Octavo_Systems_OSD3358*)
+	has_wifi="disable"
+	cleanup_extra_docs
+	dnsmasq_usb0_usb1="enable"
+	;;
 *)
 	has_wifi="disable"
 	unset board_bbgw
