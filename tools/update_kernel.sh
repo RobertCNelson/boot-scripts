@@ -1,6 +1,6 @@
 #!/bin/sh -e
 #
-# Copyright (c) 2014-2017 Robert Nelson <robertcnelson@gmail.com>
+# Copyright (c) 2014-2018 Robert Nelson <robertcnelson@gmail.com>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -213,6 +213,12 @@ get_device () {
 			scan_armv7_kernels
 			es8="enabled"
 			;;
+		Octavo_Systems_OSD3358*)
+			scan_ti_kernels
+			scan_bone_kernels
+			scan_armv7_kernels
+			es8="enabled"
+			;;
 		SanCloud_BeagleBone_Enhanced)
 			scan_ti_kernels
 			scan_bone_kernels
@@ -253,6 +259,10 @@ get_device () {
 		sgxti335x="enabled"
 		;;
 	TI_AM335x_P*)
+		es8="enabled"
+		sgxti335x="enabled"
+		;;
+	Octavo_Systems_OSD3358*)
 		es8="enabled"
 		sgxti335x="enabled"
 		;;
@@ -596,6 +606,25 @@ third_party () {
 				run_depmod_initramfs="enabled"
 			fi
 			;;
+		LTS414)
+			install_pkg=""
+			if [ "x${tidebugss}" = "xenabled" ] ; then
+				install_pkg="${install_pkg}ti-debugss-modules-${latest_kernel} "
+			fi
+			if [ "x${titemperature}" = "xenabled" ] ; then
+				install_pkg="${install_pkg}ti-temperature-modules-${latest_kernel} "
+			fi
+			if [ "x${sgxti335x}" = "xenabled" ] ; then
+				install_pkg="${install_pkg}ti-sgx-ti335x-modules-${latest_kernel} "
+			fi
+			if [ "x${sgxjacinto6evm}" = "xenabled" ] ; then
+				install_pkg="${install_pkg}ti-sgx-jacinto6evm-modules-${latest_kernel} "
+			fi
+			if [ ! "x${install_pkg}" = "x" ] ; then
+				${apt_bin} ${apt_options} ${install_pkg}
+				run_depmod_initramfs="enabled"
+			fi
+			;;
 		esac
 		;;
 	ti|ti-rt)
@@ -630,6 +659,25 @@ third_party () {
 			if [ "x${ticmem}" = "xenabled" ] ; then
 				install_pkg="${install_pkg}ti-cmem-modules-${latest_kernel} "
 			fi
+			if [ "x${tidebugss}" = "xenabled" ] ; then
+				install_pkg="${install_pkg}ti-debugss-modules-${latest_kernel} "
+			fi
+			if [ "x${titemperature}" = "xenabled" ] ; then
+				install_pkg="${install_pkg}ti-temperature-modules-${latest_kernel} "
+			fi
+			if [ "x${sgxti335x}" = "xenabled" ] ; then
+				install_pkg="${install_pkg}ti-sgx-ti335x-modules-${latest_kernel} "
+			fi
+			if [ "x${sgxjacinto6evm}" = "xenabled" ] ; then
+				install_pkg="${install_pkg}ti-sgx-jacinto6evm-modules-${latest_kernel} "
+			fi
+			if [ ! "x${install_pkg}" = "x" ] ; then
+				${apt_bin} ${apt_options} ${install_pkg}
+				run_depmod_initramfs="enabled"
+			fi
+			;;
+		LTS414)
+			install_pkg=""
 			if [ "x${tidebugss}" = "xenabled" ] ; then
 				install_pkg="${install_pkg}ti-debugss-modules-${latest_kernel} "
 			fi
