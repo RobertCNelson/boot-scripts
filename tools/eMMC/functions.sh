@@ -5,13 +5,13 @@
 # Source it like this:
 # source $(dirname "$0")/functions.sh
 
-version_message="1.20171220: btrfs..."
+version_message="1.20180412: all ssh regneration override..."
 emmcscript="cmdline=init=/opt/scripts/tools/eMMC/$(basename $0)"
 
-#
+#This is just a backup-backup-backup for old images...
 #https://rcn-ee.com/repos/bootloader/am335x_evm/
-http_spl="MLO-am335x_evm-v2018.01-r13"
-http_uboot="u-boot-am335x_evm-v2018.01-r13.img"
+http_spl="MLO-am335x_evm-v2018.03-r8"
+http_uboot="u-boot-am335x_evm-v2018.03-r8.img"
 
 set -o errtrace
 
@@ -1008,12 +1008,16 @@ _copy_rootfs() {
   generate_line 80 '='
   echo_broadcast "Final System Tweaks:"
   generate_line 40
-  if [ -d ${tmp_rootfs_dir}/etc/ssh/ ] ; then
-    echo_broadcast "==> Applying SSH Key Regeneration trick"
-    #ssh keys will now get regenerated on the next bootup
-    touch ${tmp_rootfs_dir}/etc/ssh/ssh.regenerate
-    flush_cache
-  fi
+
+	#disable_ssh_regeneration sourced from SOC.sh
+	if [ ! "x${disable_ssh_regeneration}" = "xtrue" ] ; then
+		if [ -d ${tmp_rootfs_dir}/etc/ssh/ ] ; then
+			echo_broadcast "==> Applying SSH Key Regeneration trick"
+			#ssh keys will now get regenerated on the next bootup
+			touch ${tmp_rootfs_dir}/etc/ssh/ssh.regenerate
+			flush_cache
+		fi
+	fi
 
   _generate_uEnv ${tmp_rootfs_dir}/boot/uEnv.txt
 
