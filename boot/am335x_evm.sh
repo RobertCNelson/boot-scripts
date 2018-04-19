@@ -170,6 +170,16 @@ Octavo_Systems_OSD3358*)
 	cleanup_extra_docs
 	dnsmasq_usb0_usb1="enable"
 	;;
+TI_AM335x_BeagleBone_Black_RoboticsCape)
+	has_wifi="disable"
+	cleanup_extra_docs
+	dnsmasq_usb0_usb1="enable"
+	;;
+TI_AM335x_BeagleBone_Black_Wireless_RoboticsCape)
+	has_wifi="enable"
+	#recovers 82MB of space
+	cleanup_extra_docs
+	;;
 *)
 	has_wifi="disable"
 	unset board_bbgw
