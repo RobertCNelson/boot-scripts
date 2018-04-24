@@ -95,7 +95,7 @@ if [ -f ${mac_address} ] ; then
 
 	#Some devices are showing a blank cpsw_0_mac [00:00:00:00:00:00], let's fix that up...
 	if [ "x${cpsw_0_mac}" = "x00:00:00:00:00:00" ] ; then
-		cpsw_0_mac="1C:BA:8C:A2:ED:70"
+		cpsw_0_mac="1C:BA:8C:A2:ED:68"
 	fi
 else
 	#todo: generate random mac... (this is a development tre board in the lab...)
@@ -133,13 +133,13 @@ else
 
 				cpsw_1_mac=${mac_0_prefix}:$(echo ${cpsw_res} | cut -c 2-3)
 			else
-				cpsw_1_mac="1C:BA:8C:A2:ED:71"
+				cpsw_1_mac="1C:BA:8C:A2:ED:70"
 			fi
 		fi
 		echo "${cpsw_1_mac}" > /etc/cpsw_1_mac || true
 	else
 		#todo: generate random mac...
-		cpsw_1_mac="1C:BA:8C:A2:ED:71"
+		cpsw_1_mac="1C:BA:8C:A2:ED:70"
 		echo "${cpsw_1_mac}" > /etc/cpsw_1_mac || true
 	fi
 fi
@@ -156,7 +156,7 @@ else
 
 		cpsw_2_mac=${mac_0_prefix}:$(echo ${cpsw_res} | cut -c 2-3)
 	else
-		cpsw_2_mac="1C:BA:8C:A2:ED:72"
+		cpsw_2_mac="1C:BA:8C:A2:ED:6A"
 	fi
 	echo "${cpsw_2_mac}" > /etc/cpsw_2_mac || true
 fi
@@ -173,7 +173,7 @@ else
 
 		cpsw_3_mac=${mac_0_prefix}:$(echo ${cpsw_res} | cut -c 2-3)
 	else
-		cpsw_3_mac="1C:BA:8C:A2:ED:73"
+		cpsw_3_mac="1C:BA:8C:A2:ED:71"
 	fi
 	echo "${cpsw_3_mac}" > /etc/cpsw_3_mac || true
 fi
@@ -190,7 +190,7 @@ else
 
 		cpsw_4_mac=${mac_0_prefix}:$(echo ${cpsw_res} | cut -c 2-3)
 	else
-		cpsw_4_mac="1C:BA:8C:A2:ED:74"
+		cpsw_4_mac="1C:BA:8C:A2:ED:72"
 	fi
 	echo "${cpsw_4_mac}" > /etc/cpsw_4_mac || true
 fi
@@ -207,7 +207,7 @@ else
 
 		cpsw_5_mac=${mac_0_prefix}:$(echo ${cpsw_res} | cut -c 2-3)
 	else
-		cpsw_5_mac="1C:BA:8C:A2:ED:75"
+		cpsw_5_mac="1C:BA:8C:A2:ED:73"
 	fi
 	echo "${cpsw_5_mac}" > /etc/cpsw_5_mac || true
 fi
@@ -247,6 +247,15 @@ run_libcomposite () {
 		# first byte of address must be even
 		echo ${cpsw_2_mac} > functions/rndis.usb0/host_addr
 		echo ${cpsw_3_mac} > functions/rndis.usb0/dev_addr
+
+		# Starting with kernel 4.14, we can do this to match Microsoft's built-in RNDIS driver.
+		# Earlier kernels require the patch below as a work-around instead:
+		# https://github.com/beagleboard/linux/commit/e94487c59cec8ba32dc1eb83900297858fdc590b
+		if [ -f functions/rndis.usb0/class ]; then
+			echo EF > functions/rndis.usb0/class
+			echo 04 > functions/rndis.usb0/subclass
+			echo 01 > functions/rndis.usb0/protocol
+		fi
 
 		mkdir -p functions/ecm.usb0
 		echo ${cpsw_4_mac} > functions/ecm.usb0/host_addr
@@ -290,7 +299,9 @@ run_libcomposite () {
 use_libcomposite () {
 	echo "${log} use_libcomposite"
 	unset has_img_file
-	if [ -f ${usb_image_file} ] ; then
+	if [ "x${USB_IMAGE_FILE_DISABLED}" = "xyes" ]; then
+		echo "${log} usb_image_file disabled by bb-boot config file."
+	elif [ -f ${usb_image_file} ] ; then
 		actual_image_file=$(readlink -f ${usb_image_file} || true)
 		if [ ! "x${actual_image_file}" = "x" ] ; then
 			if [ -f ${actual_image_file} ] ; then
@@ -306,6 +317,7 @@ use_libcomposite () {
 			echo "${log} FIXME: no usb_image_file"
 		fi
 	fi
+
 	#ls -lha /sys/kernel/*
 	#ls -lha /sys/kernel/config/*
 #	if [ ! -d /sys/kernel/config/usb_gadget/ ] ; then
