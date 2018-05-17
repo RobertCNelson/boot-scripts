@@ -126,14 +126,18 @@ fi
 
 pkg="bb-cape-overlays" ; dpkg_check_version
 pkg="bb-wl18xx-firmware" ; dpkg_check_version
-pkg="firmware-ti-connectivity" ; dpkg_check_version
 
 if [ -d /home/debian/ ] ; then
+	pkg="firmware-ti-connectivity" ; dpkg_check_version
 	echo "groups:[`groups debian`]"
 fi
 
 if [ -d /home/ubuntu/ ] ; then
 	echo "groups:[`groups ubuntu`]"
+fi
+
+if [ -d /home/beagle/ ] ; then
+	echo "groups:[`groups beagle`]"
 fi
 
 echo "cmdline:[`cat /proc/cmdline`]" ; then
