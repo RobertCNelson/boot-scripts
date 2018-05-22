@@ -140,7 +140,7 @@ if [ -d /home/beagle/ ] ; then
 	echo "groups:[`groups beagle`]"
 fi
 
-echo "cmdline:[`cat /proc/cmdline`]" ; then
+echo "cmdline:[`cat /proc/cmdline`]"
 
 echo "dmesg | grep pinctrl-single"
 dmesg | grep pinctrl-single
