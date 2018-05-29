@@ -132,6 +132,8 @@ if [ -d /home/debian/ ] ; then
 	echo "groups:[`groups debian`]"
 fi
 
+pkg="roboticscape" ; dpkg_check_version
+
 if [ -d /home/ubuntu/ ] ; then
 	echo "groups:[`groups ubuntu`]"
 fi
