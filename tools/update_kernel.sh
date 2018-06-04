@@ -551,7 +551,7 @@ third_party () {
 			#TESTING|LTS414
 			#v4.15.x sgx modules are broken...
 			if [ "x${es8}" = "xenabled" ] ; then
-				${apt_bin} ${apt_options} ti-sgx-es8-modules-${latest_kernel} || true
+				${apt_bin} ${apt_options} kmod ti-sgx-es8-modules-${latest_kernel} || true
 				run_depmod_initramfs="enabled"
 			fi
 			;;
@@ -607,7 +607,7 @@ third_party () {
 			fi
 			;;
 		LTS414)
-			install_pkg=""
+			install_pkg="kmod "
 			if [ "x${tidebugss}" = "xenabled" ] ; then
 				install_pkg="${install_pkg}ti-debugss-modules-${latest_kernel} "
 			fi
@@ -677,7 +677,7 @@ third_party () {
 			fi
 			;;
 		LTS414)
-			install_pkg=""
+			install_pkg="kmod "
 			if [ "x${tidebugss}" = "xenabled" ] ; then
 				install_pkg="${install_pkg}ti-debugss-modules-${latest_kernel} "
 			fi
