@@ -126,13 +126,13 @@ fi
 
 pkg="bb-cape-overlays" ; dpkg_check_version
 pkg="bb-wl18xx-firmware" ; dpkg_check_version
+pkg="kmod" ; dpkg_check_version
+pkg="roboticscape" ; dpkg_check_version
 
 if [ -d /home/debian/ ] ; then
 	pkg="firmware-ti-connectivity" ; dpkg_check_version
 	echo "groups:[`groups debian`]"
 fi
-
-pkg="roboticscape" ; dpkg_check_version
 
 if [ -d /home/ubuntu/ ] ; then
 	echo "groups:[`groups ubuntu`]"
