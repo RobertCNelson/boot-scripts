@@ -55,13 +55,18 @@ server {
 #RCNEE-start:
 
 	location / {
-		#Cloud9
-		proxy_pass http://localhost:3000;
+		proxy_pass http://localhost:80;
+#		#Cloud9
+#		proxy_pass http://localhost:3000;
 	}
 
-	location /bone101/ {
-		proxy_pass http://localhost:8000/;
+	location /cloud9/ {
+		proxy_pass http://localhost:3000/;
 	}
+
+#	location /bone101/ {
+#		proxy_pass http://localhost:8000/;
+#	}
 
 	location /nodered/ {
 		proxy_pass http://localhost:1880/;
