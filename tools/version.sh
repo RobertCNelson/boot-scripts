@@ -135,6 +135,11 @@ if [ -d /home/debian/ ] ; then
 	echo "groups:[`groups debian`]"
 fi
 
+if [ -d /home/machinekit/ ] ; then
+	pkg="firmware-ti-connectivity" ; dpkg_check_version
+	echo "groups:[`groups machinekit`]"
+fi
+
 if [ -d /home/ubuntu/ ] ; then
 	echo "groups:[`groups ubuntu`]"
 fi
