@@ -121,6 +121,7 @@ if [ -f /boot/uEnv.txt ] ; then
 	test_var=$(cat /boot/uEnv.txt | grep -v '#' | grep enable_uboot_overlays=1 || true)
 	if [ "x${test_var}" != "x" ] ; then
 		cat /boot/uEnv.txt | grep uboot_ | grep -v '#' | sed 's/^/uboot_overlay_options:[/' | sed 's/$/]/'
+		cat /boot/uEnv.txt | grep dtb_overlay | grep -v '#' | sed 's/^/uboot_overlay_options:[/' | sed 's/$/]/'
 	fi
 fi
 
