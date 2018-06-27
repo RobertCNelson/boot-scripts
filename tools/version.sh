@@ -6,8 +6,6 @@ if ! id | grep -q root; then
 	exit
 fi
 
-git_bin=$(which git)
-
 omap_bootloader () {
 	unset test_var
 	test_var=$(dd if=${drive} count=6 skip=393248 bs=1 2>/dev/null || true)
@@ -44,11 +42,11 @@ dpkg_check_version () {
 	fi
 }
 
-if [ -f ${git_bin} ] ; then
+if [ -f /usr/bin/git ] ; then
 	if [ -d /opt/scripts/ ] ; then
 		old_dir="`pwd`"
 		cd /opt/scripts/ || true
-		echo "git:/opt/scripts/:[`${git_bin} rev-parse HEAD`]"
+		echo "git:/opt/scripts/:[`/usr/bin/git rev-parse HEAD`]"
 		cd "${old_dir}" || true
 	fi
 fi
