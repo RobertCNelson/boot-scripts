@@ -42,6 +42,7 @@ if [ -f /etc/rcn-ee.conf ] ; then
 fi
 
 if [ -f /etc/default/bb-boot ] ; then
+	unset USB_NETWORK_DISABLED
 	. /etc/default/bb-boot
 fi
 
@@ -502,23 +503,25 @@ run_libcomposite () {
 		echo ${usb_imanufacturer} > strings/0x409/manufacturer
 		echo ${usb_iproduct} > strings/0x409/product
 
-		mkdir -p functions/rndis.usb0
-		# first byte of address must be even
-		echo ${cpsw_2_mac} > functions/rndis.usb0/host_addr
-		echo ${cpsw_1_mac} > functions/rndis.usb0/dev_addr
+		if [ "x${USB_NETWORK_DISABLED}" = "xyes" ]; then
+			mkdir -p functions/rndis.usb0
+			# first byte of address must be even
+			echo ${cpsw_2_mac} > functions/rndis.usb0/host_addr
+			echo ${cpsw_1_mac} > functions/rndis.usb0/dev_addr
 
-		# Starting with kernel 4.14, we can do this to match Microsoft's built-in RNDIS driver.
-		# Earlier kernels require the patch below as a work-around instead:
-		# https://github.com/beagleboard/linux/commit/e94487c59cec8ba32dc1eb83900297858fdc590b
-		if [ -f functions/rndis.usb0/class ]; then
-			echo EF > functions/rndis.usb0/class
-			echo 04 > functions/rndis.usb0/subclass
-			echo 01 > functions/rndis.usb0/protocol
+			# Starting with kernel 4.14, we can do this to match Microsoft's built-in RNDIS driver.
+			# Earlier kernels require the patch below as a work-around instead:
+			# https://github.com/beagleboard/linux/commit/e94487c59cec8ba32dc1eb83900297858fdc590b
+			if [ -f functions/rndis.usb0/class ]; then
+				echo EF > functions/rndis.usb0/class
+				echo 04 > functions/rndis.usb0/subclass
+				echo 01 > functions/rndis.usb0/protocol
+			fi
+
+			mkdir -p functions/ecm.usb0
+			echo ${cpsw_4_mac} > functions/ecm.usb0/host_addr
+			echo ${cpsw_5_mac} > functions/ecm.usb0/dev_addr
 		fi
-
-		mkdir -p functions/ecm.usb0
-		echo ${cpsw_4_mac} > functions/ecm.usb0/host_addr
-		echo ${cpsw_5_mac} > functions/ecm.usb0/dev_addr
 
 		mkdir -p functions/acm.usb0
 
@@ -538,8 +541,10 @@ run_libcomposite () {
 
 		echo 500 > configs/c.1/MaxPower
 
-		ln -s functions/rndis.usb0 configs/c.1/
-		ln -s functions/ecm.usb0 configs/c.1/
+		if [ "x${USB_NETWORK_DISABLED}" = "xyes" ]; then
+			ln -s functions/rndis.usb0 configs/c.1/
+			ln -s functions/ecm.usb0 configs/c.1/
+		fi
 		ln -s functions/acm.usb0 configs/c.1/
 		if [ "x${has_img_file}" = "xtrue" ] ; then
 			ln -s functions/mass_storage.usb0 configs/c.1/
@@ -720,56 +725,58 @@ else
 	use_libcomposite
 fi
 
-if [ -f /var/lib/misc/dnsmasq.leases ] ; then
-	systemctl stop dnsmasq || true
-	rm -rf /var/lib/misc/dnsmasq.leases || true
-fi
+if [ "x${USB_NETWORK_DISABLED}" = "xyes" ]; then
+	if [ -f /var/lib/misc/dnsmasq.leases ] ; then
+		systemctl stop dnsmasq || true
+		rm -rf /var/lib/misc/dnsmasq.leases || true
+	fi
 
-if [ "x${usb0}" = "xenable" ] ; then
-	echo "${log} Starting usb0 network"
-	# Auto-configuring the usb0 network interface:
-	$(dirname $0)/autoconfigure_usb0.sh || true
-fi
+	if [ "x${usb0}" = "xenable" ] ; then
+		echo "${log} Starting usb0 network"
+		# Auto-configuring the usb0 network interface:
+		$(dirname $0)/autoconfigure_usb0.sh || true
+	fi
 
-if [ "x${usb1}" = "xenable" ] ; then
-	echo "${log} Starting usb1 network"
-	# Auto-configuring the usb1 network interface:
-	$(dirname $0)/autoconfigure_usb1.sh || true
-fi
+	if [ "x${usb1}" = "xenable" ] ; then
+		echo "${log} Starting usb1 network"
+		# Auto-configuring the usb1 network interface:
+		$(dirname $0)/autoconfigure_usb1.sh || true
+	fi
 
-if [ "x${dnsmasq_usb0_usb1}" = "xenable" ] ; then
-	if [ -d /sys/kernel/config/usb_gadget ] ; then
-		/etc/init.d/udhcpd stop || true
+	if [ "x${dnsmasq_usb0_usb1}" = "xenable" ] ; then
+		if [ -d /sys/kernel/config/usb_gadget ] ; then
+			/etc/init.d/udhcpd stop || true
 
-		if [ -d /etc/dnsmasq.d/ ] ; then
-			echo "${log} dnsmasq: setting up for usb0/usb1"
-			disable_connman_dnsproxy
+			if [ -d /etc/dnsmasq.d/ ] ; then
+				echo "${log} dnsmasq: setting up for usb0/usb1"
+				disable_connman_dnsproxy
 
-			wfile="/etc/dnsmasq.d/SoftAp0"
-			echo "interface=usb0" > ${wfile}
-			echo "interface=usb1" >> ${wfile}
-			echo "port=53" >> ${wfile}
-			echo "dhcp-authoritative" >> ${wfile}
-			echo "domain-needed" >> ${wfile}
-			echo "bogus-priv" >> ${wfile}
-			echo "expand-hosts" >> ${wfile}
-			echo "cache-size=2048" >> ${wfile}
-			echo "dhcp-range=usb0,192.168.7.1,192.168.7.1,2m" >> ${wfile}
-			echo "dhcp-range=usb1,192.168.6.1,192.168.6.1,2m" >> ${wfile}
-			echo "listen-address=127.0.0.1" >> ${wfile}
-			echo "listen-address=192.168.7.2" >> ${wfile}
-			echo "listen-address=192.168.6.2" >> ${wfile}
-			echo "dhcp-option=usb0,3" >> ${wfile}
-			echo "dhcp-option=usb0,6" >> ${wfile}
-			echo "dhcp-option=usb1,3" >> ${wfile}
-			echo "dhcp-option=usb1,6" >> ${wfile}
-#FIXME: why was this added, without connman every ip get's 172.1.8.1????
-#			echo "address=/#/172.1.8.1" >> ${wfile}
-			echo "dhcp-leasefile=/var/run/dnsmasq.leases" >> ${wfile}
+				wfile="/etc/dnsmasq.d/SoftAp0"
+				echo "interface=usb0" > ${wfile}
+				echo "interface=usb1" >> ${wfile}
+				echo "port=53" >> ${wfile}
+				echo "dhcp-authoritative" >> ${wfile}
+				echo "domain-needed" >> ${wfile}
+				echo "bogus-priv" >> ${wfile}
+				echo "expand-hosts" >> ${wfile}
+				echo "cache-size=2048" >> ${wfile}
+				echo "dhcp-range=usb0,192.168.7.1,192.168.7.1,2m" >> ${wfile}
+				echo "dhcp-range=usb1,192.168.6.1,192.168.6.1,2m" >> ${wfile}
+				echo "listen-address=127.0.0.1" >> ${wfile}
+				echo "listen-address=192.168.7.2" >> ${wfile}
+				echo "listen-address=192.168.6.2" >> ${wfile}
+				echo "dhcp-option=usb0,3" >> ${wfile}
+				echo "dhcp-option=usb0,6" >> ${wfile}
+				echo "dhcp-option=usb1,3" >> ${wfile}
+				echo "dhcp-option=usb1,6" >> ${wfile}
+	#FIXME: why was this added, without connman every ip get's 172.1.8.1????
+	#			echo "address=/#/172.1.8.1" >> ${wfile}
+				echo "dhcp-leasefile=/var/run/dnsmasq.leases" >> ${wfile}
 
-			systemctl restart dnsmasq || true
-		else
-			echo "${log} ERROR: dnsmasq is not installed"
+				systemctl restart dnsmasq || true
+			else
+				echo "${log} ERROR: dnsmasq is not installed"
+			fi
 		fi
 	fi
 fi
