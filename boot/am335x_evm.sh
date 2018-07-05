@@ -503,7 +503,7 @@ run_libcomposite () {
 		echo ${usb_imanufacturer} > strings/0x409/manufacturer
 		echo ${usb_iproduct} > strings/0x409/product
 
-		if [ "x${USB_NETWORK_DISABLED}" = "xyes" ]; then
+		if [ ! "x${USB_NETWORK_DISABLED}" = "xyes" ]; then
 			mkdir -p functions/rndis.usb0
 			# first byte of address must be even
 			echo ${cpsw_2_mac} > functions/rndis.usb0/host_addr
@@ -541,7 +541,7 @@ run_libcomposite () {
 
 		echo 500 > configs/c.1/MaxPower
 
-		if [ "x${USB_NETWORK_DISABLED}" = "xyes" ]; then
+		if [ ! "x${USB_NETWORK_DISABLED}" = "xyes" ]; then
 			ln -s functions/rndis.usb0 configs/c.1/
 			ln -s functions/ecm.usb0 configs/c.1/
 		fi
@@ -725,7 +725,7 @@ else
 	use_libcomposite
 fi
 
-if [ "x${USB_NETWORK_DISABLED}" = "xyes" ]; then
+if [ ! "x${USB_NETWORK_DISABLED}" = "xyes" ]; then
 	if [ -f /var/lib/misc/dnsmasq.leases ] ; then
 		systemctl stop dnsmasq || true
 		rm -rf /var/lib/misc/dnsmasq.leases || true
