@@ -42,6 +42,14 @@ dpkg_check_version () {
 	fi
 }
 
+dpkg_check_version_replaced () {
+	unset pkg_version
+	pkg_version=$(dpkg -l | awk '$2=="'$pkg'" { print $3 }' || true)
+	if [ ! "x${pkg_version}" = "x" ] ; then
+		echo "pkg:[$pkg]:[$pkg_version]:[GOT_REPLACED_BY_NEXT]"
+	fi
+}
+
 if [ -f /usr/bin/git ] ; then
 	if [ -d /opt/scripts/ ] ; then
 		old_dir="`pwd`"
@@ -127,7 +135,8 @@ echo "pkg check: to individually upgrade run: [sudo apt install --only-upgrade <
 pkg="bb-cape-overlays" ; dpkg_check_version
 pkg="bb-wl18xx-firmware" ; dpkg_check_version
 pkg="kmod" ; dpkg_check_version
-pkg="roboticscape" ; dpkg_check_version
+pkg="roboticscape" ; dpkg_check_version_replaced
+pkg="librobotcontrol" ; dpkg_check_version
 
 if [ -d /home/debian/ ] ; then
 	pkg="firmware-ti-connectivity" ; dpkg_check_version
