@@ -707,85 +707,83 @@ use_old_g_multi () {
 
 unset usb0 usb1
 
-if [ -f /sbin/modprobe ] ; then
-	#use libcomposite with v4.4.x+ kernel's...
-	kernel_major=$(uname -r | cut -d. -f1 || true)
-	kernel_minor=$(uname -r | cut -d. -f2 || true)
-	compare_major="4"
-	compare_minor="4"
+#use libcomposite with v4.4.x+ kernel's...
+kernel_major=$(uname -r | cut -d. -f1 || true)
+kernel_minor=$(uname -r | cut -d. -f2 || true)
+compare_major="4"
+compare_minor="4"
 
-	if [ "${kernel_major}" -lt "${compare_major}" ] ; then
+if [ "${kernel_major}" -lt "${compare_major}" ] ; then
+	use_old_g_multi
+elif [ "${kernel_major}" -eq "${compare_major}" ] ; then
+	if [ "${kernel_minor}" -lt "${compare_minor}" ] ; then
 		use_old_g_multi
-	elif [ "${kernel_major}" -eq "${compare_major}" ] ; then
-		if [ "${kernel_minor}" -lt "${compare_minor}" ] ; then
-			use_old_g_multi
-		else
-			use_libcomposite
-		fi
 	else
 		use_libcomposite
 	fi
+else
+	use_libcomposite
+fi
 
-	if [ ! "x${USB_NETWORK_DISABLED}" = "xyes" ]; then
-		if [ -f /var/lib/misc/dnsmasq.leases ] ; then
-			systemctl stop dnsmasq || true
-			rm -rf /var/lib/misc/dnsmasq.leases || true
-		fi
+if [ ! "x${USB_NETWORK_DISABLED}" = "xyes" ]; then
+	if [ -f /var/lib/misc/dnsmasq.leases ] ; then
+		systemctl stop dnsmasq || true
+		rm -rf /var/lib/misc/dnsmasq.leases || true
+	fi
 
-		if [ "x${usb0}" = "xenable" ] ; then
-			echo "${log} Starting usb0 network"
-			# Auto-configuring the usb0 network interface:
-			$(dirname $0)/autoconfigure_usb0.sh || true
-		fi
+	if [ "x${usb0}" = "xenable" ] ; then
+		echo "${log} Starting usb0 network"
+		# Auto-configuring the usb0 network interface:
+		$(dirname $0)/autoconfigure_usb0.sh || true
+	fi
 
-		if [ "x${usb1}" = "xenable" ] ; then
-			echo "${log} Starting usb1 network"
-			# Auto-configuring the usb1 network interface:
-			$(dirname $0)/autoconfigure_usb1.sh || true
-		fi
+	if [ "x${usb1}" = "xenable" ] ; then
+		echo "${log} Starting usb1 network"
+		# Auto-configuring the usb1 network interface:
+		$(dirname $0)/autoconfigure_usb1.sh || true
+	fi
 
-		if [ "x${dnsmasq_usb0_usb1}" = "xenable" ] ; then
-			if [ -d /sys/kernel/config/usb_gadget ] ; then
-				/etc/init.d/udhcpd stop || true
+	if [ "x${dnsmasq_usb0_usb1}" = "xenable" ] ; then
+		if [ -d /sys/kernel/config/usb_gadget ] ; then
+			/etc/init.d/udhcpd stop || true
 
-				if [ -d /etc/dnsmasq.d/ ] ; then
-					echo "${log} dnsmasq: setting up for usb0/usb1"
-					disable_connman_dnsproxy
+			if [ -d /etc/dnsmasq.d/ ] ; then
+				echo "${log} dnsmasq: setting up for usb0/usb1"
+				disable_connman_dnsproxy
 
-					wfile="/etc/dnsmasq.d/SoftAp0"
-					echo "interface=usb0" > ${wfile}
-					echo "interface=usb1" >> ${wfile}
-					echo "port=53" >> ${wfile}
-					echo "dhcp-authoritative" >> ${wfile}
-					echo "domain-needed" >> ${wfile}
-					echo "bogus-priv" >> ${wfile}
-					echo "expand-hosts" >> ${wfile}
-					echo "cache-size=2048" >> ${wfile}
-					echo "dhcp-range=usb0,192.168.7.1,192.168.7.1,2m" >> ${wfile}
-					echo "dhcp-range=usb1,192.168.6.1,192.168.6.1,2m" >> ${wfile}
-					echo "listen-address=127.0.0.1" >> ${wfile}
-					echo "listen-address=192.168.7.2" >> ${wfile}
-					echo "listen-address=192.168.6.2" >> ${wfile}
-					echo "dhcp-option=usb0,3" >> ${wfile}
-					echo "dhcp-option=usb0,6" >> ${wfile}
-					echo "dhcp-option=usb1,3" >> ${wfile}
-					echo "dhcp-option=usb1,6" >> ${wfile}
-		#FIXME: why was this added, without connman every ip get's 172.1.8.1????
-		#			echo "address=/#/172.1.8.1" >> ${wfile}
-					echo "dhcp-leasefile=/var/run/dnsmasq.leases" >> ${wfile}
+				wfile="/etc/dnsmasq.d/SoftAp0"
+				echo "interface=usb0" > ${wfile}
+				echo "interface=usb1" >> ${wfile}
+				echo "port=53" >> ${wfile}
+				echo "dhcp-authoritative" >> ${wfile}
+				echo "domain-needed" >> ${wfile}
+				echo "bogus-priv" >> ${wfile}
+				echo "expand-hosts" >> ${wfile}
+				echo "cache-size=2048" >> ${wfile}
+				echo "dhcp-range=usb0,192.168.7.1,192.168.7.1,2m" >> ${wfile}
+				echo "dhcp-range=usb1,192.168.6.1,192.168.6.1,2m" >> ${wfile}
+				echo "listen-address=127.0.0.1" >> ${wfile}
+				echo "listen-address=192.168.7.2" >> ${wfile}
+				echo "listen-address=192.168.6.2" >> ${wfile}
+				echo "dhcp-option=usb0,3" >> ${wfile}
+				echo "dhcp-option=usb0,6" >> ${wfile}
+				echo "dhcp-option=usb1,3" >> ${wfile}
+				echo "dhcp-option=usb1,6" >> ${wfile}
+	#FIXME: why was this added, without connman every ip get's 172.1.8.1????
+	#			echo "address=/#/172.1.8.1" >> ${wfile}
+				echo "dhcp-leasefile=/var/run/dnsmasq.leases" >> ${wfile}
 
-					systemctl restart dnsmasq || true
-				else
-					echo "${log} ERROR: dnsmasq is not installed"
-				fi
+				systemctl restart dnsmasq || true
+			else
+				echo "${log} ERROR: dnsmasq is not installed"
 			fi
 		fi
 	fi
+fi
 
-	if [ -d /sys/class/tty/ttyGS0/ ] ; then
-		echo "${log} Starting serial-getty@ttyGS0.service"
-		systemctl start serial-getty@ttyGS0.service || true
-	fi
+if [ -d /sys/class/tty/ttyGS0/ ] ; then
+	echo "${log} Starting serial-getty@ttyGS0.service"
+	systemctl start serial-getty@ttyGS0.service || true
 fi
 
 #create_ap is now legacy, use connman...
