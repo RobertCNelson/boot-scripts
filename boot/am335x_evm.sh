@@ -201,7 +201,7 @@ wifi_prefix="BeagleBone"
 
 #pre nvmem...
 eeprom="/sys/bus/i2c/devices/0-0050/eeprom"
-if [ -f ${eeprom} ] ; then
+if [ -f ${eeprom} ] && [ -f /usr/bin/hexdump ] ; then
 	usb_iserialnumber=$(hexdump -e '8/1 "%c"' ${eeprom} -n 28 | cut -b 17-28)
 	ISBLACK=$(hexdump -e '8/1 "%c"' ${eeprom} -n 12 | cut -b 9-12)
 	ISGREEN=$(hexdump -e '8/1 "%c"' ${eeprom} -n 19 | cut -b 17-19)
@@ -210,7 +210,7 @@ fi
 
 #[PATCH (pre v8) 0/9] Add simple NVMEM Framework via regmap.
 eeprom="/sys/class/nvmem/at24-0/nvmem"
-if [ -f ${eeprom} ] ; then
+if [ -f ${eeprom} ] && [ -f /usr/bin/hexdump ] ; then
 	usb_iserialnumber=$(hexdump -e '8/1 "%c"' ${eeprom} -n 28 | cut -b 17-28)
 	ISBLACK=$(hexdump -e '8/1 "%c"' ${eeprom} -n 12 | cut -b 9-12)
 	ISGREEN=$(hexdump -e '8/1 "%c"' ${eeprom} -n 19 | cut -b 17-19)
@@ -219,7 +219,7 @@ fi
 
 #[PATCH v8 0/9] Add simple NVMEM Framework via regmap.
 eeprom="/sys/bus/nvmem/devices/at24-0/nvmem"
-if [ -f ${eeprom} ] ; then
+if [ -f ${eeprom} ] && [ -f /usr/bin/hexdump ] ; then
 	usb_iserialnumber=$(hexdump -e '8/1 "%c"' ${eeprom} -n 28 | cut -b 17-28)
 	ISBLACK=$(hexdump -e '8/1 "%c"' ${eeprom} -n 12 | cut -b 9-12)
 	ISGREEN=$(hexdump -e '8/1 "%c"' ${eeprom} -n 19 | cut -b 17-19)
@@ -261,7 +261,7 @@ fi
 #cpsw_5_mac = usb1 (USB host, pc side)
 
 mac_address="/proc/device-tree/ocp/ethernet@4a100000/slave@4a100200/mac-address"
-if [ -f ${mac_address} ] ; then
+if [ -f ${mac_address} ] && [ -f /usr/bin/hexdump ] ; then
 	cpsw_0_mac=$(hexdump -v -e '1/1 "%02X" ":"' ${mac_address} | sed 's/.$//')
 
 	#Some devices are showing a blank cpsw_0_mac [00:00:00:00:00:00], let's fix that up...
@@ -290,7 +290,7 @@ if [ "x${use_cached_cpsw_mac}" = "xtrue" ] && [ -f /etc/cpsw_1_mac ] ; then
 	cpsw_1_mac=$(cat /etc/cpsw_1_mac)
 else
 	mac_address="/proc/device-tree/ocp/ethernet@4a100000/slave@4a100300/mac-address"
-	if [ -f ${mac_address} ] ; then
+	if [ -f ${mac_address} ] && [ -f /usr/bin/hexdump ] ; then
 		cpsw_1_mac=$(hexdump -v -e '1/1 "%02X" ":"' ${mac_address} | sed 's/.$//')
 
 		#Some devices are showing a blank cpsw_1_mac [00:00:00:00:00:00], let's fix that up...
