@@ -512,6 +512,15 @@ run_libcomposite () {
 				echo 01 > functions/rndis.usb0/protocol
 			fi
 
+			# Add OS Descriptors for the latest Windows 10 rndiscmp.inf
+			# https://answers.microsoft.com/en-us/windows/forum/windows_10-networking-winpc/windows-10-vs-remote-ndis-ethernet-usbgadget-not/cb30520a-753c-4219-b908-ad3d45590447
+			# https://www.spinics.net/lists/linux-usb/msg107185.html
+			echo 1 > os_desc/use
+			echo CD > os_desc/b_vendor_code
+			echo MSFT100 > os_desc/qw_sign
+			echo "RNDIS" > functions/rndis.usb0/os_desc/interface.rndis/compatible_id
+			echo "5162001" > functions/rndis.usb0/os_desc/interface.rndis/sub_compatible_id
+
 			mkdir -p functions/ecm.usb0
 			echo ${cpsw_4_mac} > functions/ecm.usb0/host_addr
 			echo ${cpsw_5_mac} > functions/ecm.usb0/dev_addr
@@ -536,6 +545,14 @@ run_libcomposite () {
 		echo 500 > configs/c.1/MaxPower
 
 		if [ ! "x${USB_NETWORK_DISABLED}" = "xyes" ]; then
+			ln -s configs/c.1 os_desc
+			mkdir functions/rndis.usb0/os_desc/interface.rndis/Icons
+			echo 2 > functions/rndis.usb0/os_desc/interface.rndis/Icons/type
+			echo "%SystemRoot%\\system32\\shell32.dll,-233" > functions/rndis.usb0/os_desc/interface.rndis/Icons/data
+			mkdir functions/rndis.usb0/os_desc/interface.rndis/Label
+			echo 1 > functions/rndis.usb0/os_desc/interface.rndis/Label/type
+			echo "BeagleBone USB Ethernet" > functions/rndis.usb0/os_desc/interface.rndis/Label/data
+
 			ln -s functions/rndis.usb0 configs/c.1/
 			ln -s functions/ecm.usb0 configs/c.1/
 		fi
