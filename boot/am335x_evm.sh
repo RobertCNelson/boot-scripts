@@ -41,7 +41,23 @@ if [ -f /etc/rcn-ee.conf ] ; then
 	. /etc/rcn-ee.conf
 fi
 
+if [ -f /etc/default/bb-boot ] ; then
+	unset USB_NETWORK_DISABLED
+	. /etc/default/bb-boot
+fi
+
 log="am335x_evm:"
+
+unset detected_capes
+detected_capes=$(cat /proc/cmdline | sed 's/ /\n/g' | grep uboot_detected_capes= || true)
+if [ ! "x${detected_capes}" = "x" ] ; then
+	got_DLPDLCR2000=$(echo ${detected_capes} | grep DLPDLCR2000 || true)
+	if [ ! "x${got_DLPDLCR2000}" = "x" ] ; then
+		echo "${log} found: DLPDLCR2000 init display"
+		i2cset -y 2 0x1b 0x0b 0x00 0x00 0x00 0x00 i || true
+		i2cset -y 2 0x1b 0x0c 0x00 0x00 0x00 0x1b i || true
+	fi
+fi
 
 usb_gadget="/sys/kernel/config/usb_gadget"
 
@@ -114,7 +130,7 @@ TI_AM335x_BeagleBone_Black_Wireless)
 TI_AM335x_BeagleBone_Blue)
 	has_wifi="enable"
 	cleanup_extra_docs
-	blue_fix_uarts="enable"
+#	blue_fix_uarts="enable"
 	;;
 TI_AM335x_BeagleBone_Green)
 	has_wifi="disable"
@@ -136,7 +152,11 @@ TI_AM335x_BeagleBone_Green_Wireless)
 		usb_image_file="/var/local/bbgw_usb_mass_storage.img"
 	fi
 	;;
-TI_AM335x_PocketBone)
+TI_AM335x_BeagleLogic_Standalone)
+	has_wifi="disable"
+	dnsmasq_usb0_usb1="enable"
+	;;
+TI_AM335x_P*)
 	has_wifi="disable"
 	cleanup_extra_docs
 	dnsmasq_usb0_usb1="enable"
@@ -144,6 +164,21 @@ TI_AM335x_PocketBone)
 SanCloud_BeagleBone_Enhanced)
 	board_sbbe="enable"
 	has_wifi="enable"
+	cleanup_extra_docs
+	;;
+Octavo_Systems_OSD3358*)
+	has_wifi="disable"
+	cleanup_extra_docs
+	dnsmasq_usb0_usb1="enable"
+	;;
+TI_AM335x_BeagleBone_Black_RoboticsCape)
+	has_wifi="disable"
+	cleanup_extra_docs
+	dnsmasq_usb0_usb1="enable"
+	;;
+TI_AM335x_BeagleBone_Black_Wireless_RoboticsCape)
+	has_wifi="enable"
+	#recovers 82MB of space
 	cleanup_extra_docs
 	;;
 *)
@@ -166,7 +201,7 @@ wifi_prefix="BeagleBone"
 
 #pre nvmem...
 eeprom="/sys/bus/i2c/devices/0-0050/eeprom"
-if [ -f ${eeprom} ] ; then
+if [ -f ${eeprom} ] && [ -f /usr/bin/hexdump ] ; then
 	usb_iserialnumber=$(hexdump -e '8/1 "%c"' ${eeprom} -n 28 | cut -b 17-28)
 	ISBLACK=$(hexdump -e '8/1 "%c"' ${eeprom} -n 12 | cut -b 9-12)
 	ISGREEN=$(hexdump -e '8/1 "%c"' ${eeprom} -n 19 | cut -b 17-19)
@@ -175,7 +210,7 @@ fi
 
 #[PATCH (pre v8) 0/9] Add simple NVMEM Framework via regmap.
 eeprom="/sys/class/nvmem/at24-0/nvmem"
-if [ -f ${eeprom} ] ; then
+if [ -f ${eeprom} ] && [ -f /usr/bin/hexdump ] ; then
 	usb_iserialnumber=$(hexdump -e '8/1 "%c"' ${eeprom} -n 28 | cut -b 17-28)
 	ISBLACK=$(hexdump -e '8/1 "%c"' ${eeprom} -n 12 | cut -b 9-12)
 	ISGREEN=$(hexdump -e '8/1 "%c"' ${eeprom} -n 19 | cut -b 17-19)
@@ -184,7 +219,7 @@ fi
 
 #[PATCH v8 0/9] Add simple NVMEM Framework via regmap.
 eeprom="/sys/bus/nvmem/devices/at24-0/nvmem"
-if [ -f ${eeprom} ] ; then
+if [ -f ${eeprom} ] && [ -f /usr/bin/hexdump ] ; then
 	usb_iserialnumber=$(hexdump -e '8/1 "%c"' ${eeprom} -n 28 | cut -b 17-28)
 	ISBLACK=$(hexdump -e '8/1 "%c"' ${eeprom} -n 12 | cut -b 9-12)
 	ISGREEN=$(hexdump -e '8/1 "%c"' ${eeprom} -n 19 | cut -b 17-19)
@@ -212,6 +247,11 @@ if [ "x${ISBLACK}" = "xBBBK" ] || [ "x${ISBLACK}" = "xBNLT" ] ; then
 	fi
 fi
 
+if [ "x${ISBLACK}" = "xBLGC" ] ; then
+	usb_imanufacturer="BeagleLogic"
+	usb_iproduct="BeagleLogicStandalone"
+fi
+
 #mac address:
 #cpsw_0_mac = eth0 - wlan0 (in eeprom)
 #cpsw_1_mac = usb0 (BeagleBone Side) (in eeprom)
@@ -221,7 +261,7 @@ fi
 #cpsw_5_mac = usb1 (USB host, pc side)
 
 mac_address="/proc/device-tree/ocp/ethernet@4a100000/slave@4a100200/mac-address"
-if [ -f ${mac_address} ] ; then
+if [ -f ${mac_address} ] && [ -f /usr/bin/hexdump ] ; then
 	cpsw_0_mac=$(hexdump -v -e '1/1 "%02X" ":"' ${mac_address} | sed 's/.$//')
 
 	#Some devices are showing a blank cpsw_0_mac [00:00:00:00:00:00], let's fix that up...
@@ -250,7 +290,7 @@ if [ "x${use_cached_cpsw_mac}" = "xtrue" ] && [ -f /etc/cpsw_1_mac ] ; then
 	cpsw_1_mac=$(cat /etc/cpsw_1_mac)
 else
 	mac_address="/proc/device-tree/ocp/ethernet@4a100000/slave@4a100300/mac-address"
-	if [ -f ${mac_address} ] ; then
+	if [ -f ${mac_address} ] && [ -f /usr/bin/hexdump ] ; then
 		cpsw_1_mac=$(hexdump -v -e '1/1 "%02X" ":"' ${mac_address} | sed 's/.$//')
 
 		#Some devices are showing a blank cpsw_1_mac [00:00:00:00:00:00], let's fix that up...
@@ -445,10 +485,96 @@ if [ -f /var/run/udhcpd.pid ] ; then
 	/etc/init.d/udhcpd stop || true
 fi
 
+run_libcomposite () {
+	if [ ! -d /sys/kernel/config/usb_gadget/g_multi/ ] ; then
+		echo "${log} Creating g_multi"
+		mkdir -p /sys/kernel/config/usb_gadget/g_multi || true
+		cd /sys/kernel/config/usb_gadget/g_multi
+
+		echo ${usb_bcdUSB} > bcdUSB
+		echo ${usb_idVendor} > idVendor # Linux Foundation
+		echo ${usb_idProduct} > idProduct # Multifunction Composite Gadget
+		echo ${usb_bcdDevice} > bcdDevice
+
+		#0x409 = english strings...
+		mkdir -p strings/0x409
+
+		echo ${usb_iserialnumber} > strings/0x409/serialnumber
+		echo ${usb_imanufacturer} > strings/0x409/manufacturer
+		echo ${usb_iproduct} > strings/0x409/product
+
+		if [ ! "x${USB_NETWORK_DISABLED}" = "xyes" ]; then
+			mkdir -p functions/rndis.usb0
+			# first byte of address must be even
+			echo ${cpsw_2_mac} > functions/rndis.usb0/host_addr
+			echo ${cpsw_1_mac} > functions/rndis.usb0/dev_addr
+
+			# Starting with kernel 4.14, we can do this to match Microsoft's built-in RNDIS driver.
+			# Earlier kernels require the patch below as a work-around instead:
+			# https://github.com/beagleboard/linux/commit/e94487c59cec8ba32dc1eb83900297858fdc590b
+			if [ -f functions/rndis.usb0/class ]; then
+				echo EF > functions/rndis.usb0/class
+				echo 04 > functions/rndis.usb0/subclass
+				echo 01 > functions/rndis.usb0/protocol
+			fi
+
+			mkdir -p functions/ecm.usb0
+			echo ${cpsw_4_mac} > functions/ecm.usb0/host_addr
+			echo ${cpsw_5_mac} > functions/ecm.usb0/dev_addr
+		fi
+
+		mkdir -p functions/acm.usb0
+
+		if [ "x${has_img_file}" = "xtrue" ] ; then
+			echo "${log} enable USB mass_storage ${usb_image_file}"
+			mkdir -p functions/mass_storage.usb0
+			echo ${usb_ms_stall} > functions/mass_storage.usb0/stall
+			echo ${usb_ms_cdrom} > functions/mass_storage.usb0/lun.0/cdrom
+			echo ${usb_ms_nofua} > functions/mass_storage.usb0/lun.0/nofua
+			echo ${usb_ms_removable} > functions/mass_storage.usb0/lun.0/removable
+			echo ${usb_ms_ro} > functions/mass_storage.usb0/lun.0/ro
+			echo ${actual_image_file} > functions/mass_storage.usb0/lun.0/file
+		fi
+
+		mkdir -p configs/c.1/strings/0x409
+		echo "Multifunction with RNDIS" > configs/c.1/strings/0x409/configuration
+
+		echo 500 > configs/c.1/MaxPower
+
+		if [ ! "x${USB_NETWORK_DISABLED}" = "xyes" ]; then
+			ln -s functions/rndis.usb0 configs/c.1/
+			ln -s functions/ecm.usb0 configs/c.1/
+		fi
+		ln -s functions/acm.usb0 configs/c.1/
+		if [ "x${has_img_file}" = "xtrue" ] ; then
+			ln -s functions/mass_storage.usb0 configs/c.1/
+		fi
+
+		#ls /sys/class/udc
+		#v4.4.x-ti
+		if [ -d /sys/class/udc/musb-hdrc.0.auto ] ; then
+			echo musb-hdrc.0.auto > UDC
+		else
+			#v4.9.x-ti
+			if [ -d /sys/class/udc/musb-hdrc.0 ] ; then
+				echo musb-hdrc.0 > UDC
+			fi
+		fi
+
+		usb0="enable"
+		usb1="enable"
+		echo "${log} g_multi Created"
+	else
+		echo "${log} FIXME: need to bring down g_multi first, before running a second time."
+	fi
+}
+
 use_libcomposite () {
 	echo "${log} use_libcomposite"
 	unset has_img_file
-	if [ -f ${usb_image_file} ] ; then
+	if [ "x${USB_IMAGE_FILE_DISABLED}" = "xyes" ]; then
+		echo "${log} usb_image_file disabled by bb-boot config file."
+	elif [ -f ${usb_image_file} ] ; then
 		actual_image_file=$(readlink -f ${usb_image_file} || true)
 		if [ ! "x${actual_image_file}" = "x" ] ; then
 			if [ -f ${actual_image_file} ] ; then
@@ -479,82 +605,26 @@ use_libcomposite () {
 			actual_image_file="${root_drive%?}1"
 		fi
 	fi
+
+	#ls -lha /sys/kernel/*
+	#ls -lha /sys/kernel/config/*
+#	if [ ! -d /sys/kernel/config/usb_gadget/ ] ; then
+
 	echo "${log} modprobe libcomposite"
 	modprobe libcomposite || true
 	if [ -d /sys/module/libcomposite ] ; then
-		if [ -d ${usb_gadget} ] ; then
-			if [ ! -d ${usb_gadget}/g_multi/ ] ; then
-				echo "${log} Creating g_multi"
-				mkdir -p ${usb_gadget}/g_multi || true
-				cd ${usb_gadget}/g_multi
-
-				echo ${usb_bcdUSB} > bcdUSB
-				echo ${usb_idVendor} > idVendor # Linux Foundation
-				echo ${usb_idProduct} > idProduct # Multifunction Composite Gadget
-				echo ${usb_bcdDevice} > bcdDevice
-
-				#0x409 = english strings...
-				mkdir -p strings/0x409
-
-				echo ${usb_iserialnumber} > strings/0x409/serialnumber
-				echo ${usb_imanufacturer} > strings/0x409/manufacturer
-				echo ${usb_iproduct} > strings/0x409/product
-
-				mkdir -p functions/rndis.usb0
-				# first byte of address must be even
-				echo ${cpsw_2_mac} > functions/rndis.usb0/host_addr
-				echo ${cpsw_1_mac} > functions/rndis.usb0/dev_addr
-
-				mkdir -p functions/ecm.usb0
-				echo ${cpsw_4_mac} > functions/ecm.usb0/host_addr
-				echo ${cpsw_5_mac} > functions/ecm.usb0/dev_addr
-
-				mkdir -p functions/acm.usb0
-
-				if [ "x${has_img_file}" = "xtrue" ] ; then
-					mkdir -p functions/mass_storage.usb0
-					echo ${usb_ms_stall} > functions/mass_storage.usb0/stall
-					echo ${usb_ms_cdrom} > functions/mass_storage.usb0/lun.0/cdrom
-					echo ${usb_ms_nofua} > functions/mass_storage.usb0/lun.0/nofua
-					echo ${usb_ms_removable} > functions/mass_storage.usb0/lun.0/removable
-					echo ${usb_ms_ro} > functions/mass_storage.usb0/lun.0/ro
-					echo ${actual_image_file} > functions/mass_storage.usb0/lun.0/file
-				fi
-
-				mkdir -p configs/c.1/strings/0x409
-				echo "Multifunction with RNDIS" > configs/c.1/strings/0x409/configuration
-
-				echo 500 > configs/c.1/MaxPower
-
-				ln -s functions/rndis.usb0 configs/c.1/
-				ln -s functions/ecm.usb0 configs/c.1/
-				ln -s functions/acm.usb0 configs/c.1/
-				if [ "x${has_img_file}" = "xtrue" ] ; then
-					ln -s functions/mass_storage.usb0 configs/c.1/
-				fi
-
-				#ls /sys/class/udc
-				#v4.4.x-ti
-				if [ -d /sys/class/udc/musb-hdrc.0.auto ] ; then
-					echo musb-hdrc.0.auto > UDC
-				else
-					#v4.9.x-ti
-					if [ -d /sys/class/udc/musb-hdrc.0 ] ; then
-						echo musb-hdrc.0 > UDC
-					fi
-				fi
-				usb0="enable"
-				usb1="enable"
-				echo "${log} g_multi Created"
-			else
-				echo "${log} FIXME: need to bring down g_multi first, before running a second time."
-			fi
-		else
-			echo "${log} ERROR: no [${usb_gadget}]"
-		fi
+		run_libcomposite
 	else
+		if [ -f /sbin/depmod ] ; then
+			/sbin/depmod -a
+		fi
 		echo "${log} ERROR: [libcomposite didn't load]"
 	fi
+
+#	echo
+#		echo "${log} libcomposite built-in"
+#		run_libcomposite
+#	fi
 }
 
 g_network="iSerialNumber=${usb_iserialnumber} iManufacturer=${usb_imanufacturer} iProduct=${usb_iproduct} host_addr=${cpsw_2_mac} dev_addr=${cpsw_1_mac}"
@@ -655,63 +725,65 @@ else
 	use_libcomposite
 fi
 
-if [ -f /var/lib/misc/dnsmasq.leases ] ; then
-	systemctl stop dnsmasq || true
-	rm -rf /var/lib/misc/dnsmasq.leases || true
-fi
+if [ ! "x${USB_NETWORK_DISABLED}" = "xyes" ]; then
+	if [ -f /var/lib/misc/dnsmasq.leases ] ; then
+		systemctl stop dnsmasq || true
+		rm -rf /var/lib/misc/dnsmasq.leases || true
+	fi
 
-if [ "x${usb0}" = "xenable" ] ; then
-	echo "${log} Starting usb0 network"
-	# Auto-configuring the usb0 network interface:
-	$(dirname $0)/autoconfigure_usb0.sh || true
-fi
+	if [ "x${usb0}" = "xenable" ] ; then
+		echo "${log} Starting usb0 network"
+		# Auto-configuring the usb0 network interface:
+		$(dirname $0)/autoconfigure_usb0.sh || true
+	fi
 
-if [ "x${usb1}" = "xenable" ] ; then
-	echo "${log} Starting usb1 network"
-	# Auto-configuring the usb1 network interface:
-	$(dirname $0)/autoconfigure_usb1.sh || true
-fi
+	if [ "x${usb1}" = "xenable" ] ; then
+		echo "${log} Starting usb1 network"
+		# Auto-configuring the usb1 network interface:
+		$(dirname $0)/autoconfigure_usb1.sh || true
+	fi
 
-if [ "x${dnsmasq_usb0_usb1}" = "xenable" ] ; then
-	if [ -d /sys/kernel/config/usb_gadget ] ; then
-		/etc/init.d/udhcpd stop || true
+	if [ "x${dnsmasq_usb0_usb1}" = "xenable" ] ; then
+		if [ -d /sys/kernel/config/usb_gadget ] ; then
+			/etc/init.d/udhcpd stop || true
 
-		if [ -d /etc/dnsmasq.d/ ] ; then
-			echo "${log} dnsmasq: setting up for usb0/usb1"
-			disable_connman_dnsproxy
+			if [ -d /etc/dnsmasq.d/ ] ; then
+				echo "${log} dnsmasq: setting up for usb0/usb1"
+				disable_connman_dnsproxy
 
-			wfile="/etc/dnsmasq.d/SoftAp0"
-			echo "interface=usb0" > ${wfile}
-			echo "interface=usb1" >> ${wfile}
-			echo "port=53" >> ${wfile}
-			echo "dhcp-authoritative" >> ${wfile}
-			echo "domain-needed" >> ${wfile}
-			echo "bogus-priv" >> ${wfile}
-			echo "expand-hosts" >> ${wfile}
-			echo "cache-size=2048" >> ${wfile}
-			echo "dhcp-range=usb0,192.168.7.1,192.168.7.1,2m" >> ${wfile}
-			echo "dhcp-range=usb1,192.168.6.1,192.168.6.1,2m" >> ${wfile}
-			echo "listen-address=127.0.0.1" >> ${wfile}
-			echo "listen-address=192.168.7.2" >> ${wfile}
-			echo "listen-address=192.168.6.2" >> ${wfile}
-			echo "dhcp-option=usb0,3" >> ${wfile}
-			echo "dhcp-option=usb0,6" >> ${wfile}
-			echo "dhcp-option=usb1,3" >> ${wfile}
-			echo "dhcp-option=usb1,6" >> ${wfile}
-#FIXME: why was this added, without connman every ip get's 172.1.8.1????
-#			echo "address=/#/172.1.8.1" >> ${wfile}
-			echo "dhcp-leasefile=/var/run/dnsmasq.leases" >> ${wfile}
+				wfile="/etc/dnsmasq.d/SoftAp0"
+				echo "interface=usb0" > ${wfile}
+				echo "interface=usb1" >> ${wfile}
+				echo "port=53" >> ${wfile}
+				echo "dhcp-authoritative" >> ${wfile}
+				echo "domain-needed" >> ${wfile}
+				echo "bogus-priv" >> ${wfile}
+				echo "expand-hosts" >> ${wfile}
+				echo "cache-size=2048" >> ${wfile}
+				echo "dhcp-range=usb0,192.168.7.1,192.168.7.1,2m" >> ${wfile}
+				echo "dhcp-range=usb1,192.168.6.1,192.168.6.1,2m" >> ${wfile}
+				echo "listen-address=127.0.0.1" >> ${wfile}
+				echo "listen-address=192.168.7.2" >> ${wfile}
+				echo "listen-address=192.168.6.2" >> ${wfile}
+				echo "dhcp-option=usb0,3" >> ${wfile}
+				echo "dhcp-option=usb0,6" >> ${wfile}
+				echo "dhcp-option=usb1,3" >> ${wfile}
+				echo "dhcp-option=usb1,6" >> ${wfile}
+	#FIXME: why was this added, without connman every ip get's 172.1.8.1????
+	#			echo "address=/#/172.1.8.1" >> ${wfile}
+				echo "dhcp-leasefile=/var/run/dnsmasq.leases" >> ${wfile}
 
-			systemctl restart dnsmasq || true
-		else
-			echo "${log} ERROR: dnsmasq is not installed"
+				systemctl restart dnsmasq || true
+			else
+				echo "${log} ERROR: dnsmasq is not installed"
+			fi
 		fi
 	fi
 fi
 
 if [ -d /sys/class/tty/ttyGS0/ ] ; then
-	echo "${log} Starting serial-getty@ttyGS0.service"
-	systemctl start serial-getty@ttyGS0.service || true
+	echo "${log} Starting serial-getty@ttyGS0.service via fork..."
+	systemctl start serial-getty@ttyGS0.service &
 fi
 
 #create_ap is now legacy, use connman...

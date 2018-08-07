@@ -39,17 +39,40 @@ if [ -f /etc/ssh/ssh.regenerate ] ; then
 	fi
 fi
 
+if [ -f /boot/efi/EFI/efi.gen ] ; then
+	echo "grub-install --efi-directory=/boot/efi/ --target=arm-efi --no-nvram"
+	grub-install --efi-directory=/boot/efi/ --target=arm-efi --no-nvram
+	echo "update-grub"
+	update-grub
+	sync
+	rm -rf /boot/efi/EFI/efi.gen || true
+	sync
+fi
+
 #Resize drive when requested
 if [ -f /resizerootfs ] ; then
 	echo "generic-board-startup: resizerootfs"
-	drive=$(cat /resizerootfs)
-	if [ ! "x${drive}" = "x" ] ; then
-		if [ "x${drive}" = "x/dev/mmcblk0" ] || [ "x${drive}" = "x/dev/mmcblk1" ] ; then
-			resize2fs ${drive}p2 >/var/log/resize.log 2>&1 || true
-		else
-			resize2fs ${drive} >/var/log/resize.log 2>&1 || true
+
+	unset is_btrfs
+	is_btrfs=$(cat /proc/cmdline | grep btrfs || true)
+
+	if [ "x${is_btrfs}" = "x" ] ; then
+		drive=$(cat /resizerootfs)
+		if [ ! "x${drive}" = "x" ] ; then
+			echo "generic-board-startup: "
+			if [ "x${drive}" = "x/dev/mmcblk0" ] || [ "x${drive}" = "x/dev/mmcblk1" ] ; then
+				echo "generic-board-startup: resize2fs ${drive}p2"
+				resize2fs ${drive}p2 >/var/log/resize.log 2>&1 || true
+			else
+				echo "generic-board-startup: resize2fs ${drive}"
+				resize2fs ${drive} >/var/log/resize.log 2>&1 || true
+			fi
 		fi
+	else
+		echo "generic-board-startup: btrfs filesystem resize max /"
+		btrfs filesystem resize max / >/var/log/resize.log 2>&1 || true
 	fi
+
 	rm -rf /resizerootfs || true
 	sync
 fi
@@ -57,6 +80,9 @@ fi
 if [ -d /sys/class/gpio/ ] ; then
 	chown -R root:gpio /sys/class/gpio/ || true
 	chmod -R ug+rw /sys/class/gpio/ || true
+
+	chown -R root:gpio /dev/gpiochip* || true
+	chmod -R ug+rw /dev/gpiochip* || true
 fi
 
 if [ -d /sys/class/leds ] ; then
@@ -74,7 +100,7 @@ if [ -f /proc/device-tree/model ] ; then
 	echo "generic-board-startup: [model=${board}]"
 
 	case "${board}" in
-	TI_AM335x*|Arrow_BeagleBone_Black_Industrial|SanCloud_BeagleBone_Enhanced)
+	TI_AM335x*|Arrow_BeagleBone_Black_Industrial|SanCloud_BeagleBone_Enhanced|Octavo_Systems*)
 		script="am335x_evm.sh"
 		;;
 	TI_AM5728*)

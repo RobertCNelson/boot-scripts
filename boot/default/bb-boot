@@ -1,0 +1,11 @@
+# This file allows some control on the boot process
+#
+# USB_IMAGE_FILE_DISABLED=yes #disable the loading of the mass storage file.
+# when UNSET the detected file (based on the board detected) will be used.
+# other values take no effect, and are ignored. The only expected value is "yes"
+# USB_IMAGE_FILE_DISABLED=yes
+#
+# USB_NETWORK_DISABLED=yes #disable the loading of the network.
+# when UNSET the detected file (based on the board detected) will be used.
+# other values take no effect, and are ignored. The only expected value is "yes"
+# USB_NETWORK_DISABLED=yes

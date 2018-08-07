@@ -99,9 +99,15 @@ fatfs_boot () {
 	echo "SPL: [${SPL}]"
 	echo "u-boot.img: [${UBOOT}]"
 	echo "for: [${conf_board}]"
-	echo ""
-	echo -n "Are you 100% sure, on selecting [${conf_board}] (y/n)? "
-	read response
+
+	if [ "x${cronjob}" = "xenable" ] ; then
+		response=y
+	else
+		echo ""
+		echo -n "Are you 100% sure, on selecting [${conf_board}] (y/n)? "
+		read response
+	fi
+
 	if [ "x${response}" = "xy" ] ; then
 		echo "-----------------------------"
 		if [ "${spl_name}" ] ; then
@@ -109,6 +115,7 @@ fatfs_boot () {
 				rm -f ${DRIVE}/${spl_name} || true
 				cp -v ${TEMPDIR}/dl/${SPL} ${DRIVE}/${spl_name}
 				sync
+				flashed=done
 			fi
 		fi
 
@@ -117,6 +124,7 @@ fatfs_boot () {
 				rm -f ${DRIVE}/${boot_name} || true
 				cp -v ${TEMPDIR}/dl/${UBOOT} ${DRIVE}/${boot_name}
 				sync
+				flashed=done
 			fi
 		fi
 		echo "-----------------------------"
@@ -129,9 +137,15 @@ dd_uboot_boot () {
 	echo "Warning: this script will flash your bootloader with:"
 	echo "u-boot.imx: [${UBOOT}]"
 	echo "for: [${conf_board}]"
-	echo ""
-	echo -n "Are you 100% sure, on selecting [${conf_board}] (y/n)? "
-	read response
+
+	if [ "x${cronjob}" = "xenable" ] ; then
+		response=y
+	else
+		echo ""
+		echo -n "Are you 100% sure, on selecting [${conf_board}] (y/n)? "
+		read response
+	fi
+
 	if [ "x${response}" = "xy" ] ; then
 		echo "-----------------------------"
 
@@ -204,9 +218,14 @@ dd_spl_uboot_boot () {
 		echo "log: dd if=${TEMPDIR}/dl/${UBOOT} of=${target} seek=${dd_uboot_seek} bs=${dd_uboot_bs}"
 	fi
 
-	echo ""
-	echo -n "Are you 100% sure, on selecting [${conf_board}] (y/n)? "
-	read response
+	if [ "x${cronjob}" = "xenable" ] ; then
+		response=y
+	else
+		echo ""
+		echo -n "Are you 100% sure, on selecting [${conf_board}] (y/n)? "
+		read response
+	fi
+
 	if [ "x${response}" = "xy" ] ; then
 
 		if [ -f ${TEMPDIR}/dl/${UBOOT} ] ; then
@@ -312,6 +331,10 @@ get_device () {
 			fi
 		fi
 		;;
+	TI_AM335x_PocketBeagle)
+		target="/dev/mmcblk0"
+		am335x_dd_default
+		;;
 	SanCloud_BeagleBone_Enhanced)
 		target="/dev/mmcblk0"
 		if [ -b ${target} ] ; then
@@ -373,13 +396,6 @@ check_soc_sh () {
 	if [ -f ${DRIVE}/SOC.sh ] ; then
 		. ${DRIVE}/SOC.sh
 		if [ "x${board}" != "x" ] ; then
-
-			if [ "x${board}" = "xam335x_boneblack" ] ; then
-				#Special eeprom less u-boot, switch them to normal on upgrades
-				sed -i -e 's:am335x_boneblack:am335x_evm:g' ${DRIVE}/SOC.sh
-				board="am335x_evm"
-			fi
-
 			conf_board="${board}"
 			if [ "x${bbb_blank}" = "xenable" ] ; then
 				conf_board="am335x_boneblack"
@@ -398,13 +414,6 @@ check_soc_sh () {
 			mount ${target}p1 /tmp/uboot/
 			DRIVE="/tmp/uboot"
 			if [ "x${board}" != "x" ] ; then
-
-				if [ "x${board}" = "xam335x_boneblack" ] ; then
-					#Special eeprom less u-boot, switch them to normal on upgrades
-					sed -i -e 's:am335x_boneblack:am335x_evm:g' ${DRIVE}/SOC.sh
-					board="am335x_evm"
-				fi
-
 				conf_board="${board}"
 				if [ "x${bbb_blank}" = "xenable" ] ; then
 					conf_board="am335x_boneblack"
@@ -427,13 +436,6 @@ check_soc_sh () {
 			mount ${target}p1 /tmp/uboot/
 			DRIVE="/tmp/uboot"
 			if [ "x${board}" != "x" ] ; then
-
-				if [ "x${board}" = "xam335x_boneblack" ] ; then
-					#Special eeprom less u-boot, switch them to normal on upgrades
-					sed -i -e 's:am335x_boneblack:am335x_evm:g' ${DRIVE}/SOC.sh
-					board="am335x_evm"
-				fi
-
 				conf_board="${board}"
 				if [ "x${bbb_blank}" = "xenable" ] ; then
 					conf_board="am335x_boneblack"
@@ -466,6 +468,9 @@ while [ ! -z "$1" ] ; do
 		;;
 	--bbb-blank)
 		bbb_blank=enable
+		;;
+	--cronjob)
+		cronjob=enable
 		;;
 	esac
 	shift

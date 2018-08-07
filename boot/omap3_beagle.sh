@@ -96,6 +96,9 @@ use_libcomposite () {
 			echo "${log} ERROR: no [${usb_gadget}]"
 		fi
 	else
+		if [ -f /sbin/depmod ] ; then
+			/sbin/depmod -a
+		fi
 		echo "${log} ERROR: [libcomposite didn't load]"
 	fi
 }
@@ -103,8 +106,8 @@ use_libcomposite () {
 use_libcomposite
 
 if [ -d /sys/class/tty/ttyGS0/ ] ; then
-	echo "${log} Starting serial-getty@ttyGS0.service"
-	systemctl start serial-getty@ttyGS0.service || true
+	echo "${log} Starting serial-getty@ttyGS0.service via fork..."
+	systemctl start serial-getty@ttyGS0.service &
 fi
 
 if [ -f /usr/bin/amixer ] ; then

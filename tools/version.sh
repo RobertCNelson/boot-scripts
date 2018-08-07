@@ -6,27 +6,25 @@ if ! id | grep -q root; then
 	exit
 fi
 
-git_bin=$(which git)
-
 omap_bootloader () {
 	unset test_var
 	test_var=$(dd if=${drive} count=6 skip=393248 bs=1 2>/dev/null || true)
 	if [ "x${test_var}" = "xU-Boot" ] ; then
 		uboot=$(dd if=${drive} count=32 skip=393248 bs=1 2>/dev/null || true)
 		uboot=$(echo ${uboot} | awk '{print $2}')
-		echo "bootloader:[${label}]:[${drive}]:[U-Boot ${uboot}]"
+		echo "bootloader:[${label}]:[${drive}]:[U-Boot ${uboot}]:[location: dd MBR]"
 	else
 		if [ -f /boot/uboot/u-boot.img ] ; then
 			if [ -f /usr/bin/mkimage ] ; then
 				unset uboot
 				uboot=$(/usr/bin/mkimage -l /boot/uboot/u-boot.img | grep Description | head -n1 | awk '{print $3}' 2>/dev/null || true)
 				if [ ! "x${uboot}" = "x" ] ; then
-					echo "bootloader:[${label}]:[${drive}]:[U-Boot ${uboot}]"
+					echo "bootloader:[${label}]:[${drive}]:[U-Boot ${uboot}]:[location: fatfs /boot/uboot/MLO]"
 				else
 					unset uboot
 					uboot=$(/usr/bin/mkimage -l /boot/uboot/u-boot.img | grep Name:| head -n1 | awk '{print $4}' 2>/dev/null || true)
 					if [ ! "x${uboot}" = "x" ] ; then
-						echo "bootloader:[${label}]:[${drive}]:[U-Boot ${uboot}]"
+						echo "bootloader:[${label}]:[${drive}]:[U-Boot ${uboot}]:[location: fatfs /boot/uboot/MLO]"
 					fi
 				fi
 			fi
@@ -44,11 +42,19 @@ dpkg_check_version () {
 	fi
 }
 
-if [ -f ${git_bin} ] ; then
+dpkg_check_version_replaced () {
+	unset pkg_version
+	pkg_version=$(dpkg -l | awk '$2=="'$pkg'" { print $3 }' || true)
+	if [ ! "x${pkg_version}" = "x" ] ; then
+		echo "pkg:[$pkg]:[$pkg_version]:[GOT_REPLACED_BY_NEXT]"
+	fi
+}
+
+if [ -f /usr/bin/git ] ; then
 	if [ -d /opt/scripts/ ] ; then
 		old_dir="`pwd`"
 		cd /opt/scripts/ || true
-		echo "git:/opt/scripts/:[`${git_bin} rev-parse HEAD`]"
+		echo "git:/opt/scripts/:[`/usr/bin/git rev-parse HEAD`]"
 		cd "${old_dir}" || true
 	fi
 fi
@@ -57,6 +63,8 @@ if [ -f /sys/bus/i2c/devices/0-0050/eeprom ] ; then
 	board_eeprom=$(hexdump -e '8/1 "%c"' /sys/bus/i2c/devices/0-0050/eeprom -n 28 | cut -b 5-28 || true)
 	echo "eeprom:[${board_eeprom}]"
 fi
+
+echo "model:[`cat /proc/device-tree/model | sed "s/ /_/g" | tr -d '\000'`]"
 
 if [ -f /etc/dogtag ] ; then
 	echo "dogtag:[`cat /etc/dogtag`]"
@@ -77,6 +85,9 @@ if [ "x${SOC}" = "x" ] ; then
 	TI_OMAP5_uEVM_board)
 		mmc0_label="eMMC-(secondary)"
 		mmc1_label="microSD-(primary)"
+		;;
+	TI_AM335x_PocketBeagle)
+		mmc0_label="microSD"
 		;;
 	*)
 		mmc0_label="microSD-(push-button)"
@@ -116,10 +127,41 @@ if [ -f /boot/uEnv.txt ] ; then
 	test_var=$(cat /boot/uEnv.txt | grep -v '#' | grep enable_uboot_overlays=1 || true)
 	if [ "x${test_var}" != "x" ] ; then
 		cat /boot/uEnv.txt | grep uboot_ | grep -v '#' | sed 's/^/uboot_overlay_options:[/' | sed 's/$/]/'
+		cat /boot/uEnv.txt | grep dtb_overlay | grep -v '#' | sed 's/^/uboot_overlay_options:[/' | sed 's/$/]/'
 	fi
 fi
 
+echo "pkg check: to individually upgrade run: [sudo apt install --only-upgrade <pkg>]"
 pkg="bb-cape-overlays" ; dpkg_check_version
 pkg="bb-wl18xx-firmware" ; dpkg_check_version
-pkg="firmware-ti-connectivity" ; dpkg_check_version
+pkg="kmod" ; dpkg_check_version
+pkg="roboticscape" ; dpkg_check_version_replaced
+pkg="librobotcontrol" ; dpkg_check_version
+
+if [ -d /home/debian/ ] ; then
+	pkg="firmware-ti-connectivity" ; dpkg_check_version
+	echo "groups:[`groups debian`]"
+fi
+
+if [ -d /home/machinekit/ ] ; then
+	pkg="firmware-ti-connectivity" ; dpkg_check_version
+	echo "groups:[`groups machinekit`]"
+fi
+
+if [ -d /home/ubuntu/ ] ; then
+	echo "groups:[`groups ubuntu`]"
+fi
+
+if [ -d /home/beagle/ ] ; then
+	echo "groups:[`groups beagle`]"
+fi
+
+echo "cmdline:[`cat /proc/cmdline`]"
+
+echo "dmesg | grep pinctrl-single"
+dmesg | grep pinctrl-single
+echo "dmesg | grep gpio-of-helper"
+dmesg | grep gpio-of-helper
+echo "END"
+
 #

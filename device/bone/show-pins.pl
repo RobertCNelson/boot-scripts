@@ -54,10 +54,17 @@ my @usage;
 while( <> ) {
 	local $SIG{__DIE__} = sub { die "@_$_\n" };
 	/^pin/gc  or next;
-	/\G +(0|[1-9]\d*) +\((\w+)\.0\):/gc  or die;
+	/\G +(0|[1-9]\d*)/gc or die;
 	my $pin = 0 + $1;
-	my $addr = hex $2;
-	( $addr & 0x7ff ) == 4 * $pin  or die;
+	my $addr;
+	if(/\G +\((\w+)\.0\):/gc) {
+		$addr = hex $1;
+		( $addr & 0x7ff ) == 4 * $pin  or die;
+	} elsif(/\G +\(PIN(0|[1-9]\d*)\):/gc) {
+		$1 == $pin  or die;
+	} else {
+		die;
+	}
 	next if /\G \(MUX UNCLAIMED\)/gc;
 	/\G (\S+)/gc  or die;
 	my @path = split m!:!, $1;
@@ -79,10 +86,18 @@ while( <> ) {
 	s/\s*\z//;
 	/^pin / or next;
 
-	/^pin (\d+) \(44e1([0-9a-f]{4})\.0\) 000000([0-7][0-9a-f]) pinctrl-single\z/ or die "parse error";
-	my $pin = $1;
-	my $reg = hex $2;
-	my $mux = hex $3;
+	my ($pin, $reg, $mux);
+	if(/PIN/) {
+		/^pin (\d+) \(PIN\d+\) 44e1([0-9a-f]{4}) 000000([0-7][0-9a-f]) pinctrl-single\z/ or die "parse error";
+		$pin = $1;
+		$reg = hex $2;
+		$mux = hex $3;
+	} else {
+		/^pin (\d+) \(44e1([0-9a-f]{4})\.0\) 000000([0-7][0-9a-f]) pinctrl-single\z/ or die "parse error";
+		$pin = $1;
+		$reg = hex $2;
+		$mux = hex $3;
+	}
 	0x800 + 4 * $pin == $reg  or die "sanity check failed";
 
 	my $zcz_ball = $data[ $pin ][ 9 ] || "";

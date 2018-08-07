@@ -5,13 +5,13 @@
 # Source it like this:
 # source $(dirname "$0")/functions.sh
 
-version_message="1.20170427: u-boot v2017.05-rc2..."
+version_message="1.20180412: all ssh regneration override..."
 emmcscript="cmdline=init=/opt/scripts/tools/eMMC/$(basename $0)"
 
-#
+#This is just a backup-backup-backup for old images...
 #https://rcn-ee.com/repos/bootloader/am335x_evm/
-http_spl="MLO-am335x_evm-v2017.05-rc2-r4"
-http_uboot="u-boot-am335x_evm-v2017.05-rc2-r4.img"
+http_spl="MLO-am335x_evm-v2018.03-r8"
+http_uboot="u-boot-am335x_evm-v2018.03-r8.img"
 
 set -o errtrace
 
@@ -83,6 +83,10 @@ __dry_run__(){
     echo "!!! Would run 'mkfs.ext4' with '$@'"
   }
   export -f mkfs.ext4
+  mkfs.btrfs() {
+    echo "!!! Would run 'mkfs.btrfs' with '$@'"
+  }
+  export -f mkfs.btrfs
   sfdisk() {
     echo "!!! Would run 'sfdisk' with '$@'"
   }
@@ -140,12 +144,14 @@ prepare_environment() {
 	echo_broadcast "==> Preparing /tmp"
 	mount -t tmpfs tmpfs /tmp
 
-	echo_broadcast "==> Preparing sysctl"
-	value_min_free_kbytes=$(sysctl -n vm.min_free_kbytes)
-	echo_broadcast "==> sysctl: vm.min_free_kbytes=[${value_min_free_kbytes}]"
-	echo_broadcast "==> sysctl: setting: [sysctl -w vm.min_free_kbytes=16384]"
-	sysctl -w vm.min_free_kbytes=16384
-	generate_line 40
+	if [ -f /proc/sys/vm/min_free_kbytes ] ; then
+		echo_broadcast "==> Preparing sysctl"
+		value_min_free_kbytes=$(sysctl -n vm.min_free_kbytes)
+		echo_broadcast "==> sysctl: vm.min_free_kbytes=[${value_min_free_kbytes}]"
+		echo_broadcast "==> sysctl: setting: [sysctl -w vm.min_free_kbytes=16384]"
+		sysctl -w vm.min_free_kbytes=16384
+		generate_line 40
+	fi
 
 	echo_broadcast "==> Determining root drive"
 	find_root_drive
@@ -812,15 +818,26 @@ _format_boot() {
   flush_cache
 }
 
-_format_root() {
-  empty_line
-  echo_broadcast "==> Formatting rootfs with mkfs.ext4 ${ext4_options} ${rootfs_partition} -L ${rootfs_label}"
-  generate_line 80
-  empty_line
-  LC_ALL=C mkfs.ext4 ${ext4_options} ${rootfs_partition} -L ${rootfs_label}
-  generate_line 80
-  echo_broadcast "==> Formatting rootfs: ${rootfs_partition} complete"
-  flush_cache
+_format_root_ext4() {
+	empty_line
+	echo_broadcast "==> Formatting rootfs with mkfs.ext4 ${ext4_options} ${rootfs_partition} -L ${rootfs_label}"
+	generate_line 80
+	empty_line
+	LC_ALL=C mkfs.ext4 ${ext4_options} ${rootfs_partition} -L ${rootfs_label}
+	generate_line 80
+	echo_broadcast "==> Formatting rootfs: ${rootfs_partition} complete"
+	flush_cache
+}
+
+_format_root_btrfs() {
+	empty_line
+	echo_broadcast "==> Formatting rootfs with mkfs.btrfs ${rootfs_partition} -L ${rootfs_label}"
+	generate_line 80
+	empty_line
+	LC_ALL=C mkfs.btrfs ${rootfs_partition} -L ${rootfs_label}
+	generate_line 80
+	echo_broadcast "==> Formatting rootfs: ${rootfs_partition} complete"
+	flush_cache
 }
 
 _copy_boot() {
@@ -937,9 +954,19 @@ _generate_fstab() {
 	#UUID support for 3.8.x kernel
 	if [ -d /sys/devices/bone_capemgr.*/ ] ; then
 		root_fs_id=$(get_fstab_id_for_device ${rootfs_partition})
-		echo "${root_fs_id}  /  ext4  noatime,errors=remount-ro  0  1" >> ${tmp_rootfs_dir}/etc/fstab
+		if [ "x${boot_fstype}" = "xbtrfs" ] ; then
+			echo "${root_fs_id}  /  btrfs  defaults,noatime  0  1" >> ${tmp_rootfs_dir}/etc/fstab
+			echo "mmcrootfstype=btrfs rootwait" >> ${tmp_rootfs_dir}/boot/uEnv.txt
+		else
+			echo "${root_fs_id}  /  ext4  noatime,errors=remount-ro  0  1" >> ${tmp_rootfs_dir}/etc/fstab
+		fi
 	else
-		echo "${rootfs_partition}  /  ext4  noatime,errors=remount-ro  0  1" >> ${tmp_rootfs_dir}/etc/fstab
+		if [ "x${boot_fstype}" = "xbtrfs" ] ; then
+			echo "${rootfs_partition}  /  btrfs  defaults,noatime  0  1" >> ${tmp_rootfs_dir}/etc/fstab
+			echo "mmcrootfstype=btrfs rootwait" >> ${tmp_rootfs_dir}/boot/uEnv.txt
+		else
+			echo "${rootfs_partition}  /  ext4  noatime,errors=remount-ro  0  1" >> ${tmp_rootfs_dir}/etc/fstab
+		fi
 	fi
 
 	echo "debugfs  /sys/kernel/debug  debugfs  defaults  0  0" >> ${tmp_rootfs_dir}/etc/fstab
@@ -981,12 +1008,16 @@ _copy_rootfs() {
   generate_line 80 '='
   echo_broadcast "Final System Tweaks:"
   generate_line 40
-  if [ -d ${tmp_rootfs_dir}/etc/ssh/ ] ; then
-    echo_broadcast "==> Applying SSH Key Regeneration trick"
-    #ssh keys will now get regenerated on the next bootup
-    touch ${tmp_rootfs_dir}/etc/ssh/ssh.regenerate
-    flush_cache
-  fi
+
+	#disable_ssh_regeneration sourced from SOC.sh
+	if [ ! "x${disable_ssh_regeneration}" = "xtrue" ] ; then
+		if [ -d ${tmp_rootfs_dir}/etc/ssh/ ] ; then
+			echo_broadcast "==> Applying SSH Key Regeneration trick"
+			#ssh keys will now get regenerated on the next bootup
+			touch ${tmp_rootfs_dir}/etc/ssh/ssh.regenerate
+			flush_cache
+		fi
+	fi
 
   _generate_uEnv ${tmp_rootfs_dir}/boot/uEnv.txt
 
@@ -1321,18 +1352,22 @@ _teardown_future_boot() {
 }
 
 _prepare_future_rootfs() {
-  empty_line
-  generate_line 80 '='
-  echo_broadcast "Preparing future rootfs to receive files"
-  generate_line 40
-  _format_root
-  tmp_rootfs_dir=${tmp_rootfs_dir:-"/tmp/rootfs"}
-  echo_broadcast "==> Creating temporary rootfs directory (${tmp_rootfs_dir})"
-  mkdir -p ${tmp_rootfs_dir} || true
-  echo_broadcast "==> Mounting ${rootfs_partition} to ${tmp_rootfs_dir}"
-  mount ${rootfs_partition} ${tmp_rootfs_dir} -o async,noatime
-  empty_line
-  generate_line 80 '='
+	empty_line
+	generate_line 80 '='
+	echo_broadcast "Preparing future rootfs to receive files"
+	generate_line 40
+	if [ "x${boot_fstype}" = "xbtrfs" ] ; then
+		_format_root_btrfs
+	else
+		_format_root_ext4
+	fi
+	tmp_rootfs_dir=${tmp_rootfs_dir:-"/tmp/rootfs"}
+	echo_broadcast "==> Creating temporary rootfs directory (${tmp_rootfs_dir})"
+	mkdir -p ${tmp_rootfs_dir} || true
+	echo_broadcast "==> Mounting ${rootfs_partition} to ${tmp_rootfs_dir}"
+	mount ${rootfs_partition} ${tmp_rootfs_dir} -o async,noatime
+	empty_line
+	generate_line 80 '='
 }
 
 _teardown_future_rootfs() {
