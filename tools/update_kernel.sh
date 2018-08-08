@@ -678,6 +678,9 @@ third_party () {
 			;;
 		LTS414)
 			install_pkg=""
+			if [ "x${ticmem}" = "xenabled" ] ; then
+				install_pkg="${install_pkg}ti-cmem-modules-${latest_kernel} "
+			fi
 			if [ "x${tidebugss}" = "xenabled" ] ; then
 				install_pkg="${install_pkg}ti-debugss-modules-${latest_kernel} "
 			fi
