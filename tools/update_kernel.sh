@@ -681,12 +681,6 @@ third_party () {
 			if [ "x${ticmem}" = "xenabled" ] ; then
 				install_pkg="${install_pkg}ti-cmem-modules-${latest_kernel} "
 			fi
-			if [ "x${tidebugss}" = "xenabled" ] ; then
-				install_pkg="${install_pkg}ti-debugss-modules-${latest_kernel} "
-			fi
-			if [ "x${titemperature}" = "xenabled" ] ; then
-				install_pkg="${install_pkg}ti-temperature-modules-${latest_kernel} "
-			fi
 			if [ "x${sgxti335x}" = "xenabled" ] ; then
 				install_pkg="${install_pkg}ti-sgx-ti335x-modules-${latest_kernel} "
 			fi
