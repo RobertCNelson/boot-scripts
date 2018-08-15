@@ -554,6 +554,10 @@ third_party () {
 				${apt_bin} ${apt_options} ti-sgx-es8-modules-${latest_kernel} || true
 				run_depmod_initramfs="enabled"
 			fi
+			if [ "x${rtl8723bu}" = "xenabled" ] ; then
+				${apt_bin} ${apt_options} rtl8723bu-modules-${latest_kernel} || true
+				run_depmod_initramfs="enabled"
+			fi
 			;;
 		esac
 		;;
@@ -566,12 +570,6 @@ third_party () {
 			fi
 			if [ "x${ticmem}" = "xenabled" ] ; then
 				install_pkg="${install_pkg}ti-cmem-modules-${latest_kernel} "
-			fi
-			if [ "x${tidebugss}" = "xenabled" ] ; then
-				install_pkg="${install_pkg}ti-debugss-modules-${latest_kernel} "
-			fi
-			if [ "x${titemperature}" = "xenabled" ] ; then
-				install_pkg="${install_pkg}ti-temperature-modules-${latest_kernel} "
 			fi
 			if [ "x${sgxti335x}" = "xenabled" ] ; then
 				install_pkg="${install_pkg}ti-sgx-ti335x-modules-${latest_kernel} "
@@ -589,12 +587,6 @@ third_party () {
 			if [ "x${ticmem}" = "xenabled" ] ; then
 				install_pkg="${install_pkg}ti-cmem-modules-${latest_kernel} "
 			fi
-			if [ "x${tidebugss}" = "xenabled" ] ; then
-				install_pkg="${install_pkg}ti-debugss-modules-${latest_kernel} "
-			fi
-			if [ "x${titemperature}" = "xenabled" ] ; then
-				install_pkg="${install_pkg}ti-temperature-modules-${latest_kernel} "
-			fi
 			if [ "x${sgxti335x}" = "xenabled" ] ; then
 				install_pkg="${install_pkg}ti-sgx-ti335x-modules-${latest_kernel} "
 			fi
@@ -608,12 +600,6 @@ third_party () {
 			;;
 		LTS414)
 			install_pkg=""
-			if [ "x${tidebugss}" = "xenabled" ] ; then
-				install_pkg="${install_pkg}ti-debugss-modules-${latest_kernel} "
-			fi
-			if [ "x${titemperature}" = "xenabled" ] ; then
-				install_pkg="${install_pkg}ti-temperature-modules-${latest_kernel} "
-			fi
 			if [ "x${sgxti335x}" = "xenabled" ] ; then
 				install_pkg="${install_pkg}ti-sgx-ti335x-modules-${latest_kernel} "
 			fi
@@ -637,12 +623,6 @@ third_party () {
 			if [ "x${ticmem}" = "xenabled" ] ; then
 				install_pkg="${install_pkg}ti-cmem-modules-${latest_kernel} "
 			fi
-			if [ "x${tidebugss}" = "xenabled" ] ; then
-				install_pkg="${install_pkg}ti-debugss-modules-${latest_kernel} "
-			fi
-			if [ "x${titemperature}" = "xenabled" ] ; then
-				install_pkg="${install_pkg}ti-temperature-modules-${latest_kernel} "
-			fi
 			if [ "x${sgxti335x}" = "xenabled" ] ; then
 				install_pkg="${install_pkg}ti-sgx-ti335x-modules-${latest_kernel} "
 			fi
@@ -656,14 +636,11 @@ third_party () {
 			;;
 		LTS49)
 			install_pkg=""
+			if [ "x${rtl8723bu}" = "xenabled" ] ; then
+				install_pkg="${install_pkg}rtl8723bu-modules-${latest_kernel} "
+			fi
 			if [ "x${ticmem}" = "xenabled" ] ; then
 				install_pkg="${install_pkg}ti-cmem-modules-${latest_kernel} "
-			fi
-			if [ "x${tidebugss}" = "xenabled" ] ; then
-				install_pkg="${install_pkg}ti-debugss-modules-${latest_kernel} "
-			fi
-			if [ "x${titemperature}" = "xenabled" ] ; then
-				install_pkg="${install_pkg}ti-temperature-modules-${latest_kernel} "
 			fi
 			if [ "x${sgxti335x}" = "xenabled" ] ; then
 				install_pkg="${install_pkg}ti-sgx-ti335x-modules-${latest_kernel} "
@@ -678,6 +655,9 @@ third_party () {
 			;;
 		LTS414)
 			install_pkg=""
+			if [ "x${rtl8723bu}" = "xenabled" ] ; then
+				install_pkg="${install_pkg}rtl8723bu-modules-${latest_kernel} "
+			fi
 			if [ "x${ticmem}" = "xenabled" ] ; then
 				install_pkg="${install_pkg}ti-cmem-modules-${latest_kernel} "
 			fi
