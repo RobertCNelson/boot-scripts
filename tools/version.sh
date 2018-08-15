@@ -64,7 +64,21 @@ if [ -f /sys/bus/i2c/devices/0-0050/eeprom ] ; then
 	echo "eeprom:[${board_eeprom}]"
 fi
 
-echo "model:[`cat /proc/device-tree/model | sed "s/ /_/g" | tr -d '\000'`]"
+device_model=$(cat /proc/device-tree/model | sed "s/ /_/g" | tr -d '\000')
+
+case "${device_model}" in
+SanCloud_BeagleBone_Enhanced)
+	wifi_8723bu_driver=$(lsmod | grep 8723bu | grep -v cfg | awk '{print $1}' || true)
+	if [ "x${wifi_8723bu_driver}" != "x" ] ; then
+		echo "model:[${device_model}]:WiFi AP Enabled:[https://github.com/lwfinger/rtl8723bu]"
+	else
+		echo "model:[${device_model}]:WiFi AP Broken on Mainline"
+	fi
+	;;
+*)
+	echo "model:[${device_model}]"
+	;;
+esac
 
 if [ -f /etc/dogtag ] ; then
 	echo "dogtag:[`cat /etc/dogtag`]"
