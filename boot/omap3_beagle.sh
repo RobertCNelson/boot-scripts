@@ -43,6 +43,10 @@ if [ -f /var/run/udhcpd.pid ] ; then
 	/etc/init.d/udhcpd stop || true
 fi
 
+if [ ! -f /etc/systemd/system/getty.target.wants/serial-getty@ttyGS0.service ] ; then
+	ln -s /lib/systemd/system/serial-getty@.service /etc/systemd/system/getty.target.wants/serial-getty@ttyGS0.service
+fi
+
 use_libcomposite () {
 	echo "${log} modprobe libcomposite"
 	modprobe libcomposite || true
@@ -104,10 +108,6 @@ use_libcomposite () {
 }
 
 use_libcomposite
-
-if [ ! -f /etc/systemd/system/getty.target.wants/serial-getty@ttyGS0.service ] ; then
-	ln -s /lib/systemd/system/serial-getty@.service /etc/systemd/system/getty.target.wants/serial-getty@ttyGS0.service
-fi
 
 if [ -f /usr/bin/amixer ] ; then
 	echo "${log} Enabling Headset (Audio Out):"

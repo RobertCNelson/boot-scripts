@@ -225,6 +225,10 @@ if [ -f /var/run/udhcpd.pid ] ; then
 	/etc/init.d/udhcpd stop || true
 fi
 
+if [ ! -f /etc/systemd/system/getty.target.wants/serial-getty@ttyGS0.service ] ; then
+	ln -s /lib/systemd/system/serial-getty@.service /etc/systemd/system/getty.target.wants/serial-getty@ttyGS0.service
+fi
+
 run_libcomposite () {
 	if [ ! -d /sys/kernel/config/usb_gadget/g_multi/ ] ; then
 		echo "${log} Creating g_multi"
@@ -391,10 +395,6 @@ if [ "x${dnsmasq_usb0_usb1}" = "xenable" ] ; then
 			echo "${log} ERROR: dnsmasq is not installed"
 		fi
 	fi
-fi
-
-if [ ! -f /etc/systemd/system/getty.target.wants/serial-getty@ttyGS0.service ] ; then
-	ln -s /lib/systemd/system/serial-getty@.service /etc/systemd/system/getty.target.wants/serial-getty@ttyGS0.service
 fi
 
 if [ -f /usr/bin/amixer ] ; then
