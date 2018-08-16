@@ -781,9 +781,8 @@ if [ ! "x${USB_NETWORK_DISABLED}" = "xyes" ]; then
 	fi
 fi
 
-if [ -d /sys/class/tty/ttyGS0/ ] ; then
-	echo "${log} Starting serial-getty@ttyGS0.service"
-	systemctl start serial-getty@ttyGS0.service || true
+if [ ! -f /etc/systemd/system/getty.target.wants/serial-getty@ttyGS0.service ] ; then
+	ln -s /lib/systemd/system/serial-getty@.service /etc/systemd/system/getty.target.wants/serial-getty@ttyGS0.service
 fi
 
 #create_ap is now legacy, use connman...
