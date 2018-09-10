@@ -40,6 +40,9 @@ test_ti_kernel_version () {
 		x4.14x)
 			kernel="LTS414"
 			;;
+		x4.19x)
+			kernel="LTS419"
+			;;
 		esac
 	fi
 }
@@ -88,6 +91,9 @@ test_bone_rt_kernel_version () {
 		x4.14x)
 			kernel="LTS414"
 			;;
+		x4.19x)
+			kernel="LTS419"
+			;;
 		esac
 	fi
 }
@@ -109,6 +115,9 @@ test_bone_kernel_version () {
 			;;
 		x4.14x)
 			kernel="LTS414"
+			;;
+		x4.19x)
+			kernel="LTS419"
 			;;
 		*)
 			#aka STABLE, as 3.8.13 will always be considered STABLE
@@ -151,6 +160,9 @@ test_armv7_kernel_version () {
 			;;
 		x4.14x)
 			kernel="LTS414"
+			;;
+		x4.19x)
+			kernel="LTS419"
 			;;
 		*)
 			kernel="STABLE"
@@ -339,6 +351,7 @@ latest_version_repo () {
 			echo "LTS44: --lts-4_4"
 			echo "LTS49: --lts-4_9"
 			echo "LTS414: --lts-4_14"
+			echo "LTS419: --lts-4_19"
 			echo "STABLE: --stable"
 			echo "TESTING: --testing"
 			echo "-----------------------------"
@@ -760,6 +773,9 @@ while [ ! -z "$1" ] ; do
 		kernel="LTS49"
 		;;
 	--lts-4_14-kernel|--lts-4_14)
+		kernel="LTS414"
+		;;
+	--lts-4_19-kernel|--lts-4_19)
 		kernel="LTS414"
 		;;
 	--stable-kernel|--stable)
