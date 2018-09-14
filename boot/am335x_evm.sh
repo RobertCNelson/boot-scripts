@@ -136,21 +136,11 @@ TI_AM335x_BeagleBone_Green)
 	has_wifi="disable"
 	unset board_bbgw
 	unset board_sbbe
-	if [ -f /var/local/bbg_usb_mass_storage.iso ] ; then
-		usb_image_file="/var/local/bbg_usb_mass_storage.iso"
-	elif [ -f /var/local/bbg_usb_mass_storage.img ] ; then
-		usb_image_file="/var/local/bbg_usb_mass_storage.img"
-	fi
 	dnsmasq_usb0_usb1="enable"
 	;;
 TI_AM335x_BeagleBone_Green_Wireless)
 	board_bbgw="enable"
 	has_wifi="enable"
-	if [ -f /var/local/bbgw_usb_mass_storage.iso ] ; then
-		usb_image_file="/var/local/bbgw_usb_mass_storage.iso"
-	elif [ -f /var/local/bbgw_usb_mass_storage.img ] ; then
-		usb_image_file="/var/local/bbgw_usb_mass_storage.img"
-	fi
 	;;
 TI_AM335x_BeagleLogic_Standalone)
 	has_wifi="disable"
