@@ -789,6 +789,11 @@ fi
 #Just Cleanup /etc/issue, systemd starts up tty before these are updated...
 sed -i -e '/Address/d' /etc/issue || true
 
+check_getty_tty=$(systemctl is-active serial-getty@ttyGS0.service || true)
+if [ "x${check_getty_tty}" = "xinactive" ] ; then
+	systemctl restart serial-getty@ttyGS0.service || true
+fi
+
 #legacy support of: 2014-05-14 (now taken care by the init flasher)
 if [ "x${abi}" = "x" ] ; then
 	$(dirname $0)/legacy/write_emmc.sh || true
