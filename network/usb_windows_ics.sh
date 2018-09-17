@@ -6,6 +6,7 @@ if ! id | grep -q root; then
 	exit
 fi
 
+/sbin/dhclient usb0 || true
 /sbin/route add default gw 192.168.7.1 || true
 
 ping -c1 8.8.8.8
