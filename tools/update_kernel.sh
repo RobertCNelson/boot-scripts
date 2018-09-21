@@ -256,6 +256,7 @@ get_device () {
 	unset sgxti335x
 	unset sgxjacinto6evm
 	unset rtl8723bu
+	unset libpruio
 	unset ticmem
 	unset tidebugss
 	unset titemperature
@@ -263,22 +264,27 @@ get_device () {
 
 	case "${machine}" in
 	Arrow_BeagleBone_Black_Industrial)
+		libpruio="enabled"
 		es8="enabled"
 		sgxti335x="enabled"
 		;;
 	TI_AM335x_BeagleBone*)
+		libpruio="enabled"
 		es8="enabled"
 		sgxti335x="enabled"
 		;;
 	TI_AM335x_P*)
+		libpruio="enabled"
 		es8="enabled"
 		sgxti335x="enabled"
 		;;
 	Octavo_Systems_OSD3358*)
+		libpruio="enabled"
 		es8="enabled"
 		sgxti335x="enabled"
 		;;
 	SanCloud_BeagleBone_Enhanced)
+		libpruio="enabled"
 		es8="enabled"
 		sgxti335x="enabled"
 		rtl8723bu="enabled"
@@ -670,6 +676,9 @@ third_party () {
 			install_pkg=""
 			if [ "x${rtl8723bu}" = "xenabled" ] ; then
 				install_pkg="${install_pkg}rtl8723bu-modules-${latest_kernel} "
+			fi
+			if [ "x${libpruio}" = "xenabled" ] ; then
+				install_pkg="${install_pkg}libpruio-modules-${latest_kernel} "
 			fi
 			if [ "x${ticmem}" = "xenabled" ] ; then
 				install_pkg="${install_pkg}ti-cmem-modules-${latest_kernel} "
