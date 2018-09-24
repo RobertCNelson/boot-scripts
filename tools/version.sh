@@ -28,6 +28,17 @@ omap_bootloader () {
 					fi
 				fi
 			fi
+		else
+			if [ -b ${drive}p1 ] ; then
+				#U-Boot SPL 2014.04
+				unset test_var
+				test_var=$(dd if=${drive}p1 count=6 skip=284077 bs=1 2>/dev/null || true)
+				if [ "x${test_var}" = "xU-Boot" ] ; then
+					uboot=$(dd if=${drive}p1 count=32 skip=284077 bs=1 2>/dev/null || true)
+					uboot=$(echo ${uboot} | awk '{print $2}')
+					echo "bootloader:[${label}]:[${drive}]:[U-Boot ${uboot}]:[location: fatfs /boot/uboot/MLO]"
+				fi
+			fi
 		fi
 	fi
 }
