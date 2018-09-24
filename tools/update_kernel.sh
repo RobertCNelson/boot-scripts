@@ -573,6 +573,10 @@ third_party () {
 				${apt_bin} ${apt_options} ti-sgx-es8-modules-${latest_kernel} || true
 				run_depmod_initramfs="enabled"
 			fi
+			if [ "x${libpruio}" = "xenabled" ] ; then
+				${apt_bin} ${apt_options} libpruio-modules-${latest_kernel} || true
+				run_depmod_initramfs="enabled"
+			fi
 			if [ "x${rtl8723bu}" = "xenabled" ] ; then
 				${apt_bin} ${apt_options} rtl8723bu-modules-${latest_kernel} || true
 				run_depmod_initramfs="enabled"
