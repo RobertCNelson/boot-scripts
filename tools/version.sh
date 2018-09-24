@@ -34,8 +34,8 @@ omap_bootloader () {
 				unset test_var
 				test_var=$(dd if=${drive}p1 count=6 skip=284077 bs=1 2>/dev/null || true)
 				if [ "x${test_var}" = "xU-Boot" ] ; then
-					uboot=$(dd if=${drive}p1 count=32 skip=284077 bs=1 2>/dev/null || true)
-					uboot=$(echo ${uboot} | awk '{print $2}')
+					uboot=$(dd if=${drive}p1 count=34 skip=284077 bs=1 2>/dev/null || true)
+					uboot=$(echo ${uboot} | awk '{print $3}')
 					echo "bootloader:[${label}]:[${drive}]:[U-Boot ${uboot}]:[location: fatfs /boot/uboot/MLO]"
 				fi
 			fi
