@@ -533,16 +533,7 @@ specific_version_repo () {
 	fi
 }
 
-third_party_final () {
-	if [ "x${run_depmod_initramfs}" = "xenabled" ] ; then
-		depmod -a ${latest_kernel}
-		update-initramfs -uk ${latest_kernel}
-	fi
-}
-
 third_party () {
-	unset run_depmod_initramfs
-
 	apt_options="install -y"
 	if [ "x${flag_reinstall}" = xtrue ] ; then
 		apt_options="install -y --reinstall"
@@ -554,16 +545,13 @@ third_party () {
 		STABLE)
 			#3.8 only...
 			${apt_bin} ${apt_options} -o Dpkg::Options::="--force-overwrite" mt7601u-modules-${latest_kernel} || true
-			run_depmod_initramfs="enabled"
 			;;
 		LTS44)
 			if [ "x${es8}" = "xenabled" ] ; then
 				${apt_bin} ${apt_options} ti-sgx-es8-modules-${latest_kernel} || true
-				run_depmod_initramfs="enabled"
 			fi
 			if [ "x${rtl8723bu}" = "xenabled" ] ; then
 				${apt_bin} ${apt_options} rtl8723bu-modules-${latest_kernel} || true
-				run_depmod_initramfs="enabled"
 			fi
 			;;
 		LTS414)
@@ -571,15 +559,12 @@ third_party () {
 			#v4.15.x sgx modules are broken...
 			if [ "x${es8}" = "xenabled" ] ; then
 				${apt_bin} ${apt_options} ti-sgx-es8-modules-${latest_kernel} || true
-				run_depmod_initramfs="enabled"
 			fi
 			if [ "x${libpruio}" = "xenabled" ] ; then
 				${apt_bin} ${apt_options} libpruio-modules-${latest_kernel} || true
-				run_depmod_initramfs="enabled"
 			fi
 			if [ "x${rtl8723bu}" = "xenabled" ] ; then
 				${apt_bin} ${apt_options} rtl8723bu-modules-${latest_kernel} || true
-				run_depmod_initramfs="enabled"
 			fi
 			;;
 		esac
@@ -602,7 +587,6 @@ third_party () {
 			fi
 			if [ ! "x${install_pkg}" = "x" ] ; then
 				${apt_bin} ${apt_options} ${install_pkg}
-				run_depmod_initramfs="enabled"
 			fi
 			;;
 		LTS49)
@@ -618,7 +602,6 @@ third_party () {
 			fi
 			if [ ! "x${install_pkg}" = "x" ] ; then
 				${apt_bin} ${apt_options} ${install_pkg}
-				run_depmod_initramfs="enabled"
 			fi
 			;;
 		LTS414)
@@ -631,7 +614,6 @@ third_party () {
 			fi
 			if [ ! "x${install_pkg}" = "x" ] ; then
 				${apt_bin} ${apt_options} ${install_pkg}
-				run_depmod_initramfs="enabled"
 			fi
 			;;
 		esac
@@ -654,7 +636,6 @@ third_party () {
 			fi
 			if [ ! "x${install_pkg}" = "x" ] ; then
 				${apt_bin} ${apt_options} ${install_pkg}
-				run_depmod_initramfs="enabled"
 			fi
 			;;
 		LTS49)
@@ -673,7 +654,6 @@ third_party () {
 			fi
 			if [ ! "x${install_pkg}" = "x" ] ; then
 				${apt_bin} ${apt_options} ${install_pkg}
-				run_depmod_initramfs="enabled"
 			fi
 			;;
 		LTS414)
@@ -695,14 +675,14 @@ third_party () {
 			fi
 			if [ ! "x${install_pkg}" = "x" ] ; then
 				${apt_bin} ${apt_options} ${install_pkg}
-				run_depmod_initramfs="enabled"
 			fi
 			;;
 		esac
 		;;
 	esac
 
-	third_party_final
+	depmod -a ${latest_kernel}
+	update-initramfs -uk ${latest_kernel}
 }
 
 checkparm () {
@@ -719,6 +699,10 @@ wheezy|jessie)
 	apt_bin="apt-get"
 	;;
 stretch|buster|sid)
+	dist="${get_dist}"
+	apt_bin="apt"
+	;;
+bionic|cosmic)
 	dist="${get_dist}"
 	apt_bin="apt"
 	;;
