@@ -27,8 +27,8 @@
 version_message="1.20180214: u-boot v2018.01..."
 #
 #https://rcn-ee.com/repos/bootloader/am335x_evm/
-http_spl="MLO-am335x_evm-v2018.01-r13"
-http_uboot="u-boot-am335x_evm-v2018.01-r13.img"
+http_spl="MLO-am335x_evm-v2018.09-r7"
+http_uboot="u-boot-am335x_evm-v2018.09-r7.img"
 
 #mke2fs -c
 #Check the device for bad blocks before creating the file system.

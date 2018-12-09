@@ -10,8 +10,8 @@ emmcscript="cmdline=init=/opt/scripts/tools/eMMC/$(basename $0)"
 
 #This is just a backup-backup-backup for old images...
 #https://rcn-ee.com/repos/bootloader/am335x_evm/
-http_spl="MLO-am335x_evm-v2018.03-r8"
-http_uboot="u-boot-am335x_evm-v2018.03-r8.img"
+http_spl="MLO-am335x_evm-v2018.09-r7"
+http_uboot="u-boot-am335x_evm-v2018.09-r7.img"
 
 set -o errtrace
 
