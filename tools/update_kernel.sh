@@ -256,6 +256,7 @@ get_device () {
 	unset sgxti335x
 	unset sgxjacinto6evm
 	unset rtl8723bu
+	unset rtl8821cu
 	unset libpruio
 	unset ticmem
 	unset tidebugss
@@ -288,6 +289,7 @@ get_device () {
 		es8="enabled"
 		sgxti335x="enabled"
 		rtl8723bu="enabled"
+		rtl8821cu="enabled"
 		;;
 	TI_AM5728*)
 		sgxjacinto6evm="enabled"
@@ -572,48 +574,36 @@ third_party () {
 	ti-xenomai)
 		case "${kernel}" in
 		LTS44)
-			install_pkg=""
 			if [ "x${rtl8723bu}" = "xenabled" ] ; then
-				install_pkg="${install_pkg}rtl8723bu-modules-${latest_kernel} "
+				${apt_bin} ${apt_options} rtl8723bu-modules-${latest_kernel} || true
 			fi
 			if [ "x${ticmem}" = "xenabled" ] ; then
-				install_pkg="${install_pkg}ti-cmem-modules-${latest_kernel} "
+				${apt_bin} ${apt_options} ti-cmem-modules-${latest_kernel} || true
 			fi
 			if [ "x${sgxti335x}" = "xenabled" ] ; then
-				install_pkg="${install_pkg}ti-sgx-ti335x-modules-${latest_kernel} "
+				${apt_bin} ${apt_options} ti-sgx-ti335x-modules-${latest_kernel} || true
 			fi
 			if [ "x${sgxjacinto6evm}" = "xenabled" ] ; then
-				install_pkg="${install_pkg}ti-sgx-jacinto6evm-modules-${latest_kernel} "
-			fi
-			if [ ! "x${install_pkg}" = "x" ] ; then
-				${apt_bin} ${apt_options} ${install_pkg}
+				${apt_bin} ${apt_options} ti-sgx-jacinto6evm-modules-${latest_kernel} || true
 			fi
 			;;
 		LTS49)
-			install_pkg=""
 			if [ "x${ticmem}" = "xenabled" ] ; then
-				install_pkg="${install_pkg}ti-cmem-modules-${latest_kernel} "
+				${apt_bin} ${apt_options} ti-cmem-modules-${latest_kernel} || true
 			fi
 			if [ "x${sgxti335x}" = "xenabled" ] ; then
-				install_pkg="${install_pkg}ti-sgx-ti335x-modules-${latest_kernel} "
+				${apt_bin} ${apt_options} ti-sgx-ti335x-modules-${latest_kernel} || true
 			fi
 			if [ "x${sgxjacinto6evm}" = "xenabled" ] ; then
-				install_pkg="${install_pkg}ti-sgx-jacinto6evm-modules-${latest_kernel} "
-			fi
-			if [ ! "x${install_pkg}" = "x" ] ; then
-				${apt_bin} ${apt_options} ${install_pkg}
+				${apt_bin} ${apt_options} ti-sgx-jacinto6evm-modules-${latest_kernel} || true
 			fi
 			;;
 		LTS414)
-			install_pkg=""
 			if [ "x${sgxti335x}" = "xenabled" ] ; then
-				install_pkg="${install_pkg}ti-sgx-ti335x-modules-${latest_kernel} "
+				${apt_bin} ${apt_options} ti-sgx-ti335x-modules-${latest_kernel} || true
 			fi
 			if [ "x${sgxjacinto6evm}" = "xenabled" ] ; then
-				install_pkg="${install_pkg}ti-sgx-jacinto6evm-modules-${latest_kernel} "
-			fi
-			if [ ! "x${install_pkg}" = "x" ] ; then
-				${apt_bin} ${apt_options} ${install_pkg}
+				${apt_bin} ${apt_options} ti-sgx-jacinto6evm-modules-${latest_kernel} || true
 			fi
 			;;
 		esac
@@ -621,60 +611,48 @@ third_party () {
 	ti|ti-rt)
 		case "${kernel}" in
 		LTS44)
-			install_pkg=""
 			if [ "x${rtl8723bu}" = "xenabled" ] ; then
-				install_pkg="${install_pkg}rtl8723bu-modules-${latest_kernel} "
+				${apt_bin} ${apt_options} rtl8723bu-modules-${latest_kernel} || true
 			fi
 			if [ "x${ticmem}" = "xenabled" ] ; then
-				install_pkg="${install_pkg}ti-cmem-modules-${latest_kernel} "
+				${apt_bin} ${apt_options} ti-cmem-modules-${latest_kernel} || true
 			fi
 			if [ "x${sgxti335x}" = "xenabled" ] ; then
-				install_pkg="${install_pkg}ti-sgx-ti335x-modules-${latest_kernel} "
+				${apt_bin} ${apt_options} ti-sgx-ti335x-modules-${latest_kernel} || true
 			fi
 			if [ "x${sgxjacinto6evm}" = "xenabled" ] ; then
-				install_pkg="${install_pkg}ti-sgx-jacinto6evm-modules-${latest_kernel} "
-			fi
-			if [ ! "x${install_pkg}" = "x" ] ; then
-				${apt_bin} ${apt_options} ${install_pkg}
+				${apt_bin} ${apt_options} ti-sgx-jacinto6evm-modules-${latest_kernel} || true
 			fi
 			;;
 		LTS49)
-			install_pkg=""
 			if [ "x${rtl8723bu}" = "xenabled" ] ; then
-				install_pkg="${install_pkg}rtl8723bu-modules-${latest_kernel} "
+				${apt_bin} ${apt_options} rtl8723bu-modules-${latest_kernel} || true
 			fi
 			if [ "x${ticmem}" = "xenabled" ] ; then
-				install_pkg="${install_pkg}ti-cmem-modules-${latest_kernel} "
+				${apt_bin} ${apt_options} ti-cmem-modules-${latest_kernel} || true
 			fi
 			if [ "x${sgxti335x}" = "xenabled" ] ; then
-				install_pkg="${install_pkg}ti-sgx-ti335x-modules-${latest_kernel} "
+				${apt_bin} ${apt_options} ti-sgx-ti335x-modules-${latest_kernel} || true
 			fi
 			if [ "x${sgxjacinto6evm}" = "xenabled" ] ; then
-				install_pkg="${install_pkg}ti-sgx-jacinto6evm-modules-${latest_kernel} "
-			fi
-			if [ ! "x${install_pkg}" = "x" ] ; then
-				${apt_bin} ${apt_options} ${install_pkg}
+				${apt_bin} ${apt_options} ti-sgx-jacinto6evm-modules-${latest_kernel} || true
 			fi
 			;;
 		LTS414)
-			install_pkg=""
 			if [ "x${rtl8723bu}" = "xenabled" ] ; then
-				install_pkg="${install_pkg}rtl8723bu-modules-${latest_kernel} "
+				${apt_bin} ${apt_options} rtl8723bu-modules-${latest_kernel} || true
 			fi
 			if [ "x${libpruio}" = "xenabled" ] ; then
-				install_pkg="${install_pkg}libpruio-modules-${latest_kernel} "
+				${apt_bin} ${apt_options} libpruio-modules-${latest_kernel} || true
 			fi
 			if [ "x${ticmem}" = "xenabled" ] ; then
-				install_pkg="${install_pkg}ti-cmem-modules-${latest_kernel} "
+				${apt_bin} ${apt_options} ti-cmem-modules-${latest_kernel} || true
 			fi
 			if [ "x${sgxti335x}" = "xenabled" ] ; then
-				install_pkg="${install_pkg}ti-sgx-ti335x-modules-${latest_kernel} "
+				${apt_bin} ${apt_options} ti-sgx-ti335x-modules-${latest_kernel} || true
 			fi
 			if [ "x${sgxjacinto6evm}" = "xenabled" ] ; then
-				install_pkg="${install_pkg}ti-sgx-jacinto6evm-modules-${latest_kernel} "
-			fi
-			if [ ! "x${install_pkg}" = "x" ] ; then
-				${apt_bin} ${apt_options} ${install_pkg}
+				${apt_bin} ${apt_options} ti-sgx-jacinto6evm-modules-${latest_kernel} || true
 			fi
 			;;
 		esac
