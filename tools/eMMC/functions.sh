@@ -141,6 +141,12 @@ prepare_environment() {
 	echo_broadcast "==> Giving system time to stablize..."
 	countdown 5
 
+	# proc may not be mounted at boot; 'cpuinfo' will always be in proc
+	if ! [ -e /proc/cpuinfo ]; then
+		echo_broadcast "==> mounting /proc"
+		mount -t proc -o rw,nosuid,nodev,noexec,relatime proc /proc
+	fi
+
 	echo_broadcast "==> Preparing /tmp"
 	mount -t tmpfs tmpfs /tmp
 
