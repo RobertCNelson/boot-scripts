@@ -146,6 +146,11 @@ prepare_environment() {
 		echo_broadcast "==> mounting /proc"
 		mount -t proc -o rw,nosuid,nodev,noexec,relatime proc /proc
 	fi
+	# sysfs may not be mounted either
+	if ! [ -d /sys/kernel ]; then
+		echo_broadcast "==> mounting /proc"
+		mount -t sysfs -o rw,nosuid,nodev,noexec,relatime sysfs /sys
+	fi
 
 	echo_broadcast "==> Preparing /tmp"
 	mount -t tmpfs tmpfs /tmp
