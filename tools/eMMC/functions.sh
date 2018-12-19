@@ -475,21 +475,21 @@ do_we_have_eeprom() {
   unset got_eeprom
 
   #v8 of nvmem...
-  if [ -f /sys/bus/nvmem/devices/at24-0/nvmem ] && [ "x${got_eeprom}" = "x" ] ; then
+  if [ -f /sys/bus/nvmem/devices/at24-0/nvmem ] && [ ! $got_eeprom ] ; then
     eeprom="/sys/bus/nvmem/devices/at24-0/nvmem"
     eeprom_location="/sys/devices/platform/ocp/44e0b000.i2c/i2c-0/0-0050/at24-0/nvmem"
     got_eeprom="true"
   fi
 
   #pre-v8 of nvmem...
-  if [ -f /sys/class/nvmem/at24-0/nvmem ] && [ "x${got_eeprom}" = "x" ] ; then
+  if [ -f /sys/class/nvmem/at24-0/nvmem ] && [ ! $got_eeprom ] ; then
     eeprom="/sys/class/nvmem/at24-0/nvmem"
     eeprom_location="/sys/devices/platform/ocp/44e0b000.i2c/i2c-0/0-0050/nvmem/at24-0/nvmem"
     got_eeprom="true"
   fi
 
   #eeprom 3.8.x & 4.4 with eeprom-nvmem patchset...
-  if [ -f /sys/bus/i2c/devices/0-0050/eeprom ] && [ "x${got_eeprom}" = "x" ] ; then
+  if [ -f /sys/bus/i2c/devices/0-0050/eeprom ] && [ ! $got_eeprom ] ; then
     eeprom="/sys/bus/i2c/devices/0-0050/eeprom"
 
     if [ -f /sys/devices/platform/ocp/44e0b000.i2c/i2c-0/0-0050/eeprom ] ; then
@@ -522,7 +522,7 @@ check_am335x_eeprom() {
       else
         echo_broadcast "==> Invalid EEPROM header detected"
         if [ -f /opt/scripts/device/bone/${device_eeprom}.dump ] ; then
-          if [ ! "x${eeprom_location}" = "x" ] ; then
+          if [ $eeprom_location ] ; then
             echo_broadcast "===> Writing header to EEPROM"
             dd if=/opt/scripts/device/bone/${device_eeprom}.dump of=${eeprom_location}
             sync
@@ -552,7 +552,7 @@ check_eeprom() {
 
 do_we_have_am57xx_eeprom() {
   unset got_eeprom
-  if [ -f /sys/bus/i2c/devices/0-0050/eeprom ] && [ "x${got_eeprom}" = "x" ] ; then
+  if [ -f /sys/bus/i2c/devices/0-0050/eeprom ] && [ ! $got_eeprom ] ; then
     eeprom="/sys/bus/i2c/devices/0-0050/eeprom"
 
     if [ -f /sys/devices/platform/44000000.ocp/48070000.i2c/i2c-0/0-0050/eeprom ] ; then
@@ -578,7 +578,7 @@ check_am57xx_eeprom() {
     else
       echo_broadcast "==> Invalid EEPROM header detected"
       if [ -f /opt/scripts/device/${device_eeprom}.dump ] ; then
-        if [ ! "x${eeprom_location}" = "x" ] ; then
+        if [ $eeprom_location ] ; then
           echo_broadcast "===> Writing header to EEPROM"
           dd if=/opt/scripts/device/${device_eeprom}.dump of=${eeprom_location}
           sync
@@ -764,19 +764,19 @@ cylon_leds() {
 _build_uboot_spl_dd_options() {
   echo_broadcast "==> Figuring out options for SPL U-Boot copy ..."
   unset dd_spl_uboot
-  if [ ! "x${dd_spl_uboot_count}" = "x" ] ; then
+  if [ $dd_spl_uboot_count ] ; then
     dd_spl_uboot="${dd_spl_uboot}count=${dd_spl_uboot_count} "
   fi
 
-  if [ ! "x${dd_spl_uboot_seek}" = "x" ] ; then
+  if [ $dd_spl_uboot_seek ] ; then
     dd_spl_uboot="${dd_spl_uboot}seek=${dd_spl_uboot_seek} "
   fi
 
-  if [ ! "x${dd_spl_uboot_conf}" = "x" ] ; then
+  if [ $dd_spl_uboot_conf ] ; then
     dd_spl_uboot="${dd_spl_uboot}conv=${dd_spl_uboot_conf} "
   fi
 
-  if [ ! "x${dd_spl_uboot_bs}" = "x" ] ; then
+  if [ $dd_spl_uboot_bs ] ; then
     dd_spl_uboot="${dd_spl_uboot}bs=${dd_spl_uboot_bs}"
   fi
   echo_broadcast "===> Will use : $dd_spl_uboot"
@@ -785,19 +785,19 @@ _build_uboot_spl_dd_options() {
 _build_uboot_dd_options() {
   echo_broadcast "==> Figuring out options for U-Boot copy ..."
   unset dd_uboot
-  if [ ! "x${dd_uboot_count}" = "x" ] ; then
+  if [ $dd_uboot_count ] ; then
     dd_uboot="${dd_uboot}count=${dd_uboot_count} "
   fi
 
-  if [ ! "x${dd_uboot_seek}" = "x" ] ; then
+  if [ $dd_uboot_seek ] ; then
     dd_uboot="${dd_uboot}seek=${dd_uboot_seek} "
   fi
 
-  if [ ! "x${dd_uboot_conf}" = "x" ] ; then
+  if [ $dd_uboot_conf ] ; then
     dd_uboot="${dd_uboot}conv=${dd_uboot_conf} "
   fi
 
-  if [ ! "x${dd_uboot_bs}" = "x" ] ; then
+  if [ $dd_uboot_bs ] ; then
     dd_uboot="${dd_uboot}bs=${dd_uboot_bs}"
   fi
   echo_broadcast "===> Will use : $dd_uboot"
@@ -1139,7 +1139,7 @@ loading_soc_defaults() {
 			generate_line 60 '*'
 			. ${soc_file}
 			echo_broadcast "==> Loaded"
-			if [ "x${dd_spl_uboot_backup}" = "x" ] ; then
+			if [ ! $dd_spl_uboot_backup ] ; then
 				echo_broadcast "==> ${soc_file} missing dd SPL"
 				spl_uboot_name="MLO"
 				dd_spl_uboot_count="1"
@@ -1162,7 +1162,7 @@ loading_soc_defaults() {
 				wget --directory-prefix=/opt/backup/uboot/ http://rcn-ee.com/repos/bootloader/am335x_evm/${http_spl}
 				mv /opt/backup/uboot/${http_spl} /opt/backup/uboot/MLO
 			fi
-			if [ "x${dd_uboot_backup}" = "x" ] ; then
+			if [ ! $dd_uboot_backup ] ; then
 				echo_broadcast "==> ${soc_file} missing dd u-boot.img"
 				uboot_name="u-boot.img"
 				dd_uboot_count="2"
@@ -1208,7 +1208,7 @@ get_ext4_options(){
   unset test_mkfs
   LC_ALL=C mkfs.ext4 -V &> /tmp/mkfs
   test_mkfs=$(cat /tmp/mkfs | grep mke2fs | grep 1.43 || true)
-  if [ "x${test_mkfs}" = "x" ] ; then
+  if [ ! $test_mkfs ] ; then
     ext4_options="${mkfs_options}"
   else
     ext4_options="${mkfs_options} -O ^metadata_csum,^64bit"
@@ -1220,7 +1220,7 @@ get_rsync_options(){
   unset test_rsync
   rsync --version &> /tmp/rsync_ver
   test_rsync=$(cat /tmp/rsync_ver | grep version | grep 3.0 || true)
-  if [ "x${test_rsync}" = "x" ] ; then
+  if [ ! $test_rsync ] ; then
     rsync_options="--human-readable --info=name0,progress2"
   else
     rsync_options=""
@@ -1261,7 +1261,7 @@ partition_device() {
     sfdisk_rootfs_startmb=$(($sfdisk_boot_startmb + $sfdisk_boot_size_mb))
 
     test_sfdisk=$(LC_ALL=C sfdisk --help | grep -m 1 -e "--in-order" || true)
-    if [ "x${test_sfdisk}" = "x" ] ; then
+    if [ ! $test_sfdisk ] ; then
       echo_broadcast "sfdisk: [2.26.x or greater]"
       sfdisk_options="--force"
       sfdisk_boot_startmb="${sfdisk_boot_startmb}M"
@@ -1305,7 +1305,7 @@ __EOF__
     sfdisk_boot_startmb="${conf_boot_startmb}"
 
     test_sfdisk=$(LC_ALL=C sfdisk --help | grep -m 1 -e "--in-order" || true)
-    if [ "x${test_sfdisk}" = "x" ] ; then
+    if [ ! $test_sfdisk ] ; then
       echo_broadcast "sfdisk: [2.26.x or greater]"
       if [ "x${bootrom_gpt}" = "xenable" ] ; then
         sfdisk_options="--force --label gpt"
