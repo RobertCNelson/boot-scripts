@@ -342,8 +342,9 @@ find_root_drive(){
 		generate_line 40
 
 		# cmdline may have 'root=UUID=[hex]' or 'root=/dev/[device]'
-		root_drive=$(echo "$cmdline" | sed -nE 's/.*root=(\S+).*/\1/p')
-		if echo "$root_drive" | grep -q "UUID"; then
+		root_drive=$(echo "$cmdline" \
+			| sed -nE 's/.*root=(UUID=)?(\S+).*/\2/p')
+		if ! echo "$root_drive" | grep -q "/dev"; then
 			root_drive=$(/sbin/findfs $root_drive || true)
 		fi
 
