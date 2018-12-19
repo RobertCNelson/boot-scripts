@@ -325,8 +325,8 @@ end_script() {
 
     flush_cache
     unset are_we_flasher
-    are_we_flasher=$(grep init-eMMC-flasher /proc/cmdline || true)
-    if [ ! "x${are_we_flasher}" = "x" ] ; then
+    if grep -q init-eMMC-flasher /proc/cmdline; then are_we_flasher="true"; fi
+    if [ $are_we_flasher ]; then
       echo_broadcast "We are init"
       #When run as init
       exec /sbin/init
@@ -473,6 +473,7 @@ write_failure() {
 
 do_we_have_eeprom() {
   unset got_eeprom
+
   #v8 of nvmem...
   if [ -f /sys/bus/nvmem/devices/at24-0/nvmem ] && [ "x${got_eeprom}" = "x" ] ; then
     eeprom="/sys/bus/nvmem/devices/at24-0/nvmem"
@@ -1227,8 +1228,8 @@ get_rsync_options(){
 
   #Speed up production flashing, drop rsync progress...
   unset are_we_flasher
-  are_we_flasher=$(grep init-eMMC-flasher /proc/cmdline || true)
-  if [ ! "x${are_we_flasher}" = "x" ] ; then
+  if grep -q init-eMMC-flasher /proc/cmdline; then are_we_flasher="true"; fi
+  if [ $are_we_flasher ]; then
     rsync_options=""
   fi
 }
