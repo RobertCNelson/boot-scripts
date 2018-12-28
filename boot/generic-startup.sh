@@ -40,11 +40,13 @@ if [ -f /etc/ssh/ssh.regenerate ] ; then
 fi
 
 if [ -f /boot/efi/EFI/efi.gen ] ; then
-	echo "grub-install --efi-directory=/boot/efi/ --target=arm-efi --no-nvram"
-	grub-install --efi-directory=/boot/efi/ --target=arm-efi --no-nvram
-	echo "update-grub"
-	update-grub
-	sync
+	if [ -f /usr/sbin/grub-install ] ; then
+		echo "grub-install --efi-directory=/boot/efi/ --target=arm-efi --no-nvram"
+		grub-install --efi-directory=/boot/efi/ --target=arm-efi --no-nvram
+		echo "update-grub"
+		update-grub
+		sync
+	fi
 	rm -rf /boot/efi/EFI/efi.gen || true
 	sync
 fi
