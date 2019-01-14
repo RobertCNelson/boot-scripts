@@ -372,6 +372,7 @@ get_device () {
 }
 
 got_board () {
+	is_spl_uboot
 	case "${conf_board}" in
 	am335x_boneblack|am335x_evm|beagle_x15|omap5_uevm)
 		is_omap
@@ -390,7 +391,6 @@ got_board () {
 		dd_uboot_boot
 		;;
 	dd_spl_uboot_boot)
-		is_spl_uboot
 		dl_bootloader
 		dd_spl_uboot_boot
 		;;
