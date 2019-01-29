@@ -3,6 +3,17 @@
 base="/sys/class/thermal"
 
 echo -e "--------------------------------------------------------"
+echo -e "|Thermal zone\t\t|temp\t\t|mode\t|"
+echo -e "--------------------------------------------------------"
+for i in `seq 0 5`
+do
+	type=$(cat ${base}/thermal_zone$i/type)
+	temp=$(cat ${base}/thermal_zone$i/temp)
+	mode=$(cat ${base}/thermal_zone$i/mode)
+
+	echo -e "|${type}\t\t|${temp}\t\t|${mode}\t|"
+done
+echo -e "---------------------------------------------------------"
 echo -e "|Cooling type\t\t|cur_state\t|max_state\t|"
 echo -e "--------------------------------------------------------"
 for i in `seq 0 2`
