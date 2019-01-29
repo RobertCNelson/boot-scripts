@@ -25,26 +25,32 @@ do
 
 	if [ -f ${base}/thermal_zone$i/trip_point_0_temp ] ; then
 		trip_point_0_temp=$(cat ${base}/thermal_zone$i/trip_point_0_temp)
+		trip_point_0_type=$(cat ${base}/thermal_zone$i/trip_point_0_type)
 	else
-		trip_point_0_temp="\t"
+		trip_point_0_temp=""
+		trip_point_0_type=""
 	fi
 
 	if [ -f ${base}/thermal_zone$i/trip_point_1_temp ] ; then
 		trip_point_1_temp=$(cat ${base}/thermal_zone$i/trip_point_1_temp)
+		trip_point_1_type=$(cat ${base}/thermal_zone$i/trip_point_1_type)
 	else
-		trip_point_1_temp="\t"
+		trip_point_1_temp=""
+		trip_point_1_type=""
 	fi
 
 	if [ -f ${base}/thermal_zone$i/trip_point_2_temp ] ; then
 		trip_point_2_temp=$(cat ${base}/thermal_zone$i/trip_point_2_temp)
+		trip_point_2_type=$(cat ${base}/thermal_zone$i/trip_point_2_type)
 	else
-		trip_point_2_temp="\t"
+		trip_point_2_temp=""
+		trip_point_2_type=""
 	fi
 
 	if [ "x${cdev1_type}" = "xthermal-cpufreq-0" ] ; then
-		echo -e "|${type}\t\t|${temp}\t|${mode}\t|${cdev0_type}\t|${cdev1_type}\t|${trip_point_0_temp}|${trip_point_1_temp}|${trip_point_2_temp}"
+		echo -e "|${type}\t\t|${temp}\t|${mode}\t|${cdev0_type}\t|${cdev1_type}\t|${trip_point_0_type}:${trip_point_0_temp}|${trip_point_1_type}:${trip_point_1_temp}|${trip_point_2_type}:${trip_point_2_temp}|"
 	else
-		echo -e "|${type}\t\t|${temp}\t|${mode}\t|${cdev0_type}\t|${cdev1_type}\t\t|${trip_point_0_temp}|${trip_point_1_temp}|${trip_point_2_temp}"
+		echo -e "|${type}\t\t|${temp}\t|${mode}\t|${cdev0_type}\t|${cdev1_type}\t\t|${trip_point_0_type}:${trip_point_0_temp}|${trip_point_1_type}:${trip_point_1_temp}|${trip_point_2_type}:${trip_point_2_temp}|"
 	fi
 done
 echo -e "------------------------------------------------------------------------"
