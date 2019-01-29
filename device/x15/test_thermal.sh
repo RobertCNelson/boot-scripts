@@ -2,9 +2,9 @@
 
 base="/sys/class/thermal"
 
-echo -e "------------------------------------------------------------------"
-echo -e "|Thermal zone\t\t|temp\t\t|mode\t\t|cdev0_type\t|cdev1_type\t|"
-echo -e "------------------------------------------------------------------"
+echo -e "------------------------------------------------------------------------"
+echo -e "|Thermal zone\t\t|temp\t\t|mode\t\t|cdev0_type\t|cdev1_type\t\t|"
+echo -e "------------------------------------------------------------------------"
 for i in `seq 0 5`
 do
 	type=$(cat ${base}/thermal_zone$i/type)
@@ -23,15 +23,33 @@ do
 		cdev1_type="\t"
 	fi
 
-	if [ "x${cdev1_type}" = "xthermal-cpufreq-0" ] ; then
-		echo -e "|${type}\t\t|${temp}\t\t|${mode}\t|${cdev0_type}\t|${cdev1_type}\t|"
+	if [ -f ${base}/thermal_zone$i/trip_point_0_temp ] ; then
+		trip_point_0_temp=$(cat ${base}/thermal_zone$i/trip_point_0_temp)
 	else
-		echo -e "|${type}\t\t|${temp}\t\t|${mode}\t|${cdev0_type}\t|${cdev1_type}\t\t|"
+		trip_point_0_temp="\t"
+	fi
+
+	if [ -f ${base}/thermal_zone$i/trip_point_1_temp ] ; then
+		trip_point_1_temp=$(cat ${base}/thermal_zone$i/trip_point_1_temp)
+	else
+		trip_point_1_temp="\t"
+	fi
+
+	if [ -f ${base}/thermal_zone$i/trip_point_2_temp ] ; then
+		trip_point_2_temp=$(cat ${base}/thermal_zone$i/trip_point_2_temp)
+	else
+		trip_point_2_temp="\t"
+	fi
+
+	if [ "x${cdev1_type}" = "xthermal-cpufreq-0" ] ; then
+		echo -e "|${type}\t\t|${temp}\t\t|${mode}\t|${cdev0_type}\t|${cdev1_type}\t|${trip_point_0_temp}|${trip_point_1_temp}|${trip_point_2_temp}"
+	else
+		echo -e "|${type}\t\t|${temp}\t\t|${mode}\t|${cdev0_type}\t|${cdev1_type}\t\t|${trip_point_0_temp}|${trip_point_1_temp}|${trip_point_2_temp}"
 	fi
 done
-echo -e "-------------------------------------------------------------------"
+echo -e "------------------------------------------------------------------------"
 echo -e "|Cooling type\t\t|cur_state\t|max_state\t|"
-echo -e "-------------------------------------------------------------------"
+echo -e "------------------------------------------------------------------------"
 for i in `seq 0 2`
 do
 	type=$(cat ${base}/cooling_device$i/type)
@@ -44,5 +62,5 @@ do
 		echo -e "|${type}\t\t|${cur_state}\t\t|${max_state}\t\t|"
 	fi
 done
-echo -e "-------------------------------------------------------------------"
+echo -e "------------------------------------------------------------------------"
 
