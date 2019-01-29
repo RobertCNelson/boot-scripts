@@ -2,9 +2,9 @@
 
 base="/sys/class/thermal"
 
-echo -e "-------------------------------------------------------------"
+echo -e "------------------------------------------------------------------"
 echo -e "|Thermal zone\t\t|temp\t\t|mode\t\t|cdev0_type\t|cdev1_type\t|"
-echo -e "-------------------------------------------------------------"
+echo -e "------------------------------------------------------------------"
 for i in `seq 0 5`
 do
 	type=$(cat ${base}/thermal_zone$i/type)
@@ -23,11 +23,15 @@ do
 		cdev1_type="\t"
 	fi
 
-	echo -e "|${type}\t\t|${temp}\t\t|${mode}\t|${cdev0_type}\t|${cdev1_type}\t|"
+	if [ "x${cdev1_type}" = "xthermal-cpufreq-0" ] ; then
+		echo -e "|${type}\t\t|${temp}\t\t|${mode}\t|${cdev0_type}\t|${cdev1_type}\t|"
+	else
+		echo -e "|${type}\t\t|${temp}\t\t|${mode}\t|${cdev0_type}\t|${cdev1_type}\t\t|"
+	fi
 done
-echo -e "--------------------------------------------------------------"
+echo -e "-------------------------------------------------------------------"
 echo -e "|Cooling type\t\t|cur_state\t|max_state\t|"
-echo -e "--------------------------------------------------------------"
+echo -e "-------------------------------------------------------------------"
 for i in `seq 0 2`
 do
 	type=$(cat ${base}/cooling_device$i/type)
@@ -40,5 +44,5 @@ do
 		echo -e "|${type}\t\t|${cur_state}\t\t|${max_state}\t\t|"
 	fi
 done
-echo -e "--------------------------------------------------------------"
+echo -e "-------------------------------------------------------------------"
 
