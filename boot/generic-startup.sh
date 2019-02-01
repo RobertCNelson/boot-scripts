@@ -98,7 +98,7 @@ if [ -d /sys/class/leds ] ; then
 fi
 
 if [ -d /sys/kernel/debug ] ; then
-	/bin/chmod -R g=u /sys/kernel/debug/ || true
+	/bin/chmod -R ugo+x /sys/kernel/debug/ || true
 	if [ -d /sys/kernel/debug/pinctrl/44e10800.pinmux/ ] ; then
 		/bin/chgrp -R gpio /sys/kernel/debug/pinctrl/44e10800.pinmux/ || true
 		/bin/chmod -R g=u  /sys/kernel/debug/pinctrl/44e10800.pinmux/ || true
