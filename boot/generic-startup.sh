@@ -80,20 +80,28 @@ if [ -f /resizerootfs ] ; then
 fi
 
 if [ -d /sys/class/gpio/ ] ; then
-	chown -R root:gpio /sys/class/gpio/ || true
-	chmod -R ug+rw /sys/class/gpio/ || true
+	/bin/chgrp -R gpio /sys/class/gpio/ || true
+	/bin/chmod -R g=u /sys/class/gpio/ || true
 
-	chown -R root:gpio /dev/gpiochip* || true
-	chmod -R ug+rw /dev/gpiochip* || true
+	/bin/chgrp -R gpio /dev/gpiochip* || true
+	/bin/chmod -R g=u /dev/gpiochip* || true
 fi
 
 if [ -d /sys/class/leds ] ; then
-	chown -R root:gpio /sys/class/leds/ || true
-	chmod -R ug+rw /sys/class/leds/ || true
+	/bin/chgrp -R gpio /sys/class/leds/ || true
+	/bin/chmod -R g=u /sys/class/leds/ || true
 
 	if [ -d /sys/devices/platform/leds/leds/ ] ; then
-		chown -R root:gpio /sys/devices/platform/leds/leds/ || true
-		chmod -R ug+rw  /sys/devices/platform/leds/leds/ || true
+		/bin/chgrp -R gpio /sys/devices/platform/leds/leds/ || true
+		/bin/chmod -R g=u  /sys/devices/platform/leds/leds/ || true
+	fi
+fi
+
+if [ -d /sys/kernel/debug ] ; then
+	/bin/chmod -R g=u /sys/kernel/debug/ || true
+	if [ -d /sys/kernel/debug/pinctrl/44e10800.pinmux/ ] ; then
+		/bin/chgrp -R gpio /sys/kernel/debug/pinctrl/44e10800.pinmux/ || true
+		/bin/chmod -R g=u  /sys/kernel/debug/pinctrl/44e10800.pinmux/ || true
 	fi
 fi
 
