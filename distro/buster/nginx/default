@@ -70,6 +70,13 @@ server {
 		proxy_set_header Connection "upgrade";
 	}
 
+	location /ui/ {
+		proxy_pass http://localhost:1880/ui/;
+		proxy_http_version 1.1;
+		proxy_set_header Upgrade $http_upgrade;
+		proxy_set_header Connection "upgrade";
+	}
+
 #RCNEE-end:
 
 	# pass PHP scripts to FastCGI server
