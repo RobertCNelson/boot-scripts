@@ -49,7 +49,8 @@ while( @ARGV && $ARGV[0] =~ s/^-v/-/ ) {
 die "unexpected argument: $ARGV[0]\n"  if @ARGV;
 
 
-@ARGV = '/sys/kernel/debug/pinctrl/44e10800.pinmux/pinmux-pins';
+#@ARGV = '/sys/kernel/debug/pinctrl/44e10800.pinmux/pinmux-pins';
+@ARGV = '/sys/kernel/debug/pinctrl/4a003400.pinmux/pinmux-pins';
 my @usage;
 while( <> ) {
 	local $SIG{__DIE__} = sub { die "@_$_\n" };
@@ -80,7 +81,8 @@ my @data = map { chomp; [ split /\t+/ ] } grep /^[^#]/, <DATA>;
 
 
 
-@ARGV = '/sys/kernel/debug/pinctrl/44e10800.pinmux/pins';
+#@ARGV = '/sys/kernel/debug/pinctrl/44e10800.pinmux/pins';
+@ARGV = '/sys/kernel/debug/pinctrl/4a003400.pinmux/pins';
 
 while( <> ) {
 	s/\s*\z//;
