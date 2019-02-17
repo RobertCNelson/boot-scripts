@@ -96,18 +96,14 @@ while( <> ) {
 	/^pin / or next;
 
 	my ($pin, $reg, $mux);
+	my $addpre = $am5 ? "4a00" : "44e1";
 	if(/PIN/) {
-		my $prefix = $am5 ? "4a00" : "44e1";
-		/^pin (\d+) \(PIN\d+\) $prefix([0-9a-f]{4}) 000([0-9a-f]{5}) pinctrl-single\z/ or die "parse error";
+		/^pin (\d+) \(PIN\d+\) $addpre([0-9a-f]{4}) 000([0-9a-f]{5}) pinctrl-single\z/ or die "parse error";
 		$pin = $1;
 		$reg = hex $2;
 		$mux = hex $3;
 	} else {
-		if($am5) {
-			/^pin (\d+) \(4a00([0-9a-f]{4})\.0\) 000([0-9a-f]{5}) pinctrl-single\z/ or die "parse error";
-		} else {
-			/^pin (\d+) \(44e1([0-9a-f]{4})\.0\) 000000([0-7][0-9a-f]) pinctrl-single\z/ or die "parse error";
-		}
+		/^pin (\d+) \($addpre([0-9a-f]{4})\.0\) 000([0-9a-f]{5}) pinctrl-single\z/ or die "parse error";
 		$pin = $1;
 		$reg = hex $2;
 		$mux = hex $3;
@@ -157,7 +153,7 @@ while( <> ) {
 
 	if($am5) {
 		$function = qq/$slew $rx $pull $Y{$mux} $function/;
-		printf "%-32s $Y{'%3s'} $G{'%3s'} %s\n", $label, $pin, $abc_ball, $function;
+		printf "%-32s $Y{'%3s'} $G{'%4s'} %s\n", $label, $pin, $abc_ball, $function;
 	} else {
 		$function = qq/$slew $rx $pull $Y{$mux} $function/;
 		printf "%-32s $Y{'%3s'} $G{'%3s'} %s\n", $label, $pin, $zcz_ball, $function;
