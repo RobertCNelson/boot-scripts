@@ -219,7 +219,7 @@ __AM57XX__
 0x14D0		N6	gpmc_ben0	gpmc_cs4		vin1b_hsync1			vin3b_de1	timer2		dma_evt3					gpio2_26	Driver off
 0x14D4		M4	gpmc_ben1	gpmc_cs5		vin1b_de1	vin3b_clk1	gpmc_a3	vin3b_fld1	timer1		dma_evt4					gpio2_27	Driver off
 0x14D8		N2	gpmc_wait0														gpio2_28	Driver off
-0x14DC	adc int	AG8	vin1a_clk0			vout3_d16	vout3_fld										gpio2_30	Driver off
+0x14DC	adc irq	AG8	vin1a_clk0			vout3_d16	vout3_fld										gpio2_30	Driver off
 0x14E0		AH7	vin1b_clk1						vin3a_clk0								gpio2_31	Driver off
 0x14E4	P8.35b	AD9	vin1a_de0	vin1b_hsync1		vout3_d17	vout3_de	uart7_rxd		timer16	spi3_sclk	kbd_row0	eQEP1A_in				gpio3_0	Driver off
 0x14E8	P8.33b	AF9	vin1a_fld0	vin1b_vsync1			vout3_clk	uart7_txd		timer15	spi3_d1	kbd_row1	eQEP1B_in				gpio3_1	Driver off
@@ -246,7 +246,7 @@ __AM57XX__
 0x153C	bluetooth reg on	AE5	vin1a_d18	vin1b_d5			vout3_d5		vin3a_d2			kbd_col3	pr1_edio_data_in2	pr1_edio_data_out2	pr1_pru0_gpi15	pr1_pru0_gpo15	gpio3_22	Driver off
 0x1540	wifi host wake	AE1	vin1a_d19	vin1b_d4			vout3_d4		vin3a_d3			kbd_col4	pr1_edio_data_in3	pr1_edio_data_out3	pr1_pru0_gpi16	pr1_pru0_gpo16	gpio3_23	Driver off
 0x1544	p9.26b	AE2	vin1a_d20	vin1b_d3			vout3_d3		vin3a_d4			kbd_col5	pr1_edio_data_in4	pr1_edio_data_out4	pr1_pru0_gpi17	pr1_pru0_gpo17	gpio3_24	Driver off
-0x1548	usb C int	AE6	vin1a_d21	vin1b_d2			vout3_d2		vin3a_d5			kbd_col6	pr1_edio_data_in5	pr1_edio_data_out5	pr1_pru0_gpi18	pr1_pru0_gpo18	gpio3_25	Driver off
+0x1548	usb C irq	AE6	vin1a_d21	vin1b_d2			vout3_d2		vin3a_d5			kbd_col6	pr1_edio_data_in5	pr1_edio_data_out5	pr1_pru0_gpi18	pr1_pru0_gpo18	gpio3_25	Driver off
 0x154C		AD2	vin1a_d22	vin1b_d1			vout3_d1		vin3a_d6			kbd_col7	pr1_edio_data_in6	pr1_edio_data_out6	pr1_pru0_gpi19	pr1_pru0_gpo19	gpio3_26	Driver off
 0x1550	adc voltage select	AD3	vin1a_d23	vin1b_d0			vout3_d0		vin3a_d7			kbd_col8	pr1_edio_data_in7	pr1_edio_data_out7	pr1_pru0_gpi20	pr1_pru0_gpo20	gpio3_27	Driver off
 0x1554		E1	vin2a_clk0				vout2_fld	emu5				kbd_row0	eQEP1A_in		pr1_edio_data_in0	pr1_edio_data_out0	gpio3_28	Driver off
@@ -311,7 +311,7 @@ __AM57XX__
 0x1640	eth mdio data	U4	mdio_d	uart3_ctsn		mii0_txer	vin2a_d0	vin4b_d0						pr1_mii0_rxlink	pr2_pru1_gpi1	pr2_pru1_gpo1	gpio5_16	Driver off
 0x1644		U3	RMII_MHZ_50_CLK				vin2a_d11								pr2_pru1_gpi2	pr2_pru1_gpo2	gpio5_17	Driver off
 0x1648	usb A vbus overcurrent	V2	uart3_rxd		rmii1_crs	mii0_rxdv	vin2a_d1	vin4b_d1		spi3_sclk				pr1_mii0_rxdv	pr2_pru1_gpi3	pr2_pru1_gpo3	gpio5_18	Driver off
-0x164C	eth mii int	Y1	uart3_txd		rmii1_rxer	mii0_rxclk	vin2a_d2	vin4b_d2		spi3_d1	spi4_cs1			pr1_mii_mr0_clk	pr2_pru1_gpi4	pr2_pru1_gpo4	gpio5_19	Driver off
+0x164C	eth mii irq	Y1	uart3_txd		rmii1_rxer	mii0_rxclk	vin2a_d2	vin4b_d2		spi3_d1	spi4_cs1			pr1_mii_mr0_clk	pr2_pru1_gpi4	pr2_pru1_gpo4	gpio5_19	Driver off
 0x1650	eth mii tx clk	W9	rgmii0_txc	uart3_ctsn	rmii1_rxd1	mii0_rxd3	vin2a_d3	vin4b_d3		spi3_d0	spi4_cs2			pr1_mii0_rxd3	pr2_pru1_gpi5	pr2_pru1_gpo5	gpio5_20	Driver off
 0x1654	eth mii tx en	V9	rgmii0_txctl	uart3_rtsn	rmii1_rxd0	mii0_rxd2	vin2a_d4	vin4b_d4		spi3_cs0	spi4_cs3			pr1_mii0_rxd2	pr2_pru1_gpi6	pr2_pru1_gpo6	gpio5_21	Driver off
 0x1658	eth mii tx d3	V7	rgmii0_txd3	rmii0_crs		mii0_crs	vin2a_de0	vin4b_de1		spi4_sclk	uart4_rxd			pr1_mii0_crs	pr2_pru1_gpi7	pr2_pru1_gpo7	gpio5_22	Driver off
@@ -328,7 +328,7 @@ __AM57XX__
 0x1684	usb A vbus out en	AC10	usb2_drvvbus							timer15							gpio6_13	Driver off
 0x1688	P9.26a	E21	gpio6_14	mcasp1_axr8	dcan2_tx	uart10_rxd			vout2_hsync		vin4a_hsync0	i2c3_sda	timer1				gpio6_14	Driver off
 0x168C	P9.24	F20	gpio6_15	mcasp1_axr9	dcan2_rx	uart10_txd			vout2_vsync		vin4a_vsync0	i2c3_scl	timer2				gpio6_15	Driver off
-0x1690	pmic int	F21	gpio6_16	mcasp1_axr10					vout2_fld		vin4a_fld0	clkout1	timer3				gpio6_16	Driver off
+0x1690	pmic irq	F21	gpio6_16	mcasp1_axr10					vout2_fld		vin4a_fld0	clkout1	timer3				gpio6_16	Driver off
 0x1694	P9.25	D18	xref_clk0	mcasp2_axr8	mcasp1_axr4	mcasp1_ahclkx	mcasp5_ahclkx			vin6a_d0	hdq0	clkout2	timer13	pr2_mii1_col	pr2_pru1_gpi5	pr2_pru1_gpo5	gpio6_17	Driver off
 0x1698	P8.9	E17	xref_clk1	mcasp2_axr9	mcasp1_axr5	mcasp2_ahclkx	mcasp6_ahclkx			vin6a_clk0			timer14	pr2_mii1_crs	pr2_pru1_gpi6	pr2_pru1_gpo6	gpio6_18	Driver off
 0x169C	P9.22a	B26	xref_clk2	mcasp2_axr10	mcasp1_axr6	mcasp3_ahclkx	mcasp7_ahclkx		vout2_clk		vin4a_clk0		timer15				gpio6_19	Driver off
@@ -431,7 +431,7 @@ __AM57XX__
 0x1820		AB16	Wakeup2	sys_nirq2													gpio1_2	Driver off
 0x1824		AC16	Wakeup3	sys_nirq1													gpio1_3	Driver off
 0x1828		Y11	on_off															
-0x182C	power on reset	AB17	rtc_porz															
+0x182C	rtc por reset	AB17	rtc_porz															
 0x1830	jtag tms	F18	tms															
 0x1834	jtag tdi	D23	tdi														gpio8_27	
 0x1838	jtag tdo	F19	tdo														gpio8_28	
