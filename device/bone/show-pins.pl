@@ -50,10 +50,11 @@ while( @ARGV && $ARGV[0] =~ s/^-v/-/ ) {
 die "unexpected argument: $ARGV[0]\n"  if @ARGV;
 
 
-if($am5)
+if($am5) {
 	@ARGV = '/sys/kernel/debug/pinctrl/4a003400.pinmux/pinmux-pins';
-else
+} else {
 	@ARGV = '/sys/kernel/debug/pinctrl/44e10800.pinmux/pinmux-pins';
+}
 my @usage;
 while( <> ) {
 	local $SIG{__DIE__} = sub { die "@_$_\n" };
@@ -80,11 +81,12 @@ while( <> ) {
 }
 
 
+my @data;
 if($am5) {
-	my @data = map { chomp; [ split /\t/ ] } grep /^[^#]/, <AM57XX>;
+	@data = map { chomp; [ split /\t/ ] } grep /^[^#]/, <AM57XX>;
 	@ARGV = '/sys/kernel/debug/pinctrl/4a003400.pinmux/pins';
 } else {
-	my @data = map { chomp; [ split /\t+/ ] } grep /^[^#]/, <AM335X>;
+	@data = map { chomp; [ split /\t+/ ] } grep /^[^#]/, <AM335X>;
 	@ARGV = '/sys/kernel/debug/pinctrl/44e10800.pinmux/pins';
 }
 
@@ -95,11 +97,8 @@ while( <> ) {
 
 	my ($pin, $reg, $mux);
 	if(/PIN/) {
-		if($am5) {
-			/^pin (\d+) \(PIN\d+\) 4a00([0-9a-f]{4}) 000([0-9a-f]{5}) pinctrl-single\z/ or die "parse error";
-		} else {
-			/^pin (\d+) \(PIN\d+\) 44e1([0-9a-f]{4}) 000000([0-7][0-9a-f]) pinctrl-single\z/ or die "parse error";
-		}
+		my $prefix = $am5 ? "4a00" : "44e1";
+		/^pin (\d+) \(PIN\d+\) $prefix([0-9a-f]{4}) 000([0-9a-f]{5}) pinctrl-single\z/ or die "parse error";
 		$pin = $1;
 		$reg = hex $2;
 		$mux = hex $3;
@@ -113,32 +112,34 @@ while( <> ) {
 		$reg = hex $2;
 		$mux = hex $3;
 	}
+	my ($abc_ball, $zcz_ball, $label);
 	if($am5) {
 		0x3400 + 4 * $pin == $reg  or die "sanity check failed";
-		my $abc_ball = $data[ $pin ][ 2 ] || "";
-		my $label = $data[ $pin ][ 1 ] // next;
+		$abc_ball = $data[ $pin ][ 2 ] || "";
+		$label = $data[ $pin ][ 1 ] // next;
 	} else {
 		0x800 + 4 * $pin == $reg  or die "sanity check failed";
-		my $zcz_ball = $data[ $pin ][ 9 ] || "";
-		my $label = $data[ $pin ][ 8 ] // next;
+		$zcz_ball = $data[ $pin ][ 9 ] || "";
+		$label = $data[ $pin ][ 8 ] // next;
 	}
 
 
 	my $boring = $label =~ s/^-// ? 2 : $label !~ /^P[89]\./;
         next if $boring > $verbose;
 
+	my ($wu_evt, $wu_en, $slew, $rx, $pull);
 	if($am5) {
-		my $wu_evt = ( "  ", "$R{wu}" )[ $mux >> 25 & 1 ];
-		my $wu_en = ( "    ", "$R{wuen}" )[ $mux >> 24 & 1 ];
-		my $slew = ( "$D{fast}", "$R{slow}" )[ $mux >> 19 & 1 ];
-		my $rx = ( "  ", "$G{rx}" )[ $mux >> 18 & 1 ];
-		my $pull = ( "$DG{down}", " $DR{up} " )[ $mux >> 17 & 1 ];
+		$wu_evt = ( "  ", "$R{wu}" )[ $mux >> 25 & 1 ];
+		$wu_en = ( "    ", "$R{wuen}" )[ $mux >> 24 & 1 ];
+		$slew = ( "$D{fast}", "$R{slow}" )[ $mux >> 19 & 1 ];
+		$rx = ( "  ", "$G{rx}" )[ $mux >> 18 & 1 ];
+		$pull = ( "$DG{down}", " $DR{up} " )[ $mux >> 17 & 1 ];
 		$pull = "    " if $mux >> 16 & 1;
 		$mux &= 0xf;
 	} else {
-		my $slew = ( "$D{fast}", "$R{slow}" )[ $mux >> 6 & 1 ];
-		my $rx = ( "  ", "$G{rx}" )[ $mux >> 5 & 1 ];
-		my $pull = ( "$DG{down}", " $DR{up} " )[ $mux >> 4 & 1 ];
+		$slew = ( "$D{fast}", "$R{slow}" )[ $mux >> 6 & 1 ];
+		$rx = ( "  ", "$G{rx}" )[ $mux >> 5 & 1 ];
+		$pull = ( "$DG{down}", " $DR{up} " )[ $mux >> 4 & 1 ];
 		$pull = "    " if $mux >> 3 & 1;
 		$mux &= 7;
 	}
