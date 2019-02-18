@@ -152,8 +152,8 @@ while( <> ) {
 	}
 
 	if($am5) {
-		$function = qq/$slew $rx $pull $Y{$mux} $function/;
-		printf "%-24s $Y{'%3s'} $G{'%4s'} %s\n", $label, $pin, $abc_ball, $function;
+		$function = qq/$slew $rx $pull $function/;
+		printf "%-24s $Y{'%3s'} $G{'%4s'} $Y{'%1x'} %s\n", $label, $pin, $abc_ball, $mux, $function;
 	} else {
 		$function = qq/$slew $rx $pull $Y{$mux} $function/;
 		printf "%-32s $Y{'%3s'} $G{'%3s'} %s\n", $label, $pin, $zcz_ball, $function;
