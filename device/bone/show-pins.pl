@@ -156,7 +156,7 @@ while( <> ) {
 
 	if($am5) {
 		$function = qq/$slew $rx $pull $Y{$mux} $function/;
-		printf "%-32s $Y{'%3s'} $G{'%3s'} %s\n", $label, $pin, $abc_ball, $function;
+		printf "%-24s $Y{'%3s'} $G{'%4s'} %s\n", $label, $pin, $abc_ball, $function;
 	} else {
 		$function = qq/$slew $rx $pull $Y{$mux} $function/;
 		printf "%-32s $Y{'%3s'} $G{'%3s'} %s\n", $label, $pin, $zcz_ball, $function;
@@ -184,7 +184,7 @@ __AM57XX__
 0x1444	P9.20a	T9	gpmc_a1		vin3a_d17	vout3_d17	vin4a_d1		vin4b_d1	i2c4_sda	uart5_txd						gpio7_4	Driver off
 0x1448		T6	gpmc_a2		vin3a_d18	vout3_d18	vin4a_d2		vin4b_d2	uart7_rxd	uart5_ctsn						gpio7_5	Driver off
 0x144C		T7	gpmc_a3	qspi1_cs2	vin3a_d19	vout3_d19	vin4a_d3		vin4b_d3	uart7_txd	uart5_rtsn						gpio7_6	Driver off
-0x1450	blueooth in	P6	gpmc_a4	qspi1_cs3	vin3a_d20	vout3_d20	vin4a_d4		vin4b_d4	i2c5_scl	uart6_rxd						gpio1_26	Driver off
+0x1450	bluetooth in	P6	gpmc_a4	qspi1_cs3	vin3a_d20	vout3_d20	vin4a_d4		vin4b_d4	i2c5_scl	uart6_rxd						gpio1_26	Driver off
 0x1454	bluetooth out	R9	gpmc_a5		vin3a_d21	vout3_d21	vin4a_d5		vin4b_d5	i2c5_sda	uart6_txd						gpio1_27	Driver off
 0x1458	bluetooth cts	R5	gpmc_a6		vin3a_d22	vout3_d22	vin4a_d6		vin4b_d6	uart8_rxd	uart6_ctsn						gpio1_28	Driver off
 0x145C	bluetooth rts	P5	gpmc_a7		vin3a_d23	vout3_d23	vin4a_d7		vin4b_d7	uart8_txd	uart6_rtsn						gpio1_29	Driver off
@@ -404,7 +404,7 @@ __AM57XX__
 0x17B4	P9.23	A22	spi1_cs1		sata1_led	spi2_cs1											gpio7_11	Driver off
 0x17B8	hdmi ddc hpd	B21	spi1_cs2	uart4_rxd	mmc3_sdcd	spi2_cs2	dcan2_tx	mdio_mclk	hdmi1_hpd								gpio7_12	Driver off
 0x17BC	hdmi ddc cec	B20	spi1_cs3	uart4_txd	mmc3_sdwp	spi2_cs3	dcan2_rx	mdio_d	hdmi1_cec								gpio7_13	Driver off
-0x17C0	P2.22b	A26	spi2_sclk	uart3_rxd													gpio7_14	Driver off
+0x17C0	P9.22b	A26	spi2_sclk	uart3_rxd													gpio7_14	Driver off
 0x17C4	P9.21b	B22	spi2_d1	uart3_txd													gpio7_15	Driver off
 0x17C8	P9.18a	G17	spi2_d0	uart3_ctsn	uart5_rxd												gpio7_16	Driver off
 0x17CC	P9.17a	B24	spi2_cs0	uart3_rtsn	uart5_txd												gpio7_17	Driver off
