@@ -24,7 +24,8 @@
 #Based off:
 #https://github.com/beagleboard/meta-beagleboard/blob/master/meta-beagleboard-extras/recipes-support/usb-gadget/gadget-init/g-ether-load.sh
 
-set +e
+set -e
+set -x
 
 modprobe libcomposite
 echo "device" > /sys/kernel/debug/48890000.usb/mode
@@ -283,11 +284,12 @@ echo 01 > functions/rndis.usb0/protocol
 # https://answers.microsoft.com/en-us/windows/forum/windows_10-networking-winpc/windows-10-vs-remote-ndis-ethernet-usbgadget-not/cb30520a-753c-4219-b908-ad3d45590447
 # https://www.spinics.net/lists/linux-usb/msg107185.html
 echo 1 > os_desc/use
-echo CD > os_desc/b_vendor_code
+echo 0xCD > os_desc/b_vendor_code
 echo MSFT100 > os_desc/qw_sign
 echo "RNDIS" > functions/rndis.usb0/os_desc/interface.rndis/compatible_id
 echo "5162001" > functions/rndis.usb0/os_desc/interface.rndis/sub_compatible_id
 
+mkdir -p configs/c.1
 ln -s configs/c.1 os_desc
 mkdir functions/rndis.usb0/os_desc/interface.rndis/Icons
 echo 2 > functions/rndis.usb0/os_desc/interface.rndis/Icons/type
@@ -314,7 +316,7 @@ echo ${actual_image_file} > functions/mass_storage.usb0/lun.0/file
 mkdir -p configs/c.1/strings/0x409
 echo "Multifunction with RNDIS" > configs/c.1/strings/0x409/configuration
 
-echo 2000 > configs/c.1/MaxPower
+echo 500 > configs/c.1/MaxPower
 
 ln -s functions/rndis.usb0 configs/c.1/
 ln -s functions/ecm.usb0 configs/c.1/
