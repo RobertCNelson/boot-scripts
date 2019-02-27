@@ -811,6 +811,19 @@ if [ "x${check_getty_tty}" = "xinactive" ] ; then
 	systemctl restart serial-getty@ttyGS0.service || true
 fi
 
+#legacy support of: /sys/kernel/debug mount permissions...
+#We now use: debugfs  /sys/kernel/debug  debugfs  mode=755,uid=root,gid=gpio,defaults  0  0
+#vs old: debugfs  /sys/kernel/debug  debugfs  defaults  0  0
+if [ "x${abi}" = "xab" ] ; then
+	if [ -d /sys/kernel/debug ] ; then
+		/bin/chmod -R ugo+x /sys/kernel/debug/ || true
+		if [ -d /sys/kernel/debug/pinctrl/44e10800.pinmux/ ] ; then
+			/bin/chgrp -R gpio /sys/kernel/debug/pinctrl/44e10800.pinmux/ || true
+			/bin/chmod -R g=u  /sys/kernel/debug/pinctrl/44e10800.pinmux/ || true
+		fi
+	fi
+fi
+
 #legacy support of: 2014-05-14 (now taken care by the init flasher)
 if [ "x${abi}" = "x" ] ; then
 	$(dirname $0)/legacy/write_emmc.sh || true
