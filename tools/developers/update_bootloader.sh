@@ -243,6 +243,10 @@ dd_spl_uboot_boot () {
 				rm /opt/backup/uboot/${boot_name} || true
 			fi
 
+			if [ ! -d /opt/backup/uboot/ ] ; then
+				mkdir -p /opt/backup/uboot/ || true
+			fi
+
 			cp -v ${TEMPDIR}/dl/${SPL} /opt/backup/uboot/${spl_name}
 			cp -v ${TEMPDIR}/dl/${UBOOT} /opt/backup/uboot/${boot_name}
 			sync
