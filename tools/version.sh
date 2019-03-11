@@ -183,6 +183,10 @@ fi
 
 echo "cmdline:[`cat /proc/cmdline`]"
 
+echo "dmesg | grep remote"
+dmesg | grep remote
+echo "dmesg | grep pru"
+dmesg | grep pru
 echo "dmesg | grep pinctrl-single"
 dmesg | grep pinctrl-single
 echo "dmesg | grep gpio-of-helper"
