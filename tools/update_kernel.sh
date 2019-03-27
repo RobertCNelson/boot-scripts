@@ -568,6 +568,51 @@ third_party () {
 			if [ "x${rtl8723bu}" = "xenabled" ] ; then
 				${apt_bin} ${apt_options} rtl8723bu-modules-${latest_kernel} || true
 			fi
+			if [ "x${rtl8821cu}" = "xenabled" ] ; then
+				${apt_bin} ${apt_options} rtl8821cu-modules-${latest_kernel} || true
+			fi
+			;;
+		LTS419)
+			if [ "x${libpruio}" = "xenabled" ] ; then
+				${apt_bin} ${apt_options} libpruio-modules-${latest_kernel} || true
+			fi
+			if [ "x${rtl8723bu}" = "xenabled" ] ; then
+				${apt_bin} ${apt_options} rtl8723bu-modules-${latest_kernel} || true
+			fi
+			if [ "x${rtl8821cu}" = "xenabled" ] ; then
+				${apt_bin} ${apt_options} rtl8821cu-modules-${latest_kernel} || true
+			fi
+			;;
+		esac
+		;;
+	bone-rt)
+		case "${kernel}" in
+		LTS414)
+			#TESTING|LTS414
+			#v4.15.x sgx modules are broken...
+			if [ "x${es8}" = "xenabled" ] ; then
+				${apt_bin} ${apt_options} ti-sgx-es8-modules-${latest_kernel} || true
+			fi
+			if [ "x${libpruio}" = "xenabled" ] ; then
+				${apt_bin} ${apt_options} libpruio-modules-${latest_kernel} || true
+			fi
+			if [ "x${rtl8723bu}" = "xenabled" ] ; then
+				${apt_bin} ${apt_options} rtl8723bu-modules-${latest_kernel} || true
+			fi
+			if [ "x${rtl8821cu}" = "xenabled" ] ; then
+				${apt_bin} ${apt_options} rtl8821cu-modules-${latest_kernel} || true
+			fi
+			;;
+		LTS419)
+			if [ "x${libpruio}" = "xenabled" ] ; then
+				${apt_bin} ${apt_options} libpruio-modules-${latest_kernel} || true
+			fi
+			if [ "x${rtl8723bu}" = "xenabled" ] ; then
+				${apt_bin} ${apt_options} rtl8723bu-modules-${latest_kernel} || true
+			fi
+			if [ "x${rtl8821cu}" = "xenabled" ] ; then
+				${apt_bin} ${apt_options} rtl8821cu-modules-${latest_kernel} || true
+			fi
 			;;
 		esac
 		;;
@@ -591,6 +636,9 @@ third_party () {
 			if [ "x${rtl8723bu}" = "xenabled" ] ; then
 				${apt_bin} ${apt_options} rtl8723bu-modules-${latest_kernel} || true
 			fi
+			if [ "x${rtl8821cu}" = "xenabled" ] ; then
+				${apt_bin} ${apt_options} rtl8821cu-modules-${latest_kernel} || true
+			fi
 			if [ "x${ticmem}" = "xenabled" ] ; then
 				${apt_bin} ${apt_options} ti-cmem-modules-${latest_kernel} || true
 			fi
@@ -604,6 +652,9 @@ third_party () {
 		LTS414)
 			if [ "x${rtl8723bu}" = "xenabled" ] ; then
 				${apt_bin} ${apt_options} rtl8723bu-modules-${latest_kernel} || true
+			fi
+			if [ "x${rtl8821cu}" = "xenabled" ] ; then
+				${apt_bin} ${apt_options} rtl8821cu-modules-${latest_kernel} || true
 			fi
 			if [ "x${libpruio}" = "xenabled" ] ; then
 				${apt_bin} ${apt_options} libpruio-modules-${latest_kernel} || true
@@ -644,6 +695,9 @@ third_party () {
 			if [ "x${rtl8723bu}" = "xenabled" ] ; then
 				${apt_bin} ${apt_options} rtl8723bu-modules-${latest_kernel} || true
 			fi
+			if [ "x${rtl8821cu}" = "xenabled" ] ; then
+				${apt_bin} ${apt_options} rtl8821cu-modules-${latest_kernel} || true
+			fi
 			if [ "x${ticmem}" = "xenabled" ] ; then
 				${apt_bin} ${apt_options} ti-cmem-modules-${latest_kernel} || true
 			fi
@@ -657,6 +711,9 @@ third_party () {
 		LTS414)
 			if [ "x${rtl8723bu}" = "xenabled" ] ; then
 				${apt_bin} ${apt_options} rtl8723bu-modules-${latest_kernel} || true
+			fi
+			if [ "x${rtl8821cu}" = "xenabled" ] ; then
+				${apt_bin} ${apt_options} rtl8821cu-modules-${latest_kernel} || true
 			fi
 			if [ "x${libpruio}" = "xenabled" ] ; then
 				${apt_bin} ${apt_options} libpruio-modules-${latest_kernel} || true
@@ -678,6 +735,9 @@ third_party () {
 		LTS419)
 			if [ "x${rtl8723bu}" = "xenabled" ] ; then
 				${apt_bin} ${apt_options} rtl8723bu-modules-${latest_kernel} || true
+			fi
+			if [ "x${rtl8821cu}" = "xenabled" ] ; then
+				${apt_bin} ${apt_options} rtl8821cu-modules-${latest_kernel} || true
 			fi
 			if [ "x${libpruio}" = "xenabled" ] ; then
 				${apt_bin} ${apt_options} libpruio-modules-${latest_kernel} || true
@@ -721,7 +781,7 @@ stretch|buster|sid)
 	dist="${get_dist}"
 	apt_bin="apt"
 	;;
-bionic|cosmic)
+bionic|cosmic|disco)
 	dist="${get_dist}"
 	apt_bin="apt"
 	;;
