@@ -614,6 +614,7 @@ third_party () {
 			if [ "x${sgxti335x}" = "xenabled" ] ; then
 				${apt_bin} ${apt_options} ti-sgx-ti335x-modules-${latest_kernel} || true
 				if [ "x${sgx_blob}" = "xenabled" ] ; then
+					${apt_bin} ${apt_options} ti-sgx-common-ddk-um || true
 					${apt_bin} ${apt_options} ti-sgx-ti33x-ddk-um || true
 				fi
 			fi
@@ -666,6 +667,7 @@ third_party () {
 			if [ "x${sgxti335x}" = "xenabled" ] ; then
 				${apt_bin} ${apt_options} ti-sgx-ti335x-modules-${latest_kernel} || true
 				if [ "x${sgx_blob}" = "xenabled" ] ; then
+					${apt_bin} ${apt_options} ti-sgx-common-ddk-um || true
 					${apt_bin} ${apt_options} ti-sgx-ti33x-ddk-um || true
 				fi
 			fi
@@ -686,6 +688,7 @@ third_party () {
 			if [ "x${sgxti335x}" = "xenabled" ] ; then
 				${apt_bin} ${apt_options} ti-sgx-ti335x-modules-${latest_kernel} || true
 				if [ "x${sgx_blob}" = "xenabled" ] ; then
+					${apt_bin} ${apt_options} ti-sgx-common-ddk-um || true
 					${apt_bin} ${apt_options} ti-sgx-ti33x-ddk-um || true
 				fi
 			fi
