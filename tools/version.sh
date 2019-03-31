@@ -191,6 +191,8 @@ echo "dmesg | grep pinctrl-single"
 dmesg | grep pinctrl-single
 echo "dmesg | grep gpio-of-helper"
 dmesg | grep gpio-of-helper
+echo "lsusb"
+lsusb
 echo "END"
 
 #
