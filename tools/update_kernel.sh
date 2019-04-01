@@ -543,6 +543,7 @@ third_party () {
 
 	case "${SOC}" in
 	omap-psp)
+		#AKA: "bone"...
 		case "${kernel}" in
 		STABLE)
 			#3.8 only...

@@ -811,6 +811,27 @@ if [ "x${check_getty_tty}" = "xinactive" ] ; then
 	systemctl restart serial-getty@ttyGS0.service || true
 fi
 
+if [ -f /opt/sgx/status ] ; then
+	sgx_status=$(cat /opt/sgx/status)
+	case "${sgx_status}" in
+	not_installed)
+		if [ -f /opt/sgx/ti-sgx-ti335x-modules-`uname -r`*_armhf.deb ] ; then
+			echo "${log} SGX: Installing Modules/ddk"
+			dpkg -i /opt/sgx/ti-sgx-ti335x-modules-`uname -r`*_armhf.deb
+			depmod -a `uname -r`
+			update-initramfs -uk `uname -r`
+
+			dpkg -i /opt/sgx/ti-sgx-ti33x-ddk-um*.deb
+			echo "installed" > /opt/sgx/status
+			sync
+		fi
+		;;
+#	installed)
+#		overlay="univ-emmc"
+#		;;
+	esac
+fi
+
 #legacy support of: /sys/kernel/debug mount permissions...
 #We now use: debugfs  /sys/kernel/debug  debugfs  mode=755,uid=root,gid=gpio,defaults  0  0
 #vs old: debugfs  /sys/kernel/debug  debugfs  defaults  0  0
