@@ -543,6 +543,7 @@ third_party () {
 
 	case "${SOC}" in
 	omap-psp)
+		#AKA: "bone"...
 		case "${kernel}" in
 		STABLE)
 			#3.8 only...
@@ -568,6 +569,51 @@ third_party () {
 			if [ "x${rtl8723bu}" = "xenabled" ] ; then
 				${apt_bin} ${apt_options} rtl8723bu-modules-${latest_kernel} || true
 			fi
+			if [ "x${rtl8821cu}" = "xenabled" ] ; then
+				${apt_bin} ${apt_options} rtl8821cu-modules-${latest_kernel} || true
+			fi
+			;;
+		LTS419)
+			if [ "x${libpruio}" = "xenabled" ] ; then
+				${apt_bin} ${apt_options} libpruio-modules-${latest_kernel} || true
+			fi
+			if [ "x${rtl8723bu}" = "xenabled" ] ; then
+				${apt_bin} ${apt_options} rtl8723bu-modules-${latest_kernel} || true
+			fi
+			if [ "x${rtl8821cu}" = "xenabled" ] ; then
+				${apt_bin} ${apt_options} rtl8821cu-modules-${latest_kernel} || true
+			fi
+			;;
+		esac
+		;;
+	bone-rt)
+		case "${kernel}" in
+		LTS414)
+			#TESTING|LTS414
+			#v4.15.x sgx modules are broken...
+			if [ "x${es8}" = "xenabled" ] ; then
+				${apt_bin} ${apt_options} ti-sgx-es8-modules-${latest_kernel} || true
+			fi
+			if [ "x${libpruio}" = "xenabled" ] ; then
+				${apt_bin} ${apt_options} libpruio-modules-${latest_kernel} || true
+			fi
+			if [ "x${rtl8723bu}" = "xenabled" ] ; then
+				${apt_bin} ${apt_options} rtl8723bu-modules-${latest_kernel} || true
+			fi
+			if [ "x${rtl8821cu}" = "xenabled" ] ; then
+				${apt_bin} ${apt_options} rtl8821cu-modules-${latest_kernel} || true
+			fi
+			;;
+		LTS419)
+			if [ "x${libpruio}" = "xenabled" ] ; then
+				${apt_bin} ${apt_options} libpruio-modules-${latest_kernel} || true
+			fi
+			if [ "x${rtl8723bu}" = "xenabled" ] ; then
+				${apt_bin} ${apt_options} rtl8723bu-modules-${latest_kernel} || true
+			fi
+			if [ "x${rtl8821cu}" = "xenabled" ] ; then
+				${apt_bin} ${apt_options} rtl8821cu-modules-${latest_kernel} || true
+			fi
 			;;
 		esac
 		;;
@@ -588,6 +634,12 @@ third_party () {
 			fi
 			;;
 		LTS49)
+			if [ "x${rtl8723bu}" = "xenabled" ] ; then
+				${apt_bin} ${apt_options} rtl8723bu-modules-${latest_kernel} || true
+			fi
+			if [ "x${rtl8821cu}" = "xenabled" ] ; then
+				${apt_bin} ${apt_options} rtl8821cu-modules-${latest_kernel} || true
+			fi
 			if [ "x${ticmem}" = "xenabled" ] ; then
 				${apt_bin} ${apt_options} ti-cmem-modules-${latest_kernel} || true
 			fi
@@ -599,8 +651,24 @@ third_party () {
 			fi
 			;;
 		LTS414)
+			if [ "x${rtl8723bu}" = "xenabled" ] ; then
+				${apt_bin} ${apt_options} rtl8723bu-modules-${latest_kernel} || true
+			fi
+			if [ "x${rtl8821cu}" = "xenabled" ] ; then
+				${apt_bin} ${apt_options} rtl8821cu-modules-${latest_kernel} || true
+			fi
+			if [ "x${libpruio}" = "xenabled" ] ; then
+				${apt_bin} ${apt_options} libpruio-modules-${latest_kernel} || true
+			fi
+			if [ "x${ticmem}" = "xenabled" ] ; then
+				${apt_bin} ${apt_options} ti-cmem-modules-${latest_kernel} || true
+			fi
 			if [ "x${sgxti335x}" = "xenabled" ] ; then
 				${apt_bin} ${apt_options} ti-sgx-ti335x-modules-${latest_kernel} || true
+				if [ "x${sgx_blob}" = "xenabled" ] ; then
+					${apt_bin} ${apt_options} ti-sgx-common-ddk-um || true
+					${apt_bin} ${apt_options} ti-sgx-ti33x-ddk-um || true
+				fi
 			fi
 			if [ "x${sgxjacinto6evm}" = "xenabled" ] ; then
 				${apt_bin} ${apt_options} ti-sgx-jacinto6evm-modules-${latest_kernel} || true
@@ -628,6 +696,9 @@ third_party () {
 			if [ "x${rtl8723bu}" = "xenabled" ] ; then
 				${apt_bin} ${apt_options} rtl8723bu-modules-${latest_kernel} || true
 			fi
+			if [ "x${rtl8821cu}" = "xenabled" ] ; then
+				${apt_bin} ${apt_options} rtl8821cu-modules-${latest_kernel} || true
+			fi
 			if [ "x${ticmem}" = "xenabled" ] ; then
 				${apt_bin} ${apt_options} ti-cmem-modules-${latest_kernel} || true
 			fi
@@ -642,6 +713,9 @@ third_party () {
 			if [ "x${rtl8723bu}" = "xenabled" ] ; then
 				${apt_bin} ${apt_options} rtl8723bu-modules-${latest_kernel} || true
 			fi
+			if [ "x${rtl8821cu}" = "xenabled" ] ; then
+				${apt_bin} ${apt_options} rtl8821cu-modules-${latest_kernel} || true
+			fi
 			if [ "x${libpruio}" = "xenabled" ] ; then
 				${apt_bin} ${apt_options} libpruio-modules-${latest_kernel} || true
 			fi
@@ -650,6 +724,34 @@ third_party () {
 			fi
 			if [ "x${sgxti335x}" = "xenabled" ] ; then
 				${apt_bin} ${apt_options} ti-sgx-ti335x-modules-${latest_kernel} || true
+				if [ "x${sgx_blob}" = "xenabled" ] ; then
+					${apt_bin} ${apt_options} ti-sgx-common-ddk-um || true
+					${apt_bin} ${apt_options} ti-sgx-ti33x-ddk-um || true
+				fi
+			fi
+			if [ "x${sgxjacinto6evm}" = "xenabled" ] ; then
+				${apt_bin} ${apt_options} ti-sgx-jacinto6evm-modules-${latest_kernel} || true
+			fi
+			;;
+		LTS419)
+			if [ "x${rtl8723bu}" = "xenabled" ] ; then
+				${apt_bin} ${apt_options} rtl8723bu-modules-${latest_kernel} || true
+			fi
+			if [ "x${rtl8821cu}" = "xenabled" ] ; then
+				${apt_bin} ${apt_options} rtl8821cu-modules-${latest_kernel} || true
+			fi
+			if [ "x${libpruio}" = "xenabled" ] ; then
+				${apt_bin} ${apt_options} libpruio-modules-${latest_kernel} || true
+			fi
+#			if [ "x${ticmem}" = "xenabled" ] ; then
+#				${apt_bin} ${apt_options} ti-cmem-modules-${latest_kernel} || true
+#			fi
+			if [ "x${sgxti335x}" = "xenabled" ] ; then
+				${apt_bin} ${apt_options} ti-sgx-ti335x-modules-${latest_kernel} || true
+				if [ "x${sgx_blob}" = "xenabled" ] ; then
+					${apt_bin} ${apt_options} ti-sgx-common-ddk-um || true
+					${apt_bin} ${apt_options} ti-sgx-ti33x-ddk-um || true
+				fi
 			fi
 			if [ "x${sgxjacinto6evm}" = "xenabled" ] ; then
 				${apt_bin} ${apt_options} ti-sgx-jacinto6evm-modules-${latest_kernel} || true
@@ -680,7 +782,7 @@ stretch|buster|sid)
 	dist="${get_dist}"
 	apt_bin="apt"
 	;;
-bionic|cosmic)
+bionic|cosmic|disco)
 	dist="${get_dist}"
 	apt_bin="apt"
 	;;
@@ -725,6 +827,7 @@ mirror="https://rcn-ee.com/repos/latest"
 unset kernel_version
 unset daily_cron
 unset old_rootfs
+unset sgx_blob
 # parse commandline options
 while [ ! -z "$1" ] ; do
 	case $1 in
@@ -811,6 +914,9 @@ while [ ! -z "$1" ] ; do
 		;;
 	--cleanup-old-kernels)
 		cleanup_old_kernels="enabled"
+		;;
+	--sgx)
+		sgx_blob="enabled"
 		;;
 	esac
 	shift
