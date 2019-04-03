@@ -323,7 +323,7 @@ __AM57XX__
 0x1674	eth mii rx d2	V3	rgmii0_rxd2	rmii0_txen		mii0_txen	vin2a_d8							pr1_mii0_txen	pr2_pru1_gpi14	pr2_pru1_gpo14	gpio5_29	Driver off
 0x1678	eth mii rx d1	Y2	rgmii0_rxd1	rmii0_txd1		mii0_txd1	vin2a_d9							pr1_mii0_txd1	pr2_pru1_gpi15	pr2_pru1_gpo15	gpio5_30	Driver off
 0x167C	eth mii rx d3	W2	rgmii0_rxd0	rmii0_txd0		mii0_txd0	vin2a_fld0	vin4b_fld1						pr1_mii0_txd0	pr2_pru1_gpi16	pr2_pru1_gpo16	gpio5_31	Driver off
-0x1680		AB10	usb1_drvvbus							timer16							gpio6_12	Driver off
+0x1680	P9.13b	AB10	usb1_drvvbus							timer16							gpio6_12	Driver off
 0x1684	usb A vbus out en	AC10	usb2_drvvbus							timer15							gpio6_13	Driver off
 0x1688	P9.26a	E21	gpio6_14	mcasp1_axr8	dcan2_tx	uart10_rxd			vout2_hsync		vin4a_hsync0	i2c3_sda	timer1				gpio6_14	Driver off
 0x168C	P9.24	F20	gpio6_15	mcasp1_axr9	dcan2_rx	uart10_txd			vout2_vsync		vin4a_vsync0	i2c3_scl	timer2				gpio6_15	Driver off
@@ -367,7 +367,7 @@ __AM57XX__
 0x1724		B18	mcasp3_aclkx	mcasp3_aclkr	mcasp2_axr12	uart7_rxd				vin6a_d3				pr2_mii0_crs	pr2_pru0_gpi12	pr2_pru0_gpo12	gpio5_13	Driver off
 0x1728		F15	mcasp3_fsx	mcasp3_fsr	mcasp2_axr13	uart7_txd				vin6a_d2				pr2_mii0_col	pr2_pru0_gpi13	pr2_pru0_gpo13	gpio5_14	Driver off
 0x172C	P9.11a	B19	mcasp3_axr0		mcasp2_axr14	uart7_ctsn	uart5_rxd			vin6a_d1				pr2_mii1_rxer	pr2_pru0_gpi14	pr2_pru0_gpo14		Driver off
-0x1730	P9.13	C17	mcasp3_axr1		mcasp2_axr15	uart7_rtsn	uart5_txd			vin6a_d0		vin5a_fld0		pr2_mii1_rxlink	pr2_pru0_gpi15	pr2_pru0_gpo15		Driver off
+0x1730	P9.13a	C17	mcasp3_axr1		mcasp2_axr15	uart7_rtsn	uart5_txd			vin6a_d0		vin5a_fld0		pr2_mii1_rxlink	pr2_pru0_gpi15	pr2_pru0_gpo15		Driver off
 0x1734	P8.38b	C18	mcasp4_aclkx	mcasp4_aclkr	spi3_sclk	uart8_rxd	i2c4_sda		vout2_d16		vin4a_d16	vin5a_d15						Driver off
 0x1738	P8.37b	A21	mcasp4_fsx	mcasp4_fsr	spi3_d1	uart8_txd	i2c4_scl		vout2_d17		vin4a_d17	vin5a_d14						Driver off
 0x173C	P8.31b	G16	mcasp4_axr0		spi3_d0	uart8_ctsn	uart4_rxd		vout2_d18		vin4a_d18	vin5a_d13						Driver off
