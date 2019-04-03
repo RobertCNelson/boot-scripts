@@ -244,7 +244,7 @@ __AM57XX__
 0x1538	bluetooth wake	AE3	vin1a_d17	vin1b_d6			vout3_d6		vin3a_d1			kbd_col2	pr1_edio_data_in1	pr1_edio_data_out1	pr1_pru0_gpi14	pr1_pru0_gpo14	gpio3_21	Driver off
 0x153C	bluetooth reg on	AE5	vin1a_d18	vin1b_d5			vout3_d5		vin3a_d2			kbd_col3	pr1_edio_data_in2	pr1_edio_data_out2	pr1_pru0_gpi15	pr1_pru0_gpo15	gpio3_22	Driver off
 0x1540	wifi host wake	AE1	vin1a_d19	vin1b_d4			vout3_d4		vin3a_d3			kbd_col4	pr1_edio_data_in3	pr1_edio_data_out3	pr1_pru0_gpi16	pr1_pru0_gpo16	gpio3_23	Driver off
-0x1544	p9.26b	AE2	vin1a_d20	vin1b_d3			vout3_d3		vin3a_d4			kbd_col5	pr1_edio_data_in4	pr1_edio_data_out4	pr1_pru0_gpi17	pr1_pru0_gpo17	gpio3_24	Driver off
+0x1544	P9.26b	AE2	vin1a_d20	vin1b_d3			vout3_d3		vin3a_d4			kbd_col5	pr1_edio_data_in4	pr1_edio_data_out4	pr1_pru0_gpi17	pr1_pru0_gpo17	gpio3_24	Driver off
 0x1548	usb C irq	AE6	vin1a_d21	vin1b_d2			vout3_d2		vin3a_d5			kbd_col6	pr1_edio_data_in5	pr1_edio_data_out5	pr1_pru0_gpi18	pr1_pru0_gpo18	gpio3_25	Driver off
 0x154C		AD2	vin1a_d22	vin1b_d1			vout3_d1		vin3a_d6			kbd_col7	pr1_edio_data_in6	pr1_edio_data_out6	pr1_pru0_gpi19	pr1_pru0_gpo19	gpio3_26	Driver off
 0x1550	adc voltage select	AD3	vin1a_d23	vin1b_d0			vout3_d0		vin3a_d7			kbd_col8	pr1_edio_data_in7	pr1_edio_data_out7	pr1_pru0_gpi20	pr1_pru0_gpo20	gpio3_27	Driver off
@@ -329,7 +329,7 @@ __AM57XX__
 0x168C	P9.24	F20	gpio6_15	mcasp1_axr9	dcan2_rx	uart10_txd			vout2_vsync		vin4a_vsync0	i2c3_scl	timer2				gpio6_15	Driver off
 0x1690	pmic irq	F21	gpio6_16	mcasp1_axr10					vout2_fld		vin4a_fld0	clkout1	timer3				gpio6_16	Driver off
 0x1694	P9.25	D18	xref_clk0	mcasp2_axr8	mcasp1_axr4	mcasp1_ahclkx	mcasp5_ahclkx			vin6a_d0	hdq0	clkout2	timer13	pr2_mii1_col	pr2_pru1_gpi5	pr2_pru1_gpo5	gpio6_17	Driver off
-0x1698	P8.9	E17	xref_clk1	mcasp2_axr9	mcasp1_axr5	mcasp2_ahclkx	mcasp6_ahclkx			vin6a_clk0			timer14	pr2_mii1_crs	pr2_pru1_gpi6	pr2_pru1_gpo6	gpio6_18	Driver off
+0x1698	P8.09	E17	xref_clk1	mcasp2_axr9	mcasp1_axr5	mcasp2_ahclkx	mcasp6_ahclkx			vin6a_clk0			timer14	pr2_mii1_crs	pr2_pru1_gpi6	pr2_pru1_gpo6	gpio6_18	Driver off
 0x169C	P9.22a	B26	xref_clk2	mcasp2_axr10	mcasp1_axr6	mcasp3_ahclkx	mcasp7_ahclkx		vout2_clk		vin4a_clk0		timer15				gpio6_19	Driver off
 0x16A0	P9.41a	C23	xref_clk3	mcasp2_axr11	mcasp1_axr7	mcasp4_ahclkx	mcasp8_ahclkx		vout2_de	hdq0	vin4a_de0	clkout3	timer16				gpio6_20	Driver off
 0x16A4	P9.31b	C14	mcasp1_aclkx							vin6a_fld0			i2c3_sda	pr2_mdio_mdclk	pr2_pru1_gpi7	pr2_pru1_gpo7	gpio7_31	Driver off
@@ -350,8 +350,8 @@ __AM57XX__
 0x16E0	P9.28	A12	mcasp1_axr11	mcasp6_fsx	mcasp6_fsr	spi3_cs0				vin6a_d12			timer8	pr2_mii0_txd1	pr2_pru1_gpi13	pr2_pru1_gpo13	gpio4_17	Driver off
 0x16E4	P9.42a	E14	mcasp1_axr12	mcasp7_axr0		spi3_cs1				vin6a_d11			timer9	pr2_mii0_txd0	pr2_pru1_gpi14	pr2_pru1_gpo14	gpio4_18	Driver off
 0x16E8	P8.10	A13	mcasp1_axr13	mcasp7_axr1						vin6a_d10			timer10	pr2_mii_mr0_clk	pr2_pru1_gpi15	pr2_pru1_gpo15	gpio6_4	Driver off
-0x16EC	P8.7	G14	mcasp1_axr14	mcasp7_aclkx	mcasp7_aclkr					vin6a_d9			timer11	pr2_mii0_rxdv	pr2_pru1_gpi16	pr2_pru1_gpo16	gpio6_5	Driver off
-0x16F0	P8.8	F14	mcasp1_axr15	mcasp7_fsx	mcasp7_fsr					vin6a_d8			timer12	pr2_mii0_rxd3	pr2_pru0_gpi20	pr2_pru0_gpo20	gpio6_6	Driver off
+0x16EC	P8.07	G14	mcasp1_axr14	mcasp7_aclkx	mcasp7_aclkr					vin6a_d9			timer11	pr2_mii0_rxdv	pr2_pru1_gpi16	pr2_pru1_gpo16	gpio6_5	Driver off
+0x16F0	P8.08	F14	mcasp1_axr15	mcasp7_fsx	mcasp7_fsr					vin6a_d8			timer12	pr2_mii0_rxd3	pr2_pru0_gpi20	pr2_pru0_gpo20	gpio6_6	Driver off
 0x16F4	bluetooth audio aclkx	A19	mcasp2_aclkx							vin6a_d7				pr2_mii0_rxd2	pr2_pru0_gpi18	pr2_pru0_gpo18		Driver off
 0x16F8	bluetooth audio fsx	A18	mcasp2_fsx							vin6a_d6				pr2_mii0_rxd1	pr2_pru0_gpi19	pr2_pru0_gpo19		Driver off
 0x16FC		E15	mcasp2_aclkr	mcasp8_axr2					vout2_d8		vin4a_d8							Driver off
@@ -390,12 +390,12 @@ __AM57XX__
 0x1780	P8.20	AC4	mmc3_cmd	spi3_sclk			vin2b_d6					vin5a_d6	eCAP2_in_PWM2_out	pr2_mii1_txd2	pr2_pru0_gpi3	pr2_pru0_gpo3	gpio6_30	Driver off
 0x1784	P8.25	AC7	mmc3_dat0	spi3_d1	uart5_rxd		vin2b_d5					vin5a_d5	eQEP3A_in	pr2_mii1_txd1	pr2_pru0_gpi4	pr2_pru0_gpo4	gpio6_31	Driver off
 0x1788	P8.24	AC6	mmc3_dat1	spi3_d0	uart5_txd		vin2b_d4					vin5a_d4	eQEP3B_in	pr2_mii1_txd0	pr2_pru0_gpi5	pr2_pru0_gpo5	gpio7_0	Driver off
-0x178C	P8.5	AC9	mmc3_dat2	spi3_cs0	uart5_ctsn		vin2b_d3					vin5a_d3	eQEP3_index	pr2_mii_mr1_clk	pr2_pru0_gpi6	pr2_pru0_gpo6	gpio7_1	Driver off
-0x1790	P8.6	AC3	mmc3_dat3	spi3_cs1	uart5_rtsn		vin2b_d2					vin5a_d2	eQEP3_strobe	pr2_mii1_rxdv	pr2_pru0_gpi7	pr2_pru0_gpo7	gpio7_2	Driver off
+0x178C	P8.05	AC9	mmc3_dat2	spi3_cs0	uart5_ctsn		vin2b_d3					vin5a_d3	eQEP3_index	pr2_mii_mr1_clk	pr2_pru0_gpi6	pr2_pru0_gpo6	gpio7_1	Driver off
+0x1790	P8.06	AC3	mmc3_dat3	spi3_cs1	uart5_rtsn		vin2b_d2					vin5a_d2	eQEP3_strobe	pr2_mii1_rxdv	pr2_pru0_gpi7	pr2_pru0_gpo7	gpio7_2	Driver off
 0x1794	P8.23	AC8	mmc3_dat4	spi4_sclk	uart10_rxd		vin2b_d1					vin5a_d1	ehrpwm3A	pr2_mii1_rxd3	pr2_pru0_gpi8	pr2_pru0_gpo8	gpio1_22	Driver off
 0x1798	P8.22	AD6	mmc3_dat5	spi4_d1	uart10_txd		vin2b_d0					vin5a_d0	ehrpwm3B	pr2_mii1_rxd2	pr2_pru0_gpi9	pr2_pru0_gpo9	gpio1_23	Driver off
-0x179C	P8.3	AB8	mmc3_dat6	spi4_d0	uart10_ctsn		vin2b_de1					vin5a_hsync0	ehrpwm3_tripzone_input	pr2_mii1_rxd1	pr2_pru0_gpi10	pr2_pru0_gpo10	gpio1_24	Driver off
-0x17A0	P8.4	AB5	mmc3_dat7	spi4_cs0	uart10_rtsn		vin2b_clk1					vin5a_vsync0	eCAP3_in_PWM3_out	pr2_mii1_rxd0	pr2_pru0_gpi11	pr2_pru0_gpo11	gpio1_25	Driver off
+0x179C	P8.03	AB8	mmc3_dat6	spi4_d0	uart10_ctsn		vin2b_de1					vin5a_hsync0	ehrpwm3_tripzone_input	pr2_mii1_rxd1	pr2_pru0_gpi10	pr2_pru0_gpo10	gpio1_24	Driver off
+0x17A0	P8.04	AB5	mmc3_dat7	spi4_cs0	uart10_rtsn		vin2b_clk1					vin5a_vsync0	eCAP3_in_PWM3_out	pr2_mii1_rxd0	pr2_pru0_gpi11	pr2_pru0_gpo11	gpio1_25	Driver off
 0x17A4		A25	spi1_sclk														gpio7_7	Driver off
 0x17A8		F16	spi1_d1														gpio7_8	Driver off
 0x17AC		B25	spi1_d0														gpio7_9	Driver off
