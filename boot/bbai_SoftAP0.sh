@@ -25,9 +25,9 @@ set -e
 
 #/etc/init.d/hostapd stop
 iw phy phy0 interface add SoftAp0 type managed
-ip link set dev wlan0 name SoftAp0
-ip link set dev SoftAp0 down
-ip link set dev SoftAp0 address 11:22:33:44:55:66 || true
+#ip link set dev wlan0 name SoftAp0
+#ip link set dev SoftAp0 down
+#ip link set dev SoftAp0 address 11:22:33:44:55:66 || true
 ip link set dev SoftAp0 up
 ip addr flush dev SoftAp0
 ip addr add 192.168.8.1/24 broadcast 192.168.8.255 dev SoftAp0
