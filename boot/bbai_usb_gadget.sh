@@ -28,7 +28,7 @@ set -e
 set -x
 
 modprobe libcomposite
-echo "device" > /sys/kernel/debug/48890000.usb/mode
+#echo "device" > /sys/kernel/debug/48890000.usb/mode
 
 usb_gadget="/sys/kernel/config/usb_gadget"
 
@@ -276,9 +276,9 @@ echo ${cpsw_1_mac} > functions/rndis.usb0/dev_addr
 # Starting with kernel 4.14, we can do this to match Microsoft's built-in RNDIS driver.
 # Earlier kernels require the patch below as a work-around instead:
 # https://github.com/beagleboard/linux/commit/e94487c59cec8ba32dc1eb83900297858fdc590b
-echo EF > functions/rndis.usb0/class
-echo 04 > functions/rndis.usb0/subclass
-echo 01 > functions/rndis.usb0/protocol
+#echo 0xEF > functions/rndis.usb0/class
+#echo 0x04 > functions/rndis.usb0/subclass
+#echo 0x01 > functions/rndis.usb0/protocol
 
 # Add OS Descriptors for the latest Windows 10 rndiscmp.inf
 # https://answers.microsoft.com/en-us/windows/forum/windows_10-networking-winpc/windows-10-vs-remote-ndis-ethernet-usbgadget-not/cb30520a-753c-4219-b908-ad3d45590447
@@ -326,39 +326,39 @@ ln -s functions/mass_storage.usb0 configs/c.1/
 
 echo 48890000.usb > UDC
 
-echo "${log} Starting usb0 network"
-cat <<EOF > /etc/udhcpd.usb0.conf
-# Managed by $0 - Do not modify unless you know what you are doing!
-start      192.168.7.1
-end        192.168.7.1
-interface  usb0
-max_leases 1
-option subnet 255.255.255.252
-option domain local
-option lease 30
-EOF
-/sbin/ifconfig usb0 192.168.7.2 netmask 255.255.255.252 || true
-/usr/sbin/udhcpd /etc/udhcpd.usb0.conf
-
-echo "${log} Starting usb1 network"
-cat <<EOF > /etc/udhcpd.usb1.conf
-# Managed by $0 - Do not modify unless you know what you are doing!
-start      192.168.6.1
-end        192.168.6.1
-interface  usb0
-max_leases 1
-option subnet 255.255.255.252
-option domain local
-option lease 30
-EOF
-/sbin/ifconfig usb1 192.168.6.2 netmask 255.255.255.252 || true
-/usr/sbin/udhcpd /etc/udhcpd.usb1.conf
-
-#Just Cleanup /etc/issue, systemd starts up tty before these are updated...
-sed -i -e '/Address/d' /etc/issue || true
+# echo "${log} Starting usb0 network"
+# cat <<EOF > /etc/udhcpd.usb0.conf
+# # Managed by $0 - Do not modify unless you know what you are doing!
+# start      192.168.7.1
+# end        192.168.7.1
+# interface  usb0
+# max_leases 1
+# option subnet 255.255.255.252
+# option domain local
+# option lease 30
+# EOF
+# 
+# echo "${log} Starting usb1 network"
+# cat <<EOF > /etc/udhcpd.usb1.conf
+# # Managed by $0 - Do not modify unless you know what you are doing!
+# start      192.168.6.1
+# end        192.168.6.1
+# interface  usb0
+# max_leases 1
+# option subnet 255.255.255.252
+# option domain local
+# option lease 30
+# EOF
+# 
+# #Just Cleanup /etc/issue, systemd starts up tty before these are updated...
+# sed -i -e '/Address/d' /etc/issue || true
 
 check_getty_tty=$(systemctl is-active serial-getty@ttyGS0.service || true)
 if [ "x${check_getty_tty}" = "xinactive" ] ; then
 	systemctl restart serial-getty@ttyGS0.service || true
 fi
 
+/sbin/ifconfig usb0 192.168.7.2 netmask 255.255.255.252 || true
+# /usr/sbin/udhcpd /etc/udhcpd.usb0.conf
+/sbin/ifconfig usb1 192.168.6.2 netmask 255.255.255.252 || true
+# /usr/sbin/udhcpd /etc/udhcpd.usb1.conf
