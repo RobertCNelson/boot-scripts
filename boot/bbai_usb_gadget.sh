@@ -311,7 +311,7 @@ echo ${usb_ms_cdrom} > functions/mass_storage.usb0/lun.0/cdrom
 echo ${usb_ms_nofua} > functions/mass_storage.usb0/lun.0/nofua
 echo ${usb_ms_removable} > functions/mass_storage.usb0/lun.0/removable
 echo ${usb_ms_ro} > functions/mass_storage.usb0/lun.0/ro
-echo ${actual_image_file} > functions/mass_storage.usb0/lun.0/file
+echo ${usb_image_file} > functions/mass_storage.usb0/lun.0/file
 
 mkdir -p configs/c.1/strings/0x409
 echo "Multifunction with RNDIS" > configs/c.1/strings/0x409/configuration
