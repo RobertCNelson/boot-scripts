@@ -23,7 +23,6 @@
 set -x
 set -e
 
-#/etc/init.d/hostapd stop
 iw phy phy0 interface add SoftAp0 type managed
 #ip link set dev wlan0 name SoftAp0
 #ip link set dev SoftAp0 down
@@ -35,5 +34,5 @@ echo 1 > /proc/sys/net/ipv4/ip_forward
 iptables -w -t nat -A POSTROUTING -o wlan0 -j MASQUERADE || true
 iptables -w -A FORWARD -i wlan0 -o SoftAp0 -m state --state RELATED,ESTABLISHED -j ACCEPT || true
 iptables -w -A FORWARD -i SoftAp0 -o wlan0 -j ACCEPT || true
-/etc/init.d/hostapd start
+systemctl restart hostapd
 
