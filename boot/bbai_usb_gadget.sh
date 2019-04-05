@@ -54,9 +54,14 @@ if [ ! -f /etc/systemd/system/getty.target.wants/serial-getty@ttyGS0.service ] ;
 	ln -s /lib/systemd/system/serial-getty@.service /etc/systemd/system/getty.target.wants/serial-getty@ttyGS0.service
 fi
 
-echo "${log} Creating g_multi"
-mkdir -p /sys/kernel/config/usb_gadget/g_multi
-cd /sys/kernel/config/usb_gadget/g_multi
+if [ true ]; then
+	echo "${log} Creating g_multi"
+	mkdir -p /sys/kernel/config/usb_gadget/g_multi
+	cd /sys/kernel/config/usb_gadget/g_multi
+else
+	mkdir -p /sys/kernel/config/usb_gadget/g_mass_storage
+	cd /sys/kernel/config/usb_gadget/g_mass_storage
+fi
 
 echo ${usb_bcdUSB} > bcdUSB
 echo ${usb_idVendor} > idVendor # Linux Foundation
@@ -70,101 +75,122 @@ echo ${usb_iserialnumber} > strings/0x409/serialnumber
 echo ${usb_imanufacturer} > strings/0x409/manufacturer
 echo ${usb_iproduct} > strings/0x409/product
 
-mkdir -p functions/rndis.usb0
-# first byte of address must be even
-cpsw_2_mac="1C:BA:8C:A2:ED:6A"
-echo ${cpsw_2_mac} > functions/rndis.usb0/host_addr
-cpsw_1_mac="1C:BA:8C:A2:ED:70"
-echo ${cpsw_1_mac} > functions/rndis.usb0/dev_addr
+if [ true ]; then
+	echo "${log} enable USB mass_storage ${usb_image_file}"
+	mkdir -p functions/mass_storage.usb0
+	echo ${usb_ms_stall} > functions/mass_storage.usb0/stall
+	echo ${usb_ms_cdrom} > functions/mass_storage.usb0/lun.0/cdrom
+	echo ${usb_ms_nofua} > functions/mass_storage.usb0/lun.0/nofua
+	echo ${usb_ms_removable} > functions/mass_storage.usb0/lun.0/removable
+	echo ${usb_ms_ro} > functions/mass_storage.usb0/lun.0/ro
+	echo ${usb_image_file} > functions/mass_storage.usb0/lun.0/file
+fi
 
-# Starting with kernel 4.14, we can do this to match Microsoft's built-in RNDIS driver.
-# Earlier kernels require the patch below as a work-around instead:
-# https://github.com/beagleboard/linux/commit/e94487c59cec8ba32dc1eb83900297858fdc590b
-#echo 0xEF > functions/rndis.usb0/class
-#echo 0x04 > functions/rndis.usb0/subclass
-#echo 0x01 > functions/rndis.usb0/protocol
+if [ true ]; then
+	mkdir -p functions/rndis.usb0
+	# first byte of address must be even
+	cpsw_2_mac="1C:BA:8C:A2:ED:6A"
+	echo ${cpsw_2_mac} > functions/rndis.usb0/host_addr
+	cpsw_1_mac="1C:BA:8C:A2:ED:70"
+	echo ${cpsw_1_mac} > functions/rndis.usb0/dev_addr
 
-# Add OS Descriptors for the latest Windows 10 rndiscmp.inf
-# https://answers.microsoft.com/en-us/windows/forum/windows_10-networking-winpc/windows-10-vs-remote-ndis-ethernet-usbgadget-not/cb30520a-753c-4219-b908-ad3d45590447
-# https://www.spinics.net/lists/linux-usb/msg107185.html
-echo 1 > os_desc/use
-echo 0xCD > os_desc/b_vendor_code
-echo MSFT100 > os_desc/qw_sign
-echo "RNDIS" > functions/rndis.usb0/os_desc/interface.rndis/compatible_id
-echo "5162001" > functions/rndis.usb0/os_desc/interface.rndis/sub_compatible_id
+	# Starting with kernel 4.14, we can do this to match Microsoft's built-in RNDIS driver.
+	# Earlier kernels require the patch below as a work-around instead:
+	# https://github.com/beagleboard/linux/commit/e94487c59cec8ba32dc1eb83900297858fdc590b
+	#echo 0xEF > functions/rndis.usb0/class
+	#echo 0x04 > functions/rndis.usb0/subclass
+	#echo 0x01 > functions/rndis.usb0/protocol
 
-mkdir -p configs/c.1
-ln -s configs/c.1 os_desc
-mkdir functions/rndis.usb0/os_desc/interface.rndis/Icons
-echo 2 > functions/rndis.usb0/os_desc/interface.rndis/Icons/type
-echo "%SystemRoot%\\system32\\shell32.dll,-233" > functions/rndis.usb0/os_desc/interface.rndis/Icons/data
-mkdir functions/rndis.usb0/os_desc/interface.rndis/Label
-echo 1 > functions/rndis.usb0/os_desc/interface.rndis/Label/type
-echo "BeagleBone USB Ethernet" > functions/rndis.usb0/os_desc/interface.rndis/Label/data
+	# Add OS Descriptors for the latest Windows 10 rndiscmp.inf
+	# https://answers.microsoft.com/en-us/windows/forum/windows_10-networking-winpc/windows-10-vs-remote-ndis-ethernet-usbgadget-not/cb30520a-753c-4219-b908-ad3d45590447
+	# https://www.spinics.net/lists/linux-usb/msg107185.html
+	echo 1 > os_desc/use
+	echo 0xCD > os_desc/b_vendor_code
+	echo MSFT100 > os_desc/qw_sign
+	echo "RNDIS" > functions/rndis.usb0/os_desc/interface.rndis/compatible_id
+	echo "5162001" > functions/rndis.usb0/os_desc/interface.rndis/sub_compatible_id
 
-mkdir -p functions/ecm.usb0
-cpsw_4_mac="1C:BA:8C:A2:ED:72"
-echo ${cpsw_4_mac} > functions/ecm.usb0/host_addr
-cpsw_5_mac="1C:BA:8C:A2:ED:73"
-echo ${cpsw_5_mac} > functions/ecm.usb0/dev_addr
+	mkdir -p configs/c.1
+	ln -s configs/c.1 os_desc
+	mkdir functions/rndis.usb0/os_desc/interface.rndis/Icons
+	echo 2 > functions/rndis.usb0/os_desc/interface.rndis/Icons/type
+	echo "%SystemRoot%\\system32\\shell32.dll,-233" > functions/rndis.usb0/os_desc/interface.rndis/Icons/data
+	mkdir functions/rndis.usb0/os_desc/interface.rndis/Label
+	echo 1 > functions/rndis.usb0/os_desc/interface.rndis/Label/type
+	echo "BeagleBone USB Ethernet" > functions/rndis.usb0/os_desc/interface.rndis/Label/data
 
-mkdir -p functions/acm.usb0
+	mkdir -p functions/ecm.usb0
+	cpsw_4_mac="1C:BA:8C:A2:ED:72"
+	echo ${cpsw_4_mac} > functions/ecm.usb0/host_addr
+	cpsw_5_mac="1C:BA:8C:A2:ED:73"
+	echo ${cpsw_5_mac} > functions/ecm.usb0/dev_addr
 
-echo "${log} enable USB mass_storage ${usb_image_file}"
-mkdir -p functions/mass_storage.usb0
-echo ${usb_ms_stall} > functions/mass_storage.usb0/stall
-echo ${usb_ms_cdrom} > functions/mass_storage.usb0/lun.0/cdrom
-echo ${usb_ms_nofua} > functions/mass_storage.usb0/lun.0/nofua
-echo ${usb_ms_removable} > functions/mass_storage.usb0/lun.0/removable
-echo ${usb_ms_ro} > functions/mass_storage.usb0/lun.0/ro
-echo ${usb_image_file} > functions/mass_storage.usb0/lun.0/file
+	mkdir -p functions/acm.usb0
+fi
 
-mkdir -p configs/c.1/strings/0x409
-echo "Multifunction with RNDIS" > configs/c.1/strings/0x409/configuration
+if [ true ]; then
+	mkdir -p configs/c.1/strings/0x409
+	echo "Multifunction with RNDIS" > configs/c.1/strings/0x409/configuration
+else
+	mkdir -p configs/c.1/strings/0x409
+	echo "Mass storage" > configs/c.1/strings/0x409/configuration
+fi
+
 
 echo 500 > configs/c.1/MaxPower
 
-ln -s functions/rndis.usb0 configs/c.1/
-ln -s functions/ecm.usb0 configs/c.1/
-
-ln -s functions/acm.usb0 configs/c.1/
-ln -s functions/mass_storage.usb0 configs/c.1/
+if [ true ]; then
+	ln -s functions/mass_storage.usb0 configs/c.1/
+fi
+if [ true ]; then
+	ln -s functions/rndis.usb0 configs/c.1/
+	ln -s functions/ecm.usb0 configs/c.1/
+	ln -s functions/acm.usb0 configs/c.1/
+fi
 
 echo 48890000.usb > UDC
 
-# echo "${log} Starting usb0 network"
-# cat <<EOF > /etc/udhcpd.usb0.conf
-# # Managed by $0 - Do not modify unless you know what you are doing!
-# start      192.168.7.1
-# end        192.168.7.1
-# interface  usb0
-# max_leases 1
-# option subnet 255.255.255.252
-# option domain local
-# option lease 30
-# EOF
-# 
-# echo "${log} Starting usb1 network"
-# cat <<EOF > /etc/udhcpd.usb1.conf
-# # Managed by $0 - Do not modify unless you know what you are doing!
-# start      192.168.6.1
-# end        192.168.6.1
-# interface  usb0
-# max_leases 1
-# option subnet 255.255.255.252
-# option domain local
-# option lease 30
-# EOF
-# 
-# #Just Cleanup /etc/issue, systemd starts up tty before these are updated...
-# sed -i -e '/Address/d' /etc/issue || true
-
-check_getty_tty=$(systemctl is-active serial-getty@ttyGS0.service || true)
-if [ "x${check_getty_tty}" = "xinactive" ] ; then
-	systemctl restart serial-getty@ttyGS0.service || true
+if [ ! true ]; then
+	echo ...skipping...
+	# echo "${log} Starting usb0 network"
+	# cat <<EOF > /etc/udhcpd.usb0.conf
+	# # Managed by $0 - Do not modify unless you know what you are doing!
+	# start      192.168.7.1
+	# end        192.168.7.1
+	# interface  usb0
+	# max_leases 1
+	# option subnet 255.255.255.252
+	# option domain local
+	# option lease 30
+	# EOF
+	# 
+	# echo "${log} Starting usb1 network"
+	# cat <<EOF > /etc/udhcpd.usb1.conf
+	# # Managed by $0 - Do not modify unless you know what you are doing!
+	# start      192.168.6.1
+	# end        192.168.6.1
+	# interface  usb0
+	# max_leases 1
+	# option subnet 255.255.255.252
+	# option domain local
+	# option lease 30
+	# EOF
+	# 
+	# #Just Cleanup /etc/issue, systemd starts up tty before these are updated...
+	# sed -i -e '/Address/d' /etc/issue || true
 fi
 
-/sbin/ifconfig usb0 192.168.7.2 netmask 255.255.255.252 || true
-# /usr/sbin/udhcpd /etc/udhcpd.usb0.conf
-/sbin/ifconfig usb1 192.168.6.2 netmask 255.255.255.252 || true
-# /usr/sbin/udhcpd /etc/udhcpd.usb1.conf
+if [ true ]; then
+	check_getty_tty=$(systemctl is-active serial-getty@ttyGS0.service || true)
+	if [ "x${check_getty_tty}" = "xinactive" ] ; then
+		systemctl restart serial-getty@ttyGS0.service || true
+	fi
+fi
+
+if [ true ]; then
+	/sbin/ifconfig usb0 192.168.7.2 netmask 255.255.255.252 || true
+	# /usr/sbin/udhcpd /etc/udhcpd.usb0.conf
+	/sbin/ifconfig usb1 192.168.6.2 netmask 255.255.255.252 || true
+	# /usr/sbin/udhcpd /etc/udhcpd.usb1.conf
+fi
+
