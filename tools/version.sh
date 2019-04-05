@@ -184,15 +184,15 @@ fi
 echo "cmdline:[`cat /proc/cmdline`]"
 
 echo "dmesg | grep remote"
-dmesg | grep remote
+dmesg | grep remote || true
 echo "dmesg | grep pru"
-dmesg | grep pru
+dmesg | grep pru || true
 echo "dmesg | grep pinctrl-single"
-dmesg | grep pinctrl-single
+dmesg | grep pinctrl-single || true
 echo "dmesg | grep gpio-of-helper"
-dmesg | grep gpio-of-helper
+dmesg | grep gpio-of-helper || true
 echo "lsusb"
-lsusb
+lsusb || true
 echo "END"
 
 #
