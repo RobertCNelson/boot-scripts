@@ -20,19 +20,21 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-set -x
-set -e
+#set -x
+#set -e
 
-iw phy phy0 interface add SoftAp0 type managed
-#ip link set dev wlan0 name SoftAp0
-#ip link set dev SoftAp0 down
-#ip link set dev SoftAp0 address 11:22:33:44:55:66 || true
-ip link set dev SoftAp0 up
-ip addr flush dev SoftAp0
-ip addr add 192.168.8.1/24 broadcast 192.168.8.255 dev SoftAp0
+until [ -d /sys/class/net/wlan0/ ] ; do
+	sleep 3
+	echo "SoftAp0: waiting for /sys/class/net/wlan0/"
+done
+
+/sbin/iw phy phy0 interface add SoftAp0 type managed
+/sbin/ip link set dev SoftAp0 up
+/sbin/ip addr flush dev SoftAp0
+/sbin/ip addr add 192.168.8.1/24 broadcast 192.168.8.255 dev SoftAp0
 echo 1 > /proc/sys/net/ipv4/ip_forward
-iptables -w -t nat -A POSTROUTING -o wlan0 -j MASQUERADE || true
-iptables -w -A FORWARD -i wlan0 -o SoftAp0 -m state --state RELATED,ESTABLISHED -j ACCEPT || true
-iptables -w -A FORWARD -i SoftAp0 -o wlan0 -j ACCEPT || true
-systemctl restart hostapd
+/sbin/iptables -w -t nat -A POSTROUTING -o wlan0 -j MASQUERADE || true
+/sbin/iptables -w -A FORWARD -i wlan0 -o SoftAp0 -m state --state RELATED,ESTABLISHED -j ACCEPT || true
+/sbin/iptables -w -A FORWARD -i SoftAp0 -o wlan0 -j ACCEPT || true
+/bin/systemctl restart hostapd
 

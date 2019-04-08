@@ -20,8 +20,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-set -e
-set -x
+#set -e
+#set -x
 
 echo "host" > /sys/kernel/debug/48890000.usb/mode
 

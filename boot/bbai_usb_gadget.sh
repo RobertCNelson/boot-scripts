@@ -24,8 +24,14 @@
 #Based off:
 #https://github.com/beagleboard/meta-beagleboard/blob/master/meta-beagleboard-extras/recipes-support/usb-gadget/gadget-init/g-ether-load.sh
 
-set -e
-set -x
+#set -e
+#set -x
+
+until [ -d /sys/class/udc/48890000.usb/ ] ; do
+	sleep 3
+	echo "usb_gadget: waiting for /sys/class/udc/48890000.usb/"
+done
+
 
 modprobe libcomposite
 #echo "device" > /sys/kernel/debug/48890000.usb/mode
@@ -180,7 +186,7 @@ if [ ! true ]; then
 	# sed -i -e '/Address/d' /etc/issue || true
 fi
 
-if [ true ]; then
+if [ ! true ]; then
 	check_getty_tty=$(systemctl is-active serial-getty@ttyGS0.service || true)
 	if [ "x${check_getty_tty}" = "xinactive" ] ; then
 		systemctl restart serial-getty@ttyGS0.service || true
