@@ -21,8 +21,13 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-set -x
-set -e
+#set -x
+#set -e
+
+until [ -d /sys/class/bluetooth/hci0/ ] ; do
+	sleep 3
+	echo "bluetooth: waiting for /sys/class/bluetooth/hci0/"
+done
 
 brctl addbr btbridge0
 ip link set dev btbridge0 address 11:22:33:44:55:66 || true
