@@ -1,13 +1,13 @@
 # PPP configuration for Hologram Nova modem using Hologram SIM card
 # For more information see hologram.io
 
-connect "/usr/sbin/chat -v -f /etc/chatscripts/nova "
+connect "/usr/sbin/chat -v -f /etc/chatscripts/nova-m "
 
 # Serial device to which the modem is connected.
-/dev/ttyACM0
+/dev/ttyUSB2
 
 # Speed of the serial line.
-9600
+115200
 
 # Assumes that your IP address is allocated dynamically by the ISP.
 noipdefault
