@@ -245,6 +245,10 @@ get_device () {
 			scan_ti_kernels
 			scan_armv7_kernels
 			;;
+		BeagleBoard.org_BeagleBone_AI)
+			scan_ti_kernels
+			scan_armv7_kernels
+			;;
 		*)
 			echo "Machine: [${machine}]"
 			scan_armv7_kernels
@@ -296,6 +300,10 @@ get_device () {
 		ticmem="enabled"
 		tidebugss="enabled"
 		titemperature="enabled"
+		;;
+	BeagleBoard.org_BeagleBone_AI)
+		sgxjacinto6evm="enabled"
+		ticmem="enabled"
 		;;
 	esac
 }
