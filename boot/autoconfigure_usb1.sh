@@ -44,4 +44,8 @@ done
 #connmanctl enable gadget >/dev/null 2>&1
 #connmanctl tether gadget on >/dev/null 2>&1
 
-/sbin/ifconfig usb1 192.168.6.2 netmask 255.255.255.252 || true
+# if there is any pre-existing config for usb1, use that;
+# otherwise use a static default
+grep -rqE '^\s*iface usb1 inet' /etc/network/interfaces* && /sbin/ifup usb1 \
+	|| /sbin/ifconfig usb1 192.168.6.2 netmask 255.255.255.252 \
+	|| true
