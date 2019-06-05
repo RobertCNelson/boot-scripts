@@ -6,6 +6,7 @@ if ! id | grep -q root; then
 	exit
 fi
 
+ip addr flush dev usb1 || true
 /sbin/dhclient usb1 || true
 /sbin/route add default gw 192.168.6.1 || true
 
