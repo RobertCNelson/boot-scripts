@@ -758,7 +758,8 @@ if [ ! "x${USB_NETWORK_DISABLED}" = "xyes" ]; then
 		if [ -d /sys/kernel/config/usb_gadget ] ; then
 			/etc/init.d/udhcpd stop || true
 
-			if [ -d /etc/dnsmasq.d/ ] ; then
+			# do not write if there is a .SoftAp0 file
+			if [ -d /etc/dnsmasq.d/ -a ! -e /etc/dnsmasq.d/.SoftAp0 ] ; then
 				echo "${log} dnsmasq: setting up for usb0/usb1"
 				disable_connman_dnsproxy
 
