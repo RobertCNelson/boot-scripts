@@ -759,33 +759,36 @@ if [ ! "x${USB_NETWORK_DISABLED}" = "xyes" ]; then
 			/etc/init.d/udhcpd stop || true
 
 			# do not write if there is a .SoftAp0 file
-			if [ -d /etc/dnsmasq.d/ -a ! -e /etc/dnsmasq.d/.SoftAp0 ] ; then
-				echo "${log} dnsmasq: setting up for usb0/usb1"
-				disable_connman_dnsproxy
+			if [ -d /etc/dnsmasq.d/ ] ; then
+				if [ ! -f /etc/dnsmasq.d/.SoftAp0 ] ; then
+					echo "${log} dnsmasq: setting up for usb0/usb1"
+					disable_connman_dnsproxy
 
-				wfile="/etc/dnsmasq.d/SoftAp0"
-				echo "interface=usb0" > ${wfile}
-				echo "interface=usb1" >> ${wfile}
-				echo "port=53" >> ${wfile}
-				echo "dhcp-authoritative" >> ${wfile}
-				echo "domain-needed" >> ${wfile}
-				echo "bogus-priv" >> ${wfile}
-				echo "expand-hosts" >> ${wfile}
-				echo "cache-size=2048" >> ${wfile}
-				echo "dhcp-range=usb0,192.168.7.1,192.168.7.1,2m" >> ${wfile}
-				echo "dhcp-range=usb1,192.168.6.1,192.168.6.1,2m" >> ${wfile}
-				echo "listen-address=127.0.0.1" >> ${wfile}
-				echo "listen-address=192.168.7.2" >> ${wfile}
-				echo "listen-address=192.168.6.2" >> ${wfile}
-				echo "dhcp-option=usb0,3" >> ${wfile}
-				echo "dhcp-option=usb0,6" >> ${wfile}
-				echo "dhcp-option=usb1,3" >> ${wfile}
-				echo "dhcp-option=usb1,6" >> ${wfile}
-	#FIXME: why was this added, without connman every ip get's 172.1.8.1????
-	#			echo "address=/#/172.1.8.1" >> ${wfile}
-				echo "dhcp-leasefile=/var/run/dnsmasq.leases" >> ${wfile}
+					wfile="/etc/dnsmasq.d/SoftAp0"
+					echo "interface=usb0" > ${wfile}
+					echo "interface=usb1" >> ${wfile}
+					echo "port=53" >> ${wfile}
+					echo "dhcp-authoritative" >> ${wfile}
+					echo "domain-needed" >> ${wfile}
+					echo "bogus-priv" >> ${wfile}
+					echo "expand-hosts" >> ${wfile}
+					echo "cache-size=2048" >> ${wfile}
+					echo "dhcp-range=usb0,192.168.7.1,192.168.7.1,2m" >> ${wfile}
+					echo "dhcp-range=usb1,192.168.6.1,192.168.6.1,2m" >> ${wfile}
+					echo "listen-address=127.0.0.1" >> ${wfile}
+					echo "listen-address=192.168.7.2" >> ${wfile}
+					echo "listen-address=192.168.6.2" >> ${wfile}
+					echo "dhcp-option=usb0,3" >> ${wfile}
+					echo "dhcp-option=usb0,6" >> ${wfile}
+					echo "dhcp-option=usb1,3" >> ${wfile}
+					echo "dhcp-option=usb1,6" >> ${wfile}
+		#FIXME: why was this added, without connman every ip get's 172.1.8.1????
+		#			echo "address=/#/172.1.8.1" >> ${wfile}
+					echo "dhcp-leasefile=/var/run/dnsmasq.leases" >> ${wfile}
 
-				systemctl restart dnsmasq || true
+					systemctl restart dnsmasq || true
+				fi
+				echo "${log} LOG: dnsmasq is disabled in this script"
 			else
 				echo "${log} ERROR: dnsmasq is not installed"
 			fi
