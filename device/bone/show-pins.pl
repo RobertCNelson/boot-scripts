@@ -51,12 +51,17 @@ while( @ARGV && $ARGV[0] =~ s/^-v/-/ ) {
 }
 die "unexpected argument: $ARGV[0]\n"  if @ARGV;
 
-
-if($am5) {
-	@ARGV = '/sys/kernel/debug/pinctrl/4a003400.pinmux/pinmux-pins';
-} else {
-	@ARGV = '/sys/kernel/debug/pinctrl/44e10800.pinmux/pinmux-pins';
+my $pinmux = '/sys/kernel/debug/pinctrl/4a003400.pinmux';
+unless(-e "$pinmux/pinmux-pins") {
+	$pinmux = '/sys/kernel/debug/pinctrl/44e10800.pinmux';
+	$am5 = 0;
 }
+unless(-e "$pinmux/pinmux-pins") {
+	$pinmux = '/sys/kernel/debug/pinctrl/44e10800.pinmux-pinctrl-single';
+	$am5 = 0;
+}
+@ARGV = "$pinmux/pinmux-pins";
+
 my @usage;
 while( <> ) {
 	local $SIG{__DIE__} = sub { die "@_$_\n" };
@@ -86,10 +91,10 @@ while( <> ) {
 my @data;
 if($am5) {
 	@data = map { chomp; [ split /\t/ ] } grep /^[^#]/, <AM57XX>;
-	@ARGV = '/sys/kernel/debug/pinctrl/4a003400.pinmux/pins';
+	@ARGV = "$pinmux/pins";
 } else {
 	@data = map { chomp; [ split /\t+/ ] } grep /^[^#]/, <AM335X>;
-	@ARGV = '/sys/kernel/debug/pinctrl/44e10800.pinmux/pins';
+	@ARGV = "$pinmux/pins";
 }
 
 
@@ -134,6 +139,7 @@ while( <> ) {
 		$pull = ( "$DG{down}", " $DR{up} " )[ $mux >> 17 & 1 ];
 		$pull = "    " if $mux >> 16 & 1;
 		$mux &= 0xf;
+		$mux += 3;
 	} else {
 		$slew = ( "$D{fast}", "$R{slow}" )[ $mux >> 6 & 1 ];
 		$rx = ( "  ", "$G{rx}" )[ $mux >> 5 & 1 ];
@@ -142,7 +148,7 @@ while( <> ) {
 		$mux &= 7;
 	}
 
-	my $function = $data[ $pin ][ $mux + 3 ];
+	my $function = $data[ $pin ][ $mux ];
 	$function = "$BR{INVALID}"  if $function eq '-';
 
 	if( $usage[ $pin ] ) {
@@ -155,7 +161,7 @@ while( <> ) {
 
 	if($am5) {
 		$function = qq/$slew $rx $pull $function/;
-		printf "%-24s $Y{'%3s'} $G{'%4s'} $Y{'%1x'} %s\n", $label, $pin, $abc_ball, $mux, $function;
+		printf "%-24s $Y{'%3s'} $G{'%4s'} $Y{'%1x'} %s\n", $label, $pin, $abc_ball, $mux-3, $function;
 	} else {
 		$function = qq/$slew $rx $pull $Y{$mux} $function/;
 		printf "%-32s $Y{'%3s'} $G{'%3s'} %s\n", $label, $pin, $zcz_ball, $function;
