@@ -51,7 +51,7 @@ while( @ARGV && $ARGV[0] =~ s/^-v/-/ ) {
 }
 die "unexpected argument: $ARGV[0]\n"  if @ARGV;
 
-my $pinmux = '/sys/kernel/debug/pinctrl/4a003400.pinmux';
+my $pinmux = '/sys/kernel/debug/pinctrl/4a003400.pinmux-pinctrl-single';
 unless(-e "$pinmux/pinmux-pins") {
 	$pinmux = '/sys/kernel/debug/pinctrl/44e10800.pinmux';
 	$am5 = 0;
