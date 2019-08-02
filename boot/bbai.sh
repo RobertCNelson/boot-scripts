@@ -45,15 +45,15 @@ if [ ! "x${usb_image_file}" = "x" ] ; then
 fi
 
 usb_iserialnumber="1234BBBK5678"
-usb_iproduct="BeagleBoardX15"
+usb_iproduct="BeagleBoneAI"
 usb_manufacturer="BeagleBoard.org"
 
 #mac address:
 #bb_0_mac = eth0 - (from AM57x eeprom)
-#bb_1_mac = usb0 (BeagleBone Side) (bb_0_mac + 1)
-#bb_2_mac = usb0 (USB host, pc side) (bb_0_mac + 2)
-#bb_3_mac = usb1 (BeagleBone Side) (bb_0_mac + 3)
-#bb_4_mac = usb1 (USB host, pc side) (bb_0_mac + 4)
+#bb_1_mac = usb0 (BeagleBone Side) (bb_0_mac + 2)
+#bb_2_mac = usb0 (USB host, pc side) (bb_0_mac + 3)
+#bb_3_mac = usb1 (BeagleBone Side) (bb_0_mac + 4)
+#bb_4_mac = usb1 (USB host, pc side) (bb_0_mac + 5)
 
 mac_address="/proc/device-tree/ocp/ethernet@48484000/slave@48480200/mac-address"
 if [ -f ${mac_address} ] && [ -f /usr/bin/hexdump ] ; then
@@ -89,7 +89,7 @@ else
 
 		bb_0_6=$(echo ${bb_0_mac} | awk -F ':' '{print $6}')
 		#bc cuts off leading zero's, we need ten/ones value
-		bb_res=$(echo "obase=16;ibase=16;$bb_0_6 + 101" | bc)
+		bb_res=$(echo "obase=16;ibase=16;$bb_0_6 + 102" | bc)
 
 		bb_1_mac=${mac_0_prefix}:$(echo ${bb_res} | cut -c 2-3)
 	else
@@ -106,7 +106,7 @@ else
 
 		bb_0_6=$(echo ${bb_0_mac} | awk -F ':' '{print $6}')
 		#bc cuts off leading zero's, we need ten/ones value
-		bb_res=$(echo "obase=16;ibase=16;$bb_0_6 + 102" | bc)
+		bb_res=$(echo "obase=16;ibase=16;$bb_0_6 + 103" | bc)
 
 		bb_2_mac=${mac_0_prefix}:$(echo ${bb_res} | cut -c 2-3)
 	else
@@ -123,7 +123,7 @@ else
 
 		bb_0_6=$(echo ${bb_0_mac} | awk -F ':' '{print $6}')
 		#bc cuts off leading zero's, we need ten/ones value
-		bb_res=$(echo "obase=16;ibase=16;$bb_0_6 + 103" | bc)
+		bb_res=$(echo "obase=16;ibase=16;$bb_0_6 + 104" | bc)
 
 		bb_3_mac=${mac_0_prefix}:$(echo ${bb_res} | cut -c 2-3)
 	else
@@ -140,7 +140,7 @@ else
 
 		bb_0_6=$(echo ${bb_0_mac} | awk -F ':' '{print $6}')
 		#bc cuts off leading zero's, we need ten/ones value
-		bb_res=$(echo "obase=16;ibase=16;$bb_0_6 + 104" | bc)
+		bb_res=$(echo "obase=16;ibase=16;$bb_0_6 + 105" | bc)
 
 		bb_4_mac=${mac_0_prefix}:$(echo ${bb_res} | cut -c 2-3)
 	else
@@ -177,7 +177,7 @@ run_libcomposite () {
 
 		echo ${usb_iserialnumber} > strings/0x409/serialnumber
 		echo ${usb_imanufacturer} > strings/0x409/manufacturer
-		cat /proc/device-tree/model > strings/0x409/product
+		echo ${usb_iproduct} > strings/0x409/product
 
 		mkdir -p functions/rndis.usb0
 		# first byte of address must be even
