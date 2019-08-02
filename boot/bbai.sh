@@ -1,6 +1,15 @@
 #!/bin/sh -e
 #
 
+if [ -f /etc/rcn-ee.conf ] ; then
+	. /etc/rcn-ee.conf
+fi
+
+if [ -f /etc/default/bb-boot ] ; then
+	unset USB_NETWORK_DISABLED
+	. /etc/default/bb-boot
+fi
+
 log="BeagleBone-AI:"
 
 #Make sure the cpu_thermal zone is enabled...
@@ -49,116 +58,120 @@ usb_iproduct="BeagleBoneAI"
 usb_manufacturer="BeagleBoard.org"
 
 #mac address:
-#bb_0_mac = eth0 - (from AM57x eeprom)
-#bb_1_mac = usb0 (BeagleBone Side) (bb_0_mac + 2)
-#bb_2_mac = usb0 (USB host, pc side) (bb_0_mac + 3)
-#bb_3_mac = usb1 (BeagleBone Side) (bb_0_mac + 4)
-#bb_4_mac = usb1 (USB host, pc side) (bb_0_mac + 5)
+#cpsw_0_mac = eth0 - (from AM57x eeprom)
+#cpsw_1_mac = usb0 (BeagleBone Side) (cpsw_0_mac + 2)
+#cpsw_2_mac = usb0 (USB host, pc side) (cpsw_0_mac + 3)
+#cpsw_3_mac = usb1 (BeagleBone Side) (cpsw_0_mac + 4)
+#cpsw_4_mac = usb1 (USB host, pc side) (cpsw_0_mac + 5)
 
 mac_address="/proc/device-tree/ocp/ethernet@48484000/slave@48480200/mac-address"
 if [ -f ${mac_address} ] && [ -f /usr/bin/hexdump ] ; then
-	bb_0_mac=$(hexdump -v -e '1/1 "%02X" ":"' ${mac_address} | sed 's/.$//')
+	cpsw_0_mac=$(hexdump -v -e '1/1 "%02X" ":"' ${mac_address} | sed 's/.$//')
 
-	#Some devices are showing a blank bb_0_mac [00:00:00:00:00:00], let's fix that up...
-	if [ "x${bb_0_mac}" = "x00:00:00:00:00:00" ] ; then
-		bb_0_mac="1C:BA:8C:A2:ED:68"
+	#Some devices are showing a blank cpsw_0_mac [00:00:00:00:00:00], let's fix that up...
+	if [ "x${cpsw_0_mac}" = "x00:00:00:00:00:00" ] ; then
+		cpsw_0_mac="1C:BA:8C:A2:ED:68"
 	fi
 else
 	#todo: generate random mac... (this is a development tre board in the lab...)
-	bb_0_mac="1C:BA:8C:A2:ED:68"
+	cpsw_0_mac="1C:BA:8C:A2:ED:68"
 fi
 
 unset use_cached_bb_mac
-if [ -f /etc/bb_0_mac ] ; then
-	unset test_bb_0_mac
-	test_bb_0_mac=$(cat /etc/bb_0_mac)
-	if [ "x${bb_0_mac}" = "x${test_bb_0_mac}" ] ; then
+if [ -f /etc/cpsw_0_mac ] ; then
+	unset test_cpsw_0_mac
+	test_cpsw_0_mac=$(cat /etc/cpsw_0_mac)
+	if [ "x${cpsw_0_mac}" = "x${test_cpsw_0_mac}" ] ; then
 		use_cached_bb_mac="true"
 	else
-		echo "${bb_0_mac}" > /etc/bb_0_mac || true
+		echo "${cpsw_0_mac}" > /etc/cpsw_0_mac || true
 	fi
 else
-	echo "${bb_0_mac}" > /etc/bb_0_mac || true
+	echo "${cpsw_0_mac}" > /etc/cpsw_0_mac || true
 fi
 
-if [ "x${use_cached_bb_mac}" = "xtrue" ] && [ -f /etc/bb_1_mac ] ; then
-	bb_1_mac=$(cat /etc/bb_1_mac)
-else
-	if [ -f /usr/bin/bc ] ; then
-		mac_0_prefix=$(echo ${bb_0_mac} | cut -c 1-14)
-
-		bb_0_6=$(echo ${bb_0_mac} | awk -F ':' '{print $6}')
-		#bc cuts off leading zero's, we need ten/ones value
-		bb_res=$(echo "obase=16;ibase=16;$bb_0_6 + 102" | bc)
-
-		bb_1_mac=${mac_0_prefix}:$(echo ${bb_res} | cut -c 2-3)
-	else
-		bb_1_mac="1C:BA:8C:A2:ED:69"
-	fi
-	echo "${bb_1_mac}" > /etc/bb_1_mac || true
-fi
-
-if [ "x${use_cached_bb_mac}" = "xtrue" ] && [ -f /etc/bb_2_mac ] ; then
-	bb_2_mac=$(cat /etc/bb_2_mac)
+if [ "x${use_cached_bb_mac}" = "xtrue" ] && [ -f /etc/cpsw_1_mac ] ; then
+	cpsw_1_mac=$(cat /etc/cpsw_1_mac)
 else
 	if [ -f /usr/bin/bc ] ; then
-		mac_0_prefix=$(echo ${bb_0_mac} | cut -c 1-14)
+		mac_0_prefix=$(echo ${cpsw_0_mac} | cut -c 1-14)
 
-		bb_0_6=$(echo ${bb_0_mac} | awk -F ':' '{print $6}')
+		cpsw_0_6=$(echo ${cpsw_0_mac} | awk -F ':' '{print $6}')
 		#bc cuts off leading zero's, we need ten/ones value
-		bb_res=$(echo "obase=16;ibase=16;$bb_0_6 + 103" | bc)
+		bb_res=$(echo "obase=16;ibase=16;$cpsw_0_6 + 102" | bc)
 
-		bb_2_mac=${mac_0_prefix}:$(echo ${bb_res} | cut -c 2-3)
+		cpsw_1_mac=${mac_0_prefix}:$(echo ${bb_res} | cut -c 2-3)
 	else
-		bb_2_mac="1C:BA:8C:A2:ED:70"
+		cpsw_1_mac="1C:BA:8C:A2:ED:69"
 	fi
-	echo "${bb_2_mac}" > /etc/bb_2_mac || true
+	echo "${cpsw_1_mac}" > /etc/cpsw_1_mac || true
 fi
 
-if [ "x${use_cached_bb_mac}" = "xtrue" ] && [ -f /etc/bb_3_mac ] ; then
-	bb_3_mac=$(cat /etc/bb_3_mac)
+if [ "x${use_cached_bb_mac}" = "xtrue" ] && [ -f /etc/cpsw_2_mac ] ; then
+	cpsw_2_mac=$(cat /etc/cpsw_2_mac)
 else
 	if [ -f /usr/bin/bc ] ; then
-		mac_0_prefix=$(echo ${bb_0_mac} | cut -c 1-14)
+		mac_0_prefix=$(echo ${cpsw_0_mac} | cut -c 1-14)
 
-		bb_0_6=$(echo ${bb_0_mac} | awk -F ':' '{print $6}')
+		cpsw_0_6=$(echo ${cpsw_0_mac} | awk -F ':' '{print $6}')
 		#bc cuts off leading zero's, we need ten/ones value
-		bb_res=$(echo "obase=16;ibase=16;$bb_0_6 + 104" | bc)
+		bb_res=$(echo "obase=16;ibase=16;$cpsw_0_6 + 103" | bc)
 
-		bb_3_mac=${mac_0_prefix}:$(echo ${bb_res} | cut -c 2-3)
+		cpsw_2_mac=${mac_0_prefix}:$(echo ${bb_res} | cut -c 2-3)
 	else
-		bb_3_mac="1C:BA:8C:A2:ED:71"
+		cpsw_2_mac="1C:BA:8C:A2:ED:70"
 	fi
-	echo "${bb_3_mac}" > /etc/bb_3_mac || true
+	echo "${cpsw_2_mac}" > /etc/cpsw_2_mac || true
 fi
 
-if [ "x${use_cached_bb_mac}" = "xtrue" ] && [ -f /etc/bb_4_mac ] ; then
-	bb_4_mac=$(cat /etc/bb_4_mac)
+if [ "x${use_cached_bb_mac}" = "xtrue" ] && [ -f /etc/cpsw_3_mac ] ; then
+	cpsw_3_mac=$(cat /etc/cpsw_3_mac)
 else
 	if [ -f /usr/bin/bc ] ; then
-		mac_0_prefix=$(echo ${bb_0_mac} | cut -c 1-14)
+		mac_0_prefix=$(echo ${cpsw_0_mac} | cut -c 1-14)
 
-		bb_0_6=$(echo ${bb_0_mac} | awk -F ':' '{print $6}')
+		cpsw_0_6=$(echo ${cpsw_0_mac} | awk -F ':' '{print $6}')
 		#bc cuts off leading zero's, we need ten/ones value
-		bb_res=$(echo "obase=16;ibase=16;$bb_0_6 + 105" | bc)
+		bb_res=$(echo "obase=16;ibase=16;$cpsw_0_6 + 104" | bc)
 
-		bb_4_mac=${mac_0_prefix}:$(echo ${bb_res} | cut -c 2-3)
+		cpsw_3_mac=${mac_0_prefix}:$(echo ${bb_res} | cut -c 2-3)
 	else
-		bb_4_mac="1C:BA:8C:A2:ED:72"
+		cpsw_3_mac="1C:BA:8C:A2:ED:71"
 	fi
-	echo "${bb_4_mac}" > /etc/bb_4_mac || true
+	echo "${cpsw_3_mac}" > /etc/cpsw_3_mac || true
 fi
 
-echo "${log} bb_0_mac: [${bb_0_mac}]"
-echo "${log} bb_1_mac: [${bb_1_mac}]"
-echo "${log} bb_2_mac: [${bb_2_mac}]"
-echo "${log} bb_3_mac: [${bb_3_mac}]"
-echo "${log} bb_4_mac: [${bb_4_mac}]"
+if [ "x${use_cached_bb_mac}" = "xtrue" ] && [ -f /etc/cpsw_4_mac ] ; then
+	cpsw_4_mac=$(cat /etc/cpsw_4_mac)
+else
+	if [ -f /usr/bin/bc ] ; then
+		mac_0_prefix=$(echo ${cpsw_0_mac} | cut -c 1-14)
+
+		cpsw_0_6=$(echo ${cpsw_0_mac} | awk -F ':' '{print $6}')
+		#bc cuts off leading zero's, we need ten/ones value
+		bb_res=$(echo "obase=16;ibase=16;$cpsw_0_6 + 105" | bc)
+
+		cpsw_4_mac=${mac_0_prefix}:$(echo ${bb_res} | cut -c 2-3)
+	else
+		cpsw_4_mac="1C:BA:8C:A2:ED:72"
+	fi
+	echo "${cpsw_4_mac}" > /etc/cpsw_4_mac || true
+fi
+
+echo "${log} cpsw_0_mac: [${cpsw_0_mac}]"
+echo "${log} cpsw_1_mac: [${cpsw_1_mac}]"
+echo "${log} cpsw_2_mac: [${cpsw_2_mac}]"
+echo "${log} cpsw_3_mac: [${cpsw_3_mac}]"
+echo "${log} cpsw_4_mac: [${cpsw_4_mac}]"
 
 #udhcpd gets started at bootup, but we need to wait till g_multi is loaded, and we run it manually...
 if [ -f /var/run/udhcpd.pid ] ; then
 	echo "${log} [/etc/init.d/udhcpd stop]"
 	/etc/init.d/udhcpd stop || true
+fi
+
+if [ ! -f /etc/systemd/system/getty.target.wants/serial-getty@ttyGS0.service ] ; then
+	ln -s /lib/systemd/system/serial-getty@.service /etc/systemd/system/getty.target.wants/serial-getty@ttyGS0.service
 fi
 
 run_libcomposite () {
@@ -181,8 +194,8 @@ run_libcomposite () {
 
 		mkdir -p functions/rndis.usb0
 		# first byte of address must be even
-		echo ${bb_1_mac} > functions/rndis.usb0/host_addr
-		echo ${bb_2_mac} > functions/rndis.usb0/dev_addr
+		echo ${cpsw_1_mac} > functions/rndis.usb0/host_addr
+		echo ${cpsw_2_mac} > functions/rndis.usb0/dev_addr
 
 		# Starting with kernel 4.14, we can do this to match Microsoft's built-in RNDIS driver.
 		# Earlier kernels require the patch below as a work-around instead:
@@ -194,8 +207,8 @@ run_libcomposite () {
 		fi
 
 		mkdir -p functions/ecm.usb0
-		echo ${bb_3_mac} > functions/ecm.usb0/host_addr
-		echo ${bb_4_mac} > functions/ecm.usb0/dev_addr
+		echo ${cpsw_3_mac} > functions/ecm.usb0/host_addr
+		echo ${cpsw_4_mac} > functions/ecm.usb0/dev_addr
 
 		mkdir -p functions/acm.usb0
 
