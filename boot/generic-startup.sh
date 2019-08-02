@@ -114,6 +114,9 @@ if [ -f /proc/device-tree/model ] ; then
 	TI_OMAP5_uEVM_board)
 		script="omap5_uevm.sh"
 		;;
+	BeagleBoard.org_BeagleBone_AI)
+		script="bbai.sh"
+		;;
 	*)
 		script="generic.sh"
 		;;
