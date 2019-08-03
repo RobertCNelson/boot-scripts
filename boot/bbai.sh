@@ -195,6 +195,14 @@ run_libcomposite_start () {
 	fi
 }
 
+run_libcomposite_end () {
+	#ls /sys/class/udc
+	echo 48890000.usb > UDC
+	usb0="enable"
+	usb1="enable"
+	echo "${log} g_multi Created"
+}
+
 run_libcomposite_jdk () {
 	if [ ! -d /sys/kernel/config/usb_gadget/g_multi/ ] ; then
 		echo "${log} Creating g_multi"
@@ -266,7 +274,7 @@ run_libcomposite_jdk () {
 			ln -s functions/acm.usb0 configs/c.1/
 		fi
 
-		echo 48890000.usb > UDC
+		run_libcomposite_end
 	fi
 }
 
@@ -331,11 +339,7 @@ run_libcomposite () {
 			ln -s functions/mass_storage.usb0 configs/c.1/
 		fi
 
-		#ls /sys/class/udc
-		echo 48890000.usb > UDC
-		usb0="enable"
-		usb1="enable"
-		echo "${log} g_multi Created"
+		run_libcomposite_end
 	else
 		echo "${log} FIXME: need to bring down g_multi first, before running a second time."
 	fi
