@@ -178,16 +178,14 @@ run_libcomposite_start () {
 	echo ${usb_imanufacturer} > strings/0x409/manufacturer
 	echo ${usb_iproduct} > strings/0x409/product
 
-	if [ "x${has_img_file}" = "xtrue" ] ; then
-		echo "${log} enable USB mass_storage ${usb_image_file}"
-		mkdir -p functions/mass_storage.usb0
-		echo ${usb_ms_stall} > functions/mass_storage.usb0/stall
-		echo ${usb_ms_cdrom} > functions/mass_storage.usb0/lun.0/cdrom
-		echo ${usb_ms_nofua} > functions/mass_storage.usb0/lun.0/nofua
-		echo ${usb_ms_removable} > functions/mass_storage.usb0/lun.0/removable
-		echo ${usb_ms_ro} > functions/mass_storage.usb0/lun.0/ro
-		echo ${usb_image_file} > functions/mass_storage.usb0/lun.0/file
-	fi
+	#echo 0xEF > bDeviceClass
+	#echo 0x02 > bDeviceSubClass
+	#echo 0x01 > bDeviceProtocol
+
+	mkdir -p configs/c.1/strings/0x409
+	echo "BeagleBone Composite" > configs/c.1/strings/0x409/configuration
+
+	echo 500 > configs/c.1/MaxPower
 
 	if [ ! "x${USB_NETWORK_DISABLED}" = "xyes" ]; then
 		mkdir -p functions/rndis.usb0
@@ -223,26 +221,40 @@ run_libcomposite_start () {
 		echo 1 > functions/rndis.usb0/os_desc/interface.rndis/Label/type
 		echo "BeagleBone USB Ethernet" > functions/rndis.usb0/os_desc/interface.rndis/Label/data
 
-		mkdir -p functions/ecm.usb0
-		echo ${cpsw_3_mac} > functions/ecm.usb0/host_addr
-		echo ${cpsw_4_mac} > functions/ecm.usb0/dev_addr
+	#if [ ! "x${USB_NETWORK_DISABLED}" = "xyes" ]; then
+		ln -s functions/rndis.usb0 configs/c.1/
+	#fi
+
 	fi
 
-	mkdir -p functions/acm.usb0
-
-	mkdir -p configs/c.1/strings/0x409
-	echo "Multifunction with RNDIS" > configs/c.1/strings/0x409/configuration
-
-	echo 500 > configs/c.1/MaxPower
-
 	if [ "x${has_img_file}" = "xtrue" ] ; then
+		echo "${log} enable USB mass_storage ${usb_image_file}"
+		mkdir -p functions/mass_storage.usb0
+		echo ${usb_ms_stall} > functions/mass_storage.usb0/stall
+		echo ${usb_ms_cdrom} > functions/mass_storage.usb0/lun.0/cdrom
+		echo ${usb_ms_nofua} > functions/mass_storage.usb0/lun.0/nofua
+		echo ${usb_ms_removable} > functions/mass_storage.usb0/lun.0/removable
+		echo ${usb_ms_ro} > functions/mass_storage.usb0/lun.0/ro
+		echo ${usb_image_file} > functions/mass_storage.usb0/lun.0/file
+
+	#if [ "x${has_img_file}" = "xtrue" ] ; then
 		ln -s functions/mass_storage.usb0 configs/c.1/
+	#fi
+
 	fi
 
 	if [ ! "x${USB_NETWORK_DISABLED}" = "xyes" ]; then
-		ln -s functions/rndis.usb0 configs/c.1/
+		mkdir -p functions/ecm.usb0
+		echo ${cpsw_3_mac} > functions/ecm.usb0/host_addr
+		echo ${cpsw_4_mac} > functions/ecm.usb0/dev_addr
+
+	#if [ ! "x${USB_NETWORK_DISABLED}" = "xyes" ]; then
 		ln -s functions/ecm.usb0 configs/c.1/
+	#fi
+
 	fi
+
+	mkdir -p functions/acm.usb0
 
 	ln -s functions/acm.usb0 configs/c.1/
 
