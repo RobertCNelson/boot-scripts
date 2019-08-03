@@ -27,6 +27,8 @@
 #set -e
 #set -x
 
+unset USB_NETWORK_DISABLED
+
 until [ -d /sys/class/udc/48890000.usb/ ] ; do
 	sleep 3
 	echo "usb_gadget: waiting for /sys/class/udc/48890000.usb/"
@@ -197,7 +199,7 @@ fi
 		echo ${usb_image_file} > functions/mass_storage.usb0/lun.0/file
 	fi
 
-	if [ true ]; then
+	if [ ! "x${USB_NETWORK_DISABLED}" = "xyes" ]; then
 		mkdir -p functions/rndis.usb0
 		# first byte of address must be even
 		echo ${cpsw_1_mac} > functions/rndis.usb0/host_addr
@@ -238,19 +240,20 @@ fi
 	mkdir -p configs/c.1/strings/0x409
 	echo "Multifunction with RNDIS" > configs/c.1/strings/0x409/configuration
 
-
 	echo 500 > configs/c.1/MaxPower
 
 	if [ "x${has_img_file}" = "xtrue" ] ; then
 		ln -s functions/mass_storage.usb0 configs/c.1/
 	fi
 
-	if [ true ]; then
+	if [ ! "x${USB_NETWORK_DISABLED}" = "xyes" ]; then
 		ln -s functions/rndis.usb0 configs/c.1/
 		ln -s functions/ecm.usb0 configs/c.1/
-		ln -s functions/acm.usb0 configs/c.1/
 	fi
 
-	echo 48890000.usb > UDC
+	ln -s functions/acm.usb0 configs/c.1/
 
+	#ls /sys/class/udc
+	echo 48890000.usb > UDC
+	echo "${log} g_multi Created"
 
