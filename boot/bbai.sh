@@ -382,8 +382,8 @@ use_libcomposite () {
 	echo "${log} modprobe libcomposite"
 	modprobe libcomposite || true
 	if [ -d /sys/module/libcomposite ] ; then
-		run_libcomposite
-		#run_libcomposite_jdk
+		#run_libcomposite
+		run_libcomposite_jdk
 	else
 		if [ -f /sbin/depmod ] ; then
 			/sbin/depmod -a
