@@ -363,3 +363,9 @@ if [ -f /usr/bin/cpufreq-set ] ; then
 	echo "${log} cpufreq-set -g powersave"
 	/usr/bin/cpufreq-set -g powersave || true
 fi
+
+echo wlan0 > /sys/class/leds/beaglebone\:green\:usr4/device_name
+echo 1 > /sys/class/leds/beaglebone\:green\:usr4/link
+echo 1 > /sys/class/leds/beaglebone\:green\:usr4/rx
+echo 1 > /sys/class/leds/beaglebone\:green\:usr4/tx
+
