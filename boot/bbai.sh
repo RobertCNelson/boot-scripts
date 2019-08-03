@@ -182,6 +182,17 @@ run_libcomposite_start () {
 	echo ${usb_iserialnumber} > strings/0x409/serialnumber
 	echo ${usb_imanufacturer} > strings/0x409/manufacturer
 	echo ${usb_iproduct} > strings/0x409/product
+
+	if [ "x${has_img_file}" = "xtrue" ] ; then
+		echo "${log} enable USB mass_storage ${usb_image_file}"
+		mkdir -p functions/mass_storage.usb0
+		echo ${usb_ms_stall} > functions/mass_storage.usb0/stall
+		echo ${usb_ms_cdrom} > functions/mass_storage.usb0/lun.0/cdrom
+		echo ${usb_ms_nofua} > functions/mass_storage.usb0/lun.0/nofua
+		echo ${usb_ms_removable} > functions/mass_storage.usb0/lun.0/removable
+		echo ${usb_ms_ro} > functions/mass_storage.usb0/lun.0/ro
+		echo ${actual_image_file} > functions/mass_storage.usb0/lun.0/file
+	fi
 }
 
 run_libcomposite_jdk () {
@@ -193,17 +204,6 @@ run_libcomposite_jdk () {
 		usb_bcdUSB="0x0300"
 
 		run_libcomposite_start
-
-		if [ true ]; then
-			echo "${log} enable USB mass_storage ${usb_image_file}"
-			mkdir -p functions/mass_storage.usb0
-			echo ${usb_ms_stall} > functions/mass_storage.usb0/stall
-			echo ${usb_ms_cdrom} > functions/mass_storage.usb0/lun.0/cdrom
-			echo ${usb_ms_nofua} > functions/mass_storage.usb0/lun.0/nofua
-			echo ${usb_ms_removable} > functions/mass_storage.usb0/lun.0/removable
-			echo ${usb_ms_ro} > functions/mass_storage.usb0/lun.0/ro
-			echo ${usb_image_file} > functions/mass_storage.usb0/lun.0/file
-		fi
 
 		if [ true ]; then
 			mkdir -p functions/rndis.usb0
@@ -254,7 +254,6 @@ run_libcomposite_jdk () {
 			mkdir -p configs/c.1/strings/0x409
 			echo "Mass storage" > configs/c.1/strings/0x409/configuration
 		fi
-
 
 		echo 500 > configs/c.1/MaxPower
 
@@ -309,17 +308,6 @@ run_libcomposite () {
 		fi
 
 		mkdir -p functions/acm.usb0
-
-		if [ "x${has_img_file}" = "xtrue" ] ; then
-			echo "${log} enable USB mass_storage ${usb_image_file}"
-			mkdir -p functions/mass_storage.usb0
-			echo ${usb_ms_stall} > functions/mass_storage.usb0/stall
-			echo ${usb_ms_cdrom} > functions/mass_storage.usb0/lun.0/cdrom
-			echo ${usb_ms_nofua} > functions/mass_storage.usb0/lun.0/nofua
-			echo ${usb_ms_removable} > functions/mass_storage.usb0/lun.0/removable
-			echo ${usb_ms_ro} > functions/mass_storage.usb0/lun.0/ro
-			echo ${actual_image_file} > functions/mass_storage.usb0/lun.0/file
-		fi
 
 		mkdir -p configs/c.1/strings/0x409
 		echo "Multifunction with RNDIS" > configs/c.1/strings/0x409/configuration
