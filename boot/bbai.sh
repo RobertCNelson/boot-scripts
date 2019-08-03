@@ -309,6 +309,11 @@ use_libcomposite () {
 	#ls -lha /sys/kernel/config/*
 #	if [ ! -d /sys/kernel/config/usb_gadget/ ] ; then
 
+	until [ -d /sys/class/udc/48890000.usb/ ] ; do
+		sleep 3
+		echo "usb_gadget: waiting for /sys/class/udc/48890000.usb/"
+	done
+
 	echo "${log} modprobe libcomposite"
 	modprobe libcomposite || true
 	if [ -d /sys/module/libcomposite ] ; then
