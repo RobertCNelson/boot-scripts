@@ -193,6 +193,13 @@ run_libcomposite_start () {
 		echo ${usb_ms_ro} > functions/mass_storage.usb0/lun.0/ro
 		echo ${actual_image_file} > functions/mass_storage.usb0/lun.0/file
 	fi
+
+	if [ ! "x${USB_NETWORK_DISABLED}" = "xyes" ]; then
+		mkdir -p functions/rndis.usb0
+		# first byte of address must be even
+		echo ${cpsw_1_mac} > functions/rndis.usb0/host_addr
+		echo ${cpsw_2_mac} > functions/rndis.usb0/dev_addr
+	fi
 }
 
 run_libcomposite_end () {
@@ -220,12 +227,12 @@ run_libcomposite_jdk () {
 		run_libcomposite_start
 
 		if [ true ]; then
-			mkdir -p functions/rndis.usb0
+			#mkdir -p functions/rndis.usb0
 			# first byte of address must be even
-			cpsw_2_mac="1C:BA:8C:A2:ED:6A"
-			echo ${cpsw_2_mac} > functions/rndis.usb0/host_addr
-			cpsw_1_mac="1C:BA:8C:A2:ED:70"
-			echo ${cpsw_1_mac} > functions/rndis.usb0/dev_addr
+			#cpsw_2_mac="1C:BA:8C:A2:ED:6A"
+			#echo ${cpsw_2_mac} > functions/rndis.usb0/host_addr
+			#cpsw_1_mac="1C:BA:8C:A2:ED:70"
+			#echo ${cpsw_1_mac} > functions/rndis.usb0/dev_addr
 
 			# Starting with kernel 4.14, we can do this to match Microsoft's built-in RNDIS driver.
 			# Earlier kernels require the patch below as a work-around instead:
@@ -289,10 +296,10 @@ run_libcomposite () {
 		run_libcomposite_start
 
 		if [ ! "x${USB_NETWORK_DISABLED}" = "xyes" ]; then
-			mkdir -p functions/rndis.usb0
+			#mkdir -p functions/rndis.usb0
 			# first byte of address must be even
-			echo ${cpsw_1_mac} > functions/rndis.usb0/host_addr
-			echo ${cpsw_2_mac} > functions/rndis.usb0/dev_addr
+			#echo ${cpsw_1_mac} > functions/rndis.usb0/host_addr
+			#echo ${cpsw_2_mac} > functions/rndis.usb0/dev_addr
 
 			# Starting with kernel 4.14, we can do this to match Microsoft's built-in RNDIS driver.
 			# Earlier kernels require the patch below as a work-around instead:
