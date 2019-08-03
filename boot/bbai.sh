@@ -33,16 +33,15 @@ usb_product="USB Device"
 
 #usb0 mass_storage
 usb_ms_cdrom=0
+#*.iso file...
+#usb_ms_cdrom=1
 usb_ms_ro=1
 usb_ms_stall=0
 usb_ms_removable=1
 usb_ms_nofua=1
 
 usb_image_file="/var/local/bb_usb_mass_storage.img"
-
-if [ ! "x${usb_image_file}" = "x" ] ; then
-	echo "${log} usb_image_file=[`readlink -f ${usb_image_file}`]"
-fi
+has_img_file="true"
 
 usb_iserialnumber="1234BBBK5678"
 #usb_iproduct="BeagleBoneAI"
@@ -279,26 +278,6 @@ run_libcomposite () {
 
 use_libcomposite () {
 	echo "${log} use_libcomposite"
-	unset has_img_file
-	if [ "x${USB_IMAGE_FILE_DISABLED}" = "xyes" ]; then
-		echo "${log} usb_image_file disabled by bb-boot config file."
-	elif [ -f ${usb_image_file} ] ; then
-		actual_image_file=$(readlink -f ${usb_image_file} || true)
-		if [ ! "x${actual_image_file}" = "x" ] ; then
-			if [ -f ${actual_image_file} ] ; then
-				has_img_file="true"
-				test_usb_image_file=$(echo ${actual_image_file} | grep .iso || true)
-				if [ ! "x${test_usb_image_file}" = "x" ] ; then
-					usb_ms_cdrom=1
-				fi
-			else
-				echo "${log} FIXME: no usb_image_file"
-			fi
-		else
-			echo "${log} FIXME: no usb_image_file"
-		fi
-	fi
-
 	#ls -lha /sys/kernel/*
 	#ls -lha /sys/kernel/config/*
 #	if [ ! -d /sys/kernel/config/usb_gadget/ ] ; then
@@ -312,8 +291,8 @@ use_libcomposite () {
 	modprobe libcomposite || true
 	if [ -d /sys/module/libcomposite ] ; then
 		#run_libcomposite
-		#run_libcomposite_jdk
-		/bin/bash /opt/scripts/boot/bbai_usb_gadget.sh
+		run_libcomposite_jdk
+		#/bin/bash /opt/scripts/boot/bbai_usb_gadget.sh
 	else
 		if [ -f /sbin/depmod ] ; then
 			/sbin/depmod -a
