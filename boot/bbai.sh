@@ -218,10 +218,33 @@ run_libcomposite_start () {
 		echo MSFT100 > os_desc/qw_sign
 		echo "RNDIS" > functions/rndis.usb0/os_desc/interface.rndis/compatible_id
 		echo "5162001" > functions/rndis.usb0/os_desc/interface.rndis/sub_compatible_id
-	fi
-}
 
-run_libcomposite_end () {
+		mkdir -p configs/c.1
+		ln -s configs/c.1 os_desc
+		mkdir functions/rndis.usb0/os_desc/interface.rndis/Icons
+		echo 2 > functions/rndis.usb0/os_desc/interface.rndis/Icons/type
+		echo "%SystemRoot%\\system32\\shell32.dll,-233" > functions/rndis.usb0/os_desc/interface.rndis/Icons/data
+		mkdir functions/rndis.usb0/os_desc/interface.rndis/Label
+		echo 1 > functions/rndis.usb0/os_desc/interface.rndis/Label/type
+		echo "BeagleBone USB Ethernet" > functions/rndis.usb0/os_desc/interface.rndis/Label/data
+
+		mkdir -p functions/ecm.usb0
+		echo ${cpsw_3_mac} > functions/ecm.usb0/host_addr
+		echo ${cpsw_4_mac} > functions/ecm.usb0/dev_addr
+	fi
+
+	mkdir -p functions/acm.usb0
+
+	mkdir -p configs/c.1/strings/0x409
+	echo "Multifunction with RNDIS" > configs/c.1/strings/0x409/configuration
+
+	echo 500 > configs/c.1/MaxPower
+
+	if [ ! "x${USB_NETWORK_DISABLED}" = "xyes" ]; then
+		ln -s functions/rndis.usb0 configs/c.1/
+		ln -s functions/ecm.usb0 configs/c.1/
+	fi
+
 	if [ "x${has_img_file}" = "xtrue" ] ; then
 		ln -s functions/mass_storage.usb0 configs/c.1/
 	fi
@@ -244,51 +267,6 @@ run_libcomposite_jdk () {
 		usb_bcdUSB="0x0300"
 
 		run_libcomposite_start
-
-		if [ true ]; then
-			# Add OS Descriptors for the latest Windows 10 rndiscmp.inf
-			# https://answers.microsoft.com/en-us/windows/forum/windows_10-networking-winpc/windows-10-vs-remote-ndis-ethernet-usbgadget-not/cb30520a-753c-4219-b908-ad3d45590447
-			# https://www.spinics.net/lists/linux-usb/msg107185.html
-		#	echo 1 > os_desc/use
-		#	echo 0xCD > os_desc/b_vendor_code
-		#	echo MSFT100 > os_desc/qw_sign
-		#	echo "RNDIS" > functions/rndis.usb0/os_desc/interface.rndis/compatible_id
-		#	echo "5162001" > functions/rndis.usb0/os_desc/interface.rndis/sub_compatible_id
-
-			mkdir -p configs/c.1
-			ln -s configs/c.1 os_desc
-			mkdir functions/rndis.usb0/os_desc/interface.rndis/Icons
-			echo 2 > functions/rndis.usb0/os_desc/interface.rndis/Icons/type
-			echo "%SystemRoot%\\system32\\shell32.dll,-233" > functions/rndis.usb0/os_desc/interface.rndis/Icons/data
-			mkdir functions/rndis.usb0/os_desc/interface.rndis/Label
-			echo 1 > functions/rndis.usb0/os_desc/interface.rndis/Label/type
-			echo "BeagleBone USB Ethernet" > functions/rndis.usb0/os_desc/interface.rndis/Label/data
-
-			mkdir -p functions/ecm.usb0
-			cpsw_4_mac="1C:BA:8C:A2:ED:72"
-			echo ${cpsw_4_mac} > functions/ecm.usb0/host_addr
-			cpsw_5_mac="1C:BA:8C:A2:ED:73"
-			echo ${cpsw_5_mac} > functions/ecm.usb0/dev_addr
-
-			mkdir -p functions/acm.usb0
-		fi
-
-		if [ true ]; then
-			mkdir -p configs/c.1/strings/0x409
-			echo "Multifunction with RNDIS" > configs/c.1/strings/0x409/configuration
-		else
-			mkdir -p configs/c.1/strings/0x409
-			echo "Mass storage" > configs/c.1/strings/0x409/configuration
-		fi
-
-		echo 500 > configs/c.1/MaxPower
-
-		if [ true ]; then
-			ln -s functions/rndis.usb0 configs/c.1/
-			ln -s functions/ecm.usb0 configs/c.1/
-		fi
-
-		run_libcomposite_end
 	fi
 }
 
@@ -300,34 +278,6 @@ run_libcomposite () {
 
 		run_libcomposite_start
 
-		if [ ! "x${USB_NETWORK_DISABLED}" = "xyes" ]; then
-
-			mkdir -p functions/ecm.usb0
-			echo ${cpsw_3_mac} > functions/ecm.usb0/host_addr
-			echo ${cpsw_4_mac} > functions/ecm.usb0/dev_addr
-		fi
-
-		mkdir -p functions/acm.usb0
-
-		mkdir -p configs/c.1/strings/0x409
-		echo "Multifunction with RNDIS" > configs/c.1/strings/0x409/configuration
-
-		echo 500 > configs/c.1/MaxPower
-
-		if [ ! "x${USB_NETWORK_DISABLED}" = "xyes" ]; then
-			ln -s configs/c.1 os_desc
-			mkdir functions/rndis.usb0/os_desc/interface.rndis/Icons
-			echo 2 > functions/rndis.usb0/os_desc/interface.rndis/Icons/type
-			echo "%SystemRoot%\\system32\\shell32.dll,-233" > functions/rndis.usb0/os_desc/interface.rndis/Icons/data
-			mkdir functions/rndis.usb0/os_desc/interface.rndis/Label
-			echo 1 > functions/rndis.usb0/os_desc/interface.rndis/Label/type
-			echo "BeagleBone USB Ethernet" > functions/rndis.usb0/os_desc/interface.rndis/Label/data
-
-			ln -s functions/rndis.usb0 configs/c.1/
-			ln -s functions/ecm.usb0 configs/c.1/
-		fi
-
-		run_libcomposite_end
 	else
 		echo "${log} FIXME: need to bring down g_multi first, before running a second time."
 	fi
