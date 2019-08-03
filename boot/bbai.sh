@@ -235,13 +235,13 @@ run_libcomposite_start () {
 
 	echo 500 > configs/c.1/MaxPower
 
+	if [ "x${has_img_file}" = "xtrue" ] ; then
+		ln -s functions/mass_storage.usb0 configs/c.1/
+	fi
+
 	if [ ! "x${USB_NETWORK_DISABLED}" = "xyes" ]; then
 		ln -s functions/rndis.usb0 configs/c.1/
 		ln -s functions/ecm.usb0 configs/c.1/
-	fi
-
-	if [ "x${has_img_file}" = "xtrue" ] ; then
-		ln -s functions/mass_storage.usb0 configs/c.1/
 	fi
 
 	ln -s functions/acm.usb0 configs/c.1/

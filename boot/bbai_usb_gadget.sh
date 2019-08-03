@@ -51,6 +51,7 @@ usb_ms_removable=1
 usb_ms_nofua=1
 
 usb_image_file="/var/local/bb_usb_mass_storage.img"
+has_img_file="true"
 
 usb_iserialnumber="1234BBBK5678"
 usb_iproduct="BeagleBone"
@@ -135,9 +136,10 @@ echo "Multifunction with RNDIS" > configs/c.1/strings/0x409/configuration
 
 echo 500 > configs/c.1/MaxPower
 
-if [ true ]; then
+if [ "x${has_img_file}" = "xtrue" ] ; then
 	ln -s functions/mass_storage.usb0 configs/c.1/
 fi
+
 if [ true ]; then
 	ln -s functions/rndis.usb0 configs/c.1/
 	ln -s functions/ecm.usb0 configs/c.1/
