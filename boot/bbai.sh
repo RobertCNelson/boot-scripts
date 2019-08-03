@@ -186,7 +186,7 @@ run_libcomposite_start () {
 		echo ${usb_ms_nofua} > functions/mass_storage.usb0/lun.0/nofua
 		echo ${usb_ms_removable} > functions/mass_storage.usb0/lun.0/removable
 		echo ${usb_ms_ro} > functions/mass_storage.usb0/lun.0/ro
-		echo ${actual_image_file} > functions/mass_storage.usb0/lun.0/file
+		echo ${usb_image_file} > functions/mass_storage.usb0/lun.0/file
 	fi
 
 	if [ ! "x${USB_NETWORK_DISABLED}" = "xyes" ]; then
