@@ -196,6 +196,12 @@ run_libcomposite_start () {
 }
 
 run_libcomposite_end () {
+	if [ "x${has_img_file}" = "xtrue" ] ; then
+		ln -s functions/mass_storage.usb0 configs/c.1/
+	fi
+
+	ln -s functions/acm.usb0 configs/c.1/
+
 	#ls /sys/class/udc
 	echo 48890000.usb > UDC
 	usb0="enable"
@@ -266,12 +272,8 @@ run_libcomposite_jdk () {
 		echo 500 > configs/c.1/MaxPower
 
 		if [ true ]; then
-			ln -s functions/mass_storage.usb0 configs/c.1/
-		fi
-		if [ true ]; then
 			ln -s functions/rndis.usb0 configs/c.1/
 			ln -s functions/ecm.usb0 configs/c.1/
-			ln -s functions/acm.usb0 configs/c.1/
 		fi
 
 		run_libcomposite_end
@@ -333,10 +335,6 @@ run_libcomposite () {
 
 			ln -s functions/rndis.usb0 configs/c.1/
 			ln -s functions/ecm.usb0 configs/c.1/
-		fi
-		ln -s functions/acm.usb0 configs/c.1/
-		if [ "x${has_img_file}" = "xtrue" ] ; then
-			ln -s functions/mass_storage.usb0 configs/c.1/
 		fi
 
 		run_libcomposite_end
