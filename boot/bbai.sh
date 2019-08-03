@@ -199,6 +199,25 @@ run_libcomposite_start () {
 		# first byte of address must be even
 		echo ${cpsw_1_mac} > functions/rndis.usb0/host_addr
 		echo ${cpsw_2_mac} > functions/rndis.usb0/dev_addr
+
+		#jason had this disabled...
+		# Starting with kernel 4.14, we can do this to match Microsoft's built-in RNDIS driver.
+		# Earlier kernels require the patch below as a work-around instead:
+		# https://github.com/beagleboard/linux/commit/e94487c59cec8ba32dc1eb83900297858fdc590b
+		#if [ -f functions/rndis.usb0/class ]; then
+		#	echo EF > functions/rndis.usb0/class
+		#	echo 04 > functions/rndis.usb0/subclass
+		#	echo 01 > functions/rndis.usb0/protocol
+		#fi
+
+		# Add OS Descriptors for the latest Windows 10 rndiscmp.inf
+		# https://answers.microsoft.com/en-us/windows/forum/windows_10-networking-winpc/windows-10-vs-remote-ndis-ethernet-usbgadget-not/cb30520a-753c-4219-b908-ad3d45590447
+		# https://www.spinics.net/lists/linux-usb/msg107185.html
+		echo 1 > os_desc/use
+		echo CD > os_desc/b_vendor_code
+		echo MSFT100 > os_desc/qw_sign
+		echo "RNDIS" > functions/rndis.usb0/os_desc/interface.rndis/compatible_id
+		echo "5162001" > functions/rndis.usb0/os_desc/interface.rndis/sub_compatible_id
 	fi
 }
 
@@ -227,28 +246,14 @@ run_libcomposite_jdk () {
 		run_libcomposite_start
 
 		if [ true ]; then
-			#mkdir -p functions/rndis.usb0
-			# first byte of address must be even
-			#cpsw_2_mac="1C:BA:8C:A2:ED:6A"
-			#echo ${cpsw_2_mac} > functions/rndis.usb0/host_addr
-			#cpsw_1_mac="1C:BA:8C:A2:ED:70"
-			#echo ${cpsw_1_mac} > functions/rndis.usb0/dev_addr
-
-			# Starting with kernel 4.14, we can do this to match Microsoft's built-in RNDIS driver.
-			# Earlier kernels require the patch below as a work-around instead:
-			# https://github.com/beagleboard/linux/commit/e94487c59cec8ba32dc1eb83900297858fdc590b
-			#echo 0xEF > functions/rndis.usb0/class
-			#echo 0x04 > functions/rndis.usb0/subclass
-			#echo 0x01 > functions/rndis.usb0/protocol
-
 			# Add OS Descriptors for the latest Windows 10 rndiscmp.inf
 			# https://answers.microsoft.com/en-us/windows/forum/windows_10-networking-winpc/windows-10-vs-remote-ndis-ethernet-usbgadget-not/cb30520a-753c-4219-b908-ad3d45590447
 			# https://www.spinics.net/lists/linux-usb/msg107185.html
-			echo 1 > os_desc/use
-			echo 0xCD > os_desc/b_vendor_code
-			echo MSFT100 > os_desc/qw_sign
-			echo "RNDIS" > functions/rndis.usb0/os_desc/interface.rndis/compatible_id
-			echo "5162001" > functions/rndis.usb0/os_desc/interface.rndis/sub_compatible_id
+		#	echo 1 > os_desc/use
+		#	echo 0xCD > os_desc/b_vendor_code
+		#	echo MSFT100 > os_desc/qw_sign
+		#	echo "RNDIS" > functions/rndis.usb0/os_desc/interface.rndis/compatible_id
+		#	echo "5162001" > functions/rndis.usb0/os_desc/interface.rndis/sub_compatible_id
 
 			mkdir -p configs/c.1
 			ln -s configs/c.1 os_desc
@@ -296,28 +301,6 @@ run_libcomposite () {
 		run_libcomposite_start
 
 		if [ ! "x${USB_NETWORK_DISABLED}" = "xyes" ]; then
-			#mkdir -p functions/rndis.usb0
-			# first byte of address must be even
-			#echo ${cpsw_1_mac} > functions/rndis.usb0/host_addr
-			#echo ${cpsw_2_mac} > functions/rndis.usb0/dev_addr
-
-			# Starting with kernel 4.14, we can do this to match Microsoft's built-in RNDIS driver.
-			# Earlier kernels require the patch below as a work-around instead:
-			# https://github.com/beagleboard/linux/commit/e94487c59cec8ba32dc1eb83900297858fdc590b
-			if [ -f functions/rndis.usb0/class ]; then
-				echo EF > functions/rndis.usb0/class
-				echo 04 > functions/rndis.usb0/subclass
-				echo 01 > functions/rndis.usb0/protocol
-			fi
-
-			# Add OS Descriptors for the latest Windows 10 rndiscmp.inf
-			# https://answers.microsoft.com/en-us/windows/forum/windows_10-networking-winpc/windows-10-vs-remote-ndis-ethernet-usbgadget-not/cb30520a-753c-4219-b908-ad3d45590447
-			# https://www.spinics.net/lists/linux-usb/msg107185.html
-			echo 1 > os_desc/use
-			echo CD > os_desc/b_vendor_code
-			echo MSFT100 > os_desc/qw_sign
-			echo "RNDIS" > functions/rndis.usb0/os_desc/interface.rndis/compatible_id
-			echo "5162001" > functions/rndis.usb0/os_desc/interface.rndis/sub_compatible_id
 
 			mkdir -p functions/ecm.usb0
 			echo ${cpsw_3_mac} > functions/ecm.usb0/host_addr
