@@ -40,10 +40,6 @@ usb_ms_nofua=1
 
 usb_image_file="/var/local/bb_usb_mass_storage.img"
 
-unset dnsmasq_usb0_usb1
-
-dnsmasq_usb0_usb1="enable"
-
 if [ ! "x${usb_image_file}" = "x" ] ; then
 	echo "${log} usb_image_file=[`readlink -f ${usb_image_file}`]"
 fi
@@ -253,8 +249,6 @@ run_libcomposite_start () {
 
 	#ls /sys/class/udc
 	echo 48890000.usb > UDC
-	usb0="enable"
-	usb1="enable"
 	echo "${log} g_multi Created"
 }
 
@@ -318,7 +312,8 @@ use_libcomposite () {
 	modprobe libcomposite || true
 	if [ -d /sys/module/libcomposite ] ; then
 		#run_libcomposite
-		run_libcomposite_jdk
+		#run_libcomposite_jdk
+		/bin/bash /opt/scripts/boot/bbai_usb_gadget.sh
 	else
 		if [ -f /sbin/depmod ] ; then
 			/sbin/depmod -a
@@ -339,50 +334,44 @@ if [ -f /var/lib/misc/dnsmasq.leases ] ; then
 	rm -rf /var/lib/misc/dnsmasq.leases || true
 fi
 
-if [ "x${usb0}" = "xenable" ] ; then
-	echo "${log} Starting usb0 network"
-	# Auto-configuring the usb0 network interface:
-	$(dirname $0)/autoconfigure_usb0.sh || true
-fi
+echo "${log} Starting usb0 network"
+# Auto-configuring the usb0 network interface:
+$(dirname $0)/autoconfigure_usb0.sh || true
 
-if [ "x${usb1}" = "xenable" ] ; then
-	echo "${log} Starting usb1 network"
-	# Auto-configuring the usb1 network interface:
-	$(dirname $0)/autoconfigure_usb1.sh || true
-fi
+echo "${log} Starting usb1 network"
+# Auto-configuring the usb1 network interface:
+$(dirname $0)/autoconfigure_usb1.sh || true
 
-if [ "x${dnsmasq_usb0_usb1}" = "xenable" ] ; then
-	if [ -d /sys/kernel/config/usb_gadget ] ; then
-		/etc/init.d/udhcpd stop || true
+if [ -d /sys/kernel/config/usb_gadget ] ; then
+	/etc/init.d/udhcpd stop || true
 
-		if [ -d /etc/dnsmasq.d/ ] ; then
-			echo "${log} dnsmasq: setting up for usb0/usb1"
-			disable_connman_dnsproxy
+	if [ -d /etc/dnsmasq.d/ ] ; then
+		echo "${log} dnsmasq: setting up for usb0/usb1"
+		disable_connman_dnsproxy
 
-			wfile="/etc/dnsmasq.d/SoftAp0"
-			echo "interface=usb0" > ${wfile}
-			echo "interface=usb1" >> ${wfile}
-			echo "port=53" >> ${wfile}
-			echo "dhcp-authoritative" >> ${wfile}
-			echo "domain-needed" >> ${wfile}
-			echo "bogus-priv" >> ${wfile}
-			echo "expand-hosts" >> ${wfile}
-			echo "cache-size=2048" >> ${wfile}
-			echo "dhcp-range=usb0,192.168.7.1,192.168.7.1,2m" >> ${wfile}
-			echo "dhcp-range=usb1,192.168.6.1,192.168.6.1,2m" >> ${wfile}
-			echo "listen-address=127.0.0.1" >> ${wfile}
-			echo "listen-address=192.168.7.2" >> ${wfile}
-			echo "listen-address=192.168.6.2" >> ${wfile}
-			echo "dhcp-option=usb0,3" >> ${wfile}
-			echo "dhcp-option=usb0,6" >> ${wfile}
-			echo "dhcp-option=usb1,3" >> ${wfile}
-			echo "dhcp-option=usb1,6" >> ${wfile}
-			echo "dhcp-leasefile=/var/run/dnsmasq.leases" >> ${wfile}
+		wfile="/etc/dnsmasq.d/SoftAp0"
+		echo "interface=usb0" > ${wfile}
+		echo "interface=usb1" >> ${wfile}
+		echo "port=53" >> ${wfile}
+		echo "dhcp-authoritative" >> ${wfile}
+		echo "domain-needed" >> ${wfile}
+		echo "bogus-priv" >> ${wfile}
+		echo "expand-hosts" >> ${wfile}
+		echo "cache-size=2048" >> ${wfile}
+		echo "dhcp-range=usb0,192.168.7.1,192.168.7.1,2m" >> ${wfile}
+		echo "dhcp-range=usb1,192.168.6.1,192.168.6.1,2m" >> ${wfile}
+		echo "listen-address=127.0.0.1" >> ${wfile}
+		echo "listen-address=192.168.7.2" >> ${wfile}
+		echo "listen-address=192.168.6.2" >> ${wfile}
+		echo "dhcp-option=usb0,3" >> ${wfile}
+		echo "dhcp-option=usb0,6" >> ${wfile}
+		echo "dhcp-option=usb1,3" >> ${wfile}
+		echo "dhcp-option=usb1,6" >> ${wfile}
+		echo "dhcp-leasefile=/var/run/dnsmasq.leases" >> ${wfile}
 
-			systemctl restart dnsmasq || true
-		else
-			echo "${log} ERROR: dnsmasq is not installed"
-		fi
+		systemctl restart dnsmasq || true
+	else
+		echo "${log} ERROR: dnsmasq is not installed"
 	fi
 fi
 

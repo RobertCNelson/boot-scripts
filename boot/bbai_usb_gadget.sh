@@ -33,7 +33,7 @@ until [ -d /sys/class/udc/48890000.usb/ ] ; do
 done
 
 
-modprobe libcomposite
+#modprobe libcomposite
 #echo "device" > /sys/kernel/debug/48890000.usb/mode
 
 usb_gadget="/sys/kernel/config/usb_gadget"
@@ -60,14 +60,9 @@ if [ ! -f /etc/systemd/system/getty.target.wants/serial-getty@ttyGS0.service ] ;
 	ln -s /lib/systemd/system/serial-getty@.service /etc/systemd/system/getty.target.wants/serial-getty@ttyGS0.service
 fi
 
-if [ true ]; then
-	echo "${log} Creating g_multi"
-	mkdir -p /sys/kernel/config/usb_gadget/g_multi
-	cd /sys/kernel/config/usb_gadget/g_multi
-else
-	mkdir -p /sys/kernel/config/usb_gadget/g_mass_storage
-	cd /sys/kernel/config/usb_gadget/g_mass_storage
-fi
+echo "${log} Creating g_multi"
+mkdir -p /sys/kernel/config/usb_gadget/g_multi
+cd /sys/kernel/config/usb_gadget/g_multi
 
 echo ${usb_bcdUSB} > bcdUSB
 echo ${usb_idVendor} > idVendor # Linux Foundation
@@ -134,13 +129,8 @@ if [ true ]; then
 	mkdir -p functions/acm.usb0
 fi
 
-if [ true ]; then
-	mkdir -p configs/c.1/strings/0x409
-	echo "Multifunction with RNDIS" > configs/c.1/strings/0x409/configuration
-else
-	mkdir -p configs/c.1/strings/0x409
-	echo "Mass storage" > configs/c.1/strings/0x409/configuration
-fi
+mkdir -p configs/c.1/strings/0x409
+echo "Multifunction with RNDIS" > configs/c.1/strings/0x409/configuration
 
 
 echo 500 > configs/c.1/MaxPower
@@ -156,47 +146,4 @@ fi
 
 echo 48890000.usb > UDC
 
-if [ ! true ]; then
-	echo ...skipping...
-	# echo "${log} Starting usb0 network"
-	# cat <<EOF > /etc/udhcpd.usb0.conf
-	# # Managed by $0 - Do not modify unless you know what you are doing!
-	# start      192.168.7.1
-	# end        192.168.7.1
-	# interface  usb0
-	# max_leases 1
-	# option subnet 255.255.255.252
-	# option domain local
-	# option lease 30
-	# EOF
-	# 
-	# echo "${log} Starting usb1 network"
-	# cat <<EOF > /etc/udhcpd.usb1.conf
-	# # Managed by $0 - Do not modify unless you know what you are doing!
-	# start      192.168.6.1
-	# end        192.168.6.1
-	# interface  usb0
-	# max_leases 1
-	# option subnet 255.255.255.252
-	# option domain local
-	# option lease 30
-	# EOF
-	# 
-	# #Just Cleanup /etc/issue, systemd starts up tty before these are updated...
-	# sed -i -e '/Address/d' /etc/issue || true
-fi
-
-if [ ! true ]; then
-	check_getty_tty=$(systemctl is-active serial-getty@ttyGS0.service || true)
-	if [ "x${check_getty_tty}" = "xinactive" ] ; then
-		systemctl restart serial-getty@ttyGS0.service || true
-	fi
-fi
-
-if [ true ]; then
-	/sbin/ifconfig usb0 192.168.7.2 netmask 255.255.255.252 || true
-	# /usr/sbin/udhcpd /etc/udhcpd.usb0.conf
-	/sbin/ifconfig usb1 192.168.6.2 netmask 255.255.255.252 || true
-	# /usr/sbin/udhcpd /etc/udhcpd.usb1.conf
-fi
 
