@@ -204,11 +204,11 @@ run_libcomposite_start () {
 		# Starting with kernel 4.14, we can do this to match Microsoft's built-in RNDIS driver.
 		# Earlier kernels require the patch below as a work-around instead:
 		# https://github.com/beagleboard/linux/commit/e94487c59cec8ba32dc1eb83900297858fdc590b
-		#if [ -f functions/rndis.usb0/class ]; then
-		#	echo EF > functions/rndis.usb0/class
-		#	echo 04 > functions/rndis.usb0/subclass
-		#	echo 01 > functions/rndis.usb0/protocol
-		#fi
+		if [ -f functions/rndis.usb0/class ]; then
+			echo EF > functions/rndis.usb0/class
+			echo 04 > functions/rndis.usb0/subclass
+			echo 01 > functions/rndis.usb0/protocol
+		fi
 
 		# Add OS Descriptors for the latest Windows 10 rndiscmp.inf
 		# https://answers.microsoft.com/en-us/windows/forum/windows_10-networking-winpc/windows-10-vs-remote-ndis-ethernet-usbgadget-not/cb30520a-753c-4219-b908-ad3d45590447
