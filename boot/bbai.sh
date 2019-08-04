@@ -43,6 +43,9 @@ usb_ms_nofua=1
 usb_image_file="/var/local/bb_usb_mass_storage.img"
 has_img_file="true"
 
+#Broken today...
+usb_serial_gadget="disable"
+
 usb_iserialnumber="1234BBBK5678"
 #usb_iproduct="BeagleBoneAI"
 usb_iproduct="BeagleBone"
@@ -254,9 +257,10 @@ run_libcomposite_start () {
 
 	fi
 
-	mkdir -p functions/acm.usb0
-
-	ln -s functions/acm.usb0 configs/c.1/
+	if [ "x${usb_serial_gadget}" = "xenable" ] ; then
+		mkdir -p functions/acm.usb0
+		ln -s functions/acm.usb0 configs/c.1/
+	fi
 
 	#ls /sys/class/udc
 	echo 48890000.usb > UDC
