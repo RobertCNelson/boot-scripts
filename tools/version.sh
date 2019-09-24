@@ -133,6 +133,11 @@ if [ -b /dev/mmcblk1 ] ; then
 	omap_bootloader
 fi
 
+if [ -f /proc/device-tree/chosen/base_dtb ] ; then
+	echo "UBOOT: Booted Device-Tree:[`cat /proc/device-tree/chosen/base_dtb`]"
+	ls /proc/device-tree/chosen/overlays/ -p | grep -v / | grep -v name | sed 's/^/UBOOT: Loaded Overlays:[/' | sed 's/$/]/'
+fi
+
 echo "kernel:[`uname -r`]"
 
 if [ -f /usr/bin/nodejs ] ; then
@@ -148,6 +153,7 @@ if [ -f /boot/uEnv.txt ] ; then
 fi
 
 if [ -f /boot/uEnv.txt ] ; then
+	echo "/boot/uEnv.txt Settings:"
 	unset test_var
 	test_var=$(cat /boot/uEnv.txt | grep -v '#' | grep enable_uboot_overlays=1 || true)
 	if [ "x${test_var}" != "x" ] ; then
@@ -157,11 +163,6 @@ if [ -f /boot/uEnv.txt ] ; then
 		cat /boot/uEnv.txt | grep uboot_ | grep -v '#' | sed 's/^/uboot_overlay_options:[/' | sed 's/$/]/'
 		cat /boot/uEnv.txt | grep dtb_overlay | grep -v '#' | sed 's/^/uboot_overlay_options:[/' | sed 's/$/]/'
 	fi
-fi
-
-if [ -f /proc/device-tree/chosen/base_dtb ] ; then
-	echo "UBOOT: Booted Device-Tree:[`cat /proc/device-tree/chosen/base_dtb`]"
-	ls /proc/device-tree/chosen/overlays/ -p | grep -v / | grep -v name | sed 's/^/UBOOT: Loaded Overlays:[/' | sed 's/$/]/'
 fi
 
 echo "pkg check: to individually upgrade run: [sudo apt install --only-upgrade <pkg>]"
