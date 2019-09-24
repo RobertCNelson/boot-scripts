@@ -160,9 +160,8 @@ if [ -f /boot/uEnv.txt ] ; then
 fi
 
 if [ -f /proc/device-tree/chosen/base_dtb ] ; then
-	echo "Booting Device-Tree: `cat /proc/device-tree/chosen/base_dtb`"
-	echo "Loaded Overlays:"
-	ls /proc/device-tree/chosen/overlays/ -p | grep -v / | grep -v name
+	echo "UBOOT: Booted Device-Tree:[`cat /proc/device-tree/chosen/base_dtb`]"
+	ls /proc/device-tree/chosen/overlays/ -p | grep -v / | grep -v name | sed 's/^/UBOOT: Loaded Overlays:[/' | sed 's/$/]/'
 fi
 
 echo "pkg check: to individually upgrade run: [sudo apt install --only-upgrade <pkg>]"
