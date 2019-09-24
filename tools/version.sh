@@ -135,7 +135,7 @@ fi
 
 if [ -f /proc/device-tree/chosen/base_dtb ] ; then
 	echo "UBOOT: Booted Device-Tree:[`cat /proc/device-tree/chosen/base_dtb`]"
-	ls /proc/device-tree/chosen/overlays/ -p | grep -v / | grep -v name | sed 's/^/UBOOT: Loaded Overlays:[/' | sed 's/$/]/'
+	ls /proc/device-tree/chosen/overlays/ -p | grep -v / | grep -v name | sed 's/^/UBOOT: Loaded Overlay:[/' | sed 's/$/]/'
 fi
 
 echo "kernel:[`uname -r`]"
