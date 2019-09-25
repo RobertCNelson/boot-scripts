@@ -682,7 +682,7 @@ third_party () {
 				${apt_bin} ${apt_options} libpruio-modules-${latest_kernel} || true
 			fi
 			if [ "x${ticmem}" = "xenabled" ] ; then
-				${apt_bin} ${apt_options} ti-cmem-modules-${latest_kernel} || true
+				${apt_bin} ${apt_options} ti-cmem-${cmem_version}-modules-${latest_kernel} || true
 			fi
 			if [ "x${sgxti335x}" = "xenabled" ] ; then
 				${apt_bin} ${apt_options} ti-sgx-ti335x-modules-${latest_kernel} || true
@@ -741,7 +741,7 @@ third_party () {
 				${apt_bin} ${apt_options} libpruio-modules-${latest_kernel} || true
 			fi
 			if [ "x${ticmem}" = "xenabled" ] ; then
-				${apt_bin} ${apt_options} ti-cmem-modules-${latest_kernel} || true
+				${apt_bin} ${apt_options} ti-cmem-${cmem_version}-modules-${latest_kernel} || true
 			fi
 			if [ "x${sgxti335x}" = "xenabled" ] ; then
 				${apt_bin} ${apt_options} ti-sgx-ti335x-modules-${latest_kernel} || true
@@ -755,6 +755,7 @@ third_party () {
 			fi
 			;;
 		LTS419)
+			cmem_version="4.16.00.00"
 			if [ "x${rtl8723bu}" = "xenabled" ] ; then
 				${apt_bin} ${apt_options} rtl8723bu-modules-${latest_kernel} || true
 			fi
@@ -764,9 +765,9 @@ third_party () {
 			if [ "x${libpruio}" = "xenabled" ] ; then
 				${apt_bin} ${apt_options} libpruio-modules-${latest_kernel} || true
 			fi
-#			if [ "x${ticmem}" = "xenabled" ] ; then
-#				${apt_bin} ${apt_options} ti-cmem-modules-${latest_kernel} || true
-#			fi
+			if [ "x${ticmem}" = "xenabled" ] ; then
+				${apt_bin} ${apt_options} ti-cmem-${cmem_version}-modules-${latest_kernel} || true
+			fi
 			if [ "x${sgxti335x}" = "xenabled" ] ; then
 				${apt_bin} ${apt_options} ti-sgx-ti335x-modules-${latest_kernel} || true
 				if [ "x${sgx_blob}" = "xenabled" ] ; then
@@ -798,22 +799,32 @@ case "${get_dist}" in
 wheezy|jessie)
 	dist="${get_dist}"
 	apt_bin="apt-get"
+	cmem_version="4.15.00.02"
 	;;
-stretch|buster|sid)
+stretch)
 	dist="${get_dist}"
 	apt_bin="apt"
+	cmem_version="4.15.00.02"
+	;;
+buster|sid)
+	dist="${get_dist}"
+	apt_bin="apt"
+	cmem_version="4.16.00.00"
 	;;
 bionic|cosmic|disco)
 	dist="${get_dist}"
 	apt_bin="apt"
+	cmem_version="4.16.00.00"
 	;;
 trusty|utopic|vivid|wily|xenial|yakkety|artful)
 	dist="${get_dist}"
 	apt_bin="apt-get"
+	cmem_version="4.15.00.02"
 	;;
 *)
 	dist=""
 	apt_bin="apt-get"
+	cmem_version="4.15.00.02"
 	;;
 esac
 
