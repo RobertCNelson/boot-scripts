@@ -497,6 +497,11 @@ run_libcomposite () {
 		echo ${usb_imanufacturer} > strings/0x409/manufacturer
 		echo ${usb_iproduct} > strings/0x409/product
 
+		mkdir -p configs/c.1/strings/0x409
+		echo "BeagleBone Composite" > configs/c.1/strings/0x409/configuration
+
+		echo 500 > configs/c.1/MaxPower
+
 		if [ ! "x${USB_NETWORK_DISABLED}" = "xyes" ]; then
 			mkdir -p functions/rndis.usb0
 			# first byte of address must be even
@@ -521,12 +526,17 @@ run_libcomposite () {
 			echo "RNDIS" > functions/rndis.usb0/os_desc/interface.rndis/compatible_id
 			echo "5162001" > functions/rndis.usb0/os_desc/interface.rndis/sub_compatible_id
 
-			mkdir -p functions/ecm.usb0
-			echo ${cpsw_4_mac} > functions/ecm.usb0/host_addr
-			echo ${cpsw_5_mac} > functions/ecm.usb0/dev_addr
-		fi
+			mkdir -p configs/c.1
+			ln -s configs/c.1 os_desc
+			mkdir -p functions/rndis.usb0/os_desc/interface.rndis/Icons
+			echo 2 > functions/rndis.usb0/os_desc/interface.rndis/Icons/type
+			echo "%SystemRoot%\\system32\\shell32.dll,-233" > functions/rndis.usb0/os_desc/interface.rndis/Icons/data
+			mkdir -p functions/rndis.usb0/os_desc/interface.rndis/Label
+			echo 1 > functions/rndis.usb0/os_desc/interface.rndis/Label/type
+			echo "BeagleBone USB Ethernet" > functions/rndis.usb0/os_desc/interface.rndis/Label/data
 
-		mkdir -p functions/acm.usb0
+			ln -s functions/rndis.usb0 configs/c.1/
+		fi
 
 		if [ "x${has_img_file}" = "xtrue" ] ; then
 			echo "${log} enable USB mass_storage ${usb_image_file}"
@@ -537,12 +547,9 @@ run_libcomposite () {
 			echo ${usb_ms_removable} > functions/mass_storage.usb0/lun.0/removable
 			echo ${usb_ms_ro} > functions/mass_storage.usb0/lun.0/ro
 			echo ${actual_image_file} > functions/mass_storage.usb0/lun.0/file
+
+			ln -s functions/mass_storage.usb0 configs/c.1/
 		fi
-
-		mkdir -p configs/c.1/strings/0x409
-		echo "Multifunction with RNDIS" > configs/c.1/strings/0x409/configuration
-
-		echo 500 > configs/c.1/MaxPower
 
 		if [ ! "x${USB_NETWORK_DISABLED}" = "xyes" ]; then
 			ln -s configs/c.1 os_desc
@@ -554,12 +561,18 @@ run_libcomposite () {
 			echo "BeagleBone USB Ethernet" > functions/rndis.usb0/os_desc/interface.rndis/Label/data
 
 			ln -s functions/rndis.usb0 configs/c.1/
+		fi
+
+		if [ ! "x${USB_NETWORK_DISABLED}" = "xyes" ]; then
+			mkdir -p functions/ecm.usb0
+			echo ${cpsw_4_mac} > functions/ecm.usb0/host_addr
+			echo ${cpsw_5_mac} > functions/ecm.usb0/dev_addr
+
 			ln -s functions/ecm.usb0 configs/c.1/
 		fi
+
+		mkdir -p functions/acm.usb0
 		ln -s functions/acm.usb0 configs/c.1/
-		if [ "x${has_img_file}" = "xtrue" ] ; then
-			ln -s functions/mass_storage.usb0 configs/c.1/
-		fi
 
 		#ls /sys/class/udc
 		#v4.4.x-ti
