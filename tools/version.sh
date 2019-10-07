@@ -202,8 +202,10 @@ echo "dmesg | grep pinctrl-single"
 dmesg | grep pinctrl-single || true
 echo "dmesg | grep gpio-of-helper"
 dmesg | grep gpio-of-helper || true
-echo "lsusb"
-lsusb || true
+if [ -f /usr/bin/lsusb ] ; then
+	echo "lsusb"
+	lsusb || true
+fi
 echo "END"
 
 #
