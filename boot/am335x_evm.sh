@@ -171,6 +171,11 @@ TI_AM335x_BeagleBone_Black_Wireless_RoboticsCape)
 	#recovers 82MB of space
 	cleanup_extra_docs
 	;;
+SeeedStudio_BeagleBone_Green_Gateway)
+	has_wifi="enable"
+	cleanup_extra_docs
+	dnsmasq_usb0_usb1="enable"
+	;;
 *)
 	has_wifi="disable"
 	unset board_bbgw
