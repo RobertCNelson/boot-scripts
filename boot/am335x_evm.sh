@@ -43,7 +43,13 @@ fi
 
 if [ -f /etc/default/bb-boot ] ; then
 	unset USB_NETWORK_DISABLED
+	unset USB_NETWORK_RNDIS_DISABLED
+	unset USB_NETWORK_CDC_DISABLED
 	. /etc/default/bb-boot
+	if [ "x${USB_NETWORK_DISABLED}" = "xyes" ] ; then
+		USB_NETWORK_RNDIS_DISABLED="yes"
+		USB_NETWORK_CDC_DISABLED="yes"
+	fi
 fi
 
 log="am335x_evm:"
@@ -507,7 +513,7 @@ run_libcomposite () {
 
 		echo 500 > configs/c.1/MaxPower
 
-		if [ ! "x${USB_NETWORK_DISABLED}" = "xyes" ]; then
+		if [ ! "x${USB_NETWORK_RNDIS_DISABLED}" = "xyes" ]; then
 			mkdir -p functions/rndis.usb0
 			# first byte of address must be even
 			echo ${cpsw_2_mac} > functions/rndis.usb0/host_addr
@@ -556,7 +562,7 @@ run_libcomposite () {
 			ln -s functions/mass_storage.usb0 configs/c.1/
 		fi
 
-		if [ ! "x${USB_NETWORK_DISABLED}" = "xyes" ]; then
+		if [ ! "x${USB_NETWORK_RNDIS_DISABLED}" = "xyes" ]; then
 			ln -s configs/c.1 os_desc
 			mkdir functions/rndis.usb0/os_desc/interface.rndis/Icons
 			echo 2 > functions/rndis.usb0/os_desc/interface.rndis/Icons/type
@@ -566,14 +572,16 @@ run_libcomposite () {
 			echo "BeagleBone USB Ethernet" > functions/rndis.usb0/os_desc/interface.rndis/Label/data
 
 			ln -s functions/rndis.usb0 configs/c.1/
+			usb0="enable"
 		fi
 
-		if [ ! "x${USB_NETWORK_DISABLED}" = "xyes" ]; then
+		if [ ! "x${USB_NETWORK_CDC_DISABLED}" = "xyes" ]; then
 			mkdir -p functions/ecm.usb0
 			echo ${cpsw_4_mac} > functions/ecm.usb0/host_addr
 			echo ${cpsw_5_mac} > functions/ecm.usb0/dev_addr
 
 			ln -s functions/ecm.usb0 configs/c.1/
+			usb1="enable"
 		fi
 
 		mkdir -p functions/acm.usb0
@@ -590,8 +598,6 @@ run_libcomposite () {
 			fi
 		fi
 
-		usb0="enable"
-		usb1="enable"
 		echo "${log} g_multi Created"
 	else
 		echo "${log} FIXME: need to bring down g_multi first, before running a second time."
