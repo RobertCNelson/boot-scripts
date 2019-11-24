@@ -87,30 +87,3 @@ do
     fi
 
 done
-
-
-
-
-
-
-
-
-
-
-# file.write("[service_"+ ssid[1] + "]\n")		# Use tamulink detailed ssid for file title
-# file.write("Type = wifi\n")				# this is a WiFi file
-# file.write("SSID = " + connmanctl_ssid[2] + "\n")	# Set SSID to detailed SSID
-# file.write("EAP = peap\n")				# Set type of encapsulation
-# file.write("Phase2 = MSCHAPV2\n")			# Set type of authentication for network
-# file.write("Identity= " + username + "\n")		# Set network username
-# file.write("Passphrase= " + password + "\n")		# Set network password
-
-# [service_wifi_38d269e00e73_74616d756c696e6b2d777061_managed_ieee8021x]
-# [service_wifi_38d269e00e73_74616d756c696e6b2d777061_managed_ieee8021x]
-
-# Type = wifi
-# SSID = 74616d756c696e6b2d777061
-# EAP = peap
-# Phase2 = MSCHAPV2
-# Identity= ansarid
-# Passphrase= DaniTAMU083098
