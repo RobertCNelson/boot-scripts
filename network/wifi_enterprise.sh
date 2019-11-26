@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Written by Daniyal Ansari
+# github.com/ansarid
+
 reset
 
 #Promt for root password
@@ -18,7 +21,7 @@ until ((${#wifi[@]} > 0)); do
 
     wifi=(${wifi// / })
 
-    if [ ${wifi[0]} = "*AR" ]||[ ${wifi[0]} = "*AO" ]; then
+    if [ ${wifi[0]} = "*AR" ]||[ ${wifi[0]} = "*AO" ]||[ ${wifi[0]} = "*A" ]; then
         wifi=("${wifi[@]:1}") #removed the 1st parameter
     fi
 
