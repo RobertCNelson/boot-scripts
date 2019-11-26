@@ -25,6 +25,11 @@ if ! id | grep -q root; then
 	exit
 fi
 
+export LANGUAGE=en_US.UTF-8
+export LANG=en_US.UTF-8
+export LC_ALL=en_US.UTF-8
+export DEBIAN_FRONTEND=noninteractive
+
 test_ti_kernel_version () {
 	if [ "x${kernel}" = "x" ] ; then
 		major=$(uname -r | awk '{print $1}' | cut -d. -f1)
