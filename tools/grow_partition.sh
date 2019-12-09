@@ -41,7 +41,7 @@ fi
 if [ ! "x${root_drive}" = "x" ] ; then
 	boot_drive="${root_drive%?}1"
 else
-	echo "Error: script halting, could detect drive..."
+	echo "Error: script halting, could not detect drive..."
 	exit 1
 fi
 
@@ -100,7 +100,7 @@ expand_partition () {
 	elif [ "x${boot_drive}" = "x/dev/mmcblk1p1" ] ; then
 		drive="/dev/mmcblk1"
 	else
-		echo "Error: script halting, could detect drive..."
+		echo "Error: script halting, could not detect drive..."
 		exit 1
 	fi
 
