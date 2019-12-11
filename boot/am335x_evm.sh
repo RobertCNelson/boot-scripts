@@ -900,13 +900,6 @@ if [ "x${blue_fix_uarts}" = "xenable" ] ; then
 	fi
 fi
 
-if [ -f /etc/docker.init.webthings-gateway ] ; then
-	docker run -d --rm --name webthings-gateway --net=host -v /opt/docker/:/home/node/.mozilla-iot mozillaiot/gateway:arm
-	systemctl enable docker-webthings-gateway.service || true
-	mv /etc/docker.init.webthings-gateway /etc/docker.enabled.webthings-gateway
-	sync
-fi
-
 unset enable_cape_universal
 enable_cape_universal=$(grep 'cape_universal=enable' /proc/cmdline || true)
 if [ ! "x${enable_cape_universal}" = "x" ] ; then
@@ -1004,6 +997,15 @@ if [ ! "x${enable_cape_universal}" = "x" ] ; then
 				fi
 			fi
 		fi
+	fi
+fi
+
+#This is terrible, need to find a better way. ;)
+if [ -f /etc/docker.init.webthings-gateway ] ; then
+	if [ -d /sys/module/cdc_acm/ ] ; then
+		docker run -d --rm --name webthings-gateway --net=host -v /opt/docker/:/home/node/.mozilla-iot --device=/dev/ttyACM0 mozillaiot/gateway:arm
+	else
+		docker run -d --rm --name webthings-gateway --net=host -v /opt/docker/:/home/node/.mozilla-iot mozillaiot/gateway:arm
 	fi
 fi
 #
