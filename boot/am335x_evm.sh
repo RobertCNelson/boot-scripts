@@ -901,7 +901,7 @@ if [ "x${blue_fix_uarts}" = "xenable" ] ; then
 fi
 
 if [ -f /etc/docker.init.webthings-gateway ] ; then
-	docker run -d --rm --restart always --name webthings-gateway --net=host -v /opt/docker/:/home/node/.mozilla-iot mozillaiot/gateway:arm
+	docker run -d --rm --name webthings-gateway --net=host -v /opt/docker/:/home/node/.mozilla-iot mozillaiot/gateway:arm
 	systemctl enable docker-webthings-gateway.service || true
 fi
 
