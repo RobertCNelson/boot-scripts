@@ -903,6 +903,8 @@ fi
 if [ -f /etc/docker.init.webthings-gateway ] ; then
 	docker run -d --rm --name webthings-gateway --net=host -v /opt/docker/:/home/node/.mozilla-iot mozillaiot/gateway:arm
 	systemctl enable docker-webthings-gateway.service || true
+	mv /etc/docker.init.webthings-gateway /etc/docker.enabled.webthings-gateway
+	sync
 fi
 
 unset enable_cape_universal
