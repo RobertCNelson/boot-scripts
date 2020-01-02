@@ -179,6 +179,7 @@ TI_AM335x_BeagleBone_Black_Wireless_RoboticsCape)
 	;;
 SeeedStudio_BeagleBone_Green_Gateway)
 	has_wifi="enable"
+	board_bbgg="enable"
 	cleanup_extra_docs
 	dnsmasq_usb0_usb1="enable"
 	;;
@@ -830,6 +831,13 @@ if [ -f /usr/bin/create_ap ] ; then
 		systemctl start create_ap &
 	fi
 fi
+
+if [ "x${board_bbgg}" = "xenable" ] ; then
+    ifconfig eth0 down
+    ifconfig eth0 hw ether ${cpsw_4_mac}
+    ifconfig eth0 up || true    
+fi
+
 
 #Just Cleanup /etc/issue, systemd starts up tty before these are updated...
 sed -i -e '/Address/d' /etc/issue || true
