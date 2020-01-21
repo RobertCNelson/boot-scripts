@@ -1,5 +1,8 @@
 #!/bin/bash -e
 
+#example:
+#/opt/buster/ *(rw,sync,no_subtree_check,no_root_squash)
+
 if [ "$(which lsb_release)" ] ; then
 	dist=$(lsb_release -cs)
 else
