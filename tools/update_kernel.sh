@@ -283,27 +283,32 @@ get_device () {
 	unset tidebugss
 	unset titemperature
 	unset kernel_headers
+	unset seeed_modules
 
 	case "${machine}" in
 	Arrow_BeagleBone_Black_Industrial)
 		libpruio="enabled"
 		es8="enabled"
 		sgxti335x="enabled"
+		seeed_modules="enabled"
 		;;
 	TI_AM335x_BeagleBone*)
 		libpruio="enabled"
 		es8="enabled"
 		sgxti335x="enabled"
+		seeed_modules="enabled"
 		;;
 	TI_AM335x_P*)
 		libpruio="enabled"
 		es8="enabled"
 		sgxti335x="enabled"
+		seeed_modules="enabled"
 		;;
 	Octavo_Systems_OSD3358*)
 		libpruio="enabled"
 		es8="enabled"
 		sgxti335x="enabled"
+		seeed_modules="enabled"
 		;;
 	SanCloud_BeagleBone_Enhanced)
 		libpruio="enabled"
@@ -311,6 +316,7 @@ get_device () {
 		sgxti335x="enabled"
 		rtl8723bu="enabled"
 		rtl8821cu="enabled"
+		seeed_modules="enabled"
 		;;
 	TI_AM5728*)
 		sgxjacinto6evm="enabled"
@@ -321,6 +327,7 @@ get_device () {
 	BeagleBoard.org_BeagleBone_AI)
 		sgxjacinto6evm="enabled"
 		ticmem="enabled"
+		seeed_modules="enabled"
 		;;
 	esac
 }
@@ -699,6 +706,9 @@ third_party () {
 			if [ "x${sgxjacinto6evm}" = "xenabled" ] ; then
 				${apt_bin} ${apt_options} ti-sgx-jacinto6evm-modules-${latest_kernel} || true
 			fi
+			if [ "x${seeed_modules}" = "xenabled" ] ; then
+				${apt_bin} ${apt_options} seeed-modules-${latest_kernel} || true
+			fi
 			;;
 		esac
 		;;
@@ -758,6 +768,9 @@ third_party () {
 			if [ "x${sgxjacinto6evm}" = "xenabled" ] ; then
 				${apt_bin} ${apt_options} ti-sgx-jacinto6evm-modules-${latest_kernel} || true
 			fi
+			if [ "x${seeed_modules}" = "xenabled" ] ; then
+				${apt_bin} ${apt_options} seeed-modules-${latest_kernel} || true
+			fi
 			;;
 		LTS419)
 			cmem_version="4.16.00.00"
@@ -782,6 +795,9 @@ third_party () {
 			fi
 			if [ "x${sgxjacinto6evm}" = "xenabled" ] ; then
 				${apt_bin} ${apt_options} ti-sgx-jacinto6evm-modules-${latest_kernel} || true
+			fi
+			if [ "x${seeed_modules}" = "xenabled" ] ; then
+				${apt_bin} ${apt_options} seeed-modules-${latest_kernel} || true
 			fi
 			;;
 		esac
