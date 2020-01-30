@@ -375,10 +375,10 @@ if [ "x${check_getty_tty}" = "xinactive" ] ; then
 	systemctl restart serial-getty@ttyGS0.service || true
 fi
 
-if [ -f /usr/bin/cpufreq-set ] ; then
-	echo "${log} cpufreq-set -g powersave"
-	/usr/bin/cpufreq-set -g powersave || true
-fi
+#if [ -f /usr/bin/cpufreq-set ] ; then
+#	echo "${log} cpufreq-set -g powersave"
+#	/usr/bin/cpufreq-set -g powersave || true
+#fi
 
 echo wlan0 > /sys/class/leds/beaglebone\:green\:usr4/device_name
 echo 1 > /sys/class/leds/beaglebone\:green\:usr4/link
