@@ -1010,15 +1010,6 @@ if [ ! "x${enable_cape_universal}" = "x" ] ; then
 	fi
 fi
 
-#This is terrible, need to find a better way. ;)
-if [ -f /etc/docker.init.webthings-gateway ] ; then
-	if [ -d /sys/module/cdc_acm/ ] ; then
-		docker run -d --rm --name webthings-gateway --net=host -v /opt/docker/:/home/node/.mozilla-iot --device=/dev/ttyACM0 mozillaiot/gateway:arm
-	else
-		docker run -d --rm --name webthings-gateway --net=host -v /opt/docker/:/home/node/.mozilla-iot mozillaiot/gateway:arm
-	fi
-fi
-
 #Disabling Non-Valid Services..
 unset check_service
 check_service=$(systemctl is-enabled bb-bbai-tether.service || true)
