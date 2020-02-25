@@ -477,7 +477,7 @@ run_libcomposite () {
 			# https://answers.microsoft.com/en-us/windows/forum/windows_10-networking-winpc/windows-10-vs-remote-ndis-ethernet-usbgadget-not/cb30520a-753c-4219-b908-ad3d45590447
 			# https://www.spinics.net/lists/linux-usb/msg107185.html
 			echo 1 > os_desc/use
-			echo CD > os_desc/b_vendor_code
+			echo CD > os_desc/b_vendor_code || true
 			echo MSFT100 > os_desc/qw_sign
 			echo "RNDIS" > functions/rndis.usb0/os_desc/interface.rndis/compatible_id
 			echo "5162001" > functions/rndis.usb0/os_desc/interface.rndis/sub_compatible_id
@@ -755,7 +755,7 @@ if [ ! "x${USB_NETWORK_DISABLED}" = "xyes" ]; then
 				echo "${log} g_multi: waiting for /sys/class/net/usb1/"
 			done
 
-			echo "${log} usb1: /sbin/ifconfig usb0 ${USB0_ADDRESS} netmask ${USB0_NETMASK}"
+			echo "${log} usb1: /sbin/ifconfig usb1 ${USB1_ADDRESS} netmask ${USB1_NETMASK}"
 			grep -rqE '^\s*iface usb1 inet' /etc/network/interfaces* && /sbin/ifup usb1 || /sbin/ifconfig usb1 ${USB1_ADDRESS} netmask ${USB1_NETMASK} || true
 		else
 			#Old Path... 2020.02.25
