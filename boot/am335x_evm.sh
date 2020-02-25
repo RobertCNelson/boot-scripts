@@ -1021,8 +1021,40 @@ fi
 unset check_service
 check_service=$(systemctl is-enabled bb-bbai-tether.service || true)
 if [ "x${check_service}" = "xenabled" ] ; then
-	echo "${log} systemctl: disable bb-bbai-tether.service "
+	echo "${log} systemctl: disable bb-bbai-tether.service"
 	systemctl disable bb-bbai-tether.service || true
 fi
+
+machine=$(cat /proc/device-tree/model | sed "s/ /_/g" | tr -d '\000')
+case "${machine}" in
+TI_AM335x_BeagleBone_Blue|TI_*_RoboticsCape)
+	unset check_service
+	check_service=$(systemctl is-enabled robotcontrol.service || true)
+	if [ "x${check_service}" = "xdisabled" ] ; then
+		echo "${log} systemctl: enable robotcontrol.service"
+		systemctl enable robotcontrol.service || true
+	fi
+	unset check_service
+	check_service=$(systemctl is-enabled rc_battery_monitor.service || true)
+	if [ "x${check_service}" = "xdisabled" ] ; then
+		echo "${log} systemctl: enable rc_battery_monitor.service"
+		systemctl enable rc_battery_monitor.service || true
+	fi
+	;;
+*)
+	unset check_service
+	check_service=$(systemctl is-enabled robotcontrol.service || true)
+	if [ "x${check_service}" = "xenabled" ] ; then
+		echo "${log} systemctl: disable robotcontrol.service"
+		systemctl disable robotcontrol.service || true
+	fi
+	unset check_service
+	check_service=$(systemctl is-enabled rc_battery_monitor.service || true)
+	if [ "x${check_service}" = "xenabled" ] ; then
+		echo "${log} systemctl: rc_battery_monitor.service"
+		systemctl disable rc_battery_monitor.service || true
+	fi
+	;;
+esac
 
 #
