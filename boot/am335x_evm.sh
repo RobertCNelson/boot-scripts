@@ -734,9 +734,10 @@ if [ ! "x${USB_NETWORK_DISABLED}" = "xyes" ]; then
 
 			until [ -d /sys/class/net/usb0/ ] ; do
 				sleep 1
-				echo "g_multi: waiting for /sys/class/net/usb0/"
+				echo "${log} g_multi: waiting for /sys/class/net/usb0/"
 			done
 
+			echo "${log} usb0: /sbin/ifconfig usb0 ${USB0_ADDRESS} netmask ${USB0_NETMASK}"
 			/sbin/ifconfig usb0 ${USB0_ADDRESS} netmask ${USB0_NETMASK} || true
 		else
 			#Old Path... 2020.02.25
@@ -751,9 +752,10 @@ if [ ! "x${USB_NETWORK_DISABLED}" = "xyes" ]; then
 
 			until [ -d /sys/class/net/usb1/ ] ; do
 				sleep 1
-				echo "g_multi: waiting for /sys/class/net/usb1/"
+				echo "${log} g_multi: waiting for /sys/class/net/usb1/"
 			done
 
+			echo "${log} usb1: /sbin/ifconfig usb0 ${USB0_ADDRESS} netmask ${USB0_NETMASK}"
 			grep -rqE '^\s*iface usb1 inet' /etc/network/interfaces* && /sbin/ifup usb1 || /sbin/ifconfig usb1 ${USB1_ADDRESS} netmask ${USB1_NETMASK} || true
 		else
 			#Old Path... 2020.02.25
@@ -810,8 +812,9 @@ if [ ! "x${USB_NETWORK_DISABLED}" = "xyes" ]; then
 					echo "dhcp-leasefile=/var/run/dnsmasq.leases" >> ${wfile}
 
 					systemctl restart dnsmasq || true
+				else
+					echo "${log} LOG: dnsmasq is disabled in this script"
 				fi
-				echo "${log} LOG: dnsmasq is disabled in this script"
 			else
 				echo "${log} ERROR: dnsmasq is not installed"
 			fi
