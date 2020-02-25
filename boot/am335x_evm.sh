@@ -1033,6 +1033,7 @@ TI_AM335x_BeagleBone_Blue|TI_*_RoboticsCape)
 	if [ "x${check_service}" = "xdisabled" ] ; then
 		echo "${log} systemctl: enable robotcontrol.service"
 		systemctl enable robotcontrol.service || true
+		cp -v /opt/scripts/boot/default/robotcontrol_modules.conf /etc/modules-load.d/robotcontrol_modules.conf || true
 	fi
 	unset check_service
 	check_service=$(systemctl is-enabled rc_battery_monitor.service || true)
@@ -1047,6 +1048,7 @@ TI_AM335x_BeagleBone_Blue|TI_*_RoboticsCape)
 	if [ "x${check_service}" = "xenabled" ] ; then
 		echo "${log} systemctl: disable robotcontrol.service"
 		systemctl disable robotcontrol.service || true
+		rm -f /etc/modules-load.d/robotcontrol_modules.conf || true
 	fi
 	unset check_service
 	check_service=$(systemctl is-enabled rc_battery_monitor.service || true)
