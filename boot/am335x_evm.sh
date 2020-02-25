@@ -864,7 +864,7 @@ if [ ! "x${USB_NETWORK_DISABLED}" = "xyes" ]; then
 					echo "dhcp-option=usb0,3" >> ${wfile}
 					echo "dhcp-option=usb0,6" >> ${wfile}
 
-\					if [ "x${USB1_ENABLE}" = "xenable" ] ; then
+					if [ "x${USB1_ENABLE}" = "xenable" ] ; then
 						echo "dhcp-option=usb1,3" >> ${wfile}
 						echo "dhcp-option=usb1,6" >> ${wfile}
 					fi
