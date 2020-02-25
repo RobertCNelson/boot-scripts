@@ -37,6 +37,8 @@ disable_connman_dnsproxy () {
 	fi
 }
 
+log="am335x_evm:"
+
 if [ -f /etc/rcn-ee.conf ] ; then
 	. /etc/rcn-ee.conf
 fi
@@ -45,14 +47,20 @@ if [ -f /etc/default/bb-boot ] ; then
 	unset USB_NETWORK_DISABLED
 	unset USB_NETWORK_RNDIS_DISABLED
 	unset USB_NETWORK_CDC_DISABLED
+
 	. /etc/default/bb-boot
+
+	if [ "x${USB_CONFIGURATION}" = "x" ] ; then
+		echo "${log} Updating /etc/default/bb-boot"
+		cp -v /opt/scripts/boot/default/bb-boot /etc/default/bb-boot || true
+		. /etc/default/bb-boot
+	fi
+
 	if [ "x${USB_NETWORK_DISABLED}" = "xyes" ] ; then
 		USB_NETWORK_RNDIS_DISABLED="yes"
 		USB_NETWORK_CDC_DISABLED="yes"
 	fi
 fi
-
-log="am335x_evm:"
 
 unset detected_capes
 detected_capes=$(cat /proc/cmdline | sed 's/ /\n/g' | grep uboot_detected_capes= || true)
@@ -769,14 +777,53 @@ if [ ! "x${USB_NETWORK_DISABLED}" = "xyes" ]; then
 
 	if [ "x${usb0}" = "xenable" ] ; then
 		echo "${log} Starting usb0 network"
-		# Auto-configuring the usb0 network interface:
-		$(dirname $0)/autoconfigure_usb0.sh || true
+		if [ "x${dnsmasq_usb0_usb1}" = "xenable" ] ; then
+
+			#Old Path... 2020.02.25 this was always defined, but not fully used..
+			if [ -f /etc/network/interfaces ] ; then
+				deb_iface_range_regex="/^[[:space:]]*iface[[:space:]]+usb0/,/iface/"
+
+				deb_usb_address=$(sed -nr "${deb_iface_range_regex} p" /etc/network/interfaces |\
+						  sed -nr "s/^[[:space:]]*address[[:space:]]+([0-9.]+)/\1/p")
+
+				deb_usb_netmask=$(sed -nr "${deb_iface_range_regex} p" /etc/network/interfaces |\
+						  sed -nr "s/^[[:space:]]*netmask[[:space:]]+([0-9.]+)/\1/p")
+
+				if [ "x${deb_usb_address}" != "x" -a\
+				     "x${deb_usb_netmask}" != "x" ] ; then
+					USB0_ADDRESS=${deb_usb_address}
+					USB0_NETMASK=${deb_usb_netmask}
+				fi
+			fi
+
+			until [ -d /sys/class/net/usb0/ ] ; do
+				sleep 1
+				echo "g_multi: waiting for /sys/class/net/usb0/"
+			done
+
+			/sbin/ifconfig usb0 ${USB0_ADDRESS} netmask ${USB0_NETMASK} || true
+		else
+			#Old Path... 2020.02.25
+			# Auto-configuring the usb0 network interface:
+			$(dirname $0)/autoconfigure_usb0.sh || true
+		fi
 	fi
 
 	if [ "x${usb1}" = "xenable" ] ; then
 		echo "${log} Starting usb1 network"
-		# Auto-configuring the usb1 network interface:
-		$(dirname $0)/autoconfigure_usb1.sh || true
+		if [ "x${dnsmasq_usb0_usb1}" = "xenable" ] ; then
+
+			until [ -d /sys/class/net/usb1/ ] ; do
+				sleep 1
+				echo "g_multi: waiting for /sys/class/net/usb1/"
+			done
+
+			grep -rqE '^\s*iface usb1 inet' /etc/network/interfaces* && /sbin/ifup usb1 || /sbin/ifconfig usb1 ${USB1_ADDRESS} netmask ${USB1_NETMASK} || true
+		else
+			#Old Path... 2020.02.25
+			# Auto-configuring the usb1 network interface:
+			$(dirname $0)/autoconfigure_usb1.sh || true
+		fi
 	fi
 
 	if [ "x${dnsmasq_usb0_usb1}" = "xenable" ] ; then
@@ -791,22 +838,37 @@ if [ ! "x${USB_NETWORK_DISABLED}" = "xyes" ]; then
 
 					wfile="/etc/dnsmasq.d/SoftAp0"
 					echo "interface=usb0" > ${wfile}
-					echo "interface=usb1" >> ${wfile}
+					if [ "x${USB1_ENABLE}" = "xenable" ] ; then
+						echo "interface=usb1" >> ${wfile}
+					fi
+
 					echo "port=53" >> ${wfile}
 					echo "dhcp-authoritative" >> ${wfile}
 					echo "domain-needed" >> ${wfile}
 					echo "bogus-priv" >> ${wfile}
 					echo "expand-hosts" >> ${wfile}
 					echo "cache-size=2048" >> ${wfile}
-					echo "dhcp-range=usb0,192.168.7.1,192.168.7.1,2m" >> ${wfile}
-					echo "dhcp-range=usb1,192.168.6.1,192.168.6.1,2m" >> ${wfile}
+					echo "dhcp-range=usb0,${USB0_SUBNET}.1,${USB0_SUBNET}.1,2m" >> ${wfile}
+
+					if [ "x${USB1_ENABLE}" = "xenable" ] ; then
+						echo "dhcp-range=usb1,${USB1_SUBNET}.1,${USB1_SUBNET}.1,2m" >> ${wfile}
+					fi
+
 					echo "listen-address=127.0.0.1" >> ${wfile}
-					echo "listen-address=192.168.7.2" >> ${wfile}
-					echo "listen-address=192.168.6.2" >> ${wfile}
+					echo "listen-address=${USB0_SUBNET}.2" >> ${wfile}
+
+					if [ "x${USB1_ENABLE}" = "xenable" ] ; then
+						echo "listen-address=${USB1_SUBNET}.2" >> ${wfile}
+					fi
+
 					echo "dhcp-option=usb0,3" >> ${wfile}
 					echo "dhcp-option=usb0,6" >> ${wfile}
-					echo "dhcp-option=usb1,3" >> ${wfile}
-					echo "dhcp-option=usb1,6" >> ${wfile}
+
+\					if [ "x${USB1_ENABLE}" = "xenable" ] ; then
+						echo "dhcp-option=usb1,3" >> ${wfile}
+						echo "dhcp-option=usb1,6" >> ${wfile}
+					fi
+
 		#FIXME: why was this added, without connman every ip get's 172.1.8.1????
 		#			echo "address=/#/172.1.8.1" >> ${wfile}
 					echo "dhcp-leasefile=/var/run/dnsmasq.leases" >> ${wfile}

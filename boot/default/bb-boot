@@ -3,9 +3,22 @@
 # USB_IMAGE_FILE_DISABLED=yes #disable the loading of the mass storage file.
 # when UNSET the detected file (based on the board detected) will be used.
 # other values take no effect, and are ignored. The only expected value is "yes"
-# USB_IMAGE_FILE_DISABLED=yes
+##USB_IMAGE_FILE_DISABLED=yes
 #
 # USB_NETWORK_DISABLED=yes #disable the loading of the network.
 # when UNSET the detected file (based on the board detected) will be used.
 # other values take no effect, and are ignored. The only expected value is "yes"
-# USB_NETWORK_DISABLED=yes
+##USB_NETWORK_DISABLED=yes
+
+USB_CONFIGURATION=enable
+#Its assumed usb0 is always enabled, usb1 can be disabled...
+USB0_SUBNET=192.168.7
+USB0_ADDRESS=192.168.7.2
+USB0_NETMASK=255.255.255.252
+
+USB1_ENABLE=enable
+USB1_SUBNET=192.168.6
+USB1_ADDRESS=192.168.6.2
+USB1_NETMASK=255.255.255.252
+
+DNS_NAMESERVER=8.8.8.8
