@@ -340,72 +340,8 @@ else
 		cpsw_res=$(echo "obase=16;ibase=16;$cpsw_div + 100" | bc)
 
 		cpsw_2_mac=${mac_0_prefix}:$(echo ${cpsw_res} | cut -c 2-3)
-		echo "${log} uncached cpsw_2_mac: [${cpsw_2_mac}]"
 	else
-		cpsw_0_last=$(echo ${cpsw_0_mac} | awk -F ':' '{print $6}' | cut -c 2)
-		cpsw_1_last=$(echo ${cpsw_1_mac} | awk -F ':' '{print $6}' | cut -c 2)
-		mac_0_prefix=$(echo ${cpsw_0_mac} | cut -c 1-16)
-		mac_1_prefix=$(echo ${cpsw_1_mac} | cut -c 1-16)
-		#if cpsw_0_mac is even, add 1
-		case "x${cpsw_0_last}" in
-		x0)
-			cpsw_2_mac="${mac_0_prefix}1"
-			;;
-		x2)
-			cpsw_2_mac="${mac_0_prefix}3"
-			;;
-		x4)
-			cpsw_2_mac="${mac_0_prefix}5"
-			;;
-		x6)
-			cpsw_2_mac="${mac_0_prefix}7"
-			;;
-		x8)
-			cpsw_2_mac="${mac_0_prefix}9"
-			;;
-		xA)
-			cpsw_2_mac="${mac_0_prefix}B"
-			;;
-		xC)
-			cpsw_2_mac="${mac_0_prefix}D"
-			;;
-		xE)
-			cpsw_2_mac="${mac_0_prefix}F"
-			;;
-		*)
-			#else, subtract 1 from cpsw_1_mac
-			case "x${cpsw_1_last}" in
-			xF)
-				cpsw_2_mac="${mac_1_prefix}E"
-				;;
-			xD)
-				cpsw_2_mac="${mac_1_prefix}C"
-				;;
-			xB)
-				cpsw_2_mac="${mac_1_prefix}A"
-				;;
-			x9)
-				cpsw_2_mac="${mac_1_prefix}8"
-				;;
-			x7)
-				cpsw_2_mac="${mac_1_prefix}6"
-				;;
-			x5)
-				cpsw_2_mac="${mac_1_prefix}4"
-				;;
-			x3)
-				cpsw_2_mac="${mac_1_prefix}2"
-				;;
-			x1)
-				cpsw_2_mac="${mac_1_prefix}0"
-				;;
-			*)
-				#todo: generate random mac...
-				cpsw_2_mac="1C:BA:8C:A2:ED:6A"
-				;;
-			esac
-			;;
-		esac
+		cpsw_2_mac="1C:BA:8C:A2:ED:6A"
 	fi
 	echo "${cpsw_2_mac}" > /etc/cpsw_2_mac || true
 fi
