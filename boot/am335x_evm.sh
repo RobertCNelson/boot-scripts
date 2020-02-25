@@ -713,7 +713,7 @@ if [ ! "x${USB_NETWORK_DISABLED}" = "xyes" ]; then
 
 	if [ "x${usb0}" = "xenable" ] ; then
 		echo "${log} Starting usb0 network"
-		if [ "x${dnsmasq_usb0_usb1}" = "xenable" ] ; then
+		if [ "x${USB_CONFIGURATION}" = "xenable" ] ; then
 
 			#Old Path... 2020.02.25 this was always defined, but not fully used..
 			if [ -f /etc/network/interfaces ] ; then
@@ -748,7 +748,7 @@ if [ ! "x${USB_NETWORK_DISABLED}" = "xyes" ]; then
 
 	if [ "x${usb1}" = "xenable" ] ; then
 		echo "${log} Starting usb1 network"
-		if [ "x${dnsmasq_usb0_usb1}" = "xenable" ] ; then
+		if [ "x${USB_CONFIGURATION}" = "xenable" ] ; then
 
 			until [ -d /sys/class/net/usb1/ ] ; do
 				sleep 1
@@ -776,6 +776,7 @@ if [ ! "x${USB_NETWORK_DISABLED}" = "xyes" ]; then
 
 					wfile="/etc/dnsmasq.d/SoftAp0"
 					echo "interface=usb0" > ${wfile}
+
 					if [ "x${USB1_ENABLE}" = "xenable" ] ; then
 						echo "interface=usb1" >> ${wfile}
 					fi
