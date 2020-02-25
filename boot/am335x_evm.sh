@@ -1016,4 +1016,13 @@ if [ -f /etc/docker.init.webthings-gateway ] ; then
 		docker run -d --rm --name webthings-gateway --net=host -v /opt/docker/:/home/node/.mozilla-iot mozillaiot/gateway:arm
 	fi
 fi
+
+#Disabling Non-Valid Services..
+unset check_service
+check_service=$(systemctl is-enabled bb-bbai-tether.service || true)
+if [ "x${check_service}" = "xenabled" ] ; then
+	echo "${log} systemctl: disable bb-bbai-tether.service "
+	systemctl disable bb-bbai-tether.service || true
+fi
+
 #
