@@ -1,6 +1,6 @@
 #!/bin/sh -e
 #
-# Copyright (c) 2013-2017 Robert Nelson <robertcnelson@gmail.com>
+# Copyright (c) 2013-2020 Robert Nelson <robertcnelson@gmail.com>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -775,14 +775,16 @@ if [ ! "x${USB_NETWORK_DISABLED}" = "xyes" ]; then
 	fi
 fi
 
-#create_ap is now legacy, use connman...
-if [ -f /usr/bin/create_ap ] ; then
-	if [ "x${has_wifi}" = "xenable" ] ; then
-		ifconfig wlan0 down
-		ifconfig wlan0 hw ether ${cpsw_0_mac}
-		ifconfig wlan0 up || true
-		echo "${cpsw_0_mac}" > /etc/wlan0-mac
-		systemctl start create_ap &
+if [ "x${abi}" = "xab" ] ; then
+	#create_ap is now legacy, use connman...
+	if [ -f /usr/bin/create_ap ] ; then
+		if [ "x${has_wifi}" = "xenable" ] ; then
+			ifconfig wlan0 down
+			ifconfig wlan0 hw ether ${cpsw_0_mac}
+			ifconfig wlan0 up || true
+			echo "${cpsw_0_mac}" > /etc/wlan0-mac
+			systemctl start create_ap &
+		fi
 	fi
 fi
 
@@ -792,8 +794,10 @@ if [ "x${board_bbgg}" = "xenable" ] ; then
     ifconfig eth0 up || true    
 fi
 
-#Just Cleanup /etc/issue, systemd starts up tty before these are updated...
-sed -i -e '/Address/d' /etc/issue || true
+if [ "x${abi}" = "xab" ] ; then
+	#Just Cleanup /etc/issue, systemd starts up tty before these are updated...
+	sed -i -e '/Address/d' /etc/issue || true
+fi
 
 check_getty_tty=$(systemctl is-active serial-getty@ttyGS0.service || true)
 if [ "x${check_getty_tty}" = "xinactive" ] ; then
@@ -825,13 +829,7 @@ fi
 #We now use: debugfs  /sys/kernel/debug  debugfs  mode=755,uid=root,gid=gpio,defaults  0  0
 #vs old: debugfs  /sys/kernel/debug  debugfs  defaults  0  0
 if [ "x${abi}" = "xab" ] ; then
-	if [ -d /sys/kernel/debug ] ; then
-		/bin/chmod -R ugo+x /sys/kernel/debug/ || true
-		if [ -d /sys/kernel/debug/pinctrl/44e10800.pinmux/ ] ; then
-			/bin/chgrp -R gpio /sys/kernel/debug/pinctrl/44e10800.pinmux/ || true
-			/bin/chmod -R g=u  /sys/kernel/debug/pinctrl/44e10800.pinmux/ || true
-		fi
-	fi
+	$(dirname $0)/legacy/old_debug_permissions.sh || true
 fi
 
 #legacy support of: 2014-05-14 (now taken care by the init flasher)
@@ -861,104 +859,9 @@ if [ "x${blue_fix_uarts}" = "xenable" ] ; then
 	fi
 fi
 
-unset enable_cape_universal
-enable_cape_universal=$(grep 'cape_universal=enable' /proc/cmdline || true)
-if [ ! "x${enable_cape_universal}" = "x" ] ; then
-	#loading cape-universal...
-	if [ -f /sys/devices/platform/bone_capemgr/slots ] ; then
-
-		#cape-universal Exports all pins not used by HDMIN and eMMC (including audio)
-		#cape-universaln Exports all pins not used by HDMI and eMMC (no audio pins are exported)
-		#cape-univ-emmc Exports pins used by eMMC, load if eMMC is disabled
-		#cape-univ-hdmi Exports pins used by HDMI video, load if HDMI is disabled
-		#cape-univ-audio Exports pins used by HDMI audio
-
-		unset stop_cape_load
-		#Make sure bone_capemgr.uboot_capemgr_enabled=1 wasn't passed to cmdline...
-		if [ "x${stop_cape_load}" = "x" ] ; then
-			check_enable_partno=$(grep bone_capemgr.uboot_capemgr_enabled=1 /proc/cmdline || true)
-			if [ ! "x${check_enable_partno}" = "x" ] ; then
-				stop_cape_load="stop"
-			fi
-		fi
-
-		#Make sure bone_capemgr.enable_partno wasn't passed to cmdline...
-		if [ "x${stop_cape_load}" = "x" ] ; then
-			check_enable_partno=$(grep bone_capemgr.enable_partno /proc/cmdline || true)
-			if [ ! "x${check_enable_partno}" = "x" ] ; then
-				stop_cape_load="stop"
-			fi
-		fi
-
-		#Make sure no custom overlays are loaded...
-		if [ "x${stop_cape_load}" = "x" ] ; then
-			check_cape_loaded=$(cat /sys/devices/platform/bone_capemgr/slots | awk '{print $3}' | grep 0 | tail -1 || true)
-			if [ ! "x${check_cape_loaded}" = "x" ] ; then
-				stop_cape_load="stop"
-			fi
-		fi
-
-		#Make sure we load the correct overlay based on lack/custom dtb's...
-		if [ "x${stop_cape_load}" = "x" ] ; then
-			unset overlay
-			check_dtb=$(cat /boot/uEnv.txt | grep -v '#' | grep dtb | tail -1 | awk -F '=' '{print $2}' || true)
-			if [ ! "x${check_dtb}" = "x" ] ; then
-				case "${check_dtb}" in
-				am335x-boneblack-overlay.dtb)
-					overlay="univ-all"
-					;;
-				am335x-boneblack-emmc-overlay.dtb)
-					overlay="univ-emmc"
-					;;
-				am335x-boneblack-hdmi-overlay.dtb)
-					overlay="univ-hdmi"
-					;;
-				am335x-boneblack-nhdmi-overlay.dtb)
-					overlay="univ-nhdmi"
-					;;
-				am335x-bonegreen-overlay.dtb)
-					overlay="univ-all"
-					;;
-				esac
-			else
-				machine=$(cat /proc/device-tree/model | sed "s/ /_/g" | tr -d '\000')
-				case "${machine}" in
-				TI_AM335x_BeagleBone)
-					overlay="univ-all"
-					;;
-				TI_AM335x_BeagleBone_Black_Wireless)
-					overlay="cape-universal"
-					;;
-				TI_AM335x_BeagleBone_Blue)
-					unset overlay
-					;;
-				TI_AM335x_BeagleBone_Black)
-					overlay="cape-universal"
-					;;
-				TI_AM335x_BeagleBone_Green)
-					overlay="univ-emmc"
-					;;
-				TI_AM335x_BeagleBone_Green_Wireless)
-					if [ -f /usr/local/lib/node_modules/node-red-node-beaglebone/.bbgw-dont-load ] ; then
-						unset overlay
-					else
-						overlay="univ-bbgw"
-					fi
-					;;
-				esac
-			fi
-			if [ ! "x${overlay}" = "x" ] ; then
-				dtbo="${overlay}-00A0.dtbo"
-				if [ -f /lib/firmware/${dtbo} ] ; then
-					if [ -f /usr/local/bin/config-pin ] ; then
-						/usr/local/bin/config-pin overlay ${overlay} || true
-					elif [ -f /usr/bin/config-pin ] ; then
-						/usr/bin/config-pin overlay ${overlay} || true
-					fi
-				fi
-			fi
-		fi
-	fi
+#Old Kernel Overlays, EOL in v4.14.x... (use u-boot overlays..)
+if [ "x${abi}" = "xac" ] ; then
+	$(dirname $0)/legacy/old_cape_universal.sh || true
 fi
 
 #Disabling Non-Valid Services..
