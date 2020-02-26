@@ -340,12 +340,8 @@ else
 			mac_0_prefix=$(echo ${cpsw_0_mac} | cut -c 1-14)
 
 			cpsw_0_6=$(echo ${cpsw_0_mac} | awk -F ':' '{print $6}')
-			cpsw_1_6=$(echo ${cpsw_1_mac} | awk -F ':' '{print $6}')
-
-			cpsw_add=$(echo "obase=16;ibase=16;$cpsw_0_6 + $cpsw_1_6" | bc)
-			cpsw_div=$(echo "obase=16;ibase=16;$cpsw_add / 2" | bc)
 			#bc cuts off leading zero's, we need ten/ones value
-			cpsw_res=$(echo "obase=16;ibase=16;$cpsw_div + 100" | bc)
+			cpsw_res=$(echo "obase=16;ibase=16;$cpsw_0_6 + 102" | bc)
 
 			cpsw_2_mac=${mac_0_prefix}:$(echo ${cpsw_res} | cut -c 2-3)
 		else
