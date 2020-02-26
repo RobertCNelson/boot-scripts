@@ -369,38 +369,63 @@ fi
 			$(dirname $0)/autoconfigure_usb1.sh || true
 		fi
 
-if [ -d /sys/kernel/config/usb_gadget ] ; then
-	/etc/init.d/udhcpd stop || true
+		if [ -d /sys/kernel/config/usb_gadget ] ; then
+			/etc/init.d/udhcpd stop || true
 
-	if [ -d /etc/dnsmasq.d/ ] ; then
-		echo "${log} dnsmasq: setting up for usb0/usb1"
-		disable_connman_dnsproxy
+			# do not write if there is a .SoftAp0 file
+			if [ -d /etc/dnsmasq.d/ ] ; then
+				if [ ! -f /etc/dnsmasq.d/.SoftAp0 ] ; then
+					echo "${log} dnsmasq: setting up for usb0/usb1"
+					disable_connman_dnsproxy
 
-		wfile="/etc/dnsmasq.d/SoftAp0"
-		echo "interface=usb0" > ${wfile}
-		echo "interface=usb1" >> ${wfile}
-		echo "port=53" >> ${wfile}
-		echo "dhcp-authoritative" >> ${wfile}
-		echo "domain-needed" >> ${wfile}
-		echo "bogus-priv" >> ${wfile}
-		echo "expand-hosts" >> ${wfile}
-		echo "cache-size=2048" >> ${wfile}
-		echo "dhcp-range=usb0,192.168.7.1,192.168.7.1,2m" >> ${wfile}
-		echo "dhcp-range=usb1,192.168.6.1,192.168.6.1,2m" >> ${wfile}
-		echo "listen-address=127.0.0.1" >> ${wfile}
-		echo "listen-address=192.168.7.2" >> ${wfile}
-		echo "listen-address=192.168.6.2" >> ${wfile}
-		echo "dhcp-option=usb0,3" >> ${wfile}
-		echo "dhcp-option=usb0,6" >> ${wfile}
-		echo "dhcp-option=usb1,3" >> ${wfile}
-		echo "dhcp-option=usb1,6" >> ${wfile}
-		echo "dhcp-leasefile=/var/run/dnsmasq.leases" >> ${wfile}
+					if [ -f /usr/bin/bb_dnsmasq_config.sh ] ; then
+						/usr/bin/bb_dnsmasq_config.sh || true
+					else
+						wfile="/etc/dnsmasq.d/SoftAp0"
+						echo "interface=usb0" > ${wfile}
 
-		systemctl restart dnsmasq || true
-	else
-		echo "${log} ERROR: dnsmasq is not installed"
-	fi
-fi
+						if [ "x${USB1_ENABLE}" = "xenable" ] ; then
+							echo "interface=usb1" >> ${wfile}
+						fi
+
+						echo "port=53" >> ${wfile}
+						echo "dhcp-authoritative" >> ${wfile}
+						echo "domain-needed" >> ${wfile}
+						echo "bogus-priv" >> ${wfile}
+						echo "expand-hosts" >> ${wfile}
+						echo "cache-size=2048" >> ${wfile}
+						echo "dhcp-range=usb0,${USB0_SUBNET}.1,${USB0_SUBNET}.1,2m" >> ${wfile}
+
+						if [ "x${USB1_ENABLE}" = "xenable" ] ; then
+							echo "dhcp-range=usb1,${USB1_SUBNET}.1,${USB1_SUBNET}.1,2m" >> ${wfile}
+						fi
+
+						echo "listen-address=127.0.0.1" >> ${wfile}
+						echo "listen-address=${USB0_SUBNET}.2" >> ${wfile}
+
+						if [ "x${USB1_ENABLE}" = "xenable" ] ; then
+							echo "listen-address=${USB1_SUBNET}.2" >> ${wfile}
+						fi
+
+						echo "dhcp-option=usb0,3" >> ${wfile}
+						echo "dhcp-option=usb0,6" >> ${wfile}
+
+						if [ "x${USB1_ENABLE}" = "xenable" ] ; then
+							echo "dhcp-option=usb1,3" >> ${wfile}
+							echo "dhcp-option=usb1,6" >> ${wfile}
+						fi
+
+						echo "dhcp-leasefile=/var/run/dnsmasq.leases" >> ${wfile}
+					fi
+
+					systemctl restart dnsmasq || true
+				else
+					echo "${log} LOG: dnsmasq is disabled in this script"
+				fi
+			else
+				echo "${log} ERROR: dnsmasq is not installed"
+			fi
+		fi
 
 check_getty_tty=$(systemctl is-active serial-getty@ttyGS0.service || true)
 if [ "x${check_getty_tty}" = "xinactive" ] ; then
