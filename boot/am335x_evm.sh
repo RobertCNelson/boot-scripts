@@ -716,7 +716,9 @@ if [ ! "x${USB_NETWORK_DISABLED}" = "xyes" ]; then
 
 	if [ "x${dnsmasq_usb0_usb1}" = "xenable" ] ; then
 		if [ -d /sys/kernel/config/usb_gadget ] ; then
-			/etc/init.d/udhcpd stop || true
+			if [ -f /etc/init.d/udhcpd ] ; then
+				/etc/init.d/udhcpd stop || true
+			fi
 
 			# do not write if there is a .SoftAp0 file
 			if [ -d /etc/dnsmasq.d/ ] ; then
