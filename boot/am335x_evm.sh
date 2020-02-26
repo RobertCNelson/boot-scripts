@@ -849,7 +849,6 @@ if [ "x${board_bbgg}" = "xenable" ] ; then
     ifconfig eth0 up || true    
 fi
 
-
 #Just Cleanup /etc/issue, systemd starts up tty before these are updated...
 sed -i -e '/Address/d' /etc/issue || true
 
