@@ -722,53 +722,22 @@ if [ ! "x${USB_NETWORK_DISABLED}" = "xyes" ]; then
 
 	if [ "x${usb0}" = "xenable" ] ; then
 		echo "${log} Starting usb0 network"
-		if [ "x${USB_CONFIGURATION}" = "xenable" ] ; then
-
-			#Old Path... 2020.02.25 this was always defined, but not fully used..
-			if [ -f /etc/network/interfaces ] ; then
-				deb_iface_range_regex="/^[[:space:]]*iface[[:space:]]+usb0/,/iface/"
-
-				deb_usb_address=$(sed -nr "${deb_iface_range_regex} p" /etc/network/interfaces |\
-						  sed -nr "s/^[[:space:]]*address[[:space:]]+([0-9.]+)/\1/p")
-
-				deb_usb_netmask=$(sed -nr "${deb_iface_range_regex} p" /etc/network/interfaces |\
-						  sed -nr "s/^[[:space:]]*netmask[[:space:]]+([0-9.]+)/\1/p")
-
-				if [ "x${deb_usb_address}" != "x" -a\
-				     "x${deb_usb_netmask}" != "x" ] ; then
-					USB0_ADDRESS=${deb_usb_address}
-					USB0_NETMASK=${deb_usb_netmask}
-				fi
-			fi
-
-			until [ -d /sys/class/net/usb0/ ] ; do
-				sleep 1
-				echo "${log} g_multi: waiting for /sys/class/net/usb0/"
-			done
-
-			echo "${log} usb0: /sbin/ifconfig usb0 ${USB0_ADDRESS} netmask ${USB0_NETMASK}"
-			/sbin/ifconfig usb0 ${USB0_ADDRESS} netmask ${USB0_NETMASK} || true
+		# Auto-configuring the usb0 network interface:
+		if [ -f /usr/bin/autoconfigure_usb0.sh ] ; then
+			/usr/bin/autoconfigure_usb0.sh || true
 		else
 			#Old Path... 2020.02.25
-			# Auto-configuring the usb0 network interface:
 			$(dirname $0)/autoconfigure_usb0.sh || true
 		fi
 	fi
 
 	if [ "x${usb1}" = "xenable" ] ; then
 		echo "${log} Starting usb1 network"
-		if [ "x${USB_CONFIGURATION}" = "xenable" ] ; then
-
-			until [ -d /sys/class/net/usb1/ ] ; do
-				sleep 1
-				echo "${log} g_multi: waiting for /sys/class/net/usb1/"
-			done
-
-			echo "${log} usb1: /sbin/ifconfig usb1 ${USB1_ADDRESS} netmask ${USB1_NETMASK}"
-			grep -rqE '^\s*iface usb1 inet' /etc/network/interfaces* && /sbin/ifup usb1 || /sbin/ifconfig usb1 ${USB1_ADDRESS} netmask ${USB1_NETMASK} || true
+		# Auto-configuring the usb1 network interface:
+		if [ -f /usr/bin/autoconfigure_usb1.sh ] ; then
+			/usr/bin/autoconfigure_usb1.sh || true
 		else
 			#Old Path... 2020.02.25
-			# Auto-configuring the usb1 network interface:
 			$(dirname $0)/autoconfigure_usb1.sh || true
 		fi
 	fi

@@ -345,13 +345,23 @@ if [ -f /var/lib/misc/dnsmasq.leases ] ; then
 	rm -rf /var/lib/misc/dnsmasq.leases || true
 fi
 
-echo "${log} Starting usb0 network"
-# Auto-configuring the usb0 network interface:
-$(dirname $0)/autoconfigure_usb0.sh || true
+		echo "${log} Starting usb0 network"
+		# Auto-configuring the usb0 network interface:
+		if [ -f /usr/bin/autoconfigure_usb0.sh ] ; then
+			/usr/bin/autoconfigure_usb0.sh || true
+		else
+			#Old Path... 2020.02.25
+			$(dirname $0)/autoconfigure_usb0.sh || true
+		fi
 
-echo "${log} Starting usb1 network"
-# Auto-configuring the usb1 network interface:
-$(dirname $0)/autoconfigure_usb1.sh || true
+		echo "${log} Starting usb1 network"
+		# Auto-configuring the usb1 network interface:
+		if [ -f /usr/bin/autoconfigure_usb1.sh ] ; then
+			/usr/bin/autoconfigure_usb1.sh || true
+		else
+			#Old Path... 2020.02.25
+			$(dirname $0)/autoconfigure_usb1.sh || true
+		fi
 
 if [ -d /sys/kernel/config/usb_gadget ] ; then
 	/etc/init.d/udhcpd stop || true

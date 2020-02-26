@@ -373,22 +373,33 @@ if [ -f /var/lib/misc/dnsmasq.leases ] ; then
 	rm -rf /var/lib/misc/dnsmasq.leases || true
 fi
 
-if [ "x${usb0}" = "xenable" ] ; then
-	echo "${log} Starting usb0 network"
-	# Auto-configuring the usb0 network interface:
-	$(dirname $0)/autoconfigure_usb0.sh || true
-fi
+	if [ "x${usb0}" = "xenable" ] ; then
+		echo "${log} Starting usb0 network"
+		# Auto-configuring the usb0 network interface:
+		if [ -f /usr/bin/autoconfigure_usb0.sh ] ; then
+			/usr/bin/autoconfigure_usb0.sh || true
+		else
+			#Old Path... 2020.02.25
+			$(dirname $0)/autoconfigure_usb0.sh || true
+		fi
+	fi
 
-if [ "x${usb1}" = "xenable" ] ; then
-	echo "${log} Starting usb1 network"
-	# Auto-configuring the usb1 network interface:
-	$(dirname $0)/autoconfigure_usb1.sh || true
-fi
+	if [ "x${usb1}" = "xenable" ] ; then
+		echo "${log} Starting usb1 network"
+		# Auto-configuring the usb1 network interface:
+		if [ -f /usr/bin/autoconfigure_usb1.sh ] ; then
+			/usr/bin/autoconfigure_usb1.sh || true
+		else
+			#Old Path... 2020.02.25
+			$(dirname $0)/autoconfigure_usb1.sh || true
+		fi
+	fi
 
 if [ "x${dnsmasq_usb0_usb1}" = "xenable" ] ; then
 	if [ -d /sys/kernel/config/usb_gadget ] ; then
 		/etc/init.d/udhcpd stop || true
 
+		# do not write if there is a .SoftAp0 file
 		if [ -d /etc/dnsmasq.d/ ] ; then
 			echo "${log} dnsmasq: setting up for usb0/usb1"
 			disable_connman_dnsproxy
