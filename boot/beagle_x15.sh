@@ -104,7 +104,7 @@ usb_manufacturer="BeagleBoard.org"
 #cpsw_5_mac = usb1 (USB host, pc side)
 
 mac_address="/proc/device-tree/ocp/ethernet@48484000/slave@48480200/mac-address"
-if [ -f ${mac_address} ] ; then
+if [ -f ${mac_address} ] && [ -f /usr/bin/hexdump ] ; then
 	cpsw_0_mac=$(hexdump -v -e '1/1 "%02X" ":"' ${mac_address} | sed 's/.$//')
 
 	#Some devices are showing a blank cpsw_0_mac [00:00:00:00:00:00], let's fix that up...
@@ -141,7 +141,7 @@ else
 		cpsw_1_mac=$(cat /etc/cpsw_1_mac)
 	else
 		mac_address="/proc/device-tree/ocp/ethernet@48484000/slave@48480300/mac-address"
-		if [ -f ${mac_address} ] ; then
+		if [ -f ${mac_address} ] && [ -f /usr/bin/hexdump ] ; then
 			cpsw_1_mac=$(hexdump -v -e '1/1 "%02X" ":"' ${mac_address} | sed 's/.$//')
 
 			#Some devices are showing a blank cpsw_1_mac [00:00:00:00:00:00], let's fix that up...
