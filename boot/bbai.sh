@@ -86,12 +86,12 @@ if [ -f /usr/bin/bb_generate_mac.sh ] ; then
 	cpsw_4_mac=$(cat /etc/cpsw_4_mac)
 	cpsw_5_mac=$(cat /etc/cpsw_5_mac)
 else
-	unset use_cached_bb_mac
+	unset use_cached_mac_addr
 	if [ -f /etc/cpsw_0_mac ] ; then
 		unset test_cpsw_0_mac
 		test_cpsw_0_mac=$(cat /etc/cpsw_0_mac)
 		if [ "x${cpsw_0_mac}" = "x${test_cpsw_0_mac}" ] ; then
-			use_cached_bb_mac="true"
+			use_cached_mac_addr="true"
 		else
 			echo "${cpsw_0_mac}" > /etc/cpsw_0_mac || true
 		fi
@@ -99,7 +99,7 @@ else
 		echo "${cpsw_0_mac}" > /etc/cpsw_0_mac || true
 	fi
 
-	if [ "x${use_cached_bb_mac}" = "xtrue" ] && [ -f /etc/cpsw_1_mac ] ; then
+	if [ "x${use_cached_mac_addr}" = "xtrue" ] && [ -f /etc/cpsw_1_mac ] ; then
 		cpsw_1_mac=$(cat /etc/cpsw_1_mac)
 	else
 		if [ -f /usr/bin/bc ] ; then
@@ -116,7 +116,7 @@ else
 		echo "${cpsw_1_mac}" > /etc/cpsw_1_mac || true
 	fi
 
-	if [ "x${use_cached_bb_mac}" = "xtrue" ] && [ -f /etc/cpsw_2_mac ] ; then
+	if [ "x${use_cached_mac_addr}" = "xtrue" ] && [ -f /etc/cpsw_2_mac ] ; then
 		cpsw_2_mac=$(cat /etc/cpsw_2_mac)
 	else
 		if [ -f /usr/bin/bc ] ; then
@@ -133,7 +133,7 @@ else
 		echo "${cpsw_2_mac}" > /etc/cpsw_2_mac || true
 	fi
 
-	if [ "x${use_cached_bb_mac}" = "xtrue" ] && [ -f /etc/cpsw_3_mac ] ; then
+	if [ "x${use_cached_mac_addr}" = "xtrue" ] && [ -f /etc/cpsw_3_mac ] ; then
 		cpsw_3_mac=$(cat /etc/cpsw_3_mac)
 	else
 		if [ -f /usr/bin/bc ] ; then
@@ -150,7 +150,7 @@ else
 		echo "${cpsw_3_mac}" > /etc/cpsw_3_mac || true
 	fi
 
-	if [ "x${use_cached_bb_mac}" = "xtrue" ] && [ -f /etc/cpsw_4_mac ] ; then
+	if [ "x${use_cached_mac_addr}" = "xtrue" ] && [ -f /etc/cpsw_4_mac ] ; then
 		cpsw_4_mac=$(cat /etc/cpsw_4_mac)
 	else
 		if [ -f /usr/bin/bc ] ; then
