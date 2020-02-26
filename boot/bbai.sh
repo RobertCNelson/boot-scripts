@@ -1,16 +1,23 @@
 #!/bin/sh -e
 #
 
+log="BeagleBone-AI:"
+
 if [ -f /etc/rcn-ee.conf ] ; then
 	. /etc/rcn-ee.conf
 fi
 
 if [ -f /etc/default/bb-boot ] ; then
 	unset USB_NETWORK_DISABLED
-	. /etc/default/bb-boot
-fi
 
-log="BeagleBone-AI:"
+	. /etc/default/bb-boot
+
+	if [ "x${USB_CONFIGURATION}" = "x" ] ; then
+		echo "${log} Updating /etc/default/bb-boot"
+		cp -v /opt/scripts/boot/default/bb-boot /etc/default/bb-boot || true
+		. /etc/default/bb-boot
+	fi
+fi
 
 #Make sure the cpu_thermal zone is enabled...
 if [ -f /sys/class/thermal/thermal_zone0/mode ] ; then
@@ -71,92 +78,101 @@ else
 	cpsw_0_mac="1C:BA:8C:A2:ED:68"
 fi
 
-unset use_cached_bb_mac
-if [ -f /etc/cpsw_0_mac ] ; then
-	unset test_cpsw_0_mac
-	test_cpsw_0_mac=$(cat /etc/cpsw_0_mac)
-	if [ "x${cpsw_0_mac}" = "x${test_cpsw_0_mac}" ] ; then
-		use_cached_bb_mac="true"
+if [ -f /usr/bin/bb_generate_mac.sh ] ; then
+	/usr/bin/bb_generate_mac.sh --mac ${cpsw_0_mac}
+	cpsw_1_mac=$(cat /etc/cpsw_1_mac)
+	cpsw_2_mac=$(cat /etc/cpsw_2_mac)
+	cpsw_3_mac=$(cat /etc/cpsw_3_mac)
+	cpsw_4_mac=$(cat /etc/cpsw_4_mac)
+	cpsw_5_mac=$(cat /etc/cpsw_5_mac)
+else
+	unset use_cached_bb_mac
+	if [ -f /etc/cpsw_0_mac ] ; then
+		unset test_cpsw_0_mac
+		test_cpsw_0_mac=$(cat /etc/cpsw_0_mac)
+		if [ "x${cpsw_0_mac}" = "x${test_cpsw_0_mac}" ] ; then
+			use_cached_bb_mac="true"
+		else
+			echo "${cpsw_0_mac}" > /etc/cpsw_0_mac || true
+		fi
 	else
 		echo "${cpsw_0_mac}" > /etc/cpsw_0_mac || true
 	fi
-else
-	echo "${cpsw_0_mac}" > /etc/cpsw_0_mac || true
-fi
 
-if [ "x${use_cached_bb_mac}" = "xtrue" ] && [ -f /etc/cpsw_1_mac ] ; then
-	cpsw_1_mac=$(cat /etc/cpsw_1_mac)
-else
-	if [ -f /usr/bin/bc ] ; then
-		mac_0_prefix=$(echo ${cpsw_0_mac} | cut -c 1-14)
-
-		cpsw_0_6=$(echo ${cpsw_0_mac} | awk -F ':' '{print $6}')
-		#bc cuts off leading zero's, we need ten/ones value
-		bb_res=$(echo "obase=16;ibase=16;$cpsw_0_6 + 102" | bc)
-
-		cpsw_1_mac=${mac_0_prefix}:$(echo ${bb_res} | cut -c 2-3)
+	if [ "x${use_cached_bb_mac}" = "xtrue" ] && [ -f /etc/cpsw_1_mac ] ; then
+		cpsw_1_mac=$(cat /etc/cpsw_1_mac)
 	else
-		cpsw_1_mac="1C:BA:8C:A2:ED:69"
+		if [ -f /usr/bin/bc ] ; then
+			mac_0_prefix=$(echo ${cpsw_0_mac} | cut -c 1-14)
+
+			cpsw_0_6=$(echo ${cpsw_0_mac} | awk -F ':' '{print $6}')
+			#bc cuts off leading zero's, we need ten/ones value
+			bb_res=$(echo "obase=16;ibase=16;$cpsw_0_6 + 102" | bc)
+
+			cpsw_1_mac=${mac_0_prefix}:$(echo ${bb_res} | cut -c 2-3)
+		else
+			cpsw_1_mac="1C:BA:8C:A2:ED:69"
+		fi
+		echo "${cpsw_1_mac}" > /etc/cpsw_1_mac || true
 	fi
-	echo "${cpsw_1_mac}" > /etc/cpsw_1_mac || true
-fi
 
-if [ "x${use_cached_bb_mac}" = "xtrue" ] && [ -f /etc/cpsw_2_mac ] ; then
-	cpsw_2_mac=$(cat /etc/cpsw_2_mac)
-else
-	if [ -f /usr/bin/bc ] ; then
-		mac_0_prefix=$(echo ${cpsw_0_mac} | cut -c 1-14)
-
-		cpsw_0_6=$(echo ${cpsw_0_mac} | awk -F ':' '{print $6}')
-		#bc cuts off leading zero's, we need ten/ones value
-		bb_res=$(echo "obase=16;ibase=16;$cpsw_0_6 + 103" | bc)
-
-		cpsw_2_mac=${mac_0_prefix}:$(echo ${bb_res} | cut -c 2-3)
+	if [ "x${use_cached_bb_mac}" = "xtrue" ] && [ -f /etc/cpsw_2_mac ] ; then
+		cpsw_2_mac=$(cat /etc/cpsw_2_mac)
 	else
-		cpsw_2_mac="1C:BA:8C:A2:ED:70"
+		if [ -f /usr/bin/bc ] ; then
+			mac_0_prefix=$(echo ${cpsw_0_mac} | cut -c 1-14)
+
+			cpsw_0_6=$(echo ${cpsw_0_mac} | awk -F ':' '{print $6}')
+			#bc cuts off leading zero's, we need ten/ones value
+			bb_res=$(echo "obase=16;ibase=16;$cpsw_0_6 + 103" | bc)
+
+			cpsw_2_mac=${mac_0_prefix}:$(echo ${bb_res} | cut -c 2-3)
+		else
+			cpsw_2_mac="1C:BA:8C:A2:ED:70"
+		fi
+		echo "${cpsw_2_mac}" > /etc/cpsw_2_mac || true
 	fi
-	echo "${cpsw_2_mac}" > /etc/cpsw_2_mac || true
-fi
 
-if [ "x${use_cached_bb_mac}" = "xtrue" ] && [ -f /etc/cpsw_3_mac ] ; then
-	cpsw_3_mac=$(cat /etc/cpsw_3_mac)
-else
-	if [ -f /usr/bin/bc ] ; then
-		mac_0_prefix=$(echo ${cpsw_0_mac} | cut -c 1-14)
-
-		cpsw_0_6=$(echo ${cpsw_0_mac} | awk -F ':' '{print $6}')
-		#bc cuts off leading zero's, we need ten/ones value
-		bb_res=$(echo "obase=16;ibase=16;$cpsw_0_6 + 104" | bc)
-
-		cpsw_3_mac=${mac_0_prefix}:$(echo ${bb_res} | cut -c 2-3)
+	if [ "x${use_cached_bb_mac}" = "xtrue" ] && [ -f /etc/cpsw_3_mac ] ; then
+		cpsw_3_mac=$(cat /etc/cpsw_3_mac)
 	else
-		cpsw_3_mac="1C:BA:8C:A2:ED:71"
+		if [ -f /usr/bin/bc ] ; then
+			mac_0_prefix=$(echo ${cpsw_0_mac} | cut -c 1-14)
+
+			cpsw_0_6=$(echo ${cpsw_0_mac} | awk -F ':' '{print $6}')
+			#bc cuts off leading zero's, we need ten/ones value
+			bb_res=$(echo "obase=16;ibase=16;$cpsw_0_6 + 104" | bc)
+
+			cpsw_3_mac=${mac_0_prefix}:$(echo ${bb_res} | cut -c 2-3)
+		else
+			cpsw_3_mac="1C:BA:8C:A2:ED:71"
+		fi
+		echo "${cpsw_3_mac}" > /etc/cpsw_3_mac || true
 	fi
-	echo "${cpsw_3_mac}" > /etc/cpsw_3_mac || true
-fi
 
-if [ "x${use_cached_bb_mac}" = "xtrue" ] && [ -f /etc/cpsw_4_mac ] ; then
-	cpsw_4_mac=$(cat /etc/cpsw_4_mac)
-else
-	if [ -f /usr/bin/bc ] ; then
-		mac_0_prefix=$(echo ${cpsw_0_mac} | cut -c 1-14)
-
-		cpsw_0_6=$(echo ${cpsw_0_mac} | awk -F ':' '{print $6}')
-		#bc cuts off leading zero's, we need ten/ones value
-		bb_res=$(echo "obase=16;ibase=16;$cpsw_0_6 + 105" | bc)
-
-		cpsw_4_mac=${mac_0_prefix}:$(echo ${bb_res} | cut -c 2-3)
+	if [ "x${use_cached_bb_mac}" = "xtrue" ] && [ -f /etc/cpsw_4_mac ] ; then
+		cpsw_4_mac=$(cat /etc/cpsw_4_mac)
 	else
-		cpsw_4_mac="1C:BA:8C:A2:ED:72"
-	fi
-	echo "${cpsw_4_mac}" > /etc/cpsw_4_mac || true
-fi
+		if [ -f /usr/bin/bc ] ; then
+			mac_0_prefix=$(echo ${cpsw_0_mac} | cut -c 1-14)
 
-echo "${log} cpsw_0_mac: [${cpsw_0_mac}]"
-echo "${log} cpsw_1_mac: [${cpsw_1_mac}]"
-echo "${log} cpsw_2_mac: [${cpsw_2_mac}]"
-echo "${log} cpsw_3_mac: [${cpsw_3_mac}]"
-echo "${log} cpsw_4_mac: [${cpsw_4_mac}]"
+			cpsw_0_6=$(echo ${cpsw_0_mac} | awk -F ':' '{print $6}')
+			#bc cuts off leading zero's, we need ten/ones value
+			bb_res=$(echo "obase=16;ibase=16;$cpsw_0_6 + 105" | bc)
+
+			cpsw_4_mac=${mac_0_prefix}:$(echo ${bb_res} | cut -c 2-3)
+		else
+			cpsw_4_mac="1C:BA:8C:A2:ED:72"
+		fi
+		echo "${cpsw_4_mac}" > /etc/cpsw_4_mac || true
+	fi
+
+	echo "${log} cpsw_0_mac: [${cpsw_0_mac}]"
+	echo "${log} cpsw_1_mac: [${cpsw_1_mac}]"
+	echo "${log} cpsw_2_mac: [${cpsw_2_mac}]"
+	echo "${log} cpsw_3_mac: [${cpsw_3_mac}]"
+	echo "${log} cpsw_4_mac: [${cpsw_4_mac}]"
+fi
 
 #udhcpd gets started at bootup, but we need to wait till g_multi is loaded, and we run it manually...
 if [ -f /var/run/udhcpd.pid ] ; then
@@ -385,3 +401,18 @@ echo 1 > /sys/class/leds/beaglebone\:green\:usr4/link
 echo 1 > /sys/class/leds/beaglebone\:green\:usr4/rx
 echo 1 > /sys/class/leds/beaglebone\:green\:usr4/tx
 
+unset check_service
+check_service=$(systemctl is-enabled robotcontrol.service || true)
+if [ "x${check_service}" = "xenabled" ] ; then
+	echo "${log} systemctl: disable robotcontrol.service"
+	systemctl disable robotcontrol.service || true
+	rm -f /etc/modules-load.d/robotcontrol_modules.conf || true
+fi
+unset check_service
+check_service=$(systemctl is-enabled rc_battery_monitor.service || true)
+if [ "x${check_service}" = "xenabled" ] ; then
+	echo "${log} systemctl: rc_battery_monitor.service"
+	systemctl disable rc_battery_monitor.service || true
+fi
+
+#
