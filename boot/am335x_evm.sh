@@ -404,14 +404,14 @@ else
 		fi
 		echo "${cpsw_5_mac}" > /etc/cpsw_5_mac || true
 	fi
-fi
 
-echo "${log} cpsw_0_mac: [${cpsw_0_mac}]"
-echo "${log} cpsw_1_mac: [${cpsw_1_mac}]"
-echo "${log} cpsw_2_mac: [${cpsw_2_mac}]"
-echo "${log} cpsw_3_mac: [${cpsw_3_mac}]"
-echo "${log} cpsw_4_mac: [${cpsw_4_mac}]"
-echo "${log} cpsw_5_mac: [${cpsw_5_mac}]"
+	echo "${log} cpsw_0_mac: [${cpsw_0_mac}]"
+	echo "${log} cpsw_1_mac: [${cpsw_1_mac}]"
+	echo "${log} cpsw_2_mac: [${cpsw_2_mac}]"
+	echo "${log} cpsw_3_mac: [${cpsw_3_mac}]"
+	echo "${log} cpsw_4_mac: [${cpsw_4_mac}]"
+	echo "${log} cpsw_5_mac: [${cpsw_5_mac}]"
+fi
 
 if [ -f /var/lib/connman/settings ] ; then
 	wifi_name=$(grep Tethering.Identifier= /var/lib/connman/settings | awk -F '=' '{print $2}' || true)
