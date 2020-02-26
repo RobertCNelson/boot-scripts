@@ -28,4 +28,25 @@ fi
 #Just Cleanup /etc/issue, systemd starts up tty before these are updated...
 sed -i -e '/Address/d' /etc/issue || true
 
+#Disabling Non-Valid Services..
+unset check_service
+check_service=$(systemctl is-enabled bb-bbai-tether.service || true)
+if [ "x${check_service}" = "xenabled" ] ; then
+	echo "${log} systemctl: disable bb-bbai-tether.service"
+	systemctl disable bb-bbai-tether.service || true
+fi
+unset check_service
+check_service=$(systemctl is-enabled robotcontrol.service || true)
+if [ "x${check_service}" = "xenabled" ] ; then
+	echo "${log} systemctl: disable robotcontrol.service"
+	systemctl disable robotcontrol.service || true
+	rm -f /etc/modules-load.d/robotcontrol_modules.conf || true
+fi
+unset check_service
+check_service=$(systemctl is-enabled rc_battery_monitor.service || true)
+if [ "x${check_service}" = "xenabled" ] ; then
+	echo "${log} systemctl: rc_battery_monitor.service"
+	systemctl disable rc_battery_monitor.service || true
+fi
+
 #
