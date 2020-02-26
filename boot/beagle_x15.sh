@@ -131,13 +131,13 @@ else
 	if [ -f /etc/cpsw_0_mac ] ; then
 		unset test_cpsw_0_mac
 		test_cpsw_0_mac=$(cat /etc/cpsw_0_mac)
-		if [ "x${cpsw_0_mac}" = "x${test_cpsw_0_mac}" ] ; then
+		if [ "x${mac_addr0}" = "x${test_cpsw_0_mac}" ] ; then
 			use_cached_mac_addr="true"
 		else
-			echo "${cpsw_0_mac}" > /etc/cpsw_0_mac || true
+			echo "${mac_addr0}" > /etc/cpsw_0_mac || true
 		fi
 	else
-		echo "${cpsw_0_mac}" > /etc/cpsw_0_mac || true
+		echo "${mac_addr0}" > /etc/cpsw_0_mac || true
 	fi
 
 	if [ "x${use_cached_mac_addr}" = "xtrue" ] && [ -f /etc/cpsw_1_mac ] ; then
@@ -371,45 +371,65 @@ fi
 		fi
 	fi
 
-if [ "x${dnsmasq_usb0_usb1}" = "xenable" ] ; then
-	if [ -d /sys/kernel/config/usb_gadget ] ; then
-		/etc/init.d/udhcpd stop || true
+	if [ "x${dnsmasq_usb0_usb1}" = "xenable" ] ; then
+		if [ -d /sys/kernel/config/usb_gadget ] ; then
+			/etc/init.d/udhcpd stop || true
 
-		# do not write if there is a .SoftAp0 file
-		if [ -d /etc/dnsmasq.d/ ] ; then
-			echo "${log} dnsmasq: setting up for usb0/usb1"
-			disable_connman_dnsproxy
+			# do not write if there is a .SoftAp0 file
+			if [ -d /etc/dnsmasq.d/ ] ; then
+				if [ ! -f /etc/dnsmasq.d/.SoftAp0 ] ; then
+					echo "${log} dnsmasq: setting up for usb0/usb1"
+					disable_connman_dnsproxy
 
-			if [ -f /usr/bin/bb_dnsmasq_config.sh ] ; then
-				/usr/bin/bb_dnsmasq_config.sh || true
+					if [ -f /usr/bin/bb_dnsmasq_config.sh ] ; then
+						/usr/bin/bb_dnsmasq_config.sh || true
+					else
+						wfile="/etc/dnsmasq.d/SoftAp0"
+						echo "interface=usb0" > ${wfile}
+
+						if [ "x${USB1_ENABLE}" = "xenable" ] ; then
+							echo "interface=usb1" >> ${wfile}
+						fi
+
+						echo "port=53" >> ${wfile}
+						echo "dhcp-authoritative" >> ${wfile}
+						echo "domain-needed" >> ${wfile}
+						echo "bogus-priv" >> ${wfile}
+						echo "expand-hosts" >> ${wfile}
+						echo "cache-size=2048" >> ${wfile}
+						echo "dhcp-range=usb0,${USB0_SUBNET}.1,${USB0_SUBNET}.1,2m" >> ${wfile}
+
+						if [ "x${USB1_ENABLE}" = "xenable" ] ; then
+							echo "dhcp-range=usb1,${USB1_SUBNET}.1,${USB1_SUBNET}.1,2m" >> ${wfile}
+						fi
+
+						echo "listen-address=127.0.0.1" >> ${wfile}
+						echo "listen-address=${USB0_SUBNET}.2" >> ${wfile}
+
+						if [ "x${USB1_ENABLE}" = "xenable" ] ; then
+							echo "listen-address=${USB1_SUBNET}.2" >> ${wfile}
+						fi
+
+						echo "dhcp-option=usb0,3" >> ${wfile}
+						echo "dhcp-option=usb0,6" >> ${wfile}
+
+						if [ "x${USB1_ENABLE}" = "xenable" ] ; then
+							echo "dhcp-option=usb1,3" >> ${wfile}
+							echo "dhcp-option=usb1,6" >> ${wfile}
+						fi
+
+						echo "dhcp-leasefile=/var/run/dnsmasq.leases" >> ${wfile}
+					fi
+
+					systemctl restart dnsmasq || true
+				else
+					echo "${log} LOG: dnsmasq is disabled in this script"
+				fi
 			else
-				wfile="/etc/dnsmasq.d/SoftAp0"
-				echo "interface=usb0" > ${wfile}
-				echo "interface=usb1" >> ${wfile}
-				echo "port=53" >> ${wfile}
-				echo "dhcp-authoritative" >> ${wfile}
-				echo "domain-needed" >> ${wfile}
-				echo "bogus-priv" >> ${wfile}
-				echo "expand-hosts" >> ${wfile}
-				echo "cache-size=2048" >> ${wfile}
-				echo "dhcp-range=usb0,192.168.7.1,192.168.7.1,2m" >> ${wfile}
-				echo "dhcp-range=usb1,192.168.6.1,192.168.6.1,2m" >> ${wfile}
-				echo "listen-address=127.0.0.1" >> ${wfile}
-				echo "listen-address=192.168.7.2" >> ${wfile}
-				echo "listen-address=192.168.6.2" >> ${wfile}
-				echo "dhcp-option=usb0,3" >> ${wfile}
-				echo "dhcp-option=usb0,6" >> ${wfile}
-				echo "dhcp-option=usb1,3" >> ${wfile}
-				echo "dhcp-option=usb1,6" >> ${wfile}
-				echo "dhcp-leasefile=/var/run/dnsmasq.leases" >> ${wfile}
+				echo "${log} ERROR: dnsmasq is not installed"
 			fi
-
-			systemctl restart dnsmasq || true
-		else
-			echo "${log} ERROR: dnsmasq is not installed"
 		fi
 	fi
-fi
 
 if [ -f /usr/bin/amixer ] ; then
 	#setup rca jacks for audio in/out:
