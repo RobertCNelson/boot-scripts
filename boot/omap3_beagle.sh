@@ -22,6 +22,20 @@
 
 log="omap3_beagle:"
 
+if [ -f /etc/rcn-ee.conf ] ; then
+	. /etc/rcn-ee.conf
+fi
+
+if [ -f /etc/default/bb-boot ] ; then
+	. /etc/default/bb-boot
+
+	if [ "x${USB_CONFIGURATION}" = "x" ] ; then
+		echo "${log} Updating /etc/default/bb-boot"
+		cp -v /opt/scripts/boot/default/bb-boot /etc/default/bb-boot || true
+		. /etc/default/bb-boot
+	fi
+fi
+
 #Bus 005 Device 014: ID 1d6b:0104 Linux Foundation Multifunction Composite Gadget
 usb_gadget="/sys/kernel/config/usb_gadget"
 
@@ -40,6 +54,7 @@ usb_product="USB Device"
 
 #udhcpd gets started at bootup, but we need to wait till g_multi is loaded, and we run it manually...
 if [ -f /var/run/udhcpd.pid ] ; then
+	echo "${log} [/etc/init.d/udhcpd stop]"
 	/etc/init.d/udhcpd stop || true
 fi
 
@@ -110,14 +125,9 @@ use_libcomposite () {
 use_libcomposite
 
 if [ -f /usr/bin/amixer ] ; then
-	echo "${log} Enabling Headset (Audio Out):"
-	echo "${log} [amixer sset 'DAC1 Digital Fine' 40]:"
 	amixer -c0 sset 'DAC1 Digital Fine' 40
-	echo "${log} [amixer sset 'Headset' 2]:"
 	amixer -c0 sset 'Headset' 2
-	echo "${log} [amixer sset 'HeadsetL Mixer AudioL1' on]:"
 	amixer -c0 sset 'HeadsetL Mixer AudioL1' on
-	echo "${log} [amixer sset 'HeadsetR Mixer AudioR1' on]:"
 	amixer -c0 sset 'HeadsetR Mixer AudioR1' on
 fi
 
@@ -127,6 +137,27 @@ sed -i -e '/Address/d' /etc/issue || true
 check_getty_tty=$(systemctl is-active serial-getty@ttyGS0.service || true)
 if [ "x${check_getty_tty}" = "xinactive" ] ; then
 	systemctl restart serial-getty@ttyGS0.service || true
+fi
+
+#Disabling Non-Valid Services..
+unset check_service
+check_service=$(systemctl is-enabled bb-bbai-tether.service || true)
+if [ "x${check_service}" = "xenabled" ] ; then
+	echo "${log} systemctl: disable bb-bbai-tether.service"
+	systemctl disable bb-bbai-tether.service || true
+fi
+unset check_service
+check_service=$(systemctl is-enabled robotcontrol.service || true)
+if [ "x${check_service}" = "xenabled" ] ; then
+	echo "${log} systemctl: disable robotcontrol.service"
+	systemctl disable robotcontrol.service || true
+	rm -f /etc/modules-load.d/robotcontrol_modules.conf || true
+fi
+unset check_service
+check_service=$(systemctl is-enabled rc_battery_monitor.service || true)
+if [ "x${check_service}" = "xenabled" ] ; then
+	echo "${log} systemctl: rc_battery_monitor.service"
+	systemctl disable rc_battery_monitor.service || true
 fi
 
 #
