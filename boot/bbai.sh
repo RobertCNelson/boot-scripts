@@ -444,16 +444,12 @@ echo 1 > /sys/class/leds/beaglebone\:green\:usr4/link
 echo 1 > /sys/class/leds/beaglebone\:green\:usr4/rx
 echo 1 > /sys/class/leds/beaglebone\:green\:usr4/tx
 
-unset check_service
-check_service=$(systemctl is-enabled robotcontrol.service || true)
-if [ "x${check_service}" = "xenabled" ] ; then
+if [ -f /etc/systemd/system/multi-user.target.wants/robotcontrol.service ] ; then
 	echo "${log} systemctl: disable robotcontrol.service"
 	systemctl disable robotcontrol.service || true
 	rm -f /etc/modules-load.d/robotcontrol_modules.conf || true
 fi
-unset check_service
-check_service=$(systemctl is-enabled rc_battery_monitor.service || true)
-if [ "x${check_service}" = "xenabled" ] ; then
+if [ -f /etc/systemd/system/multi-user.target.wants/rc_battery_monitor.service ] ; then
 	echo "${log} systemctl: rc_battery_monitor.service"
 	systemctl disable rc_battery_monitor.service || true
 fi

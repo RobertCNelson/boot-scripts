@@ -867,11 +867,17 @@ if [ "x${abi}" = "xac" ] ; then
 fi
 
 #Disabling Non-Valid Services..
-unset check_service
-check_service=$(systemctl is-enabled bb-bbai-tether.service || true)
-if [ "x${check_service}" = "xenabled" ] ; then
+if [ -f /etc/systemd/system/multi-user.target.wants/bb-bbai-tether.service ] ; then
 	echo "${log} systemctl: disable bb-bbai-tether.service"
 	systemctl disable bb-bbai-tether.service || true
+fi
+if [ -f /etc/systemd/system/basic.target.wants/cmemk-module.service ] ; then
+	echo "${log} systemctl: cmemk-module.service"
+	systemctl disable cmemk-module.service || true
+fi
+if [ -f /etc/systemd/system/basic.target.wants/ti-mct-daemon.service ] ; then
+	echo "${log} systemctl: ti-mct-daemon.service"
+	systemctl disable ti-mct-daemon.service || true
 fi
 
 machine=$(cat /proc/device-tree/model | sed "s/ /_/g" | tr -d '\000')
@@ -886,26 +892,21 @@ TI_AM335x_BeagleBone_Blue|TI_*_RoboticsCape)
 	fi
 	unset check_service
 	check_service=$(systemctl is-enabled rc_battery_monitor.service || true)
-	if [ "x${check_service}" = "xdisabled" ] ; then
+	if [ -f "x${check_service}" = "xdisabled" ] ; then
 		echo "${log} systemctl: enable rc_battery_monitor.service"
 		systemctl enable rc_battery_monitor.service || true
 	fi
 	;;
 *)
-	unset check_service
-	check_service=$(systemctl is-enabled robotcontrol.service || true)
-	if [ "x${check_service}" = "xenabled" ] ; then
+	if [ -f /etc/systemd/system/multi-user.target.wants/robotcontrol.service ] ; then
 		echo "${log} systemctl: disable robotcontrol.service"
 		systemctl disable robotcontrol.service || true
 		rm -f /etc/modules-load.d/robotcontrol_modules.conf || true
 	fi
-	unset check_service
-	check_service=$(systemctl is-enabled rc_battery_monitor.service || true)
-	if [ "x${check_service}" = "xenabled" ] ; then
+	if [ -f /etc/systemd/system/multi-user.target.wants/rc_battery_monitor.service ] ; then
 		echo "${log} systemctl: rc_battery_monitor.service"
 		systemctl disable rc_battery_monitor.service || true
 	fi
-	;;
 esac
 
 #

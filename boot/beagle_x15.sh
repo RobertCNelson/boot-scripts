@@ -452,22 +452,16 @@ if [ "x${check_getty_tty}" = "xinactive" ] ; then
 fi
 
 #Disabling Non-Valid Services..
-unset check_service
-check_service=$(systemctl is-enabled bb-bbai-tether.service || true)
-if [ "x${check_service}" = "xenabled" ] ; then
+if [ -f /etc/systemd/system/multi-user.target.wants/bb-bbai-tether.service ] ; then
 	echo "${log} systemctl: disable bb-bbai-tether.service"
 	systemctl disable bb-bbai-tether.service || true
 fi
-unset check_service
-check_service=$(systemctl is-enabled robotcontrol.service || true)
-if [ "x${check_service}" = "xenabled" ] ; then
+if [ -f /etc/systemd/system/multi-user.target.wants/robotcontrol.service ] ; then
 	echo "${log} systemctl: disable robotcontrol.service"
 	systemctl disable robotcontrol.service || true
 	rm -f /etc/modules-load.d/robotcontrol_modules.conf || true
 fi
-unset check_service
-check_service=$(systemctl is-enabled rc_battery_monitor.service || true)
-if [ "x${check_service}" = "xenabled" ] ; then
+if [ -f /etc/systemd/system/multi-user.target.wants/rc_battery_monitor.service ] ; then
 	echo "${log} systemctl: rc_battery_monitor.service"
 	systemctl disable rc_battery_monitor.service || true
 fi
