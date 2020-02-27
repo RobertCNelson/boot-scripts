@@ -370,7 +370,7 @@ fi
 		fi
 
 		if [ -d /sys/kernel/config/usb_gadget ] ; then
-			if [ -f /etc/init.d/udhcpd ] ; then
+			if [ -f /var/run/udhcpd.pid ] ; then
 				/etc/init.d/udhcpd stop || true
 			fi
 
