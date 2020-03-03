@@ -892,7 +892,7 @@ TI_AM335x_BeagleBone_Blue|TI_*_RoboticsCape)
 	fi
 	unset check_service
 	check_service=$(systemctl is-enabled rc_battery_monitor.service || true)
-	if [ -f "x${check_service}" = "xdisabled" ] ; then
+	if [ "x${check_service}" = "xdisabled" ] ; then
 		echo "${log} systemctl: enable rc_battery_monitor.service"
 		systemctl enable rc_battery_monitor.service || true
 	fi
