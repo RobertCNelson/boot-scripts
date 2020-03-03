@@ -465,5 +465,12 @@ if [ -f /etc/systemd/system/multi-user.target.wants/rc_battery_monitor.service ]
 	echo "${log} systemctl: rc_battery_monitor.service"
 	systemctl disable rc_battery_monitor.service || true
 fi
-
+if [ -f /etc/systemd/system/multi-user.target.wants/bb-wl18xx-bluetooth.service ] ; then
+	echo "${log} systemctl: bb-wl18xx-bluetooth.service"
+	systemctl disable bb-wl18xx-bluetooth.service || true
+fi
+if [ -f /etc/systemd/system/multi-user.target.wants/bb-wl18xx-wlan0.service ] ; then
+	echo "${log} systemctl: bb-wl18xx-wlan0.service"
+	systemctl disable bb-wl18xx-wlan0.service || true
+fi
 #

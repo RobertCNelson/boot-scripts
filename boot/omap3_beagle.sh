@@ -1,6 +1,6 @@
 #!/bin/sh -e
 #
-# Copyright (c) 2013-2017 Robert Nelson <robertcnelson@gmail.com>
+# Copyright (c) 2013-2020 Robert Nelson <robertcnelson@gmail.com>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -140,24 +140,25 @@ if [ "x${check_getty_tty}" = "xinactive" ] ; then
 fi
 
 #Disabling Non-Valid Services..
-unset check_service
-check_service=$(systemctl is-enabled bb-bbai-tether.service || true)
-if [ "x${check_service}" = "xenabled" ] ; then
+if [ -f /etc/systemd/system/multi-user.target.wants/bb-bbai-tether.service ] ; then
 	echo "${log} systemctl: disable bb-bbai-tether.service"
 	systemctl disable bb-bbai-tether.service || true
 fi
-unset check_service
-check_service=$(systemctl is-enabled robotcontrol.service || true)
-if [ "x${check_service}" = "xenabled" ] ; then
+if [ -f /etc/systemd/system/multi-user.target.wants/robotcontrol.service ] ; then
 	echo "${log} systemctl: disable robotcontrol.service"
 	systemctl disable robotcontrol.service || true
 	rm -f /etc/modules-load.d/robotcontrol_modules.conf || true
 fi
-unset check_service
-check_service=$(systemctl is-enabled rc_battery_monitor.service || true)
-if [ "x${check_service}" = "xenabled" ] ; then
+if [ -f /etc/systemd/system/multi-user.target.wants/rc_battery_monitor.service ] ; then
 	echo "${log} systemctl: rc_battery_monitor.service"
 	systemctl disable rc_battery_monitor.service || true
 fi
-
+if [ -f /etc/systemd/system/multi-user.target.wants/bb-wl18xx-bluetooth.service ] ; then
+	echo "${log} systemctl: bb-wl18xx-bluetooth.service"
+	systemctl disable bb-wl18xx-bluetooth.service || true
+fi
+if [ -f /etc/systemd/system/multi-user.target.wants/bb-wl18xx-wlan0.service ] ; then
+	echo "${log} systemctl: bb-wl18xx-wlan0.service"
+	systemctl disable bb-wl18xx-wlan0.service || true
+fi
 #
