@@ -896,7 +896,37 @@ TI_AM335x_BeagleBone_Blue|TI_*_RoboticsCape)
 		echo "${log} systemctl: enable rc_battery_monitor.service"
 		systemctl enable rc_battery_monitor.service || true
 	fi
+	unset check_service
+	check_service=$(systemctl is-enabled bb-wl18xx-bluetooth.service || true)
+	if [ "x${check_service}" = "xdisabled" ] ; then
+		echo "${log} systemctl: enable bb-wl18xx-bluetooth.service"
+		systemctl enable bb-wl18xx-bluetooth.service || true
+	fi
+	unset check_service
+	check_service=$(systemctl is-enabled bb-wl18xx-wlan0.service || true)
+	if [ "x${check_service}" = "xdisabled" ] ; then
+		echo "${log} systemctl: enable bb-wl18xx-wlan0.service"
+		systemctl enable bb-wl18xx-wlan0.service || true
+	fi
 	;;
+TI_AM335x_BeagleBone_Black|TI_AM335x_BeagleBone_Green)
+	if [ -f /etc/systemd/system/multi-user.target.wants/robotcontrol.service ] ; then
+		echo "${log} systemctl: disable robotcontrol.service"
+		systemctl disable robotcontrol.service || true
+		rm -f /etc/modules-load.d/robotcontrol_modules.conf || true
+	fi
+	if [ -f /etc/systemd/system/multi-user.target.wants/rc_battery_monitor.service ] ; then
+		echo "${log} systemctl: rc_battery_monitor.service"
+		systemctl disable rc_battery_monitor.service || true
+	fi
+	if [ -f /etc/systemd/system/multi-user.target.wants/bb-wl18xx-bluetooth.service ] ; then
+		echo "${log} systemctl: bb-wl18xx-bluetooth.service"
+		systemctl disable bb-wl18xx-bluetooth.service || true
+	fi
+	if [ -f /etc/systemd/system/multi-user.target.wants/bb-wl18xx-wlan0.service ] ; then
+		echo "${log} systemctl: bb-wl18xx-wlan0.service"
+		systemctl disable bb-wl18xx-wlan0.service || true
+	fi
 *)
 	if [ -f /etc/systemd/system/multi-user.target.wants/robotcontrol.service ] ; then
 		echo "${log} systemctl: disable robotcontrol.service"

@@ -131,8 +131,10 @@ if [ -f /usr/bin/amixer ] ; then
 	amixer -c0 sset 'HeadsetR Mixer AudioR1' on
 fi
 
-#Just Cleanup /etc/issue, systemd starts up tty before these are updated...
-sed -i -e '/Address/d' /etc/issue || true
+if [ "x${abi}" = "xab" ] ; then
+	#Just Cleanup /etc/issue, systemd starts up tty before these are updated...
+	sed -i -e '/Address/d' /etc/issue || true
+fi
 
 check_getty_tty=$(systemctl is-active serial-getty@ttyGS0.service || true)
 if [ "x${check_getty_tty}" = "xinactive" ] ; then
@@ -143,6 +145,14 @@ fi
 if [ -f /etc/systemd/system/multi-user.target.wants/bb-bbai-tether.service ] ; then
 	echo "${log} systemctl: disable bb-bbai-tether.service"
 	systemctl disable bb-bbai-tether.service || true
+fi
+if [ -f /etc/systemd/system/basic.target.wants/cmemk-module.service ] ; then
+	echo "${log} systemctl: cmemk-module.service"
+	systemctl disable cmemk-module.service || true
+fi
+if [ -f /etc/systemd/system/basic.target.wants/ti-mct-daemon.service ] ; then
+	echo "${log} systemctl: ti-mct-daemon.service"
+	systemctl disable ti-mct-daemon.service || true
 fi
 if [ -f /etc/systemd/system/multi-user.target.wants/robotcontrol.service ] ; then
 	echo "${log} systemctl: disable robotcontrol.service"
