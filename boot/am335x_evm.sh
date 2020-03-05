@@ -927,6 +927,7 @@ TI_AM335x_BeagleBone_Black|TI_AM335x_BeagleBone_Green)
 		echo "${log} systemctl: bb-wl18xx-wlan0.service"
 		systemctl disable bb-wl18xx-wlan0.service || true
 	fi
+	;;
 *)
 	if [ -f /etc/systemd/system/multi-user.target.wants/robotcontrol.service ] ; then
 		echo "${log} systemctl: disable robotcontrol.service"
