@@ -10,15 +10,22 @@
 # other values take no effect, and are ignored. The only expected value is "yes"
 ##USB_NETWORK_DISABLED=yes
 
+###To Run Multple Boards on one USB HOST, change the 3rd octal on every
+###USBx_SUBNET define and USBx_ADDRESS
+###BeagleBone Number 2: USB0: 192.168.11.2 USB1: 192.168.10.2
+###BeagleBone Number 3: USB0: 192.168.13.2 USB1: 192.168.12.2
+###And So On..
+
 USB_CONFIGURATION=enable
 #Its assumed usb0 is always enabled, usb1 can be disabled...
 USB0_SUBNET=192.168.7
 USB0_ADDRESS=192.168.7.2
-USB0_NETMASK=255.255.255.252
+USB0_NETMASK=255.255.255.0
 
 USB1_ENABLE=enable
 USB1_SUBNET=192.168.6
 USB1_ADDRESS=192.168.6.2
-USB1_NETMASK=255.255.255.252
+USB1_NETMASK=255.255.255.0
 
 DNS_NAMESERVER=8.8.8.8
+

@@ -403,10 +403,10 @@ fi
 						fi
 
 						echo "listen-address=127.0.0.1" >> ${wfile}
-						echo "listen-address=${USB0_SUBNET}.2" >> ${wfile}
+						echo "listen-address=${USB0_ADDRESS}" >> ${wfile}
 
 						if [ "x${USB1_ENABLE}" = "xenable" ] ; then
-							echo "listen-address=${USB1_SUBNET}.2" >> ${wfile}
+							echo "listen-address=${USB1_ADDRESS}" >> ${wfile}
 						fi
 
 						echo "dhcp-option=usb0,3" >> ${wfile}
