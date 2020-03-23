@@ -825,7 +825,7 @@ wheezy|jessie)
 stretch)
 	dist="${get_dist}"
 	apt_bin="apt"
-	cmem_version="4.15.00.02"
+	cmem_version="4.16.00.00"
 	;;
 buster|sid)
 	dist="${get_dist}"
