@@ -136,6 +136,10 @@ TI_AM335x_BeagleBone_Black)
 	cleanup_extra_docs
 	dnsmasq_usb0_usb1="enable"
 	;;
+TI_AM335x_BeagleBone_Black_Gateway_Cape)
+	has_wifi="enable"
+	cleanup_extra_docs
+	;;
 TI_AM335x_BeagleBone_Black_Wireless)
 	has_wifi="enable"
 	#recovers 82MB of space
