@@ -161,7 +161,6 @@ TI_AM335x_BeagleBone_Blue)
 TI_AM335x_BeagleBone_Green)
 	has_wifi="disable"
 	unset board_bbgw
-	unset board_sbbe
 	dnsmasq_usb0_usb1="enable"
 	;;
 TI_AM335x_BeagleBone_Green_Wireless)
@@ -183,9 +182,10 @@ TI_AM335x_PocketBone)
 	dnsmasq_usb0_usb1="enable"
 	;;
 SanCloud_BeagleBone_Enhanced)
-	board_sbbe="enable"
 	has_wifi="enable"
 	cleanup_extra_docs
+	usb_imanufacturer="SanCloud"
+	usb_iproduct="BeagleBoneEnhanced"
 	;;
 Octavo_Systems_OSD3358*)
 	has_wifi="disable"
@@ -211,7 +211,6 @@ SeeedStudio_BeagleBone_Green_Gateway)
 *)
 	has_wifi="disable"
 	unset board_bbgw
-	unset board_sbbe
 	;;
 esac
 
@@ -256,12 +255,7 @@ if [ "x${ISBLACK}" = "xBBBK" ] || [ "x${ISBLACK}" = "xBNLT" ] ; then
 			usb_imanufacturer="Seeed"
 			usb_iproduct="BeagleBoneGreenWireless"
 		else
-			if [ "x$board_sbbe" = "xenable" ] ; then
-				usb_imanufacturer="SanCloud"
-				usb_iproduct="BeagleBoneEnhanced"
-			else
-				usb_iproduct="BeagleBoneBlack"
-			fi
+			usb_iproduct="BeagleBoneBlack"
 		fi
 	fi
 fi
