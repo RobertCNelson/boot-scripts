@@ -189,6 +189,8 @@ TI_AM335x_BeagleBone_Green)
 	has_wifi="disable"
 	unset board_bbgw
 	dnsmasq_usb0_usb1="enable"
+	usb_imanufacturer="Seeed"
+	usb_iproduct="BeagleBoneGreen"
 	;;
 TI_AM335x_BeagleBone_Green_Wireless)
 	board_bbgw="enable"
@@ -250,12 +252,7 @@ if [ -f ${eeprom} ] && [ -f /usr/bin/hexdump ] ; then
 fi
 
 if [ "x${ISBLACK}" = "xBBBK" ] || [ "x${ISBLACK}" = "xBNLT" ] ; then
-	if [ "x${ISGREEN}" = "xBBG" ] ; then
-		usb_imanufacturer="Seeed"
-		usb_iproduct="BeagleBoneGreen"
-	else
-		usb_iproduct="BeagleBoneBlack"
-	fi
+	usb_iproduct="BeagleBoneBlack"
 fi
 
 #mac address:
