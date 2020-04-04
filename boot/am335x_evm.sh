@@ -130,7 +130,7 @@ wifi_prefix="BeagleBone"
 
 usb_iserialnumber="1234BBBK5678"
 usb_imanufacturer="BeagleBoard.org"
-usb_iproduct="BeagleBone"
+usb_iproduct="BeagleBoneBlack"
 
 board=$(cat /proc/device-tree/model | sed "s/ /_/g" | tr -d '\000')
 case "${board}" in
@@ -155,6 +155,7 @@ TI_AM335x_BeagleBone)
 	has_wifi="disable"
 	cleanup_extra_docs
 	dnsmasq_usb0_usb1="enable"
+	usb_iproduct="BeagleBone"
 	;;
 TI_AM335x_BeagleBone_Black)
 	has_wifi="disable"
@@ -249,10 +250,6 @@ if [ -f ${eeprom} ] && [ -f /usr/bin/hexdump ] ; then
 	ISBLACK=$(hexdump -e '8/1 "%c"' ${eeprom} -n 12 | cut -b 9-12)
 	ISGREEN=$(hexdump -e '8/1 "%c"' ${eeprom} -n 19 | cut -b 17-19)
 	ISBLACKVARIENT=$(hexdump -e '8/1 "%c"' ${eeprom} -n 16 | cut -b 13-16)
-fi
-
-if [ "x${ISBLACK}" = "xBBBK" ] || [ "x${ISBLACK}" = "xBNLT" ] ; then
-	usb_iproduct="BeagleBoneBlack"
 fi
 
 #mac address:
