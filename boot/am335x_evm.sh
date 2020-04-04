@@ -124,6 +124,14 @@ fi
 unset dnsmasq_usb0_usb1
 unset blue_fix_uarts
 
+ISBLACK=""
+ISGREEN=""
+wifi_prefix="BeagleBone"
+
+usb_iserialnumber="1234BBBK5678"
+usb_imanufacturer="BeagleBoard.org"
+usb_iproduct="BeagleBone"
+
 board=$(cat /proc/device-tree/model | sed "s/ /_/g" | tr -d '\000')
 case "${board}" in
 TI_AM335x_BeagleBone)
@@ -211,13 +219,6 @@ if [ ! "x${usb_image_file}" = "x" ] ; then
 	echo "${log} usb_image_file=[`readlink -f ${usb_image_file}`]"
 fi
 
-usb_iserialnumber="1234BBBK5678"
-ISBLACK=""
-ISGREEN=""
-usb_iproduct="am335x_evm"
-usb_imanufacturer="BeagleBoard.org"
-wifi_prefix="BeagleBone"
-
 #pre nvmem...
 eeprom="/sys/bus/i2c/devices/0-0050/eeprom"
 if [ -f ${eeprom} ] && [ -f /usr/bin/hexdump ] ; then
@@ -245,7 +246,6 @@ if [ -f ${eeprom} ] && [ -f /usr/bin/hexdump ] ; then
 	ISBLACKVARIENT=$(hexdump -e '8/1 "%c"' ${eeprom} -n 16 | cut -b 13-16)
 fi
 
-usb_iproduct="BeagleBone"
 if [ "x${ISBLACK}" = "xBBBK" ] || [ "x${ISBLACK}" = "xBNLT" ] ; then
 	if [ "x${ISGREEN}" = "xBBG" ] ; then
 		usb_imanufacturer="Seeed"
