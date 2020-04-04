@@ -164,7 +164,12 @@ TI_AM335x_BeagleLogic_Standalone)
 	has_wifi="disable"
 	dnsmasq_usb0_usb1="enable"
 	;;
-TI_AM335x_P*)
+TI_AM335x_PocketBeagle)
+	has_wifi="disable"
+	cleanup_extra_docs
+	dnsmasq_usb0_usb1="enable"
+	;;
+TI_AM335x_PocketBone)
 	has_wifi="disable"
 	cleanup_extra_docs
 	dnsmasq_usb0_usb1="enable"
