@@ -134,6 +134,23 @@ usb_iproduct="BeagleBone"
 
 board=$(cat /proc/device-tree/model | sed "s/ /_/g" | tr -d '\000')
 case "${board}" in
+Octavo_Systems_OSD3358*)
+	has_wifi="disable"
+	cleanup_extra_docs
+	dnsmasq_usb0_usb1="enable"
+	;;
+SanCloud_BeagleBone_Enhanced)
+	has_wifi="enable"
+	cleanup_extra_docs
+	usb_imanufacturer="SanCloud"
+	usb_iproduct="BeagleBoneEnhanced"
+	;;
+SeeedStudio_BeagleBone_Green_Gateway)
+	has_wifi="enable"
+	board_bbgg="enable"
+	cleanup_extra_docs
+	dnsmasq_usb0_usb1="enable"
+	;;
 TI_AM335x_BeagleBone)
 	has_wifi="disable"
 	cleanup_extra_docs
@@ -148,7 +165,17 @@ TI_AM335x_BeagleBone_Black_Gateway_Cape)
 	has_wifi="enable"
 	cleanup_extra_docs
 	;;
+TI_AM335x_BeagleBone_Black_RoboticsCape)
+	has_wifi="disable"
+	cleanup_extra_docs
+	dnsmasq_usb0_usb1="enable"
+	;;
 TI_AM335x_BeagleBone_Black_Wireless)
+	has_wifi="enable"
+	#recovers 82MB of space
+	cleanup_extra_docs
+	;;
+TI_AM335x_BeagleBone_Black_Wireless_RoboticsCape)
 	has_wifi="enable"
 	#recovers 82MB of space
 	cleanup_extra_docs
@@ -178,33 +205,6 @@ TI_AM335x_PocketBeagle)
 	;;
 TI_AM335x_PocketBone)
 	has_wifi="disable"
-	cleanup_extra_docs
-	dnsmasq_usb0_usb1="enable"
-	;;
-SanCloud_BeagleBone_Enhanced)
-	has_wifi="enable"
-	cleanup_extra_docs
-	usb_imanufacturer="SanCloud"
-	usb_iproduct="BeagleBoneEnhanced"
-	;;
-Octavo_Systems_OSD3358*)
-	has_wifi="disable"
-	cleanup_extra_docs
-	dnsmasq_usb0_usb1="enable"
-	;;
-TI_AM335x_BeagleBone_Black_RoboticsCape)
-	has_wifi="disable"
-	cleanup_extra_docs
-	dnsmasq_usb0_usb1="enable"
-	;;
-TI_AM335x_BeagleBone_Black_Wireless_RoboticsCape)
-	has_wifi="enable"
-	#recovers 82MB of space
-	cleanup_extra_docs
-	;;
-SeeedStudio_BeagleBone_Green_Gateway)
-	has_wifi="enable"
-	board_bbgg="enable"
 	cleanup_extra_docs
 	dnsmasq_usb0_usb1="enable"
 	;;
