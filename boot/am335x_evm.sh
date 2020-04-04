@@ -908,6 +908,20 @@ TI_AM335x_BeagleBone_Black|TI_AM335x_BeagleBone_Green)
 		systemctl disable bb-wl18xx-wlan0.service || true
 	fi
 	;;
+TI_AM335x_BeagleBone_Black_Wireless|TI_AM335x_BeagleBone_Green_Wireless|SeeedStudio_BeagleBone_Green_Gateway)
+	unset check_service
+	check_service=$(systemctl is-enabled bb-wl18xx-bluetooth.service || true)
+	if [ "x${check_service}" = "xdisabled" ] ; then
+		echo "${log} systemctl: enable bb-wl18xx-bluetooth.service"
+		systemctl enable bb-wl18xx-bluetooth.service || true
+	fi
+	unset check_service
+	check_service=$(systemctl is-enabled bb-wl18xx-wlan0.service || true)
+	if [ "x${check_service}" = "xdisabled" ] ; then
+		echo "${log} systemctl: enable bb-wl18xx-wlan0.service"
+		systemctl enable bb-wl18xx-wlan0.service || true
+	fi
+	;;
 *)
 	if [ -f /etc/systemd/system/multi-user.target.wants/robotcontrol.service ] ; then
 		echo "${log} systemctl: disable robotcontrol.service"
