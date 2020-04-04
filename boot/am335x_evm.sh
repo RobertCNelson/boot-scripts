@@ -193,6 +193,8 @@ TI_AM335x_BeagleBone_Green)
 TI_AM335x_BeagleBone_Green_Wireless)
 	board_bbgw="enable"
 	has_wifi="enable"
+	usb_imanufacturer="Seeed"
+	usb_iproduct="BeagleBoneGreenWireless"
 	;;
 TI_AM335x_BeagleLogic_Standalone)
 	has_wifi="disable"
@@ -252,13 +254,7 @@ if [ "x${ISBLACK}" = "xBBBK" ] || [ "x${ISBLACK}" = "xBNLT" ] ; then
 		usb_imanufacturer="Seeed"
 		usb_iproduct="BeagleBoneGreen"
 	else
-		#FIXME: should be a case statement, on the next varient..
-		if [ "x${ISBLACKVARIENT}" = "xGW1A" ] ; then
-			usb_imanufacturer="Seeed"
-			usb_iproduct="BeagleBoneGreenWireless"
-		else
-			usb_iproduct="BeagleBoneBlack"
-		fi
+		usb_iproduct="BeagleBoneBlack"
 	fi
 fi
 
