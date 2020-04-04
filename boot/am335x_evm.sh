@@ -197,6 +197,8 @@ TI_AM335x_BeagleBone_Green_Wireless)
 TI_AM335x_BeagleLogic_Standalone)
 	has_wifi="disable"
 	dnsmasq_usb0_usb1="enable"
+	usb_imanufacturer="BeagleLogic"
+	usb_iproduct="BeagleLogicStandalone"
 	;;
 TI_AM335x_PocketBeagle)
 	has_wifi="disable"
@@ -258,11 +260,6 @@ if [ "x${ISBLACK}" = "xBBBK" ] || [ "x${ISBLACK}" = "xBNLT" ] ; then
 			usb_iproduct="BeagleBoneBlack"
 		fi
 	fi
-fi
-
-if [ "x${ISBLACK}" = "xBLGC" ] ; then
-	usb_imanufacturer="BeagleLogic"
-	usb_iproduct="BeagleLogicStandalone"
 fi
 
 #mac address:
