@@ -124,7 +124,6 @@ fi
 unset dnsmasq_usb0_usb1
 unset blue_fix_uarts
 
-ISBLACK=""
 wifi_prefix="BeagleBone"
 
 usb_iserialnumber="1234BBBK5678"
@@ -228,21 +227,18 @@ fi
 eeprom="/sys/bus/i2c/devices/0-0050/eeprom"
 if [ -f ${eeprom} ] && [ -f /usr/bin/hexdump ] ; then
 	usb_iserialnumber=$(hexdump -e '8/1 "%c"' ${eeprom} -n 28 | cut -b 17-28)
-	ISBLACK=$(hexdump -e '8/1 "%c"' ${eeprom} -n 12 | cut -b 9-12)
 fi
 
 #[PATCH (pre v8) 0/9] Add simple NVMEM Framework via regmap.
 eeprom="/sys/class/nvmem/at24-0/nvmem"
 if [ -f ${eeprom} ] && [ -f /usr/bin/hexdump ] ; then
 	usb_iserialnumber=$(hexdump -e '8/1 "%c"' ${eeprom} -n 28 | cut -b 17-28)
-	ISBLACK=$(hexdump -e '8/1 "%c"' ${eeprom} -n 12 | cut -b 9-12)
 fi
 
 #[PATCH v8 0/9] Add simple NVMEM Framework via regmap.
 eeprom="/sys/bus/nvmem/devices/at24-0/nvmem"
 if [ -f ${eeprom} ] && [ -f /usr/bin/hexdump ] ; then
 	usb_iserialnumber=$(hexdump -e '8/1 "%c"' ${eeprom} -n 28 | cut -b 17-28)
-	ISBLACK=$(hexdump -e '8/1 "%c"' ${eeprom} -n 12 | cut -b 9-12)
 fi
 
 #mac address:
