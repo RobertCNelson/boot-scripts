@@ -481,11 +481,11 @@ run_libcomposite () {
 		fi
 
 		if [ ! "x${USB_NETWORK_CDC_DISABLED}" = "xyes" ]; then
-			mkdir -p functions/ecm.usb0
-			echo ${cpsw_4_mac} > functions/ecm.usb0/host_addr
-			echo ${cpsw_5_mac} > functions/ecm.usb0/dev_addr
+			mkdir -p functions/ncm.usb0
+			echo ${cpsw_4_mac} > functions/ncm.usb0/host_addr
+			echo ${cpsw_5_mac} > functions/ncm.usb0/dev_addr
 
-			ln -s functions/ecm.usb0 configs/c.1/
+			ln -s functions/ncm.usb0 configs/c.1/
 			usb1="enable"
 		fi
 

@@ -269,12 +269,12 @@ run_libcomposite_start () {
 	fi
 
 	if [ ! "x${USB_NETWORK_DISABLED}" = "xyes" ]; then
-		mkdir -p functions/ecm.usb0
-		echo ${cpsw_3_mac} > functions/ecm.usb0/host_addr
-		echo ${cpsw_4_mac} > functions/ecm.usb0/dev_addr
+		mkdir -p functions/ncm.usb0
+		echo ${cpsw_3_mac} > functions/ncm.usb0/host_addr
+		echo ${cpsw_4_mac} > functions/ncm.usb0/dev_addr
 
 	#if [ ! "x${USB_NETWORK_DISABLED}" = "xyes" ]; then
-		ln -s functions/ecm.usb0 configs/c.1/
+		ln -s functions/ncm.usb0 configs/c.1/
 	#fi
 
 	fi
