@@ -260,9 +260,9 @@ run_libcomposite () {
 			echo 01 > functions/rndis.usb0/protocol
 		fi
 
-		mkdir -p functions/ecm.usb0
-		echo ${cpsw_4_mac} > functions/ecm.usb0/host_addr
-		echo ${cpsw_5_mac} > functions/ecm.usb0/dev_addr
+		mkdir -p functions/ncm.usb0
+		echo ${cpsw_4_mac} > functions/ncm.usb0/host_addr
+		echo ${cpsw_5_mac} > functions/ncm.usb0/dev_addr
 
 		mkdir -p functions/acm.usb0
 
@@ -283,7 +283,7 @@ run_libcomposite () {
 		echo 500 > configs/c.1/MaxPower
 
 		ln -s functions/rndis.usb0 configs/c.1/
-		ln -s functions/ecm.usb0 configs/c.1/
+		ln -s functions/ncm.usb0 configs/c.1/
 		ln -s functions/acm.usb0 configs/c.1/
 		if [ "x${has_img_file}" = "xtrue" ] ; then
 			ln -s functions/mass_storage.usb0 configs/c.1/

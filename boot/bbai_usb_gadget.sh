@@ -230,9 +230,9 @@ fi
 		echo 1 > functions/rndis.usb0/os_desc/interface.rndis/Label/type
 		echo "BeagleBone USB Ethernet" > functions/rndis.usb0/os_desc/interface.rndis/Label/data
 
-		mkdir -p functions/ecm.usb0
-		echo ${cpsw_3_mac} > functions/ecm.usb0/host_addr
-		echo ${cpsw_4_mac} > functions/ecm.usb0/dev_addr
+		mkdir -p functions/ncm.usb0
+		echo ${cpsw_3_mac} > functions/ncm.usb0/host_addr
+		echo ${cpsw_4_mac} > functions/ncm.usb0/dev_addr
 	fi
 
 	mkdir -p functions/acm.usb0
@@ -248,7 +248,7 @@ fi
 
 	if [ ! "x${USB_NETWORK_DISABLED}" = "xyes" ]; then
 		ln -s functions/rndis.usb0 configs/c.1/
-		ln -s functions/ecm.usb0 configs/c.1/
+		ln -s functions/ncm.usb0 configs/c.1/
 	fi
 
 	ln -s functions/acm.usb0 configs/c.1/
