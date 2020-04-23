@@ -130,6 +130,8 @@ usb_iserialnumber="1234BBBK5678"
 usb_imanufacturer="BeagleBoard.org"
 usb_iproduct="BeagleBoneBlack"
 
+board_has_roboticscape="disable"
+
 board=$(cat /proc/device-tree/model | sed "s/ /_/g" | tr -d '\000')
 case "${board}" in
 Octavo_Systems_OSD3358*)
@@ -168,6 +170,7 @@ TI_AM335x_BeagleBone_Black_RoboticsCape)
 	has_wifi="disable"
 	cleanup_extra_docs
 	dnsmasq_usb0_usb1="enable"
+	board_has_roboticscape="enable"
 	;;
 TI_AM335x_BeagleBone_Black_Wireless)
 	has_wifi="enable"
@@ -178,11 +181,13 @@ TI_AM335x_BeagleBone_Black_Wireless_RoboticsCape)
 	has_wifi="enable"
 	#recovers 82MB of space
 	cleanup_extra_docs
+	board_has_roboticscape="enable"
 	;;
 TI_AM335x_BeagleBone_Blue)
 	has_wifi="enable"
 	cleanup_extra_docs
 #	blue_fix_uarts="enable"
+	board_has_roboticscape="enable"
 	;;
 TI_AM335x_BeagleBone_Green)
 	has_wifi="disable"
@@ -860,9 +865,7 @@ if [ -f /etc/systemd/system/basic.target.wants/ti-mct-daemon.service ] ; then
 	systemctl disable ti-mct-daemon.service || true
 fi
 
-machine=$(cat /proc/device-tree/model | sed "s/ /_/g" | tr -d '\000')
-case "${machine}" in
-TI_AM335x_BeagleBone_Blue|TI_*_RoboticsCape)
+if [ "x${board_has_roboticscape}" = "xenable" ] ; then
 	unset check_service
 	check_service=$(systemctl is-enabled robotcontrol.service || true)
 	if [ "x${check_service}" = "xdisabled" ] ; then
@@ -876,6 +879,21 @@ TI_AM335x_BeagleBone_Blue|TI_*_RoboticsCape)
 		echo "${log} systemctl: enable rc_battery_monitor.service"
 		systemctl enable rc_battery_monitor.service || true
 	fi
+else
+	if [ -f /etc/systemd/system/multi-user.target.wants/robotcontrol.service ] ; then
+		echo "${log} systemctl: disable robotcontrol.service"
+		systemctl disable robotcontrol.service || true
+		rm -f /etc/modules-load.d/robotcontrol_modules.conf || true
+	fi
+	if [ -f /etc/systemd/system/multi-user.target.wants/rc_battery_monitor.service ] ; then
+		echo "${log} systemctl: rc_battery_monitor.service"
+		systemctl disable rc_battery_monitor.service || true
+	fi
+fi
+
+machine=$(cat /proc/device-tree/model | sed "s/ /_/g" | tr -d '\000')
+case "${machine}" in
+TI_AM335x_BeagleBone_Blue|TI_*_RoboticsCape)
 	unset check_service
 	check_service=$(systemctl is-enabled bb-wl18xx-bluetooth.service || true)
 	if [ "x${check_service}" = "xdisabled" ] ; then
@@ -890,15 +908,6 @@ TI_AM335x_BeagleBone_Blue|TI_*_RoboticsCape)
 	fi
 	;;
 TI_AM335x_BeagleBone_Black|TI_AM335x_BeagleBone_Green)
-	if [ -f /etc/systemd/system/multi-user.target.wants/robotcontrol.service ] ; then
-		echo "${log} systemctl: disable robotcontrol.service"
-		systemctl disable robotcontrol.service || true
-		rm -f /etc/modules-load.d/robotcontrol_modules.conf || true
-	fi
-	if [ -f /etc/systemd/system/multi-user.target.wants/rc_battery_monitor.service ] ; then
-		echo "${log} systemctl: rc_battery_monitor.service"
-		systemctl disable rc_battery_monitor.service || true
-	fi
 	if [ -f /etc/systemd/system/multi-user.target.wants/bb-wl18xx-bluetooth.service ] ; then
 		echo "${log} systemctl: bb-wl18xx-bluetooth.service"
 		systemctl disable bb-wl18xx-bluetooth.service || true
@@ -922,16 +931,6 @@ TI_AM335x_BeagleBone_Black_Wireless|TI_AM335x_BeagleBone_Green_Wireless|SeeedStu
 		systemctl enable bb-wl18xx-wlan0.service || true
 	fi
 	;;
-*)
-	if [ -f /etc/systemd/system/multi-user.target.wants/robotcontrol.service ] ; then
-		echo "${log} systemctl: disable robotcontrol.service"
-		systemctl disable robotcontrol.service || true
-		rm -f /etc/modules-load.d/robotcontrol_modules.conf || true
-	fi
-	if [ -f /etc/systemd/system/multi-user.target.wants/rc_battery_monitor.service ] ; then
-		echo "${log} systemctl: rc_battery_monitor.service"
-		systemctl disable rc_battery_monitor.service || true
-	fi
 esac
 
 #
