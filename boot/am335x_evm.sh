@@ -131,6 +131,7 @@ usb_imanufacturer="BeagleBoard.org"
 usb_iproduct="BeagleBoneBlack"
 
 board_has_roboticscape="disable"
+board_has_wl18xx="disable"
 
 board=$(cat /proc/device-tree/model | sed "s/ /_/g" | tr -d '\000')
 case "${board}" in
@@ -150,6 +151,7 @@ SeeedStudio_BeagleBone_Green_Gateway)
 	board_bbgg="enable"
 	cleanup_extra_docs
 	dnsmasq_usb0_usb1="enable"
+	board_has_wl18xx="enable"
 	;;
 TI_AM335x_BeagleBone)
 	has_wifi="disable"
@@ -165,6 +167,7 @@ TI_AM335x_BeagleBone_Black)
 TI_AM335x_BeagleBone_Black_Gateway_Cape)
 	has_wifi="enable"
 	cleanup_extra_docs
+	board_has_wl18xx="enable"
 	;;
 TI_AM335x_BeagleBone_Black_RoboticsCape)
 	has_wifi="disable"
@@ -176,18 +179,21 @@ TI_AM335x_BeagleBone_Black_Wireless)
 	has_wifi="enable"
 	#recovers 82MB of space
 	cleanup_extra_docs
+	board_has_wl18xx="enable"
 	;;
 TI_AM335x_BeagleBone_Black_Wireless_RoboticsCape)
 	has_wifi="enable"
 	#recovers 82MB of space
 	cleanup_extra_docs
 	board_has_roboticscape="enable"
+	board_has_wl18xx="enable"
 	;;
 TI_AM335x_BeagleBone_Blue)
 	has_wifi="enable"
 	cleanup_extra_docs
 #	blue_fix_uarts="enable"
 	board_has_roboticscape="enable"
+	board_has_wl18xx="enable"
 	;;
 TI_AM335x_BeagleBone_Green)
 	has_wifi="disable"
@@ -201,6 +207,7 @@ TI_AM335x_BeagleBone_Green_Wireless)
 	has_wifi="enable"
 	usb_imanufacturer="Seeed"
 	usb_iproduct="BeagleBoneGreenWireless"
+	board_has_wl18xx="enable"
 	;;
 TI_AM335x_BeagleLogic_Standalone)
 	has_wifi="disable"
@@ -871,7 +878,9 @@ if [ "x${board_has_roboticscape}" = "xenable" ] ; then
 	if [ "x${check_service}" = "xdisabled" ] ; then
 		echo "${log} systemctl: enable robotcontrol.service"
 		systemctl enable robotcontrol.service || true
-		cp -v /opt/scripts/boot/default/robotcontrol_modules.conf /etc/modules-load.d/robotcontrol_modules.conf || true
+		if [ -f /opt/scripts/boot/default/robotcontrol_modules.conf ] ; then
+			cp -v /opt/scripts/boot/default/robotcontrol_modules.conf /etc/modules-load.d/robotcontrol_modules.conf || true
+		fi
 	fi
 	unset check_service
 	check_service=$(systemctl is-enabled rc_battery_monitor.service || true)
@@ -891,9 +900,7 @@ else
 	fi
 fi
 
-machine=$(cat /proc/device-tree/model | sed "s/ /_/g" | tr -d '\000')
-case "${machine}" in
-TI_AM335x_BeagleBone_Blue|TI_*_RoboticsCape)
+if [ "x${board_has_wl18xx}" = "xenable" ] ; then
 	unset check_service
 	check_service=$(systemctl is-enabled bb-wl18xx-bluetooth.service || true)
 	if [ "x${check_service}" = "xdisabled" ] ; then
@@ -906,8 +913,7 @@ TI_AM335x_BeagleBone_Blue|TI_*_RoboticsCape)
 		echo "${log} systemctl: enable bb-wl18xx-wlan0.service"
 		systemctl enable bb-wl18xx-wlan0.service || true
 	fi
-	;;
-TI_AM335x_BeagleBone_Black|TI_AM335x_BeagleBone_Green)
+else
 	if [ -f /etc/systemd/system/multi-user.target.wants/bb-wl18xx-bluetooth.service ] ; then
 		echo "${log} systemctl: bb-wl18xx-bluetooth.service"
 		systemctl disable bb-wl18xx-bluetooth.service || true
@@ -916,21 +922,6 @@ TI_AM335x_BeagleBone_Black|TI_AM335x_BeagleBone_Green)
 		echo "${log} systemctl: bb-wl18xx-wlan0.service"
 		systemctl disable bb-wl18xx-wlan0.service || true
 	fi
-	;;
-TI_AM335x_BeagleBone_Black_Wireless|TI_AM335x_BeagleBone_Green_Wireless|SeeedStudio_BeagleBone_Green_Gateway)
-	unset check_service
-	check_service=$(systemctl is-enabled bb-wl18xx-bluetooth.service || true)
-	if [ "x${check_service}" = "xdisabled" ] ; then
-		echo "${log} systemctl: enable bb-wl18xx-bluetooth.service"
-		systemctl enable bb-wl18xx-bluetooth.service || true
-	fi
-	unset check_service
-	check_service=$(systemctl is-enabled bb-wl18xx-wlan0.service || true)
-	if [ "x${check_service}" = "xdisabled" ] ; then
-		echo "${log} systemctl: enable bb-wl18xx-wlan0.service"
-		systemctl enable bb-wl18xx-wlan0.service || true
-	fi
-	;;
-esac
+fi
 
 #
