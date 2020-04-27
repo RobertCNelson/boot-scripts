@@ -200,12 +200,8 @@ if [ -f /var/run/udhcpd.pid ] ; then
 	/etc/init.d/udhcpd stop || true
 fi
 
-#2020.04.06, just disable as this is broken...
-#if [ ! -f /etc/systemd/system/getty.target.wants/serial-getty@ttyGS0.service ] ; then
-#	ln -s /lib/systemd/system/serial-getty@.service /etc/systemd/system/getty.target.wants/serial-getty@ttyGS0.service
-#fi
-if [ -f /etc/systemd/system/getty.target.wants/serial-getty@ttyGS0.service ] ; then
-	rm -f /etc/systemd/system/getty.target.wants/serial-getty@ttyGS0.service
+if [ ! -f /etc/systemd/system/getty.target.wants/serial-getty@ttyGS0.service ] ; then
+	ln -s /lib/systemd/system/serial-getty@.service /etc/systemd/system/getty.target.wants/serial-getty@ttyGS0.service
 fi
 
 run_libcomposite_start () {
