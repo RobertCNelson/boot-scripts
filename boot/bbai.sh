@@ -1,6 +1,20 @@
 #!/bin/sh -e
 #
 
+disable_connman_dnsproxy () {
+	if [ -f /lib/systemd/system/connman.service ] ; then
+		#netstat -tapnd
+		unset check_connman
+		check_connman=$(cat /lib/systemd/system/connman.service | grep ExecStart | grep nodnsproxy || true)
+		if [ "x${check_connman}" = "x" ] ; then
+			systemctl stop connman.service || true
+			sed -i -e 's:connmand -n:connmand -n --nodnsproxy:g' /lib/systemd/system/connman.service || true
+			systemctl daemon-reload || true
+			systemctl start connman.service || true
+		fi
+	fi
+}
+
 log="BeagleBone-AI:"
 
 if [ -f /etc/rcn-ee.conf ] ; then
