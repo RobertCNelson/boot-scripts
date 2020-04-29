@@ -1,6 +1,6 @@
 #!/bin/sh -e
 #
-# Copyright (c) 2014-2019 Robert Nelson <robertcnelson@gmail.com>
+# Copyright (c) 2014-2020 Robert Nelson <robertcnelson@gmail.com>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -388,8 +388,6 @@ latest_version_repo () {
 			echo "-----------------------------"
 			echo "Kernel version options:"
 			echo "-----------------------------"
-			echo "LTS44: --lts-4_4"
-			echo "LTS49: --lts-4_9"
 			echo "LTS414: --lts-4_14"
 			echo "LTS419: --lts-4_19"
 			echo "LTS54: --lts-5_4"
@@ -822,17 +820,12 @@ wheezy|jessie)
 	apt_bin="apt-get"
 	cmem_version="4.15.00.02"
 	;;
-stretch)
+stretch|buster|bullseye|sid)
 	dist="${get_dist}"
 	apt_bin="apt"
 	cmem_version="4.16.00.00"
 	;;
-buster|sid)
-	dist="${get_dist}"
-	apt_bin="apt"
-	cmem_version="4.16.00.00"
-	;;
-bionic|cosmic|disco)
+bionic|cosmic|disco|focal)
 	dist="${get_dist}"
 	apt_bin="apt"
 	cmem_version="4.16.00.00"
