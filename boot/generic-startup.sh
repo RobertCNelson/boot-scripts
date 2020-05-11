@@ -92,17 +92,6 @@ if [ -d /sys/class/gpio/ ] ; then
 	/bin/chmod -R g=u /dev/gpiochip* || true
 fi
 
-echo "generic-board-startup: leds"
-if [ -d /sys/class/leds ] ; then
-	/bin/chgrp -R gpio /sys/class/leds/ || true
-	/bin/chmod -R g=u /sys/class/leds/ || true
-
-	if [ -d /sys/devices/platform/leds/leds/ ] ; then
-		/bin/chgrp -R gpio /sys/devices/platform/leds/leds/ || true
-		/bin/chmod -R g=u  /sys/devices/platform/leds/leds/ || true
-	fi
-fi
-
 echo "generic-board-startup: model"
 if [ -f /proc/device-tree/model ] ; then
 	board=$(cat /proc/device-tree/model | sed "s/ /_/g")
