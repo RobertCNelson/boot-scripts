@@ -13,13 +13,14 @@ fi
 var_uname_r=$(cat /boot/uEnv.txt | grep -v '#' | sed 's/ /\n/g' | grep 'uname_r=' | awk -F"=" '{print $2}' || true)
 var_cmdline=$(cat /boot/uEnv.txt | grep -v '#' | grep 'cmdline=' || true)
 var_cmdline=${var_cmdline##*cmdline=}
+var_file_system="console=ttyO0,115200n8 root=/dev/mmcblk0p1 ro rootfstype=ext4"
 
 if [ ! "x${var_uname_r}" = "x" ] ; then
 	if [ ! "x${var_cmdline}" = "x" ] ; then
-		echo "label Linux ${var_uname_r}"
-		echo "    kernel /boot/vmlinuz-${var_uname_r}"
-		echo "    append ${var_cmdline}"
-		echo "    fdtdir /boot/dtbs/${var_uname_r}/"
+		echo "label Linux ${var_uname_r}" > /boot/extlinux/extlinux.conf
+		echo "    kernel /boot/vmlinuz-${var_uname_r}" >> /boot/extlinux/extlinux.conf
+		echo "    append ${var_file_system} ${var_cmdline}" >> /boot/extlinux/extlinux.conf
+		echo "    fdtdir /boot/dtbs/${var_uname_r}/" >> /boot/extlinux/extlinux.conf
 	fi
 fi
 
