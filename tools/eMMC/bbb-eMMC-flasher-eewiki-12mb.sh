@@ -1,6 +1,6 @@
 #!/bin/bash -e
 #
-# Copyright (c) 2013-2018 Robert Nelson <robertcnelson@gmail.com>
+# Copyright (c) 2013-2020 Robert Nelson <robertcnelson@gmail.com>
 # Portions copyright (c) 2014 Charles Steinkuehler <charles@steinkuehler.net>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -24,11 +24,11 @@
 #This script assumes, these packages are installed, as network may not be setup
 #dosfstools initramfs-tools rsync u-boot-tools
 
-version_message="1.20180214: u-boot v2018.01..."
+version_message="1.20200709: Fix v5.4.x eeprom read..."
 #
 #https://rcn-ee.com/repos/bootloader/am335x_evm/
-http_spl="MLO-am335x_evm-v2018.09-r7"
-http_uboot="u-boot-am335x_evm-v2018.09-r7.img"
+http_spl="MLO-am335x_evm-v2019.04-r13"
+http_uboot="u-boot-am335x_evm-v2019.04-r13.img"
 
 #mke2fs -c
 #Check the device for bad blocks before creating the file system.

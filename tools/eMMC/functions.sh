@@ -5,13 +5,13 @@
 # Source it like this:
 # source $(dirname "$0")/functions.sh
 
-version_message="1.20180412: all ssh regneration override..."
+version_message="1.20200709: Fix v5.4.x eeprom read..."
 emmcscript="cmdline=init=/opt/scripts/tools/eMMC/$(basename $0)"
 
 #This is just a backup-backup-backup for old images...
 #https://rcn-ee.com/repos/bootloader/am335x_evm/
-http_spl="MLO-am335x_evm-v2018.09-r7"
-http_uboot="u-boot-am335x_evm-v2018.09-r7.img"
+http_spl="MLO-am335x_evm-v2019.04-r13"
+http_uboot="u-boot-am335x_evm-v2019.04-r13.img"
 
 set -o errtrace
 
@@ -458,37 +458,41 @@ write_failure() {
 }
 
 do_we_have_eeprom() {
-  unset got_eeprom
-  #v8 of nvmem...
-  if [ -f /sys/bus/nvmem/devices/at24-0/nvmem ] && [ "x${got_eeprom}" = "x" ] ; then
-    eeprom="/sys/bus/nvmem/devices/at24-0/nvmem"
-    eeprom_location="/sys/devices/platform/ocp/44e0b000.i2c/i2c-0/0-0050/at24-0/nvmem"
-    got_eeprom="true"
-  fi
+	unset got_eeprom
+	#v8 of nvmem...
+	if [ -f /sys/bus/nvmem/devices/at24-0/nvmem ] && [ "x${got_eeprom}" = "x" ] ; then
+		eeprom="/sys/bus/nvmem/devices/at24-0/nvmem"
+		eeprom_location="/sys/devices/platform/ocp/44e0b000.i2c/i2c-0/0-0050/at24-0/nvmem"
+		got_eeprom="true"
+	fi
 
-  #pre-v8 of nvmem...
-  if [ -f /sys/class/nvmem/at24-0/nvmem ] && [ "x${got_eeprom}" = "x" ] ; then
-    eeprom="/sys/class/nvmem/at24-0/nvmem"
-    eeprom_location="/sys/devices/platform/ocp/44e0b000.i2c/i2c-0/0-0050/nvmem/at24-0/nvmem"
-    got_eeprom="true"
-  fi
+	#pre-v8 of nvmem...
+	if [ -f /sys/class/nvmem/at24-0/nvmem ] && [ "x${got_eeprom}" = "x" ] ; then
+		eeprom="/sys/class/nvmem/at24-0/nvmem"
+		eeprom_location="/sys/devices/platform/ocp/44e0b000.i2c/i2c-0/0-0050/nvmem/at24-0/nvmem"
+		got_eeprom="true"
+	fi
 
-  #eeprom 3.8.x & 4.4 with eeprom-nvmem patchset...
-  if [ -f /sys/bus/i2c/devices/0-0050/eeprom ] && [ "x${got_eeprom}" = "x" ] ; then
-    eeprom="/sys/bus/i2c/devices/0-0050/eeprom"
+	#eeprom 3.8.x & 4.4 with eeprom-nvmem patchset...
+	if [ -f /sys/bus/i2c/devices/0-0050/eeprom ] && [ "x${got_eeprom}" = "x" ] ; then
+		eeprom="/sys/bus/i2c/devices/0-0050/eeprom"
 
-    if [ -f /sys/devices/platform/ocp/44e0b000.i2c/i2c-0/0-0050/eeprom ] ; then
-      eeprom_location="/sys/devices/platform/ocp/44e0b000.i2c/i2c-0/0-0050/eeprom"
-    else
-      eeprom_location=$(ls /sys/devices/ocp*/44e0b000.i2c/i2c-0/0-0050/eeprom 2> /dev/null)
-    fi
+		if [ -f /sys/devices/platform/ocp/44c00000.interconnect/44c00000.interconnect:segment@200000/44e0b000.target-module/44e0b000.i2c/i2c-0/0-0050/eeprom ] ; then
+			eeprom_location="/sys/devices/platform/ocp/44c00000.interconnect/44c00000.interconnect:segment@200000/44e0b000.target-module/44e0b000.i2c/i2c-0/0-0050/eeprom"
+		else
+			if [ -f /sys/devices/platform/ocp/44e0b000.i2c/i2c-0/0-0050/eeprom ] ; then
+				eeprom_location="/sys/devices/platform/ocp/44e0b000.i2c/i2c-0/0-0050/eeprom"
+			else
+				eeprom_location=$(ls /sys/devices/ocp*/44e0b000.i2c/i2c-0/0-0050/eeprom 2> /dev/null)
+			fi
+		fi
 
-    got_eeprom="true"
-  fi
+		got_eeprom="true"
+	fi
 }
 
 do_we_have_am335x_eeprom() {
-  do_we_have_eeprom
+	do_we_have_eeprom
 }
 
 check_am335x_eeprom() {
@@ -532,20 +536,24 @@ check_am335x_eeprom() {
 }
 
 check_eeprom() {
-  check_am335x_eeprom
+	check_am335x_eeprom
 }
 
 do_we_have_am57xx_eeprom() {
-  unset got_eeprom
-  if [ -f /sys/bus/i2c/devices/0-0050/eeprom ] && [ "x${got_eeprom}" = "x" ] ; then
-    eeprom="/sys/bus/i2c/devices/0-0050/eeprom"
+	unset got_eeprom
+	if [ -f /sys/bus/i2c/devices/0-0050/eeprom ] && [ "x${got_eeprom}" = "x" ] ; then
+		eeprom="/sys/bus/i2c/devices/0-0050/eeprom"
 
-    if [ -f /sys/devices/platform/44000000.ocp/48070000.i2c/i2c-0/0-0050/eeprom ] ; then
-      eeprom_location="/sys/devices/platform/44000000.ocp/48070000.i2c/i2c-0/0-0050/eeprom"
-    fi
+		if [ -f /sys/devices/platform/44000000.ocp/48000000.interconnect/48000000.interconnect:segment@0/48070000.target-module/48070000.i2c/i2c-0/0-0050/eeprom ] ; then
+			eeprom_location="/sys/devices/platform/44000000.ocp/48000000.interconnect/48000000.interconnect:segment@0/48070000.target-module/48070000.i2c/i2c-0/0-0050/eeprom"
+		else
+			if [ -f /sys/devices/platform/44000000.ocp/48070000.i2c/i2c-0/0-0050/eeprom ] ; then
+				eeprom_location="/sys/devices/platform/44000000.ocp/48070000.i2c/i2c-0/0-0050/eeprom"
+			fi
+		fi
 
-    got_eeprom="true"
-  fi
+		got_eeprom="true"
+	fi
 }
 
 check_am57xx_eeprom() {
