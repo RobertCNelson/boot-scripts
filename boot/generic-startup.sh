@@ -83,15 +83,6 @@ if [ -f /resizerootfs ] ; then
 	sync
 fi
 
-echo "generic-board-startup: gpio"
-if [ -d /sys/class/gpio/ ] ; then
-	/bin/chgrp -R gpio /sys/class/gpio/ || true
-	/bin/chmod -R g=u /sys/class/gpio/ || true
-
-	/bin/chgrp -R gpio /dev/gpiochip* || true
-	/bin/chmod -R g=u /dev/gpiochip* || true
-fi
-
 echo "generic-board-startup: model"
 if [ -f /proc/device-tree/model ] ; then
 	board=$(cat /proc/device-tree/model | sed "s/ /_/g")
