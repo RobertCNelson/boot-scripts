@@ -236,6 +236,12 @@ get_device () {
 			scan_armv7_kernels
 			es8="enabled"
 			;;
+		SeeedStudio_BeagleBone*)
+			scan_ti_kernels
+			scan_bone_kernels
+			scan_armv7_kernels
+			es8="enabled"
+			;;
 		TI_AM335x_P*)
 			scan_ti_kernels
 			scan_bone_kernels
@@ -293,6 +299,12 @@ get_device () {
 		seeed_modules="enabled"
 		;;
 	TI_AM335x_BeagleBone*)
+		libpruio="enabled"
+		es8="enabled"
+		sgxti335x="enabled"
+		seeed_modules="enabled"
+		;;
+	SeeedStudio_BeagleBone*)
 		libpruio="enabled"
 		es8="enabled"
 		sgxti335x="enabled"
