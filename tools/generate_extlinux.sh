@@ -13,7 +13,16 @@ fi
 var_uname_r=$(cat /boot/uEnv.txt | grep -v '#' | sed 's/ /\n/g' | grep 'uname_r=' | awk -F"=" '{print $2}' || true)
 var_cmdline=$(cat /boot/uEnv.txt | grep -v '#' | grep 'cmdline=' || true)
 var_cmdline=${var_cmdline##*cmdline=}
-var_file_system="console=ttyO0,115200n8 root=/dev/mmcblk0p1 ro rootfstype=ext4"
+
+unset root_drive
+root_drive="$(cat /proc/cmdline | sed 's/ /\n/g' | grep root=UUID= | awk -F 'root=' '{print $2}' || true)"
+if [ ! "x${root_drive}" = "x" ] ; then
+	root_drive="$(/sbin/findfs ${root_drive} || true)"
+else
+	root_drive="$(cat /proc/cmdline | sed 's/ /\n/g' | grep root= | awk -F 'root=' '{print $2}' || true)"
+fi
+
+var_file_system="console=ttyO0,115200n8 root=${root_drive} ro rootfstype=ext4"
 
 if [ ! "x${var_uname_r}" = "x" ] ; then
 	if [ ! "x${var_cmdline}" = "x" ] ; then
