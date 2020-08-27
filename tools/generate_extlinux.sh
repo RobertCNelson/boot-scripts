@@ -35,6 +35,7 @@ fi
 
 if [ -f /boot/extlinux/extlinux.conf ] ; then
 	echo "debug: /boot/extlinux/extlinux.conf"
+	echo "-----------------------------------"
 	cat /boot/extlinux/extlinux.conf
 	echo "-----------------------------------"
 fi
