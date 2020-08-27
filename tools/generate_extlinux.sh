@@ -33,3 +33,9 @@ if [ ! "x${var_uname_r}" = "x" ] ; then
 	fi
 fi
 
+if [ -f /boot/extlinux/extlinux.conf ] ; then
+	echo "debug: /boot/extlinux/extlinux.conf"
+	cat /boot/extlinux/extlinux.conf
+	echo "-----------------------------------"
+fi
+
