@@ -169,6 +169,8 @@ fi
 
 echo "pkg check: to individually upgrade run: [sudo apt install --only-upgrade <pkg>]"
 pkg="bb-cape-overlays" ; dpkg_check_version
+pkg="bb-customizations" ; dpkg_check_version
+pkg="bb-usb-gadgets" ; dpkg_check_version
 pkg="bb-wl18xx-firmware" ; dpkg_check_version
 pkg="kmod" ; dpkg_check_version
 pkg="roboticscape" ; dpkg_check_version_replaced
