@@ -51,6 +51,9 @@ test_ti_kernel_version () {
 		x5.4x)
 			kernel="LTS54"
 			;;
+		x5.10x)
+			kernel="LTS510"
+			;;
 		esac
 	fi
 }
@@ -105,6 +108,9 @@ test_bone_rt_kernel_version () {
 		x5.4x)
 			kernel="LTS54"
 			;;
+		x5.10x)
+			kernel="LTS510"
+			;;
 		esac
 	fi
 }
@@ -132,6 +138,9 @@ test_bone_kernel_version () {
 			;;
 		x5.4x)
 			kernel="LTS54"
+			;;
+		x5.10x)
+			kernel="LTS510"
 			;;
 		*)
 			#aka STABLE, as 3.8.13 will always be considered STABLE
@@ -180,6 +189,9 @@ test_armv7_kernel_version () {
 			;;
 		x5.4x)
 			kernel="LTS54"
+			;;
+		x5.10x)
+			kernel="LTS510"
 			;;
 		*)
 			kernel="STABLE"
@@ -403,6 +415,7 @@ latest_version_repo () {
 			echo "LTS414: --lts-4_14"
 			echo "LTS419: --lts-4_19"
 			echo "LTS54: --lts-5_4"
+			echo "LTS510: --lts-5_10"
 			echo "STABLE: --stable"
 			echo "TESTING: --testing"
 			echo "-----------------------------"
@@ -916,6 +929,9 @@ while [ ! -z "$1" ] ; do
 		;;
 	--lts-5_4-kernel|--lts-5_4)
 		kernel="LTS54"
+		;;
+	--lts-5_10-kernel|--lts-5_10)
+		kernel="LTS510"
 		;;
 	--stable-kernel|--stable)
 		kernel="STABLE"
