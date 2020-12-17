@@ -8,6 +8,15 @@ fi
 
 omap_bootloader () {
 	unset test_var
+	dd if=${drive} count=1 skip=1 bs=128k > /tmp/SPL.tmp 2>/dev/null
+	if [ -f /tmp/SPL.tmp ] ; then
+		test_var=$(grep -a "U-Boot SPL" /tmp/SPL.tmp || true)
+		if [ ! "x${test_var}" = "x" ] ; then
+			echo "bootloader:[${label}]:[${drive}]:[${test_var}]:[location: dd MBR]"
+		fi
+	fi
+
+	unset test_var
 	test_var=$(dd if=${drive} count=6 skip=393248 bs=1 2>/dev/null || true)
 	if [ "x${test_var}" = "xU-Boot" ] ; then
 		uboot=$(dd if=${drive} count=32 skip=393248 bs=1 2>/dev/null || true)
