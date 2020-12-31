@@ -930,11 +930,17 @@ while [ ! -z "$1" ] ; do
 	--lts-5_4-kernel|--lts-5_4)
 		kernel="LTS54"
 		;;
+	--v5_8-kernel|--v5_8)
+		kernel="V58"
+		;;
 	--v5_9-kernel|--v5_9)
 		kernel="V59"
 		;;
 	--lts-5_10-kernel|--lts-5_10)
 		kernel="LTS510"
+		;;
+	--v5_11-kernel|--v5_11)
+		kernel="V511"
 		;;
 	--stable-kernel|--stable)
 		kernel="STABLE"
