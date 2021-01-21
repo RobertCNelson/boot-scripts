@@ -1,6 +1,6 @@
 #!/bin/sh -e
 #
-# Copyright (c) 2014-2020 Robert Nelson <robertcnelson@gmail.com>
+# Copyright (c) 2014-2021 Robert Nelson <robertcnelson@gmail.com>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -416,8 +416,6 @@ latest_version_repo () {
 			echo "LTS419: --lts-4_19"
 			echo "LTS54: --lts-5_4"
 			echo "LTS510: --lts-5_10"
-			echo "STABLE: --stable"
-			echo "TESTING: --testing"
 			echo "-----------------------------"
 
 			if [ "x${kernel}" = "x" ] ; then
@@ -946,10 +944,14 @@ while [ ! -z "$1" ] ; do
 		kernel="STABLE"
 		;;
 	--beta-kernel|--beta|--testing-kernel|--testing)
-		kernel="TESTING"
+		echo "option: [--beta-kernel|--beta|--testing-kernel|--testing] is no longer supported"
+		exit 2
+		kernel="STABLE"
 		;;
 	--exp-kernel|--exp)
-		kernel="EXPERIMENTAL"
+		echo "option: [--exp-kernel|--exp] is no longer supported"
+		exit 2
+		kernel="STABLE"
 		;;
 	--armv7-channel)
 		SOC="armv7"
