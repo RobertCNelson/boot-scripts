@@ -925,20 +925,44 @@ while [ ! -z "$1" ] ; do
 	--lts-4_19-kernel|--lts-4_19)
 		kernel="LTS419"
 		;;
+	--v4_20-kernel|--v4_20)
+		kernel="V420X"
+		;;
+	--v5_0-kernel|--v5_0)
+		kernel="V50X"
+		;;
+	--v5_1-kernel|--v5_1)
+		kernel="V51X"
+		;;
+	--v5_2-kernel|--v5_2)
+		kernel="V52X"
+		;;
+	--v5_3-kernel|--v5_3)
+		kernel="V53X"
+		;;
 	--lts-5_4-kernel|--lts-5_4)
 		kernel="LTS54"
 		;;
+	--v5_5-kernel|--v5_5)
+		kernel="V55X"
+		;;
+	--v5_6-kernel|--v5_6)
+		kernel="V56X"
+		;;
+	--v5_7-kernel|--v5_7)
+		kernel="V57X"
+		;;
 	--v5_8-kernel|--v5_8)
-		kernel="V58"
+		kernel="V58X"
 		;;
 	--v5_9-kernel|--v5_9)
-		kernel="V59"
+		kernel="V59X"
 		;;
 	--lts-5_10-kernel|--lts-5_10)
 		kernel="LTS510"
 		;;
 	--v5_11-kernel|--v5_11)
-		kernel="V511"
+		kernel="V511X"
 		;;
 	--stable-kernel|--stable)
 		kernel="STABLE"
