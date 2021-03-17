@@ -731,6 +731,34 @@ third_party () {
 				${apt_bin} ${apt_options} seeed-modules-${latest_kernel} || true
 			fi
 			;;
+		LTS419)
+			cmem_version="4.16.00.00"
+			if [ "x${rtl8723bu}" = "xenabled" ] ; then
+				${apt_bin} ${apt_options} rtl8723bu-modules-${latest_kernel} || true
+			fi
+			if [ "x${rtl8821cu}" = "xenabled" ] ; then
+				${apt_bin} ${apt_options} rtl8821cu-modules-${latest_kernel} || true
+			fi
+			if [ "x${libpruio}" = "xenabled" ] ; then
+				${apt_bin} ${apt_options} libpruio-modules-${latest_kernel} || true
+			fi
+			if [ "x${ticmem}" = "xenabled" ] ; then
+				${apt_bin} ${apt_options} ti-cmem-${cmem_version}-modules-${latest_kernel} || true
+			fi
+			if [ "x${sgxti335x}" = "xenabled" ] ; then
+				${apt_bin} ${apt_options} ti-sgx-ti335x-modules-${latest_kernel} || true
+				if [ "x${sgx_blob}" = "xenabled" ] ; then
+					${apt_bin} ${apt_options} ti-sgx-common-ddk-um || true
+					${apt_bin} ${apt_options} ti-sgx-ti33x-ddk-um || true
+				fi
+			fi
+			if [ "x${sgxjacinto6evm}" = "xenabled" ] ; then
+				${apt_bin} ${apt_options} ti-sgx-jacinto6evm-modules-${latest_kernel} || true
+			fi
+			if [ "x${seeed_modules}" = "xenabled" ] ; then
+				${apt_bin} ${apt_options} seeed-modules-${latest_kernel} || true
+			fi
+			;;
 		esac
 		;;
 	ti|ti-rt)
@@ -963,6 +991,9 @@ while [ ! -z "$1" ] ; do
 		;;
 	--v5_11-kernel|--v5_11)
 		kernel="V511X"
+		;;
+	--v5_12-kernel|--v5_12)
+		kernel="V512X"
 		;;
 	--stable-kernel|--stable)
 		kernel="STABLE"
