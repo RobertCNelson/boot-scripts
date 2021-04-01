@@ -638,6 +638,16 @@ third_party () {
 				${apt_bin} ${apt_options} rtl8821cu-modules-${latest_kernel} || true
 			fi
 			;;
+		LTS54)
+			if [ "x${libpruio}" = "xenabled" ] ; then
+				${apt_bin} ${apt_options} libpruio-modules-${latest_kernel} || true
+			fi
+			;;
+		LTS510)
+			if [ "x${libpruio}" = "xenabled" ] ; then
+				${apt_bin} ${apt_options} libpruio-modules-${latest_kernel} || true
+			fi
+			;;
 		esac
 		;;
 	bone-rt)
@@ -667,6 +677,16 @@ third_party () {
 			fi
 			if [ "x${rtl8821cu}" = "xenabled" ] ; then
 				${apt_bin} ${apt_options} rtl8821cu-modules-${latest_kernel} || true
+			fi
+			;;
+		LTS54)
+			if [ "x${libpruio}" = "xenabled" ] ; then
+				${apt_bin} ${apt_options} libpruio-modules-${latest_kernel} || true
+			fi
+			;;
+		LTS510)
+			if [ "x${libpruio}" = "xenabled" ] ; then
+				${apt_bin} ${apt_options} libpruio-modules-${latest_kernel} || true
 			fi
 			;;
 		esac
@@ -759,6 +779,11 @@ third_party () {
 				${apt_bin} ${apt_options} seeed-modules-${latest_kernel} || true
 			fi
 			;;
+		LTS54)
+			if [ "x${libpruio}" = "xenabled" ] ; then
+				${apt_bin} ${apt_options} libpruio-modules-${latest_kernel} || true
+			fi
+			;;
 		esac
 		;;
 	ti|ti-rt)
@@ -849,6 +874,17 @@ third_party () {
 				${apt_bin} ${apt_options} seeed-modules-${latest_kernel} || true
 			fi
 			;;
+		LTS54)
+			if [ "x${libpruio}" = "xenabled" ] ; then
+				${apt_bin} ${apt_options} libpruio-modules-${latest_kernel} || true
+			fi
+			;;
+		LTS510)
+			if [ "x${libpruio}" = "xenabled" ] ; then
+				${apt_bin} ${apt_options} libpruio-modules-${latest_kernel} || true
+			fi
+			;;
+
 		esac
 		;;
 	esac
