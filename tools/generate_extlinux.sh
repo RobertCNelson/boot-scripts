@@ -15,11 +15,11 @@ var_cmdline=$(cat /boot/uEnv.txt | grep -v '#' | grep 'cmdline=' || true)
 var_cmdline=${var_cmdline##*cmdline=}
 
 unset root_drive
-root_drive="$(cat /proc/cmdline | sed 's/ /\n/g' | grep root=UUID= | awk -F 'root=' '{print $2}' || true)"
+root_drive="$(cat /proc/cmdline | sed 's/ /\n/g' | grep ^root=UUID= | awk -F 'root=' '{print $2}' || true)"
 if [ ! "x${root_drive}" = "x" ] ; then
 	root_drive="$(/sbin/findfs ${root_drive} || true)"
 else
-	root_drive="$(cat /proc/cmdline | sed 's/ /\n/g' | grep root= | awk -F 'root=' '{print $2}' || true)"
+	root_drive="$(cat /proc/cmdline | sed 's/ /\n/g' | grep ^root= | awk -F 'root=' '{print $2}' || true)"
 fi
 
 var_file_system="console=ttyO0,115200n8 root=${root_drive} ro rootfstype=ext4"

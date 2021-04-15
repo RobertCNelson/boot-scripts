@@ -339,11 +339,11 @@ find_root_drive(){
 		proc_cmdline=$(cat /proc/cmdline | tr -d '\000')
 		echo_broadcast "==> ${proc_cmdline}"
 		generate_line 40
-		root_drive=$(cat /proc/cmdline | tr -d '\000' | sed 's/ /\n/g' | grep root=UUID= | awk -F 'root=' '{print $2}' || true)
+		root_drive=$(cat /proc/cmdline | tr -d '\000' | sed 's/ /\n/g' | grep ^root=UUID= | awk -F 'root=' '{print $2}' || true)
 		if [ ! "x${root_drive}" = "x" ] ; then
 			root_drive=$(/sbin/findfs ${root_drive} || true)
 		else
-			root_drive=$(cat /proc/cmdline | sed 's/ /\n/g' | grep root= | awk -F 'root=' '{print $2}' || true)
+			root_drive=$(cat /proc/cmdline | sed 's/ /\n/g' | grep ^root= | awk -F 'root=' '{print $2}' || true)
 		fi
 		echo_broadcast "==> root_drive=[${root_drive}]"
 	else
