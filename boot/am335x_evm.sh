@@ -548,11 +548,11 @@ use_libcomposite () {
 	else
 		#We don't use a physical partition anymore...
 		unset root_drive
-		root_drive="$(cat /proc/cmdline | sed 's/ /\n/g' | grep root=UUID= | awk -F 'root=' '{print $2}' || true)"
+		root_drive="$(cat /proc/cmdline | sed 's/ /\n/g' | grep ^root=UUID= | awk -F 'root=' '{print $2}' || true)"
 		if [ ! "x${root_drive}" = "x" ] ; then
 			root_drive="$(/sbin/findfs ${root_drive} || true)"
 		else
-			root_drive="$(cat /proc/cmdline | sed 's/ /\n/g' | grep root= | awk -F 'root=' '{print $2}' || true)"
+			root_drive="$(cat /proc/cmdline | sed 's/ /\n/g' | grep ^root= | awk -F 'root=' '{print $2}' || true)"
 		fi
 
 		if [ "x${root_drive}" = "x/dev/mmcblk0p1" ] || [ "x${root_drive}" = "x/dev/mmcblk1p1" ] ; then
@@ -637,11 +637,11 @@ use_old_g_multi () {
 	else
 		#g_multi: Do we have a non-rootfs "fat" partition?
 		unset root_drive
-		root_drive="$(cat /proc/cmdline | sed 's/ /\n/g' | grep root=UUID= | awk -F 'root=' '{print $2}' || true)"
+		root_drive="$(cat /proc/cmdline | sed 's/ /\n/g' | grep ^root=UUID= | awk -F 'root=' '{print $2}' || true)"
 		if [ ! "x${root_drive}" = "x" ] ; then
 			root_drive="$(/sbin/findfs ${root_drive} || true)"
 		else
-			root_drive="$(cat /proc/cmdline | sed 's/ /\n/g' | grep root= | awk -F 'root=' '{print $2}' || true)"
+			root_drive="$(cat /proc/cmdline | sed 's/ /\n/g' | grep ^root= | awk -F 'root=' '{print $2}' || true)"
 		fi
 
 		if [ "x${root_drive}" = "x/dev/mmcblk0p1" ] || [ "x${root_drive}" = "x/dev/mmcblk1p1" ] ; then

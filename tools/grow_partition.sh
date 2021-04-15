@@ -31,11 +31,11 @@ if [ ! -f /etc/ssh/ssh_host_ecdsa_key.pub ] ; then
 fi
 
 unset root_drive
-root_drive="$(cat /proc/cmdline | sed 's/ /\n/g' | grep root=UUID= | awk -F 'root=' '{print $2}' || true)"
+root_drive="$(cat /proc/cmdline | sed 's/ /\n/g' | grep ^root=UUID= | awk -F 'root=' '{print $2}' || true)"
 if [ ! "x${root_drive}" = "x" ] ; then
 	root_drive="$(/sbin/findfs ${root_drive} || true)"
 else
-	root_drive="$(cat /proc/cmdline | sed 's/ /\n/g' | grep root= | awk -F 'root=' '{print $2}' || true)"
+	root_drive="$(cat /proc/cmdline | sed 's/ /\n/g' | grep ^root= | awk -F 'root=' '{print $2}' || true)"
 fi
 
 if [ ! "x${root_drive}" = "x" ] ; then
