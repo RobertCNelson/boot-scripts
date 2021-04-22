@@ -1284,6 +1284,7 @@ __EOF__
     boot_partition="${destination}p1"
     rootfs_partition="${destination}p2"
   else
+    conf_rootfs_partition_size=${conf_rootfs_partition_size:-""}
     conf_boot_startmb=${conf_boot_startmb:-"4"}
     sfdisk_fstype=${sfdisk_fstype:-"L"}
     if [ "x${sfdisk_fstype}" = "x0x83" ] ; then
@@ -1315,7 +1316,7 @@ __EOF__
     echo_broadcast "==> Partitionning"
     generate_line 60
     LC_ALL=C sfdisk ${sfdisk_options} "${destination}" <<-__EOF__
-${sfdisk_boot_startmb},,${sfdisk_fstype},*
+${sfdisk_boot_startmb},${conf_rootfs_partition_size},${sfdisk_fstype},*
 __EOF__
     generate_line 60
     flush_cache
