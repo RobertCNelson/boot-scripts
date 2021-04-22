@@ -1020,9 +1020,10 @@ _copy_rootfs() {
 	#disable_ssh_regeneration sourced from SOC.sh
 	if [ ! "x${disable_ssh_regeneration}" = "xtrue" ] ; then
 		if [ -d ${tmp_rootfs_dir}/etc/ssh/ ] ; then
-			echo_broadcast "==> Applying SSH Key Regeneration trick"
-			#ssh keys will now get regenerated on the next bootup
+			echo_broadcast "==> Applying SSH Key and machine-id Regeneration trick"
+			#ssh keys and machine-id will now get regenerated on the next bootup
 			touch ${tmp_rootfs_dir}/etc/ssh/ssh.regenerate
+			rm -f ${tmp_rootfs_dir}/etc/machine-id || true
 			flush_cache
 		fi
 	fi
