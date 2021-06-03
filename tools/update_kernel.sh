@@ -408,7 +408,11 @@ latest_version_repo () {
 
 			echo "-----------------------------"
 			echo "Kernel Options:"
-			cat /tmp/LATEST-${SOC} | grep -v LTS314 | grep -v "LTS41 4.1." | grep -v LTS44 | grep -v LTS49
+			if [ "x${hide_old}" = "xenabled" ] ; then
+				cat /tmp/LATEST-${SOC} | grep -v LTS314 | grep -v "LTS41 4.1." | grep -v LTS44 | grep -v LTS49
+			else
+				cat /tmp/LATEST-${SOC} | grep -v LTS314 | grep -v "LTS41 4.1."
+			fi
 			echo "-----------------------------"
 			echo "Kernel version options:"
 			echo "-----------------------------"
@@ -973,6 +977,7 @@ unset kernel_version
 unset daily_cron
 unset old_rootfs
 unset sgx_blob
+hide_old="enable"
 # parse commandline options
 while [ ! -z "$1" ] ; do
 	case $1 in
@@ -985,15 +990,19 @@ while [ ! -z "$1" ] ; do
 		;;
 	--lts-3_14-kernel|--lts-3_14)
 		kernel="LTS44"
+		unset hide_old
 		;;
 	--lts-kernel|--lts-4_1-kernel|--lts-4_1)
 		kernel="LTS44"
+		unset hide_old
 		;;
 	--lts-4_4-kernel|--lts-4_4|--lts)
 		kernel="LTS44"
+		unset hide_old
 		;;
 	--lts-4_9-kernel|--lts-4_9)
 		kernel="LTS49"
+		unset hide_old
 		;;
 	--lts-4_14-kernel|--lts-4_14)
 		kernel="LTS414"
