@@ -880,8 +880,12 @@ third_party () {
 			fi
 			;;
 		LTS510)
+			cmem_version="4.20.00.01"
 			if [ "x${libpruio}" = "xenabled" ] ; then
 				${apt_bin} ${apt_options} libpruio-modules-${latest_kernel} || true
+			fi
+			if [ "x${ticmem}" = "xenabled" ] ; then
+				${apt_bin} ${apt_options} ti-cmem-${cmem_version}-modules-${latest_kernel} || true
 			fi
 			;;
 
@@ -1030,6 +1034,9 @@ while [ ! -z "$1" ] ; do
 		;;
 	--v5_12-kernel|--v5_12)
 		kernel="V512X"
+		;;
+	--v5_13-kernel|--v5_13)
+		kernel="V513X"
 		;;
 	--stable-kernel|--stable)
 		kernel="STABLE"
