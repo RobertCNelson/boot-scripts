@@ -780,8 +780,12 @@ third_party () {
 			fi
 			;;
 		LTS54)
+			cmem_version="4.20.00.01"
 			if [ "x${libpruio}" = "xenabled" ] ; then
 				${apt_bin} ${apt_options} libpruio-modules-${latest_kernel} || true
+			fi
+			if [ "x${ticmem}" = "xenabled" ] ; then
+				${apt_bin} ${apt_options} ti-cmem-${cmem_version}-modules-${latest_kernel} || true
 			fi
 			;;
 		esac
@@ -875,8 +879,12 @@ third_party () {
 			fi
 			;;
 		LTS54)
+			cmem_version="4.20.00.01"
 			if [ "x${libpruio}" = "xenabled" ] ; then
 				${apt_bin} ${apt_options} libpruio-modules-${latest_kernel} || true
+			fi
+			if [ "x${ticmem}" = "xenabled" ] ; then
+				${apt_bin} ${apt_options} ti-cmem-${cmem_version}-modules-${latest_kernel} || true
 			fi
 			;;
 		LTS510)
