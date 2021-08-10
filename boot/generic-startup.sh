@@ -11,6 +11,7 @@ if [ ! "x${are_we_flasher}" = "x" ] ; then
 	exit
 fi
 
+if [ ! -f /lib/systemd/system/regenerate_ssh_host_keys.service ] ; then
 echo "generic-board-startup: ssh"
 #Regenerate ssh host keys
 if [ -f /etc/ssh/ssh.regenerate ] ; then
@@ -40,6 +41,7 @@ if [ -f /etc/ssh/ssh.regenerate ] ; then
 		sync
 		systemctl start sshd
 	fi
+fi
 fi
 
 echo "generic-board-startup: efi"
