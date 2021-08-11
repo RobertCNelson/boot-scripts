@@ -22,7 +22,7 @@ else
 	root_drive="$(cat /proc/cmdline | sed 's/ /\n/g' | grep ^root= | awk -F 'root=' '{print $2}' || true)"
 fi
 
-var_file_system="console=ttyO0,115200n8 root=${root_drive} ro rootfstype=ext4 rootwait"
+var_file_system="console=ttyS0,115200n8 root=${root_drive} ro rootfstype=ext4 rootwait"
 
 if [ ! "x${var_uname_r}" = "x" ] ; then
 	echo "label Linux ${var_uname_r}" > /boot/extlinux/extlinux.conf
