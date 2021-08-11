@@ -25,12 +25,14 @@ fi
 var_file_system="console=ttyO0,115200n8 root=${root_drive} ro rootfstype=ext4 rootwait"
 
 if [ ! "x${var_uname_r}" = "x" ] ; then
+	echo "label Linux ${var_uname_r}" > /boot/extlinux/extlinux.conf
+	echo "    kernel /boot/vmlinuz-${var_uname_r}" >> /boot/extlinux/extlinux.conf
 	if [ ! "x${var_cmdline}" = "x" ] ; then
-		echo "label Linux ${var_uname_r}" > /boot/extlinux/extlinux.conf
-		echo "    kernel /boot/vmlinuz-${var_uname_r}" >> /boot/extlinux/extlinux.conf
 		echo "    append ${var_file_system} ${var_cmdline}" >> /boot/extlinux/extlinux.conf
-		echo "    fdtdir /boot/dtbs/${var_uname_r}/" >> /boot/extlinux/extlinux.conf
+	else
+		echo "    append ${var_file_system}" >> /boot/extlinux/extlinux.conf
 	fi
+	echo "    fdtdir /boot/dtbs/${var_uname_r}/" >> /boot/extlinux/extlinux.conf
 fi
 
 if [ -f /boot/extlinux/extlinux.conf ] ; then
