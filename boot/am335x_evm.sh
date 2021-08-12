@@ -261,16 +261,29 @@ fi
 #cpsw_4_mac = usb1 (BeagleBone Side)
 #cpsw_5_mac = usb1 (USB host, pc side)
 
+unset mac_addr0
 mac_address="/proc/device-tree/ocp/ethernet@4a100000/slave@4a100200/mac-address"
 if [ -f ${mac_address} ] && [ -f /usr/bin/hexdump ] ; then
 	mac_addr0=$(hexdump -v -e '1/1 "%02X" ":"' ${mac_address} | sed 's/.$//')
-
-	#Some devices are showing a blank mac_addr0 [00:00:00:00:00:00], let's fix that up...
-	if [ "x${mac_addr0}" = "x00:00:00:00:00:00" ] ; then
-		mac_addr0="1C:BA:8C:A2:ED:68"
-	fi
 else
-	#todo: generate random mac... (this is a development tre board in the lab...)
+	unset mac_addr0
+fi
+
+#v5.4.x+ish...
+mac_address="/proc/device-tree/ocp/interconnect@4a000000/segment@0/target-module@100000/ethernet@0/slave@200/mac-address"
+if [ -f ${mac_address} ] && [ -f /usr/bin/hexdump ] ; then
+	mac_addr0=$(hexdump -v -e '1/1 "%02X" ":"' ${mac_address} | sed 's/.$//')
+else
+	unset mac_addr0
+fi
+
+#Some devices are showing a blank mac_addr0 [00:00:00:00:00:00], let's fix that up...
+if [ "x${mac_addr0}" = "x00:00:00:00:00:00" ] ; then
+	mac_addr0="1C:BA:8C:A2:ED:68"
+fi
+
+#todo: generate random mac... (this is a development tre board in the lab...)
+if [ "x${mac_addr0}" = "x0" ] ; then
 	mac_addr0="1C:BA:8C:A2:ED:68"
 fi
 
