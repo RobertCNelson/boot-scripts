@@ -264,16 +264,7 @@ fi
 unset mac_addr0
 mac_address="/proc/device-tree/ocp/ethernet@4a100000/slave@4a100200/mac-address"
 if [ -f ${mac_address} ] && [ -f /usr/bin/hexdump ] ; then
-	echo "${log} cpsw: proc: ethernet@4a100000/slave@4a100200/mac-address"
-	mac_addr0=$(hexdump -v -e '1/1 "%02X" ":"' ${mac_address} | sed 's/.$//')
-	echo "${log} cpsw: ${mac_addr0}"
-else
-	unset mac_addr0
-fi
-
-mac_address="/sys/firmware/devicetree/base/ocp/ethernet@4a100000/slave@4a100200/mac-address"
-if [ -f ${mac_address} ] && [ -f /usr/bin/hexdump ] ; then
-	echo "${log} cpsw: sys: ethernet@4a100000/slave@4a100200/mac-address"
+	echo "${log} cpsw: ethernet@4a100000/slave@4a100200/mac-address"
 	mac_addr0=$(hexdump -v -e '1/1 "%02X" ":"' ${mac_address} | sed 's/.$//')
 	echo "${log} cpsw: ${mac_addr0}"
 else
@@ -285,12 +276,12 @@ mac_address="/proc/device-tree/ocp/interconnect@4a000000/segment@0/target-module
 if [ -f ${mac_address} ] && [ -f /usr/bin/hexdump ] ; then
 	echo "${log} cpsw: ethernet@0/slave@200/mac-address"
 	mac_addr0=$(hexdump -v -e '1/1 "%02X" ":"' ${mac_address} | sed 's/.$//')
+	echo "${log} cpsw: ${mac_addr0}"
 else
 	unset mac_addr0
 fi
 
-#todo: generate random mac... (this is a development tre board in the lab...)
-if [ "x${mac_addr0}" = "x" ] ; then
+if [ ! ${mac_addr0} ] ; then
 	echo "${log} cpsw: came up blank...fixing..."
 	mac_addr0="1C:BA:8C:A2:ED:68"
 fi
