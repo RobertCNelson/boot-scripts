@@ -266,7 +266,6 @@ mac_address="/proc/device-tree/ocp/ethernet@4a100000/slave@4a100200/mac-address"
 if [ -f ${mac_address} ] && [ -f /usr/bin/hexdump ] ; then
 	echo "${log} cpsw: ethernet@4a100000/slave@4a100200/mac-address"
 	mac_addr0=$(hexdump -v -e '1/1 "%02X" ":"' ${mac_address} | sed 's/.$//')
-	echo "${log} cpsw: ${mac_addr0}"
 else
 	unset mac_addr0
 fi
@@ -276,23 +275,27 @@ mac_address="/proc/device-tree/ocp/interconnect@4a000000/segment@0/target-module
 if [ -f ${mac_address} ] && [ -f /usr/bin/hexdump ] ; then
 	echo "${log} cpsw: ethernet@0/slave@200/mac-address"
 	mac_addr0=$(hexdump -v -e '1/1 "%02X" ":"' ${mac_address} | sed 's/.$//')
-	echo "${log} cpsw: ${mac_addr0}"
 else
 	unset mac_addr0
 fi
 
-#Some devices are showing a blank mac_addr0 [00:00:00:00:00:00], let's fix that up...
-if [ "x${mac_addr0}" = "x00:00:00:00:00:00" ] ; then
+#todo: generate random mac... (this is a development tre board in the lab...)
+if [ "x${mac_addr0}" = "x" ] ; then
+	echo "${log} cpsw: came up blank...fixing..."
 	mac_addr0="1C:BA:8C:A2:ED:68"
 fi
 
-#todo: generate random mac... (this is a development tre board in the lab...)
-if [ "x${mac_addr0}" = "x:" ] ; then
+#Some devices are showing a blank mac_addr0 [00:00:00:00:00:00], let's fix that up...
+if [ "x${mac_addr0}" = "x00:00:00:00:00:00" ] ; then
+	echo "${log} cpsw: mac came up 00:00:00:00:00:00 fixing..."
 	mac_addr0="1C:BA:8C:A2:ED:68"
 fi
+
+echo "${log} cpsw: ${mac_addr0}"
 
 mac_addr0_octet_1_5=$(echo ${mac_addr0} | cut -c 1-14)
 mac_addr0_octet_6=$(echo ${mac_addr0} | awk -F ':' '{print $6}')
+echo "${log} cpsw: [${mac_addr0}] [${mac_addr0_octet_1_5}] [${mac_addr0_octet_6}]"
 
 if [ -f /usr/bin/bb_generate_mac.sh ] ; then
 	/usr/bin/bb_generate_mac.sh --mac ${mac_addr0}
