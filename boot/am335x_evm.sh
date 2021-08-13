@@ -283,7 +283,7 @@ if [ "x${mac_addr0}" = "x00:00:00:00:00:00" ] ; then
 fi
 
 #todo: generate random mac... (this is a development tre board in the lab...)
-if [ "x${mac_addr0}" = "x0" ] ; then
+if [ "x${mac_addr0}" = "x:" ] ; then
 	mac_addr0="1C:BA:8C:A2:ED:68"
 fi
 
