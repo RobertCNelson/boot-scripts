@@ -263,26 +263,17 @@ fi
 
 unset mac_addr0
 mac_address="/proc/device-tree/ocp/ethernet@4a100000/slave@4a100200/mac-address"
+mac_address_v54="/proc/device-tree/ocp/interconnect@4a000000/segment@0/target-module@100000/ethernet@0/slave@200/mac-address"
 if [ -f ${mac_address} ] && [ -f /usr/bin/hexdump ] ; then
 	echo "${log} cpsw: ethernet@4a100000/slave@4a100200/mac-address"
 	mac_addr0=$(hexdump -v -e '1/1 "%02X" ":"' ${mac_address} | sed 's/.$//')
 	echo "${log} cpsw: ${mac_addr0}"
-else
-	unset mac_addr0
-fi
-
-#v5.4.x+ish...
-mac_address="/proc/device-tree/ocp/interconnect@4a000000/segment@0/target-module@100000/ethernet@0/slave@200/mac-address"
-if [ -f ${mac_address} ] && [ -f /usr/bin/hexdump ] ; then
+elif [ -f ${mac_address_v54} ] && [ -f /usr/bin/hexdump ] ; then
 	echo "${log} cpsw: ethernet@0/slave@200/mac-address"
-	mac_addr0=$(hexdump -v -e '1/1 "%02X" ":"' ${mac_address} | sed 's/.$//')
+	mac_addr0=$(hexdump -v -e '1/1 "%02X" ":"' ${mac_address_v54} | sed 's/.$//')
 	echo "${log} cpsw: ${mac_addr0}"
 else
-	unset mac_addr0
-fi
-
-if [ ! ${mac_addr0} ] ; then
-	echo "${log} cpsw: came up blank...fixing..."
+	echo "${log} cpsw: mac-address location changed again..."
 	mac_addr0="1C:BA:8C:A2:ED:68"
 fi
 
