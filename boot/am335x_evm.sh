@@ -275,15 +275,16 @@ elif [ -f ${mac_address_v54} ] && [ -f /usr/bin/hexdump ] ; then
 else
 	echo "${log} cpsw: mac-address location changed again..."
 	mac_addr0="1C:BA:8C:A2:ED:68"
+	echo "${log} cpsw: ${mac_addr0}"
 fi
 
 #Some devices are showing a blank mac_addr0 [00:00:00:00:00:00], let's fix that up...
 if [ "x${mac_addr0}" = "x00:00:00:00:00:00" ] ; then
 	echo "${log} cpsw: mac came up 00:00:00:00:00:00 fixing..."
 	mac_addr0="1C:BA:8C:A2:ED:68"
+	echo "${log} cpsw: ${mac_addr0}"
 fi
 
-echo "${log} cpsw: ${mac_addr0}"
 
 mac_addr0_octet_1_5=$(echo ${mac_addr0} | cut -c 1-14)
 mac_addr0_octet_6=$(echo ${mac_addr0} | awk -F ':' '{print $6}')
