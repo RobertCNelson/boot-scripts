@@ -330,32 +330,29 @@ run_libcomposite () {
 
 use_libcomposite () {
 	echo "${log} use_libcomposite"
-	#ls -lha /sys/kernel/*
-	#ls -lha /sys/kernel/config/*
-#	if [ ! -d /sys/kernel/config/usb_gadget/ ] ; then
 
 	until [ -d /sys/class/udc/48890000.usb/ ] ; do
 		sleep 3
 		echo "usb_gadget: waiting for /sys/class/udc/48890000.usb/"
 	done
 
-	echo "${log} modprobe libcomposite"
-	modprobe libcomposite || true
-	if [ -d /sys/module/libcomposite ] ; then
-		#run_libcomposite
-		run_libcomposite_jdk
-		#/bin/bash /opt/scripts/boot/bbai_usb_gadget.sh
+	echo "${log} Looking for libcomposite"
+	if [ -d /sys/kernel/config/usb_gadget/ ] ; then
+		run_libcomposite
 	else
-		if [ -f /sbin/depmod ] ; then
-			/sbin/depmod -a
+		echo "${log} modprobe libcomposite"
+		modprobe libcomposite || true
+		if [ -d /sys/module/libcomposite ] ; then
+			#run_libcomposite
+			run_libcomposite_jdk
+			#/bin/bash /opt/scripts/boot/bbai_usb_gadget.sh
+		else
+			if [ -f /sbin/depmod ] ; then
+				/sbin/depmod -a
+			fi
+			echo "${log} ERROR: [libcomposite didn't load]"
 		fi
-		echo "${log} ERROR: [libcomposite didn't load]"
 	fi
-
-#	echo
-#		echo "${log} libcomposite built-in"
-#		run_libcomposite
-#	fi
 }
 
 use_libcomposite
