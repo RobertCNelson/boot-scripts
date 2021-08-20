@@ -58,14 +58,14 @@ if [ -f /boot/efi/EFI/efi.gen ] ; then
 fi
 
 #Resize drive when requested
-if [ -f /resizerootfs ] ; then
+if [ -f /var/resizerootfs ] ; then
 	echo "generic-board-startup: resizerootfs"
 
 	unset is_btrfs
 	is_btrfs=$(cat /proc/cmdline | grep btrfs || true)
 
 	if [ "x${is_btrfs}" = "x" ] ; then
-		drive=$(cat /resizerootfs)
+		drive=$(cat /var/resizerootfs)
 		if [ ! "x${drive}" = "x" ] ; then
 			echo "generic-board-startup: "
 			if [ "x${drive}" = "x/dev/mmcblk0" ] || [ "x${drive}" = "x/dev/mmcblk1" ] ; then
@@ -81,7 +81,7 @@ if [ -f /resizerootfs ] ; then
 		btrfs filesystem resize max / >/var/log/resize.log 2>&1 || true
 	fi
 
-	rm -rf /resizerootfs || true
+	rm -rf /var/resizerootfs || true
 	sync
 fi
 
