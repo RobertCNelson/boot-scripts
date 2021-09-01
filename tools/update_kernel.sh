@@ -1055,6 +1055,12 @@ while [ ! -z "$1" ] ; do
 	--v5_13-kernel|--v5_13)
 		kernel="V513X"
 		;;
+	--v5_14-kernel|--v5_14)
+		kernel="V514X"
+		;;
+	--v5_15-kernel|--v5_15)
+		kernel="V515X"
+		;;
 	--stable-kernel|--stable)
 		kernel="STABLE"
 		;;
