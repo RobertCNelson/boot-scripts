@@ -402,6 +402,13 @@ got_board () {
 }
 
 check_soc_sh () {
+	echo "-----------------------------"
+	echo "WARNING, the u-boot builds behind this repo is not updated anymore..."
+	echo "Please migrate to the debian package: [bb-u-boot-am335x-evm or bb-u-boot-am57xx-evm]"
+	echo "-----------------------------"
+	echo "Legacy script will resume in 5 seconds..."
+	sleep 5
+
 	get_device
 	echo "Bootloader Recovery"
 	if [ ! "x$(uname -m)" = "xarmv7l" ] ; then
