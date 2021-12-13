@@ -923,7 +923,15 @@ wheezy|jessie)
 	apt_bin="apt-get"
 	cmem_version="4.15.00.02"
 	;;
-stretch|buster|bullseye|sid)
+stretch|buster)
+	dist="${get_dist}"
+	apt_bin="apt"
+	cmem_version="4.16.00.00"
+	echo "info: Updating libgnutls30"
+	${apt_bin} update
+	${apt_bin} install -y --only-upgrade libgnutls30
+	;;
+bullseye|bookworm|sid)
 	dist="${get_dist}"
 	apt_bin="apt"
 	cmem_version="4.16.00.00"
