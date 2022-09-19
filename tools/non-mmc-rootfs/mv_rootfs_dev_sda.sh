@@ -76,7 +76,7 @@ copy_rootfs () {
 	if [ ! "x${rsync_progress}" = "x" ] ; then
 		echo "rsync: note the % column is useless..."
 	fi
-	rsync -aAx ${rsync_progress} /* /tmp/rootfs/ --exclude={/dev/*,/proc/*,/sys/*,/tmp/*,/run/*,/mnt/*,/media/*,/lost+found,/lib/modules/*,/uEnv.txt}
+	rsync -aAXx ${rsync_progress} /* /tmp/rootfs/ --exclude={/dev/*,/proc/*,/sys/*,/tmp/*,/run/*,/mnt/*,/media/*,/lost+found,/lib/modules/*,/uEnv.txt}
 	#flush_cache
 
 	mkdir -p /tmp/rootfs/lib/modules/$(uname -r)/ || true
@@ -86,7 +86,7 @@ copy_rootfs () {
 	if [ ! "x${rsync_progress}" = "x" ] ; then
 		echo "rsync: note the % column is useless..."
 	fi
-	rsync -aAx ${rsync_progress} /lib/modules/$(uname -r)/* /tmp/rootfs/lib/modules/$(uname -r)/
+	rsync -aAXx ${rsync_progress} /lib/modules/$(uname -r)/* /tmp/rootfs/lib/modules/$(uname -r)/
 	#flush_cache
 
 	message="Copying: ${source}p${media_rootfs} -> ${destination}${media_rootfs} complete" ; broadcast

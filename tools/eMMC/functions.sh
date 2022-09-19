@@ -869,7 +869,7 @@ _copy_boot() {
 	if [ -f /boot/uboot/MLO ] ; then
 		echo_broadcast "==> rsync: /boot/uboot/ -> ${tmp_boot_dir}"
 		get_rsync_options
-		rsync -aAxv $rsync_options /boot/uboot/* ${tmp_boot_dir} --exclude={MLO,u-boot.img,uEnv.txt} || write_failure
+		rsync -aAXxv $rsync_options /boot/uboot/* ${tmp_boot_dir} --exclude={MLO,u-boot.img,uEnv.txt} || write_failure
 		flush_cache
 		empty_line
 		generate_line 80 '='
@@ -998,7 +998,7 @@ _copy_rootfs() {
   echo_broadcast "==> rsync: / -> ${tmp_rootfs_dir}"
   generate_line 40
   get_rsync_options
-  rsync -aAx $rsync_options /* ${tmp_rootfs_dir} --exclude={/dev/*,/proc/*,/sys/*,/tmp/*,/run/*,/mnt/*,/media/*,/lost+found,/lib/modules/*,/uEnv.txt} || write_failure
+  rsync -aAXx $rsync_options /* ${tmp_rootfs_dir} --exclude={/dev/*,/proc/*,/sys/*,/tmp/*,/run/*,/mnt/*,/media/*,/lost+found,/lib/modules/*,/uEnv.txt} || write_failure
   flush_cache
   generate_line 40
   echo_broadcast "==> Copying: Kernel modules"
@@ -1006,7 +1006,7 @@ _copy_rootfs() {
   mkdir -p ${tmp_rootfs_dir}/lib/modules/$(uname -r)/ || true
   echo_broadcast "===> rsync: /lib/modules/$(uname -r)/ -> ${tmp_rootfs_dir}/lib/modules/$(uname -r)/"
   generate_line 40
-  rsync -aAx $rsync_options /lib/modules/$(uname -r)/* ${tmp_rootfs_dir}/lib/modules/$(uname -r)/ || write_failure
+  rsync -aAXx $rsync_options /lib/modules/$(uname -r)/* ${tmp_rootfs_dir}/lib/modules/$(uname -r)/ || write_failure
   flush_cache
   generate_line 40
 
@@ -1049,7 +1049,7 @@ _copy_rootfs_reverse() {
 	echo_broadcast "==> rsync: / -> ${tmp_rootfs_dir}"
 	generate_line 40
 	get_rsync_options
-	rsync -aAx $rsync_options /* ${tmp_rootfs_dir} --exclude={/dev/*,/proc/*,/sys/*,/tmp/*,/run/*,/mnt/*,/media/*,/lost+found,/lib/modules/*,/uEnv.txt} || write_failure
+	rsync -aAXx $rsync_options /* ${tmp_rootfs_dir} --exclude={/dev/*,/proc/*,/sys/*,/tmp/*,/run/*,/mnt/*,/media/*,/lost+found,/lib/modules/*,/uEnv.txt} || write_failure
 	flush_cache
 	generate_line 40
 	echo_broadcast "==> Copying: Kernel modules"
@@ -1057,7 +1057,7 @@ _copy_rootfs_reverse() {
 	mkdir -p ${tmp_rootfs_dir}/lib/modules/$(uname -r)/ || true
 	echo_broadcast "===> rsync: /lib/modules/$(uname -r)/ -> ${tmp_rootfs_dir}/lib/modules/$(uname -r)/"
 	generate_line 40
-	rsync -aAx $rsync_options /lib/modules/$(uname -r)/* ${tmp_rootfs_dir}/lib/modules/$(uname -r)/ || write_failure
+	rsync -aAXx $rsync_options /lib/modules/$(uname -r)/* ${tmp_rootfs_dir}/lib/modules/$(uname -r)/ || write_failure
 	flush_cache
 	generate_line 40
 

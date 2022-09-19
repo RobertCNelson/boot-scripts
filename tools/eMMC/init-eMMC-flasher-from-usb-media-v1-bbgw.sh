@@ -208,7 +208,7 @@ flash_emmc () {
     mount -v -o async,noatime,offset=1048576 -t ext4 /opt/emmc/${conf_image} /tmp/source_rootfs
 
 	message="rsync: /tmp/source_rootfs -> /tmp/dest_rootfs/" ; broadcast
-	rsync -aAx /tmp/source_rootfs/* /tmp/dest_rootfs/ --exclude={/dev/*,/proc/*,/sys/*,/tmp/*,/run/*,/mnt/*,/media/*,/lost+found,/lib/modules/*,/uEnv.txt} || write_failure
+	rsync -aAXx /tmp/source_rootfs/* /tmp/dest_rootfs/ --exclude={/dev/*,/proc/*,/sys/*,/tmp/*,/run/*,/mnt/*,/media/*,/lost+found,/lib/modules/*,/uEnv.txt} || write_failure
 
 	if [ -d /tmp/dest_rootfs/etc/ssh/ ] ; then
 		#ssh keys will now get regenerated on the next bootup
@@ -219,7 +219,7 @@ flash_emmc () {
     mkdir -p /tmp/dest_rootfs/lib/modules/$(uname -r)/ || true
 	message="Copying: Kernel modules" ; broadcast
 	message="rsync: /tmp/source_rootfs/lib/modules/$(uname -r)/ -> /tmp/dest_rootfs/lib/modules/$(uname -r)/" ; broadcast
-	rsync -aAx /tmp/source_rootfs/lib/modules/$(uname -r)/* /tmp/dest_rootfs/lib/modules/$(uname -r)/ || write_failure
+	rsync -aAXx /tmp/source_rootfs/lib/modules/$(uname -r)/* /tmp/dest_rootfs/lib/modules/$(uname -r)/ || write_failure
 	flush_cache
     
 	message="Final System Tweaks:" ; broadcast

@@ -181,7 +181,7 @@ copy_boot () {
 	fi
 
 	message="rsync: /boot/uboot/ -> /tmp/boot/" ; broadcast
-	rsync -aAx /boot/uboot/ /tmp/boot/ --exclude={MLO,u-boot.img,uEnv.txt} || write_failure
+	rsync -aAXx /boot/uboot/ /tmp/boot/ --exclude={MLO,u-boot.img,uEnv.txt} || write_failure
 	flush_cache
 
 	flush_cache
@@ -197,7 +197,7 @@ copy_rootfs () {
 	mount ${destination}p${media_rootfs} /tmp/rootfs/ -o async,noatime
 
 	message="rsync: / -> /tmp/rootfs/" ; broadcast
-	rsync -aAx /* /tmp/rootfs/ --exclude={/dev/*,/proc/*,/sys/*,/tmp/*,/run/*,/mnt/*,/media/*,/lost+found,/lib/modules/*,/uEnv.txt} || write_failure
+	rsync -aAXx /* /tmp/rootfs/ --exclude={/dev/*,/proc/*,/sys/*,/tmp/*,/run/*,/mnt/*,/media/*,/lost+found,/lib/modules/*,/uEnv.txt} || write_failure
 	flush_cache
 
 	if [ -d /tmp/rootfs/etc/ssh/ ] ; then
@@ -210,7 +210,7 @@ copy_rootfs () {
 
 	message="Copying: Kernel modules" ; broadcast
 	message="rsync: /lib/modules/$(uname -r)/ -> /tmp/rootfs/lib/modules/$(uname -r)/" ; broadcast
-	rsync -aAx /lib/modules/$(uname -r)/* /tmp/rootfs/lib/modules/$(uname -r)/ || write_failure
+	rsync -aAXx /lib/modules/$(uname -r)/* /tmp/rootfs/lib/modules/$(uname -r)/ || write_failure
 	flush_cache
 
 	message="Copying: ${source}p${media_rootfs} -> ${destination}p${media_rootfs} complete" ; broadcast
