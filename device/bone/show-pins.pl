@@ -12,8 +12,6 @@ use Inline::Files;
 
 binmode STDOUT, ':utf8'  or die;
 
-my $am5 = 1;
-
 package style;
 
 use base 'Tie::Hash';
@@ -31,13 +29,13 @@ sub FETCH {
 
 package main;
 
-tie my %R, style => 31;
-tie my %G, style => 32;
-tie my %Y, style => 33;
-tie my %D, style => 2;
-tie my %BR, style => 31, 1;
-tie my %DR, style => 31, 2;
-tie my %DG, style => 32, 2;
+tie my %RED, style => 31;
+tie my %GRN, style => 32;
+tie my %YEL, style => 33;
+tie my %DIM_BLK, style => 2;
+tie my %BOLD_RED, style => 31, 1;
+tie my %DIM_RED, style => 31, 2;
+tie my %DIM_GRN, style => 32, 2;
 
 
 
@@ -49,18 +47,33 @@ while( @ARGV && $ARGV[0] =~ s/^-v/-/ ) {
 	++$verbose;
 	shift if $ARGV[0] eq '-';
 }
-die "unexpected argument: $ARGV[0]\n"  if @ARGV;
+die "usage: show-pins.pl [-v]\nuse 'show-pins.pl|sort' to sort by P8/P9 pin number\nexit"  if @ARGV;
 
-my $pinmux = '/sys/kernel/debug/pinctrl/4a003400.pinmux-pinctrl-single';
+my $tda4 = 1;
+my $am5 = 0;
+
+my $pinmux = '/sys/kernel/debug/pinctrl/11c000.pinmux';
+unless(-e "$pinmux/pinmux-pins") {
+	$pinmux = '/sys/kernel/debug/pinctrl/11c000.pinctrl-pinctrl-single';
+}
 unless(-e "$pinmux/pinmux-pins") {
 	$pinmux = '/sys/kernel/debug/pinctrl/4a003400.pinmux';
+	$tda4 = 0;
+	$am5 = 1;
+}
+unless(-e "$pinmux/pinmux-pins") {
+	$pinmux = '/sys/kernel/debug/pinctrl/4a003400.pinmux-pinctrl-single';
+	$tda4 = 0;
+	$am5 = 1;
 }
 unless(-e "$pinmux/pinmux-pins") {
 	$pinmux = '/sys/kernel/debug/pinctrl/44e10800.pinmux';
+	$tda4 = 0;
 	$am5 = 0;
 }
 unless(-e "$pinmux/pinmux-pins") {
 	$pinmux = '/sys/kernel/debug/pinctrl/44e10800.pinmux-pinctrl-single';
+	$tda4 = 0;
 	$am5 = 0;
 }
 @ARGV = "$pinmux/pinmux-pins";
@@ -71,9 +84,8 @@ while( <> ) {
 	/^pin/gc  or next;
 	/\G +(0|[1-9]\d*)/gc or die;
 	my $pin = 0 + $1;
-	my $addr;
 	if(/\G +\((\w+)\.0\):/gc) {
-		$addr = hex $1;
+		my $addr = hex $1;
 		( $addr & 0x7ff ) == 4 * $pin  or die;
 	} elsif(/\G +\(PIN(0|[1-9]\d*)\):/gc) {
 		$1 == $pin  or die;
@@ -84,21 +96,22 @@ while( <> ) {
 	/\G (\S+)/gc  or die;
 	my @path = split m!:!, $1;
 	s/^(.*)\.([^.]+)\z/$2\@$1/ for @path;
-	$addr = join '/', @path;
+	my $path = join '/', @path;
 	/\G \(GPIO UNCLAIMED\)/gc  or die;
 	/\G function (\S+) group (\S+)\s*\z/gc && $1 eq $2  or die;
-	$usage[ $pin ] = [ $addr, $1 ];
+	$usage[ $pin ] = [ $path, $1 ];
 }
 
 
 my @data;
-if($am5) {
+if($tda4) {
+	@data = map { chomp; [ split /\t/ ] } grep /^[^#]/, <TDA4XX>;
+} elsif($am5) {
 	@data = map { chomp; [ split /\t/ ] } grep /^[^#]/, <AM57XX>;
-	@ARGV = "$pinmux/pins";
 } else {
 	@data = map { chomp; [ split /\t+/ ] } grep /^[^#]/, <AM335X>;
-	@ARGV = "$pinmux/pins";
 }
+	@ARGV = "$pinmux/pins";
 
 
 while( <> ) {
@@ -106,9 +119,14 @@ while( <> ) {
 	/^pin / or next;
 
 	my ($pin, $reg, $mux);
-	my $addpre = $am5 ? "4a00" : "44e1";
-	if(/PIN/) {
-		/^pin (\d+) \(PIN\d+\) $addpre([0-9a-f]{4}) 000([0-9a-f]{5}) pinctrl-single\z/ or die "parse error";
+	my $addpre = $tda4 ? "11" : ($am5 ? "4a00" : "44e1");
+	if($tda4) {
+		/^pin (\d+) \(PIN\d+\) 0\:\? $addpre([0-9a-f]{4}) ([0-9a-f]{8}) pinctrl-single\z/ or die "parse error";
+		$pin = $1;
+		$reg = hex $2;
+		$mux = hex $3;
+	} elsif(/PIN/) {
+		/^pin (\d+) \(PIN\d+\) $addpre([0-9a-f]{4}) ([0-9a-f]{8}) pinctrl-single\z/ or die "parse error";
 		$pin = $1;
 		$reg = hex $2;
 		$mux = hex $3;
@@ -119,7 +137,11 @@ while( <> ) {
 		$mux = hex $3;
 	}
 	my ($abc_ball, $zcz_ball, $label);
-	if($am5) {
+	if($tda4) {
+		0xc000 + 4 * $pin == $reg  or die "sanity check failed";
+		$abc_ball = $data[ $pin ][ 2 ] || "";
+		$label = $data[ $pin ][ 1 ] // next;
+	} elsif($am5) {
 		0x3400 + 4 * $pin == $reg  or die "sanity check failed";
 		$abc_ball = $data[ $pin ][ 2 ] || "";
 		$label = $data[ $pin ][ 1 ] // next;
@@ -133,45 +155,352 @@ while( <> ) {
 	my $boring = $label =~ s/^-// ? 2 : $label !~ /^P[89]\./;
         next if $boring > $verbose;
 
-	my ($wu_evt, $wu_en, $slew, $rx, $pull);
-	if($am5) {
-		$wu_evt = ( "  ", "$R{wu}" )[ $mux >> 25 & 1 ];
-		$wu_en = ( "    ", "$R{wuen}" )[ $mux >> 24 & 1 ];
-		$slew = ( "$D{fast}", "$R{slow}" )[ $mux >> 19 & 1 ];
-		$rx = ( "  ", "$G{rx}" )[ $mux >> 18 & 1 ];
-		$pull = ( "$DG{down}", " $DR{up} " )[ $mux >> 17 & 1 ];
+	my ($mux_s, $lock, $wu_evt, $wu_en, $slew, $tx, $rx, $pull, $st, $mode, $mode_i, $mode_s);
+	if($tda4) {
+		# BB AI-64 TDA4XX
+		$mux_s = sprintf "$YEL{'%08x'}", $mux;
+		$mux_s = sprintf "$DIM_BLK{'%08x'}", $mux if $mux == 0x08214007;    # post-reset value
+		$lock = ( "  ..", "$RED{lock}" )[ $mux >> 31 & 1 ];
+		$wu_evt = ( "  ", "$RED{wu}" )[ $mux >> 30 & 1 ];
+		$wu_en = ( "    ", "$RED{wuen}" )[ $mux >> 29 & 1 ];
+		$tx = ( "$GRN{tx}", "  " )[ $mux >> 21 & 1 ];
+		$slew = ( " $DIM_BLK{nom}", "$GRN{fast}", "$YEL{slow}", "$RED{resv}" )[ $mux >> 19 & 3 ];
+		$rx = ( "  ", "$GRN{rx}" )[ $mux >> 18 & 1 ];
+		$pull = ( "$DIM_GRN{down}", " $DIM_RED{up} " )[ $mux >> 17 & 1 ];
 		$pull = "    " if $mux >> 16 & 1;
-		$mux &= 0xf;
-		$mux += 3;
+		$st = ( "  ", "$YEL{st}" )[ $mux >> 14 & 1 ];
+		if ($pin == 0) {    # different from all the others! (see J721E_registers1.pdf 6.403 CTRLMMR_PADCONFIG0 vs CTRLMMR_PADCONFIG1 for example)
+			$mux_s = sprintf "$DIM_BLK{'%08x'}", $mux if $mux == 0x00004007;    # post-reset value
+			$slew = "    ";
+			$pull = "    ";
+		}
+		$mode = $mux & 0xf;
+		$mode_s = sprintf "$DIM_RED{'m%-2d'}", $mode;
+		$mode_s = sprintf "$GRN{'m7'} " if $mode == 7;   # GPIO
+		$mode_s = sprintf "$DIM_BLK{'m15'}" if $mode == 15;   # bootstrap
+		$mode_i = $mode + 3;
+	} elsif($am5) {
+		# BB AI AM57XX
+		$mux_s = sprintf "$YEL{'%08x'}", $mux;
+		$wu_evt = ( "  ", "$RED{wu}" )[ $mux >> 25 & 1 ];
+		$wu_en = ( "    ", "$RED{wuen}" )[ $mux >> 24 & 1 ];
+		$slew = ( "$DIM_BLK{fast}", "$RED{slow}" )[ $mux >> 19 & 1 ];
+		$rx = ( "  ", "$GRN{rx}" )[ $mux >> 18 & 1 ];
+		$pull = ( "$DIM_GRN{down}", " $DIM_RED{up} " )[ $mux >> 17 & 1 ];
+		$pull = "    " if $mux >> 16 & 1;
+		$mode = $mux & 0xf;
+		$mode_s = sprintf "$DIM_RED{'m%-2d'}", $mode;
+		$mode_s = sprintf "$GRN{'m14'}" if $mode == 14;   # GPIO
+		$mode_s = sprintf "$DIM_BLK{'m15'}" if $mode == 15;   # bootstrap
+		$mode_i = $mode + 3;
 	} else {
-		$slew = ( "$D{fast}", "$R{slow}" )[ $mux >> 6 & 1 ];
-		$rx = ( "  ", "$G{rx}" )[ $mux >> 5 & 1 ];
-		$pull = ( "$DG{down}", " $DR{up} " )[ $mux >> 4 & 1 ];
+		# BB AM335X
+		$mux_s = sprintf "$YEL{'%08x'}", $mux;
+		$slew = ( "$DIM_BLK{fast}", "$RED{slow}" )[ $mux >> 6 & 1 ];
+		$rx = ( "  ", "$GRN{rx}" )[ $mux >> 5 & 1 ];
+		$pull = ( "$DIM_GRN{down}", " $DIM_RED{up} " )[ $mux >> 4 & 1 ];
 		$pull = "    " if $mux >> 3 & 1;
-		$mux &= 7;
+		$mode = $mux & 7;
+		$mode_s = sprintf "$DIM_RED{'m%d'}", $mode;
+		$mode_s = sprintf "$GRN{'m7'}" if $mode == 7;   # GPIO
+		$mode_i = $mode;
 	}
 
-	my $function = $data[ $pin ][ $mux ];
-	$function = "$BR{INVALID}"  if $function eq '-';
+	my $function = $data[ $pin ][ $mode_i ];
+	$function = "$BOLD_RED{INVALID}" if $function eq '-';
 
 	if( $usage[ $pin ] ) {
 		my( $dev, $group ) = @{ $usage[ $pin ] };
 		$function = sprintf "%-16s", $function;
-		$function = join ' ', $function, $Y{$dev}, $D{"($group)"};
+		$function = join ' ', $function, $YEL{$dev}, $DIM_BLK{"($group)"};
 	} elsif( $function =~ /^gpio / || $boring > 1 ) {
-		$function = $D{$function};
+		$function = $DIM_BLK{$function};
 	}
 
-	if($am5) {
-		$function = qq/$slew $rx $pull $function/;
-		printf "%-24s $Y{'%3s'} $G{'%4s'} $Y{'%1x'} %s\n", $label, $pin, $abc_ball, $mux-3, $function;
+	$reg |= (hex $addpre) << 16;
+	if($tda4) {
+		$function = qq/$mux_s $slew $tx $rx $st $pull $mode_s $function/;
+		printf "%-24s $YEL{'%3s'} $GRN{'%4s'} $DIM_BLK{'@%06x'} %s\n", $label, $pin, $abc_ball, $reg, $function;
+	} elsif($am5) {
+		$function = qq/$mux_s $slew $rx $pull $mode_s $function/;
+		printf "%-24s $YEL{'%3s'} $GRN{'%4s'} $DIM_BLK{'@%08x'} %s\n", $label, $pin, $abc_ball, $reg, $function;
 	} else {
-		$function = qq/$slew $rx $pull $Y{$mux} $function/;
-		printf "%-32s $Y{'%3s'} $G{'%3s'} %s\n", $label, $pin, $zcz_ball, $function;
+		$function = qq/$mux_s $slew $rx $pull $mode_s $function/;
+		printf "%-32s $YEL{'%3s'} $GRN{'%3s'} $DIM_BLK{'@%08x'} %s\n", $label, $pin, $zcz_ball, $reg, $function;
 	}
 }
 
+__TDA4XX__
+# reg		label	ball	mode 0-14, bootstrap
+0x0011C000		AC18	extintn							gpio0_0								
+0x0011C004	P9.11	AC23	prg1_pru0_gpo0	prg1_pru0_gpi0	prg1_rgmii1_rd0	prg1_pwm3_a0	rgmii1_rd0	rmii1_rxd0		gpio0_1	gpmc0_be1n	rgmii7_rd0			mcasp6_aclkx		uart0_rxd	
+0x0011C008	P9.13	AG22	prg1_pru0_gpo1	prg1_pru0_gpi1	prg1_rgmii1_rd1	prg1_pwm3_b0	rgmii1_rd1	rmii1_rxd1		gpio0_2	gpmc0_wait0	rgmii7_rd1			mcasp6_afsx		uart0_txd	
+0x0011C00C	P8.17	AF22	prg1_pru0_gpo2	prg1_pru0_gpi2	prg1_rgmii1_rd2	prg1_pwm2_a0	rgmii1_rd2	rmii1_crs_dv		gpio0_3	gpmc0_wait1	rgmii7_rd2			mcasp6_axr0		uart1_rxd	
+0x0011C010	P8.18	AJ23	prg1_pru0_gpo3	prg1_pru0_gpi3	prg1_rgmii1_rd3	prg1_pwm3_a2	rgmii1_rd3	rmii1_rx_er		gpio0_4	gpmc0_dir	rgmii7_rd3			mcasp6_axr1		uart1_txd	
+0x0011C014	P8.22	AH23	prg1_pru0_gpo4	prg1_pru0_gpi4	prg1_rgmii1_rx_ctl	prg1_pwm2_b0	rgmii1_rx_ctl	rmii1_txd0		gpio0_5	gpmc0_csn2	rgmii7_rx_ctl			mcasp6_axr2	mcasp6_aclkr	uart2_rxd	
+0x0011C018	P8.24	AD20	prg1_pru0_gpo5	prg1_pru0_gpi5		prg1_pwm3_b2		rmii1_tx_en		gpio0_6	gpmc0_wen				mcasp3_axr0			bootmode0
+0x0011C01C	P8.34	AD22	prg1_pru0_gpo6	prg1_pru0_gpi6	prg1_rgmii1_rxc	prg1_pwm3_a1	rgmii1_rxc	rmii1_txd1	audio_ext_refclk0	gpio0_7	gpmc0_csn3	rgmii7_rxc			mcasp6_axr3	mcasp6_afsr	uart2_txd	
+0x0011C020	P8.36	AE20	prg1_pru0_gpo7	prg1_pru0_gpi7	prg1_iep0_edc_latch_in1	prg1_pwm3_b1		audio_ext_refclk1	mcan4_tx	gpio0_8					mcasp3_axr1			
+0x0011C024	P8.38b	AJ20	prg1_pru0_gpo8	prg1_pru0_gpi8		prg1_pwm2_a1		rmii5_rxd0	mcan4_rx	gpio0_9	gpmc0_oen_ren		vout0_data22		mcasp3_axr2			
+0x0011C028	P9.23	AG20	prg1_pru0_gpo9	prg1_pru0_gpi9	prg1_uart0_ctsn	prg1_pwm3_tz_in	spi6_cs1	rmii5_rxd1		gpio0_10	gpmc0_advn_ale	prg1_iep0_edio_data_in_out28	vout0_data23		mcasp3_aclkx			
+0x0011C02C	P8.37b	AD21	prg1_pru0_gpo10	prg1_pru0_gpi10	prg1_uart0_rtsn	prg1_pwm2_b1	spi6_cs2	rmii5_crs_dv		gpio0_11	gpmc0_be0n_cle	prg1_iep0_edio_data_in_out29	obsclk2		mcasp3_afsx			
+0x0011C030	P9.26b	AF24	prg1_pru0_gpo11	prg1_pru0_gpi11	prg1_rgmii1_td0	prg1_pwm3_tz_out	rgmii1_td0		mcan4_tx	gpio0_12		rgmii7_td0	vout0_data16	vpfe0_data0	mcasp7_aclkx			
+0x0011C034	P9.24b	AJ24	prg1_pru0_gpo12	prg1_pru0_gpi12	prg1_rgmii1_td1	prg1_pwm0_a0	rgmii1_td1		mcan4_rx	gpio0_13		rgmii7_td1	vout0_data17	vpfe0_data1	mcasp7_afsx			
+0x0011C038	P8.08	AG24	prg1_pru0_gpo13	prg1_pru0_gpi13	prg1_rgmii1_td2	prg1_pwm0_b0	rgmii1_td2		mcan5_tx	gpio0_14		rgmii7_td2	vout0_data18	vpfe0_data2	mcasp7_axr0			
+0x0011C03C	P8.07	AD24	prg1_pru0_gpo14	prg1_pru0_gpi14	prg1_rgmii1_td3	prg1_pwm0_a1	rgmii1_td3		mcan5_rx	gpio0_15		rgmii7_td3	vout0_data19	vpfe0_data3	mcasp7_axr1			
+0x0011C040	P8.10	AC24	prg1_pru0_gpo15	prg1_pru0_gpi15	prg1_rgmii1_tx_ctl	prg1_pwm0_b1	rgmii1_tx_ctl		mcan6_tx	gpio0_16		rgmii7_tx_ctl	vout0_data20	vpfe0_data4	mcasp7_axr2	mcasp7_aclkr		
+0x0011C044	P8.09	AE24	prg1_pru0_gpo16	prg1_pru0_gpi16	prg1_rgmii1_txc	prg1_pwm0_a2	rgmii1_txc		mcan6_rx	gpio0_17		rgmii7_txc	vout0_data21	vpfe0_data5	mcasp7_axr3	mcasp7_afsr		
+# NB: 11c048 is not used
+0x0011C048			
+0x0011C04C	P9.42b	AJ21	prg1_pru0_gpo17	prg1_pru0_gpi17	prg1_iep0_edc_sync_out1	prg1_pwm0_b2		rmii5_txd1	mcan5_tx	gpio0_18				vpfe0_data6	mcasp3_axr3			
+0x0011C050		AE21	prg1_pru0_gpo18	prg1_pru0_gpi18	prg1_iep0_edc_latch_in0	prg1_pwm0_tz_in		rmii5_rx_er	mcan5_rx	gpio0_19				vpfe0_data7	mcasp4_aclkx			
+0x0011C054	P8.03	AH21	prg1_pru0_gpo19	prg1_pru0_gpi19	prg1_iep0_edc_sync_out0	prg1_pwm0_tz_out		rmii5_txd0	mcan6_tx	gpio0_20			vout0_extpclkin	vpfe0_pclk	mcasp4_afsx			
+0x0011C058		AE22	prg1_pru1_gpo0	prg1_pru1_gpi0	prg1_rgmii2_rd0		rgmii2_rd0	rmii2_rxd0		gpio0_21	rgmii8_rd0		vout0_data0	vpfe0_hd	mcasp8_aclkx			
+0x0011C05C		AG23	prg1_pru1_gpo1	prg1_pru1_gpi1	prg1_rgmii2_rd1		rgmii2_rd1	rmii2_rxd1		gpio0_22	rgmii8_rd1		vout0_data1	vpfe0_field	mcasp8_afsx			
+0x0011C060		AF23	prg1_pru1_gpo2	prg1_pru1_gpi2	prg1_rgmii2_rd2	prg1_pwm2_a2	rgmii2_rd2	rmii2_crs_dv		gpio0_23	rgmii8_rd2		vout0_data2	vpfe0_vd	mcasp8_axr0	mcasp3_aclkr		
+0x0011C064	P8.35a	AD23	prg1_pru1_gpo3	prg1_pru1_gpi3	prg1_rgmii2_rd3		rgmii2_rd3	rmii2_rx_er		gpio0_24	rgmii8_rd3	eqep1_a	vout0_data3	vpfe0_wen	mcasp8_axr1	mcasp3_afsr	timer_io2	
+0x0011C068	P8.33a	AH24	prg1_pru1_gpo4	prg1_pru1_gpi4	prg1_rgmii2_rx_ctl	prg1_pwm2_b2	rgmii2_rx_ctl	rmii2_txd0		gpio0_25	rgmii8_rx_ctl	eqep1_b	vout0_data4	vpfe0_data13	mcasp8_axr2	mcasp8_aclkr	timer_io3	
+0x0011C06C	P8.32a	AG21	prg1_pru1_gpo5	prg1_pru1_gpi5				rmii5_tx_en	mcan6_rx	gpio0_26	gpmc0_wpn	eqep1_s	vout0_data5		mcasp4_axr0		timer_io4	
+0x0011C070		AE23	prg1_pru1_gpo6	prg1_pru1_gpi6	prg1_rgmii2_rxc		rgmii2_rxc	rmii2_txd1		gpio0_27	rgmii8_rxc		vout0_data6	vpfe0_data14	mcasp8_axr3	mcasp8_afsr	timer_io5	
+0x0011C074	P9.17a	AC21	prg1_pru1_gpo7	prg1_pru1_gpi7	prg1_iep1_edc_latch_in1		spi6_cs0	rmii6_rx_er	mcan7_tx	gpio0_28			vout0_data7	vpfe0_data15	mcasp4_axr1		uart3_txd	
+0x0011C078		Y23	prg1_pru1_gpo8	prg1_pru1_gpi8		prg1_pwm2_tz_out		rmii6_rxd0	mcan7_rx	gpio0_29	gpmc0_csn1		vout0_data8		mcasp4_axr2		uart3_rxd	
+0x0011C07C	P8.21	AF21	prg1_pru1_gpo9	prg1_pru1_gpi9	prg1_uart0_rxd		spi6_cs3	rmii6_rxd1	mcan8_tx	gpio0_30	gpmc0_csn0	prg1_iep0_edio_data_in_out30	vout0_data9		mcasp4_axr3			
+0x0011C080	P8.23	AB23	prg1_pru1_gpo10	prg1_pru1_gpi10	prg1_uart0_txd	prg1_pwm2_tz_in		rmii6_crs_dv	mcan8_rx	gpio0_31	gpmc0_clkout	prg1_iep0_edio_data_in_out31	vout0_data10	gpmc0_fclk_mux	mcasp5_aclkx			
+0x0011C084	P8.31a	AJ25	prg1_pru1_gpo11	prg1_pru1_gpi11	prg1_rgmii2_td0		rgmii2_td0	rmii2_tx_en		gpio0_32	rgmii8_td0	eqep1_i	vout0_data11		mcasp9_aclkx			
+0x0011C088	P8.05	AH25	prg1_pru1_gpo12	prg1_pru1_gpi12	prg1_rgmii2_td1	prg1_pwm1_a0	rgmii2_td1		mcan7_tx	gpio0_33	rgmii8_td1		vout0_data12		mcasp9_afsx			
+0x0011C08C	P8.06	AG25	prg1_pru1_gpo13	prg1_pru1_gpi13	prg1_rgmii2_td2	prg1_pwm1_b0	rgmii2_td2		mcan7_rx	gpio0_34	rgmii8_td2		vout0_data13	vpfe0_data8	mcasp9_axr0	mcasp4_aclkr		
+0x0011C090	P8.25	AH26	prg1_pru1_gpo14	prg1_pru1_gpi14	prg1_rgmii2_td3	prg1_pwm1_a1	rgmii2_td3		mcan8_tx	gpio0_35	rgmii8_td3		vout0_data14		mcasp9_axr1	mcasp4_afsr		
+0x0011C094		AJ27	prg1_pru1_gpo15	prg1_pru1_gpi15	prg1_rgmii2_tx_ctl	prg1_pwm1_b1	rgmii2_tx_ctl		mcan8_rx	gpio0_36	rgmii8_tx_ctl		vout0_data15	vpfe0_data9	mcasp9_axr2	mcasp9_aclkr		
+0x0011C098		AJ26	prg1_pru1_gpo16	prg1_pru1_gpi16	prg1_rgmii2_txc	prg1_pwm1_a2	rgmii2_txc			gpio0_37	rgmii8_txc	vout0_vp2_hsync	vout0_hsync		mcasp9_axr3	mcasp9_afsr	vout0_vp0_hsync	
+0x0011C09C	P9.22a	AC22	prg1_pru1_gpo17	prg1_pru1_gpi17	prg1_iep1_edc_sync_out1	prg1_pwm1_b2	spi6_clk	rmii6_tx_en	prg1_ecap0_sync_out	gpio0_38		vout0_vp2_de	vout0_de	vpfe0_data10	mcasp5_afsx		vout0_vp0_de	bootmode1
+0x0011C0A0	P9.21a	AJ22	prg1_pru1_gpo18	prg1_pru1_gpi18	prg1_iep1_edc_latch_in0	prg1_pwm1_tz_in	spi6_d0	rmii6_txd0	prg1_ecap0_sync_in	gpio0_39		vout0_vp2_vsync	vout0_vsync		mcasp5_axr0		vout0_vp0_vsync	
+0x0011C0A4	P9.18a	AH22	prg1_pru1_gpo19	prg1_pru1_gpi19	prg1_iep1_edc_sync_out0	prg1_pwm1_tz_out	spi6_d1	rmii6_txd1	prg1_ecap0_in_apwm_out	gpio0_40			vout0_pclk		mcasp5_axr1			
+0x0011C0A8		AD19	prg1_mdio0_mdio	spi1_cs2	i2c4_scl					gpio0_41			dss_fsync1	vpfe0_data11	mcasp5_axr2	mcasp5_aclkr	uart3_ctsn	
+0x0011C0AC		AD18	prg1_mdio0_mdc	spi1_cs3	i2c4_sda			rmii_ref_clk		gpio0_42				vpfe0_data12	mcasp5_axr3	mcasp5_afsr	uart3_rtsn	
+0x0011C0B0	P9.28b	AF28	prg0_pru0_gpo0	prg0_pru0_gpi0	prg0_rgmii1_rd0	prg0_pwm3_a0	rgmii3_rd0	rmii3_rxd1		gpio0_43					mcasp0_axr0			
+0x0011C0B4	P9.30b	AE28	prg0_pru0_gpo1	prg0_pru0_gpi1	prg0_rgmii1_rd1	prg0_pwm3_b0	rgmii3_rd1	rmii3_rxd0		gpio0_44					mcasp0_axr1			
+0x0011C0B8	P9.12	AE27	prg0_pru0_gpo2	prg0_pru0_gpi2	prg0_rgmii1_rd2	prg0_pwm2_a0	rgmii3_rd2	rmii3_crs_dv		gpio0_45	uart3_rxd				mcasp0_aclkr			
+0x0011C0BC	P9.27a	AD26	prg0_pru0_gpo3	prg0_pru0_gpi3	prg0_rgmii1_rd3	prg0_pwm3_a2	rgmii3_rd3	rmii3_rx_er		gpio0_46	uart3_txd				mcasp0_afsr			
+0x0011C0C0	P9.15	AD25	prg0_pru0_gpo4	prg0_pru0_gpi4	prg0_rgmii1_rx_ctl	prg0_pwm2_b0	rgmii3_rx_ctl	rmii3_txd1		gpio0_47					mcasp0_axr2			
+0x0011C0C4	P8.04	AC29	prg0_pru0_gpo5	prg0_pru0_gpi5		prg0_pwm3_b2		rmii3_txd0		gpio0_48	gpmc0_ad0				mcasp0_axr3			bootmode2
+0x0011C0C8		AE26	prg0_pru0_gpo6	prg0_pru0_gpi6	prg0_rgmii1_rxc	prg0_pwm3_a1	rgmii3_rxc	rmii3_tx_en		gpio0_49					mcasp0_axr4			
+0x0011C0CC	P9.33b	AC28	prg0_pru0_gpo7	prg0_pru0_gpi7	prg0_iep0_edc_latch_in1	prg0_pwm3_b1	prg0_ecap0_sync_in		mcan9_tx	gpio0_50	gpmc0_ad1				mcasp0_axr5			
+0x0011C0D0	P8.26	AC27	prg0_pru0_gpo8	prg0_pru0_gpi8		prg0_pwm2_a1			mcan9_rx	gpio0_51	gpmc0_ad2				mcasp0_axr6		uart6_rxd	
+0x0011C0D4	P9.31b	AB26	prg0_pru0_gpo9	prg0_pru0_gpi9	prg0_uart0_ctsn	prg0_pwm3_tz_in	spi3_cs1	prg0_iep0_edio_data_in_out28	mcan10_tx	gpio0_52	gpmc0_ad3				mcasp0_aclkx		uart6_txd	
+0x0011C0D8	P9.29b	AB25	prg0_pru0_gpo10	prg0_pru0_gpi10	prg0_uart0_rtsn	prg0_pwm2_b1	spi3_cs2	prg0_iep0_edio_data_in_out29	mcan10_rx	gpio0_53	gpmc0_ad4				mcasp0_afsx			
+0x0011C0DC	P9.39b	AJ28	prg0_pru0_gpo11	prg0_pru0_gpi11	prg0_rgmii1_td0	prg0_pwm3_tz_out	rgmii3_td0			gpio0_54		clkout			mcasp0_axr7			
+0x0011C0E0	P9.35b	AH27	prg0_pru0_gpo12	prg0_pru0_gpi12	prg0_rgmii1_td1	prg0_pwm0_a0	rgmii3_td1			gpio0_55			dss_fsync0		mcasp0_axr8			
+0x0011C0E4	P9.36b	AH29	prg0_pru0_gpo13	prg0_pru0_gpi13	prg0_rgmii1_td2	prg0_pwm0_b0	rgmii3_td2			gpio0_56			dss_fsync2		mcasp0_axr9			
+0x0011C0E8	P9.37b	AG28	prg0_pru0_gpo14	prg0_pru0_gpi14	prg0_rgmii1_td3	prg0_pwm0_a1	rgmii3_td3			gpio0_57	uart4_rxd				mcasp0_axr10			
+0x0011C0EC	P9.38b	AG27	prg0_pru0_gpo15	prg0_pru0_gpi15	prg0_rgmii1_tx_ctl	prg0_pwm0_b1	rgmii3_tx_ctl			gpio0_58	uart4_txd		dss_fsync3		mcasp0_axr11			
+0x0011C0F0	P8.12	AH28	prg0_pru0_gpo16	prg0_pru0_gpi16	prg0_rgmii1_txc	prg0_pwm0_a2	rgmii3_txc			gpio0_59			dss_fsync1		mcasp0_axr12			
+0x0011C0F4	P8.11	AB24	prg0_pru0_gpo17	prg0_pru0_gpi17	prg0_iep0_edc_sync_out1	prg0_pwm0_b2	prg0_ecap0_sync_out			gpio0_60	gpmc0_ad5	obsclk1			mcasp0_axr13			bootmode7
+0x0011C0F8	P8.15	AB29	prg0_pru0_gpo18	prg0_pru0_gpi18	prg0_iep0_edc_latch_in0	prg0_pwm0_tz_in	prg0_ecap0_in_apwm_out			gpio0_61	gpmc0_ad6				mcasp0_axr14			
+0x0011C0FC	P8.16	AB28	prg0_pru0_gpo19	prg0_pru0_gpi19	prg0_iep0_edc_sync_out0	prg0_pwm0_tz_out				gpio0_62	gpmc0_ad7				mcasp0_axr15			
+0x0011C100	P8.31b	AE29	prg0_pru1_gpo0	prg0_pru1_gpi0	prg0_rgmii2_rd0		rgmii4_rd0	rmii4_rxd0		gpio0_63	uart4_ctsn				mcasp1_axr0		uart5_rxd	
+0x0011C104	P8.32b	AD28	prg0_pru1_gpo1	prg0_pru1_gpi1	prg0_rgmii2_rd1		rgmii4_rd1	rmii4_rxd1		gpio0_64	uart4_rtsn				mcasp1_axr1		uart5_txd	
+0x0011C108	P8.43	AD27	prg0_pru1_gpo2	prg0_pru1_gpi2	prg0_rgmii2_rd2	prg0_pwm2_a2	rgmii4_rd2	rmii4_crs_dv		gpio0_65	gpmc0_a23				mcasp1_aclkr	mcasp1_axr10		
+0x0011C10C	P8.44	AC25	prg0_pru1_gpo3	prg0_pru1_gpi3	prg0_rgmii2_rd3		rgmii4_rd3	rmii4_rx_er		gpio0_66					mcasp1_afsr	mcasp1_axr11		
+0x0011C110	P8.41	AD29	prg0_pru1_gpo4	prg0_pru1_gpi4	prg0_rgmii2_rx_ctl	prg0_pwm2_b2	rgmii4_rx_ctl	rmii4_txd1		gpio0_67	gpmc0_a24				mcasp1_axr2			
+0x0011C114	P8.42	AB27	prg0_pru1_gpo5	prg0_pru1_gpi5						gpio0_68	gpmc0_ad8				mcasp1_aclkx			bootmode6
+0x0011C118	P8.39	AC26	prg0_pru1_gpo6	prg0_pru1_gpi6	prg0_rgmii2_rxc		rgmii4_rxc	rmii4_txd0		gpio0_69	gpmc0_a25				mcasp1_axr3			
+0x0011C11C	P8.40	AA24	prg0_pru1_gpo7	prg0_pru1_gpi7	prg0_iep1_edc_latch_in1		spi3_cs0		mcan11_tx	gpio0_70	gpmc0_ad9				mcasp1_axr4		uart2_txd	
+0x0011C120	P8.27	AA28	prg0_pru1_gpo8	prg0_pru1_gpi8		prg0_pwm2_tz_out			mcan11_rx	gpio0_71	gpmc0_ad10				mcasp1_afsx			
+0x0011C124	P8.28	Y24	prg0_pru1_gpo9	prg0_pru1_gpi9	prg0_uart0_rxd		spi3_cs3		prg0_iep0_edio_data_in_out30	gpio0_72	gpmc0_ad11		dss_fsync3		mcasp1_axr5		uart8_rxd	
+0x0011C128	P8.29	AA25	prg0_pru1_gpo10	prg0_pru1_gpi10	prg0_uart0_txd	prg0_pwm2_tz_in			prg0_iep0_edio_data_in_out31	gpio0_73	gpmc0_ad12	clkout			mcasp1_axr6		uart8_txd	
+0x0011C12C	P8.30	AG26	prg0_pru1_gpo11	prg0_pru1_gpi11	prg0_rgmii2_td0		rgmii4_td0	rmii4_tx_en		gpio0_74	gpmc0_a26				mcasp1_axr7			
+0x0011C130	P8.14	AF27	prg0_pru1_gpo12	prg0_pru1_gpi12	prg0_rgmii2_td1	prg0_pwm1_a0	rgmii4_td1			gpio0_75					mcasp1_axr8		uart8_ctsn	
+0x0011C134	P8.20	AF26	prg0_pru1_gpo13	prg0_pru1_gpi13	prg0_rgmii2_td2	prg0_pwm1_b0	rgmii4_td2			gpio0_76					mcasp1_axr9		uart8_rtsn	
+0x0011C138	P9.20b	AE25	prg0_pru1_gpo14	prg0_pru1_gpi14	prg0_rgmii2_td3	prg0_pwm1_a1	rgmii4_td3			gpio0_77					mcasp2_axr0		uart2_ctsn	
+0x0011C13C	P9.19b	AF29	prg0_pru1_gpo15	prg0_pru1_gpi15	prg0_rgmii2_tx_ctl	prg0_pwm1_b1	rgmii4_tx_ctl			gpio0_78					mcasp2_axr1		uart2_rtsn	
+0x0011C140	P8.45	AG29	prg0_pru1_gpo16	prg0_pru1_gpi16	prg0_rgmii2_txc	prg0_pwm1_a2	rgmii4_txc			gpio0_79					mcasp2_axr2			
+0x0011C144	P8.46	Y25	prg0_pru1_gpo17	prg0_pru1_gpi17	prg0_iep1_edc_sync_out1	prg0_pwm1_b2	spi3_clk			gpio0_80	gpmc0_ad13				mcasp2_axr3			bootmode3
+0x0011C148	P9.40b	AA26	prg0_pru1_gpo18	prg0_pru1_gpi18	prg0_iep1_edc_latch_in0	prg0_pwm1_tz_in	spi3_d0		mcan12_tx	gpio0_81	gpmc0_ad14				mcasp2_afsx		uart2_rxd	
+0x0011C14C		AA29	prg0_pru1_gpo19	prg0_pru1_gpi19	prg0_iep1_edc_sync_out0	prg0_pwm1_tz_out	spi3_d1		mcan12_rx	gpio0_82	gpmc0_ad15				mcasp2_aclkx			
+0x0011C150		Y26	prg0_mdio0_mdio		i2c5_scl				mcan13_tx	gpio0_83	gpmc0_a27		dss_fsync0		mcasp2_afsr	mcasp2_axr4		
+0x0011C154		AA27	prg0_mdio0_mdc		i2c5_sda				mcan13_rx	gpio0_84	gpmc0_a0		dss_fsync2		mcasp2_aclkr	mcasp2_axr5		
+0x0011C158		U23	rgmii5_tx_ctl	rmii7_crs_dv	i2c2_scl		vout1_data0	trc_clk	ehrpwm0_synci	gpio0_85	gpmc0_a1				mcasp10_aclkx			
+0x0011C15C		U26	rgmii5_rx_ctl	rmii7_rx_er	i2c2_sda		vout1_data1	trc_ctl	ehrpwm0_synco	gpio0_86	gpmc0_a2				mcasp10_afsx			
+0x0011C160		V28	rgmii5_td3	uart3_rxd		sync2_out	vout1_data2	trc_data0	ehrpwm_tzn_in0	gpio0_87	gpmc0_a3				mcasp10_axr0			
+0x0011C164	P8.19	V29	rgmii5_td2	uart3_txd		sync3_out	vout1_data3	trc_data1	ehrpwm0_a	gpio0_88	gpmc0_a4				mcasp10_axr1			
+0x0011C168	P8.13	V27	rgmii5_td1	rmii7_txd1	i2c3_scl		vout1_data4	trc_data2	ehrpwm0_b	gpio0_89	gpmc0_a5				mcasp11_aclkx			
+0x0011C16C	P9.21b	U28	rgmii5_td0	rmii7_txd0	i2c3_sda		vout1_data5	trc_data3	ehrpwm1_a	gpio0_90	gpmc0_a6				mcasp11_afsx			
+0x0011C170	P9.22b	U29	rgmii5_txc	rmii7_tx_en	i2c6_scl		vout1_data6	trc_data4	ehrpwm1_b	gpio0_91	gpmc0_a7				mcasp10_axr2			
+0x0011C174		U25	rgmii5_rxc		i2c6_sda		vout1_data7	trc_data5	ehrpwm_tzn_in1	gpio0_92	gpmc0_a8				mcasp10_axr3		ehrpwm_soca	
+0x0011C178	P9.14	U27	rgmii5_rd3	uart3_ctsn		uart6_rxd	vout1_data8	trc_data6	ehrpwm2_a	gpio0_93	gpmc0_a9				mcasp11_axr0			
+0x0011C17C	P9.16	U24	rgmii5_rd2	uart3_rtsn		uart6_txd	vout1_data9	trc_data7	ehrpwm2_b	gpio0_94	gpmc0_a10				mcasp11_axr1			
+0x0011C180		R23	rgmii5_rd1	rmii7_rxd1		uart6_ctsn	vout1_data10	trc_data8	ehrpwm_tzn_in2	gpio0_95	gpmc0_a11				mcasp11_axr2		ehrpwm_socb	
+0x0011C184		T23	rgmii5_rd0	rmii7_rxd0		uart6_rtsn	vout1_data11	trc_data9		gpio0_96	gpmc0_a12				mcasp11_axr3			
+0x0011C188		Y28	rgmii6_tx_ctl	rmii8_crs_dv			vout1_data12	trc_data10		gpio0_97	gpmc0_a13				mcasp10_aclkr			
+0x0011C18C		V23	rgmii6_rx_ctl	rmii8_rx_er			vout1_data13	trc_data11	ehrpwm3_a	gpio0_98	gpmc0_a14				mcasp10_afsr			
+0x0011C190		W23	rgmii6_td3	uart4_rxd		spi5_cs3	vout1_data14	trc_data12	ehrpwm3_b	gpio0_99	gpmc0_a15				mcasp11_aclkr			
+0x0011C194		W28	rgmii6_td2	uart4_txd		spi5_cs2	vout1_data15	trc_data13	ehrpwm3_synci	gpio0_100	gpmc0_a16				mcasp11_afsr			
+0x0011C198		V25	rgmii6_td1	rmii8_txd1		spi5_d0	vout1_vsync	trc_data14	ehrpwm3_synco	gpio0_101	gpmc0_a17	vout1_vp0_vsync			mcasp10_axr4			
+0x0011C19C		W27	rgmii6_td0	rmii8_txd0		spi5_cs0	vout1_hsync	trc_data15	ehrpwm_tzn_in3	gpio0_102	gpmc0_a18	vout1_vp0_hsync			mcasp10_axr5			
+0x0011C1A0		W29	rgmii6_txc	rmii8_tx_en		spi5_clk	vout1_pclk	trc_data16	ehrpwm4_a	gpio0_103	gpmc0_a19				mcasp10_axr6			
+0x0011C1A4	P9.25b	W26	rgmii6_rxc			audio_ext_refclk2	vout1_de	trc_data17	ehrpwm4_b	gpio0_104	gpmc0_a20	vout1_vp0_de			mcasp10_axr7			
+0x0011C1A8	P8.38a	Y29	rgmii6_rd3	uart4_ctsn		uart5_rxd	clkout	trc_data18	ehrpwm_tzn_in4	gpio0_105	gpmc0_a21				mcasp11_axr4			
+0x0011C1AC	P8.37a	Y27	rgmii6_rd2	uart4_rtsn		uart5_txd		trc_data19	ehrpwm5_a	gpio0_106	gpmc0_a22				mcasp11_axr5			
+0x0011C1B0		W24	rgmii6_rd1	rmii8_rxd1		spi5_d1	vout1_extpclkin	trc_data20	ehrpwm5_b	gpio0_107	gpmc0_be1n				mcasp11_axr6			
+0x0011C1B4		W25	rgmii6_rd0	rmii8_rxd0		spi5_cs1	audio_ext_refclk3	trc_data21	ehrpwm_tzn_in5	gpio0_108	gpmc0_dir				mcasp11_axr7			
+0x0011C1B8		V26	mdio0_mdio					trc_data22		gpio0_109	gpmc0_wait3							
+0x0011C1BC		V24	mdio0_mdc					trc_data23		gpio0_110	gpmc0_wait2							
+0x0011C1C0	P8.33b	AA2	spi0_cs0	uart0_rtsn						gpio0_111								
+0x0011C1C4		Y4	spi0_cs1	cpts0_ts_comp	i2c3_scl			dp0_hpd	prg1_iep0_edio_outvalid	gpio0_112								
+0x0011C1C8		AA1	spi0_clk	uart1_ctsn	i2c2_scl					gpio0_113								
+0x0011C1CC		AB5	spi0_d0	uart1_rtsn	i2c2_sda					gpio0_114								
+0x0011C1D0	P9.17b	AA3	spi0_d1		i2c6_scl					gpio0_115								
+0x0011C1D4	P8.35b	Y3	spi1_cs0	uart0_ctsn		uart5_rxd			prg0_iep0_edio_outvalid	gpio0_116	prg0_iep0_edc_latch_in0							
+0x0011C1D8		W4	spi1_cs1	cpts0_ts_sync	i2c3_sda	uart5_txd				gpio0_117								
+0x0011C1DC	P9.26a	Y1	spi1_clk	uart5_ctsn	i2c4_sda	uart2_rxd				gpio0_118	prg0_iep0_edc_sync_out0							
+0x0011C1E0	P9.24a	Y5	spi1_d0	uart5_rtsn	i2c4_scl	uart2_txd				gpio0_119	prg0_iep1_edc_latch_in0							
+0x0011C1E4	P9.18b	Y2	spi1_d1		i2c6_sda					gpio0_120	prg0_iep1_edc_sync_out0							
+0x0011C1E8		AB2	uart0_rxd				spi2_cs1			gpio0_121								
+0x0011C1EC		AB3	uart0_txd				spi2_cs2		spi7_cs1	gpio0_122								
+0x0011C1F0	P9.42a	AC2	uart0_ctsn	timer_io6	spi0_cs2	mcan2_rx	spi2_cs0	eqep0_a		gpio0_123								
+0x0011C1F4	P9.27b	AB1	uart0_rtsn	timer_io7	spi0_cs3	mcan2_tx	spi2_clk	eqep0_b		gpio0_124								
+0x0011C1F8		AA4	uart1_rxd						spi7_cs2	gpio0_125								
+0x0011C1FC		AB4	uart1_txd					i3c0_sdapullen	spi7_cs3	gpio0_126								
+0x0011C200	P9.25a	AC4	uart1_ctsn	mcan3_rx			spi2_d0	eqep0_s		gpio0_127								
+0x0011C204	P9.41	AD5	uart1_rtsn	mcan3_tx			spi2_d1	eqep0_i		gpio1_0								
+0x0011C208	P9.19a	W5	mcan0_rx				i2c2_scl			gpio1_1								
+0x0011C20C	P9.20a	W6	mcan0_tx				i2c2_sda			gpio1_2								
+0x0011C210		W3	mcan1_rx	uart6_ctsn	uart9_rxd	usb0_drvvbus	usb1_drvvbus			gpio1_3								
+0x0011C214		V4	mcan1_tx	uart6_rtsn	uart9_txd	usb0_drvvbus	usb1_drvvbus			gpio1_4								
+0x0011C218		W2	i3c0_scl	mmc2_sdcd	uart9_ctsn	mcan2_rx	i2c6_scl	dp0_hpd	pcie0_clkreqn	gpio1_5	uart6_rxd							
+0x0011C21C		W1	i3c0_sda	mmc2_sdwp	uart9_rtsn	mcan2_tx	i2c6_sda		pcie1_clkreqn	gpio1_6	uart6_txd							
+0x0011C220		AC5	i2c0_scl							gpio1_7								
+0x0011C224		AA5	i2c0_sda							gpio1_8								
+0x0011C228		Y6	i2c1_scl	cpts0_hw1tspush						gpio1_9								
+0x0011C22C		AA6	i2c1_sda	cpts0_hw2tspush						gpio1_10								
+0x0011C230	P9.28a	U2	ecap0_in_apwm_out	sync0_out	cpts0_rft_clk		spi2_cs3	i3c0_sdapullen	spi7_cs0	gpio1_11								
+0x0011C234	P9.31a	U3	ext_refclk1	sync1_out					spi7_clk	gpio1_12								
+0x0011C238	P9.30a	V6	timer_io0	ecap1_in_apwm_out	sysclkout0				spi7_d0	gpio1_13								bootmode4
+0x0011C23C	P9.29a	V5	timer_io1	ecap2_in_apwm_out	obsclk0				spi7_d1	gpio1_14								bootmode5
+0x0011C240		R26	mmc1_dat3	uart7_rxd						gpio1_15								
+0x0011C244		R25	mmc1_dat2	uart7_txd						gpio1_16								
+0x0011C248		P24	mmc1_dat1	uart7_ctsn	ecap0_in_apwm_out	timer_io0		uart4_rxd		gpio1_17								
+0x0011C24C		R24	mmc1_dat0	uart7_rtsn	ecap1_in_apwm_out	timer_io1		uart4_txd		gpio1_18								
+0x0011C250		P25	mmc1_clk	uart8_rxd			i2c4_scl			gpio1_19								
+0x0011C254		R29	mmc1_cmd	uart8_txd			i2c4_sda			gpio1_20								
+0x0011C258		P23	mmc1_sdcd	uart8_ctsn	uart0_dcdn	timer_io2		eqep2_i	pcie2_clkreqn	gpio1_21	prg0_iep0_edc_latch_in1							
+0x0011C25C		R28	mmc1_sdwp	uart8_rtsn	uart0_dsrn	timer_io3	ecap2_in_apwm_out	eqep2_s	pcie3_clkreqn	gpio1_22	prg0_iep0_edc_sync_out1							
+0x0011C260		T28	mmc2_dat3	uart9_rxd	cpts0_hw1tspush		i2c5_scl			gpio1_23								
+0x0011C264		T29	mmc2_dat2	uart9_txd	cpts0_hw2tspush		i2c5_sda			gpio1_24								
+0x0011C268		T27	mmc2_dat1	uart9_ctsn	uart0_dtrn	timer_io4	uart6_rxd	eqep2_a		gpio1_25	prg0_iep1_edc_latch_in1							
+0x0011C26C		T24	mmc2_dat0	uart9_rtsn	uart0_rin	timer_io5	uart6_txd	eqep2_b		gpio1_26	prg0_iep1_edc_sync_out1							
+0x0011C270		T26	mmc2_clk	usb0_drvvbus	usb1_drvvbus	timer_io6	i2c3_scl	uart3_rxd		gpio1_27								
+0x0011C274		T25	mmc2_cmd	usb0_drvvbus	usb1_drvvbus	timer_io7	i2c3_sda	uart3_txd		gpio1_28								
+0x0011C278		T6	resetstatz															
+0x0011C27C		U1	porz_out															
+0x0011C280		U4	soc_safety_errorn															
+0x0011C284		V1	tdi															
+0x0011C288		V3	tdo															
+0x0011C28C		V2	tms															
+0x0011C290		U6	usb0_drvvbus	usb1_drvvbus						gpio1_29								
+0x0011C294		AD1	mlb0_mlbsp							gpio1_30								
+0x0011C298		AC1	mlb0_mlbsn							gpio1_31								
+0x0011C29C		AC3	mlb0_mlbdp							gpio1_32								
+0x0011C2A0		AD3	mlb0_mlbdn							gpio1_33								
+0x0011C2A4		AD2	mlb0_mlbcp							gpio1_34								
+0x0011C2A8		AE2	mlb0_mlbcn							gpio1_35								
+0x4301C000		E20	mcu_ospi0_clk	mcu_hyperbus0_ck						wkup_gpio0_16								
+0x4301C004		C21	mcu_ospi0_lbclko	mcu_hyperbus0_ckn						wkup_gpio0_17								
+0x4301C008		D21	mcu_ospi0_dqs	mcu_hyperbus0_rwds						wkup_gpio0_18								
+0x4301C00C		D20	mcu_ospi0_d0	mcu_hyperbus0_dq0						wkup_gpio0_19								
+0x4301C010		G19	mcu_ospi0_d1	mcu_hyperbus0_dq1						wkup_gpio0_20								
+0x4301C014		G20	mcu_ospi0_d2	mcu_hyperbus0_dq2						wkup_gpio0_21								
+0x4301C018		F20	mcu_ospi0_d3	mcu_hyperbus0_dq3						wkup_gpio0_22								
+0x4301C01C		F21	mcu_ospi0_d4	mcu_hyperbus0_dq4						wkup_gpio0_23								
+0x4301C020		E21	mcu_ospi0_d5	mcu_hyperbus0_dq5						wkup_gpio0_24								
+0x4301C024		B22	mcu_ospi0_d6	mcu_hyperbus0_dq6						wkup_gpio0_25								
+0x4301C028		G21	mcu_ospi0_d7	mcu_hyperbus0_dq7						wkup_gpio0_26								
+0x4301C02C		F19	mcu_ospi0_csn0	mcu_hyperbus0_csn0						wkup_gpio0_27								
+0x4301C030		E19	mcu_ospi0_csn1	mcu_hyperbus0_resetn						wkup_gpio0_28								
+0x4301C034		F22	mcu_ospi1_clk							wkup_gpio0_29								
+0x4301C038		A23	mcu_ospi1_lbclko	mcu_ospi0_csn2	mcu_hyperbus0_reseton				mcu_ospi0_reset_out0	wkup_gpio0_30								
+0x4301C03C		B23	mcu_ospi1_dqs	mcu_ospi0_csn3	mcu_hyperbus0_intn				mcu_ospi0_ecc_fail	wkup_gpio0_31								
+0x4301C040		D22	mcu_ospi1_d0							wkup_gpio0_32								
+0x4301C044		G22	mcu_ospi1_d1				mcu_uart0_rxd	mcu_spi1_cs1		wkup_gpio0_33								
+0x4301C048		D23	mcu_ospi1_d2				mcu_uart0_txd	mcu_spi1_cs2		wkup_gpio0_34								
+0x4301C04C		C23	mcu_ospi1_d3				mcu_uart0_ctsn	mcu_spi0_cs1		wkup_gpio0_35								
+0x4301C050		C22	mcu_ospi1_csn0							wkup_gpio0_36								
+0x4301C054		E22	mcu_ospi1_csn1	mcu_hyperbus0_wpn	mcu_timer_io0	mcu_hyperbus0_csn1	mcu_uart0_rtsn	mcu_spi0_cs2	mcu_ospi0_reset_out1	wkup_gpio0_37								
+0x4301C058		B27	mcu_rgmii1_tx_ctl	mcu_rmii1_crs_dv						wkup_gpio0_38								
+0x4301C05C		C25	mcu_rgmii1_rx_ctl	mcu_rmii1_rx_er						wkup_gpio0_39								
+0x4301C060		A28	mcu_rgmii1_td3	mcu_timer_io2		mcu_adc_ext_trigger0				wkup_gpio0_40								
+0x4301C064		A27	mcu_rgmii1_td2	mcu_timer_io3		mcu_adc_ext_trigger1				wkup_gpio0_41								
+0x4301C068		A26	mcu_rgmii1_td1	mcu_rmii1_txd1						wkup_gpio0_42								
+0x4301C06C		B25	mcu_rgmii1_td0	mcu_rmii1_txd0						wkup_gpio0_43								
+0x4301C070		B26	mcu_rgmii1_txc	mcu_rmii1_tx_en						wkup_gpio0_44								
+0x4301C074		C24	mcu_rgmii1_rxc	mcu_rmii1_ref_clk						wkup_gpio0_45								
+0x4301C078		A25	mcu_rgmii1_rd3	mcu_timer_io4						wkup_gpio0_46								
+0x4301C07C		D24	mcu_rgmii1_rd2	mcu_timer_io5						wkup_gpio0_47								
+0x4301C080		A24	mcu_rgmii1_rd1	mcu_rmii1_rxd1						wkup_gpio0_48								
+0x4301C084		B24	mcu_rgmii1_rd0	mcu_rmii1_rxd0						wkup_gpio0_49								
+0x4301C088		E23	mcu_mdio0_mdio							wkup_gpio0_50								
+0x4301C08C		F23	mcu_mdio0_mdc							wkup_gpio0_51								
+0x4301C090		E27	mcu_spi0_clk							wkup_gpio0_52								mcu_bootmode00
+0x4301C094		E24	mcu_spi0_d0							wkup_gpio0_53								mcu_bootmode01
+0x4301C098		E28	mcu_spi0_d1				mcu_timer_io0			wkup_gpio0_54								mcu_bootmode02
+0x4301C09C		E25	mcu_spi0_cs0				mcu_timer_io1			wkup_gpio0_55								
+0x4301C0A0		J29	wkup_uart0_rxd							wkup_gpio0_56								
+0x4301C0A4		J28	wkup_uart0_txd							wkup_gpio0_57								
+0x4301C0A8		D29	mcu_mcan0_tx							wkup_gpio0_58								
+0x4301C0AC		C29	mcu_mcan0_rx							wkup_gpio0_59								
+0x4301C0B0		F26	mcu_spi1_clk	mcu_spi1_clk						wkup_gpio0_0								mcu_bootmode03
+0x4301C0B4		F25	mcu_spi1_d0	mcu_spi1_d0						wkup_gpio0_1								mcu_bootmode04
+0x4301C0B8		F28	mcu_spi1_d1	mcu_spi1_d1						wkup_gpio0_2								mcu_bootmode05
+0x4301C0BC		F27	mcu_spi1_cs0	mcu_spi1_cs0						wkup_gpio0_3								
+0x4301C0C0		G25	mcu_mcan1_tx	mcu_mcan1_tx	mcu_spi0_cs3	mcu_adc_ext_trigger0				wkup_gpio0_4								
+0x4301C0C4		G24	mcu_mcan1_rx	mcu_mcan1_rx	mcu_spi1_cs3	mcu_adc_ext_trigger1				wkup_gpio0_5								
+0x4301C0C8		F29	wkup_uart0_ctsn	wkup_uart0_ctsn	mcu_cpts0_hw1tspush	mcu_i2c1_scl				wkup_gpio0_6								
+0x4301C0CC		G28	wkup_uart0_rtsn	wkup_uart0_rtsn	mcu_cpts0_hw2tspush	mcu_i2c1_sda				wkup_gpio0_7								
+0x4301C0D0		G27	mcu_i2c1_scl	mcu_i2c1_scl	mcu_cpts0_ts_sync	mcu_i3c1_scl	mcu_timer_io6			wkup_gpio0_8								
+0x4301C0D4		G26	mcu_i2c1_sda	mcu_i2c1_sda	mcu_cpts0_ts_comp	mcu_i3c1_sda	mcu_timer_io7			wkup_gpio0_9								
+0x4301C0D8		H26	mcu_ext_refclk0	mcu_ext_refclk0	mcu_uart0_txd	mcu_adc_ext_trigger0	mcu_cpts0_rft_clk	mcu_sysclkout0		wkup_gpio0_10								
+0x4301C0DC		H27	mcu_obsclk0	mcu_obsclk0	mcu_uart0_rxd	mcu_adc_ext_trigger1	mcu_timer_io1	mcu_i3c1_sdapullen	mcu_clkout0	wkup_gpio0_11								
+0x4301C0E0		G29	mcu_uart0_txd	mcu_spi0_cs1						wkup_gpio0_12								mcu_bootmode08
+0x4301C0E4		H28	mcu_uart0_rxd	mcu_spi1_cs1						wkup_gpio0_13								mcu_bootmode09
+0x4301C0E8		H29	mcu_uart0_ctsn	mcu_spi0_cs2						wkup_gpio0_14								mcu_bootmode06
+0x4301C0EC		J27	mcu_uart0_rtsn	mcu_spi1_cs2						wkup_gpio0_15								mcu_bootmode07
+0x4301C0F0		D26	mcu_i3c0_scl		mcu_uart0_ctsn		mcu_timer_io8			wkup_gpio0_60								
+0x4301C0F4		D25	mcu_i3c0_sda		mcu_uart0_rtsn		mcu_timer_io9			wkup_gpio0_61								
+0x4301C0F8		J25	wkup_i2c0_scl							wkup_gpio0_62								
+0x4301C0FC		H24	wkup_i2c0_sda							wkup_gpio0_63								
+0x4301C100		J26	mcu_i2c0_scl							wkup_gpio0_64								
+0x4301C104		H25	mcu_i2c0_sda							wkup_gpio0_65								
+0x4301C108		E26	mcu_i3c0_sdapullen							wkup_gpio0_66								
+0x4301C10C		G23	pmic_power_en1					mcu_i3c1_sdapullen		wkup_gpio0_67								
+0x4301C110		D27	mcu_safety_errorn															
+0x4301C114		D28	mcu_resetz															
+0x4301C118		C27	mcu_resetstatz															
+0x4301C11C		B28	mcu_porz_out															
+0x4301C120		E29	tck															
+0x4301C124		F24	trstn															
+0x4301C128		C26	emu0															
+0x4301C12C		B29	emu1															
+0x4301C130	P9.39a	K25	mcu_adc0_ain0															
+0x4301C134	P9.40a	K26	mcu_adc0_ain1															
+0x4301C138	P9.37a	K28	mcu_adc0_ain2															
+0x4301C13C	P9.38a	L28	mcu_adc0_ain3															
+0x4301C140	P9.33a	K24	mcu_adc0_ain4															
+0x4301C144	P9.36a	K27	mcu_adc0_ain5															
+0x4301C148	P9.35a	K29	mcu_adc0_ain6															
+0x4301C14C		L29	mcu_adc0_ain7															
+0x4301C150		N23	mcu_adc1_ain0															
+0x4301C154		M25	mcu_adc1_ain1															
+0x4301C158		L24	mcu_adc1_ain2															
+0x4301C15C		L26	mcu_adc1_ain3															
+0x4301C160		N24	mcu_adc1_ain4															
+0x4301C164		M24	mcu_adc1_ain5															
+0x4301C168		L25	mcu_adc1_ain6															
+0x4301C16C		L27	mcu_adc1_ain7															
+0x4301C170		C28	reset_reqz															
+0x4301C174		J24	porz															
+
 __AM57XX__
+# reg	label	ball	mode 0-14, bootstrap
 0x1400	sysboot 0	M6	gpmc_ad0		vin3a_d0	vout3_d0											gpio1_6	sysboot0
 0x1404	sysboot 1	M2	gpmc_ad1		vin3a_d1	vout3_d1											gpio1_7	sysboot1
 0x1408	sysboot 2	L5	gpmc_ad2		vin3a_d2	vout3_d2											gpio1_8	sysboot2
@@ -453,6 +782,7 @@ __AM57XX__
 0x1864	reset out	F23	rstoutn															
 
 __AM335X__
+# mode 0-7, label, ball
 gpmc d0			mmc 1 d0		-			-			-			-			-			gpio 1.00		P8.25 / eMMC d0	U7
 gpmc d1			mmc 1 d1		-			-			-			-			-			gpio 1.01		P8.24 / eMMC d1	V7
 gpmc d2			mmc 1 d2		-			-			-			-			-			gpio 1.02		P8.05 / eMMC d2	R8
