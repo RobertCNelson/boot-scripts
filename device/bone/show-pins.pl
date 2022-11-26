@@ -126,7 +126,7 @@ while( <> ) {
 		$reg = hex $2;
 		$mux = hex $3;
 	} elsif(/PIN/) {
-		/^pin (\d+) \(PIN\d+\) $addpre([0-9a-f]{4}) ([0-9a-f]{8}) pinctrl-single\z/ or die "parse error";
+		/^pin (\d+) \(PIN\d+\) (?:\d+:\S+)? $addpre([0-9a-f]{4}) ([0-9a-f]{8}) pinctrl-single\z/ or die "parse error";
 		$pin = $1;
 		$reg = hex $2;
 		$mux = hex $3;
