@@ -1,6 +1,6 @@
 #!/bin/bash -e
 #
-# Copyright (c) 2013-2020 Robert Nelson <robertcnelson@gmail.com>
+# Copyright (c) 2013-2023 Robert Nelson <robertcnelson@gmail.com>
 # Portions copyright (c) 2014 Charles Steinkuehler <charles@steinkuehler.net>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -26,9 +26,6 @@
 
 version_message="1.20230304.0: Fix dd locations..."
 #
-#https://rcn-ee.com/repos/bootloader/am335x_evm/
-http_spl="MLO-am335x_evm-v2019.04-r13"
-http_uboot="u-boot-am335x_evm-v2019.04-r13.img"
 
 #mke2fs -c
 #Check the device for bad blocks before creating the file system.
@@ -176,12 +173,12 @@ copy_boot () {
 		cp -v /boot/uboot/MLO /tmp/boot/MLO || write_failure
 		flush_cache
 
-		cp -v /boot/uboot/u-boot.img /tmp/boot/u-boot.img || write_failure
+		cp -v /boot/uboot/u-boot-dtb.img /tmp/boot/u-boot-dtb.img || write_failure
 		flush_cache
 	fi
 
 	message="rsync: /boot/uboot/ -> /tmp/boot/" ; broadcast
-	rsync -aAXx /boot/uboot/ /tmp/boot/ --exclude={MLO,u-boot.img,uEnv.txt} || write_failure
+	rsync -aAXx /boot/uboot/ /tmp/boot/ --exclude={MLO,u-boot-dtb.img,uEnv.txt} || write_failure
 	flush_cache
 
 	flush_cache
@@ -313,33 +310,31 @@ partition_drive () {
 	fi
 
 	if [ ! -f /opt/backup/uboot/MLO ] ; then
-		mkdir -p /opt/backup/uboot/
-		wget --directory-prefix=/opt/backup/uboot/ http://rcn-ee.com/repos/bootloader/am335x_evm/${http_spl}
-		mv /opt/backup/uboot/${http_spl} /opt/backup/uboot/MLO
+		echo "[ERROR] MLO was not copied [https://forum.digikey.com/t/debian-getting-started-with-the-beaglebone-black/12967]"
+		exit 2
 	fi
 
 	if [ "x${dd_uboot_backup}" = "x" ] ; then
-		uboot_name=u-boot.img
+		uboot_name=u-boot-dtb.img
 		dd_uboot_count="4"
 		dd_uboot_seek="1"
 		dd_uboot_conf=""
 		dd_uboot_bs="384k"
-		dd_uboot_backup=/opt/backup/uboot/u-boot.img
+		dd_uboot_backup=/opt/backup/uboot/u-boot-dtb.img
 
 		echo "uboot_name=${uboot_name}" >> /boot/SOC.sh
 		echo "dd_uboot_count=4" >> /boot/SOC.sh
 		echo "dd_uboot_seek=1" >> /boot/SOC.sh
 		echo "dd_uboot_conf=" >> /boot/SOC.sh
 		echo "dd_uboot_bs=384k" >> /boot/SOC.sh
-		echo "boot_name=u-boot.img" >> /boot/SOC.sh
+		echo "boot_name=u-boot-dtb.img" >> /boot/SOC.sh
 
 		echo "dd_uboot_name=${dd_uboot_name}" >> /boot/SOC.sh
 	fi
 
-	if [ ! -f /opt/backup/uboot/u-boot.img ] ; then
-		mkdir -p /opt/backup/uboot/
-		wget --directory-prefix=/opt/backup/uboot/ http://rcn-ee.com/repos/bootloader/am335x_evm/${http_uboot}
-		mv /opt/backup/uboot/${http_uboot} /opt/backup/uboot/u-boot.img
+	if [ ! -f /opt/backup/uboot/u-boot-dtb.img ] ; then
+		echo "[ERROR] u-boot-dtb.img was not copied [https://forum.digikey.com/t/debian-getting-started-with-the-beaglebone-black/12967]"
+		exit 2
 	fi
 
 	dd_bootloader
