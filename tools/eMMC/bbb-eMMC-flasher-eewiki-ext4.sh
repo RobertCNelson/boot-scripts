@@ -24,7 +24,7 @@
 #This script assumes, these packages are installed, as network may not be setup
 #dosfstools initramfs-tools rsync u-boot-tools
 
-version_message="1.20200709: Fix v5.4.x eeprom read..."
+version_message="1.20230304.0: Fix dd locations..."
 #
 #https://rcn-ee.com/repos/bootloader/am335x_evm/
 http_spl="MLO-am335x_evm-v2019.04-r13"
@@ -298,14 +298,14 @@ partition_drive () {
 
 	if [ "x${dd_spl_uboot_backup}" = "x" ] ; then
 		spl_uboot_name=MLO
-		dd_spl_uboot_count="1"
+		dd_spl_uboot_count="2"
 		dd_spl_uboot_seek="1"
 		dd_spl_uboot_conf=""
 		dd_spl_uboot_bs="128k"
 		dd_spl_uboot_backup=/opt/backup/uboot/MLO
 
 		echo "spl_uboot_name=${spl_uboot_name}" >> /boot/SOC.sh
-		echo "dd_spl_uboot_count=1" >> /boot/SOC.sh
+		echo "dd_spl_uboot_count=2" >> /boot/SOC.sh
 		echo "dd_spl_uboot_seek=1" >> /boot/SOC.sh
 		echo "dd_spl_uboot_conf=" >> /boot/SOC.sh
 		echo "dd_spl_uboot_bs=128k" >> /boot/SOC.sh
@@ -320,14 +320,14 @@ partition_drive () {
 
 	if [ "x${dd_uboot_backup}" = "x" ] ; then
 		uboot_name=u-boot.img
-		dd_uboot_count="2"
+		dd_uboot_count="4"
 		dd_uboot_seek="1"
 		dd_uboot_conf=""
 		dd_uboot_bs="384k"
 		dd_uboot_backup=/opt/backup/uboot/u-boot.img
 
 		echo "uboot_name=${uboot_name}" >> /boot/SOC.sh
-		echo "dd_uboot_count=2" >> /boot/SOC.sh
+		echo "dd_uboot_count=4" >> /boot/SOC.sh
 		echo "dd_uboot_seek=1" >> /boot/SOC.sh
 		echo "dd_uboot_conf=" >> /boot/SOC.sh
 		echo "dd_uboot_bs=384k" >> /boot/SOC.sh
