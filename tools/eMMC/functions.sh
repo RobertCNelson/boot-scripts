@@ -1313,7 +1313,7 @@ __EOF__
     echo_broadcast "==> sfdisk parameters:"
     echo_broadcast "sfdisk: [$(LC_ALL=C sfdisk --version)]"
     echo_broadcast "sfdisk: [sfdisk ${sfdisk_options} ${destination}]"
-    echo_broadcast "sfdisk: [${sfdisk_boot_startmb},,${sfdisk_fstype},*]"
+    echo_broadcast "sfdisk: [${sfdisk_boot_startmb},${conf_rootfs_partition_size},${sfdisk_fstype},*]"
     echo_broadcast "==> Partitionning"
     generate_line 60
     LC_ALL=C sfdisk ${sfdisk_options} "${destination}" <<-__EOF__
