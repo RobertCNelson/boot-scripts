@@ -34,6 +34,8 @@ _err_trap() {
   _showed_traceback=t
   echo "The command ${_cmd} exited with exit code ${_ec}." 1>&2
   teardown_environment
+  reset_leds 'heartbeat' || true
+  inf_loop
 }
 
 _traceback() {
