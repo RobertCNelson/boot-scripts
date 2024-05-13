@@ -52,6 +52,27 @@ usb_serialnr="000000"
 usb_manufacturer="BeagleBoard.org"
 usb_product="USB Device"
 
+#usb0 mass_storage
+usb_ms_cdrom=0
+usb_ms_ro=1
+usb_ms_stall=0
+usb_ms_removable=1
+usb_ms_nofua=1
+
+#*.iso priority over *.img
+if [ -f /var/local/bb_usb_mass_storage.iso ] ; then
+	usb_image_file="/var/local/bb_usb_mass_storage.iso"
+elif [ -f /var/local/bb_usb_mass_storage.img ] ; then
+	usb_image_file="/var/local/bb_usb_mass_storage.img"
+fi
+
+if [ ! "x${usb_image_file}" = "x" ] ; then
+	echo "${log} usb_image_file=[`readlink -f ${usb_image_file}`]"
+fi
+
+usb_iserialnumber="0123456789"
+usb_iproduct="BeagleBoard"
+usb_manufacturer="BeagleBoard.org"
 #udhcpd gets started at bootup, but we need to wait till g_multi is loaded, and we run it manually...
 if [ -f /var/run/udhcpd.pid ] ; then
 	echo "${log} [/etc/init.d/udhcpd stop]"
@@ -62,58 +83,97 @@ if [ ! -f /etc/systemd/system/getty.target.wants/serial-getty@ttyGS0.service ] ;
 	ln -s /lib/systemd/system/serial-getty@.service /etc/systemd/system/getty.target.wants/serial-getty@ttyGS0.service
 fi
 
+run_libcomposite () {
+	if [ ! -d /sys/kernel/config/usb_gadget/g_multi/ ] ; then
+		echo "${log} Creating g_multi"
+		mkdir -p /sys/kernel/config/usb_gadget/g_multi || true
+		cd /sys/kernel/config/usb_gadget/g_multi
+
+		echo ${usb_bcdUSB} > bcdUSB
+		echo ${usb_idVendor} > idVendor # Linux Foundation
+		echo ${usb_idProduct} > idProduct # Multifunction Composite Gadget
+		echo ${usb_bcdDevice} > bcdDevice
+
+		#0x409 = english strings...
+		mkdir -p strings/0x409
+
+		echo ${usb_iserialnumber} > strings/0x409/serialnumber
+		echo ${usb_imanufacturer} > strings/0x409/manufacturer
+		cat /proc/device-tree/model > strings/0x409/product
+
+		mkdir -p functions/rndis.usb0
+		# first byte of address must be even
+		HOST=$(cat /proc/device-tree/model /etc/dogtag |md5sum|sed 's/^\(..\)\(..\)\(..\)\(..\)\(..\).*$/02:\1:\2:\3:\4:\5/')
+		SELF=$(cat /proc/device-tree/model /etc/rcn-ee.conf |md5sum|sed 's/^\(..\)\(..\)\(..\)\(..\)\(..\).*$/02:\1:\2:\3:\4:\5/')
+		echo "${log} rndis.usb0/host_addr=[${HOST}]"
+		echo ${HOST} > functions/rndis.usb0/host_addr
+		echo "${log} rndis.usb0/dev_addr=[${SELF}]"
+		echo ${SELF} > functions/rndis.usb0/dev_addr
+		mkdir -p functions/acm.usb0
+
+		if [ "x${has_img_file}" = "xtrue" ] ; then
+			echo "${log} enable USB mass_storage ${usb_image_file}"
+			mkdir -p functions/mass_storage.usb0
+			echo ${usb_ms_stall} > functions/mass_storage.usb0/stall
+			echo ${usb_ms_cdrom} > functions/mass_storage.usb0/lun.0/cdrom
+			echo ${usb_ms_nofua} > functions/mass_storage.usb0/lun.0/nofua
+			echo ${usb_ms_removable} > functions/mass_storage.usb0/lun.0/removable
+			echo ${usb_ms_ro} > functions/mass_storage.usb0/lun.0/ro
+			echo ${actual_image_file} > functions/mass_storage.usb0/lun.0/file
+		fi
+
+		mkdir -p configs/c.1/strings/0x409
+		echo "Multifunction with RNDIS" > configs/c.1/strings/0x409/configuration
+
+		echo 500 > configs/c.1/MaxPower
+
+		ln -s functions/rndis.usb0 configs/c.1/
+		ln -s functions/acm.usb0 configs/c.1/
+		if [ "x${has_img_file}" = "xtrue" ] ; then
+			ln -s functions/mass_storage.usb0 configs/c.1/
+		fi
+
+		#ls /sys/class/udc
+		echo musb-hdrc.0.auto > UDC
+		echo "${log} g_multi Created"
+
+		# Auto-configuring the usb0 network interface:
+		$(dirname $0)/autoconfigure_usb0.sh || true
+	else
+		echo "${log} FIXME: need to bring down g_multi first, before running a second time."
+	fi
+}
+
 use_libcomposite () {
+	echo "${log} use_libcomposite"
+	unset has_img_file
+	if [ "x${USB_IMAGE_FILE_DISABLED}" = "xyes" ]; then
+		echo "${log} usb_image_file disabled by bb-boot config file."
+	elif [ -f ${usb_image_file} ] ; then
+		actual_image_file=$(readlink -f ${usb_image_file} || true)
+		if [ ! "x${actual_image_file}" = "x" ] ; then
+			if [ -f ${actual_image_file} ] ; then
+				has_img_file="true"
+				test_usb_image_file=$(echo ${actual_image_file} | grep .iso || true)
+				if [ ! "x${test_usb_image_file}" = "x" ] ; then
+					usb_ms_cdrom=1
+				fi
+			else
+				echo "${log} FIXME: no usb_image_file"
+			fi
+		else
+			echo "${log} FIXME: no usb_image_file"
+		fi
+	fi
+
+	#ls -lha /sys/kernel/*
+	#ls -lha /sys/kernel/config/*
+#	if [ ! -d /sys/kernel/config/usb_gadget/ ] ; then
+
 	echo "${log} modprobe libcomposite"
 	modprobe libcomposite || true
 	if [ -d /sys/module/libcomposite ] ; then
-		if [ -d ${usb_gadget} ] ; then
-			if [ ! -d ${usb_gadget}/g_multi/ ] ; then
-				echo "${log} Creating g_multi"
-				mkdir -p ${usb_gadget}/g_multi || true
-				cd ${usb_gadget}/g_multi
-
-				echo ${usb_bcdUSB} > bcdUSB
-				echo ${usb_idVendor} > idVendor # Linux Foundation
-				echo ${usb_idProduct} > idProduct # Multifunction Composite Gadget
-				echo ${usb_bcdDevice} > bcdDevice
-
-				#0x409 = english strings...
-				mkdir -p strings/0x409
-
-				echo "0123456789" > strings/0x409/serialnumber
-				echo ${usb_imanufacturer} > strings/0x409/manufacturer
-				cat /proc/device-tree/model > strings/0x409/product
-
-				mkdir -p functions/rndis.usb0
-				# first byte of address must be even
-				HOST=$(cat /proc/device-tree/model /etc/dogtag |md5sum|sed 's/^\(..\)\(..\)\(..\)\(..\)\(..\).*$/02:\1:\2:\3:\4:\5/')
-				SELF=$(cat /proc/device-tree/model /etc/rcn-ee.conf |md5sum|sed 's/^\(..\)\(..\)\(..\)\(..\)\(..\).*$/02:\1:\2:\3:\4:\5/')
-				echo "${log} rndis.usb0/host_addr=[${HOST}]"
-				echo ${HOST} > functions/rndis.usb0/host_addr
-				echo "${log} rndis.usb0/dev_addr=[${SELF}]"
-				echo ${SELF} > functions/rndis.usb0/dev_addr
-				mkdir -p functions/acm.usb0
-
-				mkdir -p configs/c.1/strings/0x409
-				echo "Multifunction with RNDIS" > configs/c.1/strings/0x409/configuration
-
-				echo 500 > configs/c.1/MaxPower
-
-				ln -s functions/rndis.usb0 configs/c.1/
-				ln -s functions/acm.usb0 configs/c.1/
-
-				#ls /sys/class/udc
-				echo musb-hdrc.0.auto > UDC
-				echo "${log} g_multi Created"
-
-				# Auto-configuring the usb0 network interface:
-				$(dirname $0)/autoconfigure_usb0.sh || true
-			else
-				echo "${log} FIXME: need to bring down g_multi first, before running a second time."
-			fi
-		else
-			echo "${log} ERROR: no [${usb_gadget}]"
-		fi
+		run_libcomposite
 	else
 		if [ -f /sbin/depmod ] ; then
 			/sbin/depmod -a
